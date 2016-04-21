@@ -1,12 +1,12 @@
 package sudoku;
 
-import common.Pair;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
+//import java.util.function.Function;
 import java.util.function.Predicate;
 
 /*
@@ -20,89 +20,113 @@ import java.util.function.Predicate;
  * chain cell can have the Symbol in question marked impossible 
  * in it.
  * 
+ * TODO in-chain validity checking (collapse all XORs if self-contradicting)
+ * If any node in the chain graph shares a FactBag with a node of the same 
+ * (non-zero) color, then collapse the entire chain, setting all the claims 
+ * with that color to false.
+ * 
+ * TODO inter-chain bridge even-XOR-distance checks
+ * If there exists a pair of XOR chains bridged by two non-XOR FactBags 
+ * which are separated from one another in those two chains by an even 
+ * number of XORs in one chain, then the (a) chain with the even XOR-count 
+ * distance can be completely collapsed, setting all of its claims with 
+ * the same color as its two claims on the bridges to false.
+ * 
+ * 
+ * 
+ * 
+ * 
  */
 public class ColorChain extends Technique {
 	
-	public static final Function<Index,Predicate<FactBag>> FactBag_TEST_GENERATOR = (s) -> ((fb) -> fb.size() == FactBag.SIZE_WHEN_XOR && fb.zMax() == s && fb.zMin() == s );
+	public static final Predicate<FactBag> BAG_IS_XOR = (fb) -> fb.size() == FactBag.SIZE_WHEN_XOR;
 	
 	public ColorChain(Puzzle puzzle) {
 		super(puzzle);
 	}
 	
 	private boolean claimProvenFalseByChainContradiction(Claim claim, Graph concom){
-		boolean neighborsPositive = false;
-		boolean neighborsNegative = false;
+		boolean hasPosColorNeighbor = false;
+		boolean hasNegColorNeighbor = false;
 		
 		for(Graph.Node node : concom.nodes){
-			if( claim.sharesRegionWith(node.claim) ){
+			if( claim.sharesBagWith(node.claim) ){
 				if(node.color > 0){
-					neighborsPositive = true;
+					hasPosColorNeighbor = true;
+				} else if(node.color < 0){
+					hasNegColorNeighbor = true;
 				} else{
-					neighborsNegative = true;
+					throw new IllegalStateException("This Node has a 0 color: "+node.toString());
 				}
 			}
 		}
 		
-		return neighborsPositive && neighborsNegative;
+		return hasPosColorNeighbor && hasNegColorNeighbor;
 	}
 	
 	@Override
 	protected boolean process() {
 		boolean result = false;
 		
-		//iterate over the symbol-layers of the cube form of the target
-		for(Index symbol : Index.values()){
-			
-			Collection<FactBag> binaryBags = puzzle.factBagsWhere( FactBag_TEST_GENERATOR.apply(symbol) );
-			List<Claim> claimsInBinaryBags = new ArrayList<>(SledgeHammer2.unionAll(binaryBags));
-			Collection<Claim> possibleClaims = puzzle.claims().claimsWhere( (c) -> !c.isKnownFalse() && !c.isKnownTrue() );
-			
-			//check all cells on this layer irrespective of their chain memberships
-			Graph g = new Graph(claimsInBinaryBags, binaryBags);
-			List<Graph> components = g.connectedComponents();
-			for(Graph concom : components){
-				for(Claim c : possibleClaims){
-					if( claimProvenFalseByChainContradiction(c, concom) ){
-						
-						result |= c.setFalse();
-						
-					}
-				}
-			}
-			
-			while(resolveComponents(components)){
-				result = true;
-			}
-			
+		Collection<FactBag> xorBags = puzzle.factBagsWhere( BAG_IS_XOR );
+		List<Claim> claimsInXorBags = new ArrayList<>(SledgeHammer2.unionAll(xorBags));
+		Collection<Claim> possibleClaims = puzzle.claims().claimsWhere( (c) -> !c.isKnownFalse() && !c.isKnownTrue() );
+		
+		Graph g = new Graph(claimsInXorBags, xorBags);
+		List<Graph> components = g.connectedComponents();
+		
+		for(Graph concom : components){
+			result |= resolve(possibleClaims, concom);
 		}
 		
 		return result;
 	}
 	
-	private boolean resolveComponents(List<Graph> components){
+	private boolean resolve(Collection<Claim> possibleClaims, Graph concom){
 		boolean result = false;
-		for(Graph concom : components ){
-			result |= concom.resolveCertainties();
+		List<Claim> claimsSetFalse = new ArrayList<>();
+		
+		for(Claim c : possibleClaims){
+			if( claimProvenFalseByChainContradiction(c, concom) ){
+				result |= c.setFalse();
+				claimsSetFalse.add(c);
+			}
 		}
+		
+		if(result){
+			puzzle.addSolveEvent(claimsSetFalse);
+		}
+		
 		return result;
 	}
 	
 	private static class Graph{
 		
 		public static final int INIT_COLOR_ROOT = 0;
-		
 		public static int colorRoot = INIT_COLOR_ROOT;
 		
 		private List<Node> nodes;
+		
 		public Graph(Collection<Claim> nakedNodes, Collection<FactBag> edges){
 			nodes = new ArrayList<>(nakedNodes.size());
 			for(Claim c : nakedNodes){
-				nodes.add(new Node(c, INIT_COLOR_ROOT, edges));
+				nodes.add(new Node(c, INIT_COLOR_ROOT));
 			}
 		}
 		
 		private Graph(Collection<Node> col){
 			nodes = new ArrayList<>(col);
+		}
+		
+		public String toString(){
+			StringBuilder sb = new StringBuilder();
+			
+			sb.append("BasicGraph: with ").append(nodes.size()).append(" nodes");
+			for(Node n : nodes){
+				sb.append(System.getProperty("line.separator")).append("\t").append(n.toString());
+			}
+			
+			return sb.toString();
 		}
 		
 		public List<Node> neighbors(Node n){
@@ -117,64 +141,6 @@ public class ColorChain extends Technique {
 			return result;
 		}
 		
-		/*public boolean setFalse(boolean isPositive){
-			boolean result = false;
-			for(Node n : nodes){
-				if( isPositive == n.color > 0 ){
-					result |= n.claim.setFalse();
-				}
-			}
-			return result;
-		}*/
-		
-		/**
-		 * Searches the node list for nodes known to be true or false 
-		 * and sets other nodes in the graph with the same color to 
-		 * the same truth-state.
-		 * @throws IllegalStateException if 
-		 * @return true if the target has been changed by this operation, 
-		 * false otherwise
-		 */
-		public boolean resolveCertainties(){
-			boolean result = false;
-			
-			Set<Pair<Integer,Boolean>> set = new HashSet<>();;
-			for(Node node : nodes){
-				if(node.claim.isKnownFalse()){
-					set.add(new Pair<Integer,Boolean>(node.color,false));
-				} else if(node.claim.isKnownTrue()){
-					set.add(new Pair<Integer,Boolean>(node.color,true));
-				}
-			}
-			
-			switch(set.size()){
-			case 1 : List<Pair<Integer,Boolean>> l1 = new ArrayList<>(set);
-				Pair<Integer,Boolean> first1 = l1.get(0);
-				result |= setAllByColor(first1.getA(), first1.getB());
-				break;
-			case 2 : List<Pair<Integer,Boolean>> l2 = new ArrayList<>(set);
-				Pair<Integer,Boolean> first2 = l2.get(0), second = l2.get(1);
-				if( first2.getB() ^ second.getB() ){
-					result |= setAllByColor(first2.getA(), first2.getB()) | setAllByColor(second.getA(), second.getB());
-				} else{
-					throw new IllegalStateException("Two colors getting set to "+first2.getB());
-				}
-			case 0 : break;
-			default : throw new IllegalStateException(set.size()+" associations exist between a color in a chain and the truth-state of the cells thus colored (max 2 allowable).");
-			}
-			return result;
-		}
-		
-		private boolean setAllByColor(int color, boolean isTrue){
-			boolean result = false;
-			for(Node node : nodes){
-				if(node.color == color){
-					result |= ( isTrue ? node.claim.setTrue_ONLY_Puzzle_AND_Resolvable_MAY_CALL_THIS_METHOD() : node.claim.setFalse() );
-				}
-			}
-			return result;
-		}
-		
 		private List<Graph> concom = null;
 		
 		public List<Graph> connectedComponents(){
@@ -183,17 +149,20 @@ public class ColorChain extends Technique {
 				
 				List<Node> nodesNotAssignedToAComponent = new ArrayList<>(nodes);
 				
-				for( ConnectedComponent newConCom; 
-						!nodesNotAssignedToAComponent.isEmpty(); 
-						concom.add( new Graph(newConCom.contract()) ) ){
-					(newConCom = new ConnectedComponent(nodes.size(), colorRoot++)).add(nodesNotAssignedToAComponent.remove(0));
-					for(; !newConCom.cuttingEdge.isEmpty(); 
-							nodesNotAssignedToAComponent.removeAll(newConCom.cuttingEdge) ){
+				while(!nodesNotAssignedToAComponent.isEmpty()){
+					ConnectedComponent newConCom = new ConnectedComponent(nodes.size(), ++colorRoot, nodesNotAssignedToAComponent);
+					
+					while(!newConCom.cuttingEdge.isEmpty()){
 						newConCom.contract();
+						
 						for(Node edgeNode : newConCom.edge){
 							newConCom.addAll(neighbors(edgeNode));
 						}
+						
+						nodesNotAssignedToAComponent.removeAll(newConCom.cuttingEdge);
 					}
+					
+					concom.add( new Graph(newConCom.contract()) );
 				}
 			}
 			return concom;
@@ -206,19 +175,21 @@ public class ColorChain extends Technique {
 			private int color;
 			private boolean phase;
 			
-			public ConnectedComponent(int size, int color){
+			public ConnectedComponent(int size, int color, List<Node> src){
 				this.size = size;
 				this.core = new HashSet<>(size);
 				this.edge = new HashSet<>(size);
 				this.cuttingEdge = new HashSet<>(size);
 				this.color = color;
 				this.phase = true;
+				add(src.remove(0));
 			}
 			
 			public void add(Node node){
 				if( !core.contains(node) && !edge.contains(node) ){
-					node.setNewColor(phase?color:-color);
-					cuttingEdge.add(node);
+					if(cuttingEdge.add(node)){
+						node.setNewColor(phase?color:-color);
+					}
 				}
 			}
 			
@@ -238,19 +209,31 @@ public class ColorChain extends Technique {
 		}
 		
 		private static class Node{
+			
 			private Claim claim;
 			private int color;
-			private List<Claim> neighbors;
-			public Node(Claim claim, int color, Collection<FactBag> edges){
+			private Set<Claim> neighbors;
+			
+			public Node(Claim claim, int color){
 				this.claim = claim;
 				this.color = color;
-				this.neighbors = new ArrayList<>();
-				for(FactBag fb : edges){
-					if(fb.contains(claim)){
-						List<Claim> l = new ArrayList<>(fb);
-						l.remove(claim);
-						neighbors.add(l.get(0));
+				this.neighbors = new HashSet<>(Claim.INIT_OWNER_COUNT);
+				for(FactBag fb : claim.getOwners()){
+					if(BAG_IS_XOR.test(fb)){
+						neighbors.add(partner(claim,fb));
 					}
+				}
+			}
+			
+			private static Claim partner(Claim c, Set<Claim> pair){
+				Iterator<Claim> iter = pair.iterator();
+				Claim c1 = iter.next();
+				if(c==c1){
+					return iter.next();
+				} else if(c==iter.next()){
+					return c1;
+				} else{
+					throw new IllegalArgumentException("Specified claim ("+c.toString()+"( not present in specified factbag.");
 				}
 			}
 			
@@ -260,6 +243,18 @@ public class ColorChain extends Technique {
 				} else{
 					throw new IllegalStateException("Trying to set "+color+" as new color in place of "+this.color);
 				}
+			}
+			
+			@Override
+			public String toString(){
+				StringBuilder sb = new StringBuilder().append("Node for ")
+						.append(claim).append(", with color ")
+						.append(color).append(", with these neighbors: ");
+				for(Claim c : neighbors){
+					sb.append(System.getProperty("line.separator")).append("\t").append(c);
+				}
+				
+				return sb.toString();
 			}
 			
 			@Override
@@ -279,32 +274,4 @@ public class ColorChain extends Technique {
 		}
 		
 	}
-	
-	/*private class Chain{
-		
-		
-		
-		
-		public void add(){
-			
-		}
-		
-		public boolean resolve(){
-			boolean result = false;
-			
-			
-			
-			return result;
-		}
-	}
-	
-	private class ColoredClaim{
-		private Claim claim;
-		private int color;
-		public ColoredClaim(Claim claim, int color){
-			this.claim = claim;
-			this.color = color;
-		}
-	}*/
-	
 }

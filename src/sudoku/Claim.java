@@ -1,13 +1,14 @@
 package sudoku;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * <p>Represents a claim that "such-and-such Cell 
- * contains such-and-such Symbol."</p>
+ * <p>Represents a claim that "such-and-such cell 
+ * contains such-and-such symbol."</p>
  * @author fiveham
  *
  */
@@ -21,13 +22,16 @@ public class Claim {
 	 */
 	public static final int INIT_OWNER_COUNT = 4;
 	
-	private Index x;
-	private Index y;
-	private Index symbol;
+	private Puzzle.IndexValue x;
+	private Puzzle.IndexValue y;
+	private Puzzle.IndexValue symbol;
 	
 	private List<FactBag> owners;
 	
-	public Claim(Index x, Index y, Index symbol) {
+	private Puzzle puzzle;
+	
+	public Claim(Puzzle puzzle, Puzzle.IndexValue x, Puzzle.IndexValue y, Puzzle.IndexValue symbol) {
+		this.puzzle = puzzle;
 		this.x = x;
 		this.y = y;
 		this.symbol = symbol;
@@ -47,20 +51,24 @@ public class Claim {
 		return false;
 	}
 	
-	public boolean sharesRegionWith(Claim c){
-		return x == c.x || y == c.y || symbol == c.symbol || Puzzle.boxIndex(x, y) == Puzzle.boxIndex(c.x, c.y);
+	public String possText(){
+		return isKnownFalse() ? " " : symbol.humanReadableSymbol();
 	}
 	
 	public boolean sharesBagWith(Claim c){
-		Set<FactBag> othersOwners = new HashSet<>(c.owners);
-		othersOwners.retainAll(owners);
-		return !othersOwners.isEmpty();
+		return !Collections.disjoint(owners, c.owners);
 	}
 	
 	boolean setTrue_ONLY_Puzzle_AND_Resolvable_MAY_CALL_THIS_METHOD(){
 		boolean result = false;
+		Set<Claim> claimsSetFalse = new HashSet<>();
 		for(FactBag owner : owners){
-			result |= owner.setAsSoleElement_ONLY_CLAIM_MAY_CALL_THIS_METHOD(this);
+			claimsSetFalse.addAll(owner);
+			result |= owner.setAsSoleElement_ONLY_Claim_MAY_CALL_THIS_METHOD(this);
+		}
+		claimsSetFalse.remove(this);
+		if(result){
+			puzzle.addSolveEvent(new ArrayList<>(claimsSetFalse));
 		}
 		return result;
 	}
@@ -85,9 +93,38 @@ public class Claim {
 		return new ArrayList<>(owners);
 	}
 	
+	public int getX(){
+		return x.intValue();
+	}
+	
+	public int getY(){
+		return y.intValue();
+	}
+	
+	public int getZ(){
+		return symbol.intValue();
+	}
+	
+	public Puzzle getPuzzle(){
+		return puzzle;
+	}
+	
+	public int linearizeCoords(){
+		return linearizeCoords(x.intValue(), y.intValue(), symbol.intValue(), puzzle.sideLength());
+	}
+	
+	public static int linearizeCoords(int x, int y, int z, int sideLength){
+		return x*sideLength*sideLength + y*sideLength + z;
+	}
+	
+	@Override
+	public String toString(){
+		return "Claim: cell "+x.intValue()+","+y.intValue()+" is "+symbol.intValue();
+	}
+	
 	@Override
 	public int hashCode(){
-		return x.intValue()*100 + y.intValue()*10 + symbol.intValue(); //XXX magic no.s
+		return linearizeCoords();
 	}
 	
 	@Override
@@ -97,5 +134,23 @@ public class Claim {
 			return c.x == x && c.y == y && c.symbol == symbol;
 		}
 		return false;
+	}
+	
+	public double spaceDistTo(Claim otherClaim){
+		int x = this.x.intValue();
+		int y = this.y.intValue();
+		int z = this.symbol.intValue();
+		int cx = otherClaim.x.intValue();
+		int cy = otherClaim.y.intValue();
+		int cz = otherClaim.symbol.intValue();
+		return Math.sqrt( (x-cx)*(x-cx) + (y-cy)*(y-cy) + (z-cz)*(z-cz) );
+	}
+
+	public int[] vectorTo(Claim cn) {
+		int[] result = new int[3]; //XXX magic no
+		result[0] = cn.x.intValue() - x.intValue();
+		result[1] = cn.y.intValue() - y.intValue();
+		result[2] = cn.symbol.intValue() - symbol.intValue();
+		return result;
 	}
 }

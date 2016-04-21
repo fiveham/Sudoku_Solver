@@ -34,6 +34,7 @@ public abstract class Technique {
 	 * to the underlying target.
 	 */
 	final public boolean digest(){
+		puzzle.newEventFrame();
 		return puzzle.isSolved() ? false : process();
 	}
 	
@@ -48,20 +49,6 @@ public abstract class Technique {
 	public Puzzle getPuzzle(){
 		return puzzle;
 	}
-	
-	/* *
-	 * Returns whether the parameter cells are considered
-	 * to connect for the purposes of the technique.
-	 * 
-	 * The default is that cells don't connect at all.
-	 * @param cell1			First cell	
-	 * @param cell2			Second cell
-	 * @return 				Returns whether the parameter cells are considered
-	 * to connect for the purposes of the technique.
-	 * /
-	public boolean connect(Cell cell1, Cell cell2){
-		return false;
-	}/**/
 }
 
 
