@@ -1,82 +1,38 @@
 package sudoku;
 
-/**
- * Represents various indices that needs to vary
- * between lower and upper limits of 1 and 9 
- * (inclusive) respectively.
- * @author fiveham
- */
-public enum Index {
+import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
+
+public enum Index{
 	
-	/*
-	 * This enum needs to remain public so that external code 
-	 * may make reference to its contents in creating new 
-	 * solution technique classes.
-	 */
+	I1,I2,I3,I4,I5,I6,I7,I8,I9;
 	
-	/**
-	 * 0 means that the index of a region or the value 
-	 * of an x or y coordinate in a cell is uncertain.
-	 */
-	UNKNOWN (0),
+	public static final Index MINIMUM = values()[0];
+	public static final Index MAXIMUM = values()[values().length-1];
 	
-	/**
-	 * 1 through 9 indicate that the index of a region 
-	 * or the x or y coordinate of a cell is that value.
-	 */
-	INDEX_1 (1),
-	INDEX_2 (2),
-	INDEX_3 (3),
-	INDEX_4 (4),
-	INDEX_5 (5),
-	INDEX_6 (6),
-	INDEX_7 (7),
-	INDEX_8 (8),
-	INDEX_9 (9);
+	public static final int NO_SYMBOL = 0;
 	
-	/** Minimum value of index */
-	public static final Index MINIMUM = INDEX_1;
+	private static final List<Index> asList = new ArrayList<>(Arrays.asList(values()));
 	
-	/** Maximum value of index */
-	public static final Index MAXIMUM = INDEX_9;
+	private Index(){}
 	
-	/** Total number of values that indicate an index is known */
-	public static final int INDEX_COUNT = 9;
-	
-	/** all values in the enum that don't pertain to not knowing the actual value */
-	public static final Index[] KNOWN_VALUES = 
-		{INDEX_1, INDEX_2, INDEX_3, INDEX_4, INDEX_5, INDEX_6, INDEX_7, INDEX_8, INDEX_9};
-	
-	private final int index;
-	
-	private Index(int index){
-		this.index = index;
+	public static Index boxIndex(Index ix, Index iy){
+		int x = ix.ordinal();
+		int y = iy.ordinal();
+		
+		return values()[ (y/3)*3 + (x/3) + 1 ];
 	}
 	
-	/**
-	 * Returns the internal value field for this index.
-	 * @return					Returns the internal 
-	 * value field for this index.
-	 */
+	public static List<Index> valuesAsList(){
+		return new ArrayList<>(asList);
+	}
+	
+	public static Index fromInt(int i){
+		return values()[i-1];
+	}
+	
 	public int intValue(){
-		return index;
-	}
-	
-	/**
-	 * Returns the enum instance with its instance field
-	 * equal to the parameter input.
-	 * @param input				int to be used to 
-	 * determine which enum instance to return
-	 * @return					Returns the enum 
-	 * instance with its instance field
-	 * equal to the parameter input.
-	 */
-	public static Index fromInt(int input){
-		try{
-			return values()[input];
-		}
-		catch(ArrayIndexOutOfBoundsException e){
-			throw new IllegalArgumentException("invalid index (an integer 0 to 9 inclusive is needed)");
-		}
+		return ordinal()+1;
 	}
 }

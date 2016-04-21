@@ -2,452 +2,309 @@ package sudoku;
 
 import java.util.*;
 import java.io.*;
-import java.util.function.*;
 
-/**
- * Represents a 9x9 Sudoku target, with
- * distinct subcomponents representing each cell,
- * column, row, and block.
- * @author fiveham
- */
 public class Puzzle {
 	
-	/** Width of a target measured in cells */
-	public static final int	WIDTH = 9;
+	public static final int SIZE = 9;
 	
-	/** Height of a target measured in cells */
-	public static final int	HEIGHT = 9;
+	private List<Region> columns;
+	private List<Region> rows;
+	private List<Region> boxes;
+	private List<Region> regions;
 	
-	private Cell[]	 	cells;
-	private Line[] 		rows;
-	private Line[] 		columns;
-	private Box[] 		boxes;
-	private boolean 	isSolved;
+	private List<Role> roles;
 	
-	private List<Symbol> symbols;
-	private List<Role>   roles;
+	public Puzzle(File f) throws FileNotFoundException{
+		this(new Scanner(f));
+	}
 	
-	/**
-	 * Constructs a target from a String containing the values of 
-	 * the cells in the target as the first 81 tokens.
-	 * @param puzzleAsString	String representation 
-	 * of a sudoku target, having the values of the cells as its 
-	 * first 81 tokens.
-	 * @throws IllegalArgumentException
-	 */
-	public Puzzle(String puzzleAsString) throws IllegalArgumentException{
-		verifyInts(puzzleAsString);
-		createCells(puzzleAsString);
-		createRows();
-		createColumns();
-		createBoxes();
-		initialPropagation();
-		isSolved = false;
+	public Puzzle(String s){
+		this(new Scanner(s));
+	}
+	
+	public Puzzle(Scanner s){
+		columns = initColumns(this);
+		columns.sort(null);
 		
-		symbols = new ArrayList<Symbol>(WIDTH*HEIGHT);
-		for(Value val : Value.KNOWN_VALUES){
-			for(int i=0; i<9; i++){
-				symbols.add( new Symbol(val, this) );
+		rows = initRows(this);
+		rows.sort(null);
+		
+		boxes = initBoxes(this);
+		boxes.sort(null);
+		
+		regions = new ArrayList<>();
+		regions.addAll(columns);
+		regions.addAll(rows);
+		regions.addAll(boxes);
+		
+		roles = new ArrayList<>(SIZE*SIZE*3);
+		for(Symbol symbol : Symbol.values()){
+			for(Region r : regions){
+				roles.add(new Role(symbol, r));
 			}
 		}
 		
-		roles = new ArrayList<>(9*9*3);	//one for each value in each region
-		for(Region region : getRegions()){
-			for(Value value : Value.KNOWN_VALUES){
-				roles.add( new Role(this, value, region) );
+		for(Index y : Index.values()){
+			for(Index x : Index.values()){
+				int value = s.nextInt();
+				if(value != Symbol.NONE){
+					Symbol symbol = Symbol.fromInt(value);
+					unifyAll(symbol, x, y);
+				}
 			}
 		}
 	}
 	
-	/**
-	 * Constructs a target from a plaintext source file having the 
-	 * values of the cells of the target as the first 81 tokens.
-	 * @param file				The file from which to extract the 
-	 * initial values of the target's cells.
-	 * @throws FileNotFoundException
-	 * @throws IOException
-	 * @throws IllegalArgumentException
-	 */
-	public Puzzle(File file) throws FileNotFoundException, IOException, IllegalArgumentException{
-		this( fileContent(file) );
-	}
-	
-	private static void verifyInts(String puzzleAsString){
-		Scanner intChecker = new Scanner(puzzleAsString);
-		for(int i=0; i<WIDTH*HEIGHT; i++){
-			if(!intChecker.hasNextInt()){
-				intChecker.close();
-				throw new IllegalArgumentException("too few uninterrupted int tokens ("+i+"); 81 required.");
-			}
-			intChecker.next();
-		}
-		intChecker.close();
-	}
-	
-	private void createCells(String puzzleAsString){
-		cells = new Cell[Index.INDEX_COUNT*Index.INDEX_COUNT];
-		Scanner valueGetter = new Scanner(puzzleAsString);
-		for( Index y : Index.KNOWN_VALUES ){
-			Scanner lineReader = new Scanner(valueGetter.nextLine());
-			for( Index x : Index.KNOWN_VALUES ){
-				cells[cellArrayIndexFromXY(x,y)] = new Cell(x,y,Value.fromInt(lineReader.nextInt()),this);
-			}
-			lineReader.close();
-		}
-		valueGetter.close();
-	}
-	
-	private void initialPropagation(){
-		for(Cell currentCell : cells ){
-			Value currentValue = currentCell.getValue();
-			if(currentValue != Value.UNKNOWN)
-				for(Cell neighborCell : neighbors(currentCell))
-					neighborCell.setValueImpossible(currentValue);
-		}
-	}
-	
-	private void createBoxes(){
-		boxes = new Box[Index.INDEX_COUNT];
-		for( Index currentBlockIndex : Index.KNOWN_VALUES )
-			boxes[currentBlockIndex.intValue() - 1] = 
-					new Box(currentBlockIndex, 
-							cellsForBlock(currentBlockIndex), this);
-	}
-	
-	/* 
-	 * Returns the cells that need to be sent to a block 
-	 * with the parameter index.
-	 * 
-	 * Purely for use in constructing the target.
-	 */
-	private Cell[] cellsForBlock(Index blockIndex){
-		Cell[] returnArray = new Cell[Box.CELL_COUNT];
-		
-		Index minX = Box.minXForBlockIndex(blockIndex);
-		Index minY = Box.minYForBlockIndex(blockIndex);
-		
-		for(int pointer = 0, 
-				yLow    = minY.intValue(), 
-				xLow    = minX.intValue(), 
-				y       = yLow; 
-				y < yLow + Box.HEIGHT; 
-				y++ ){
-			for( int x = xLow; x < xLow + Box.WIDTH; x++ ){
-				returnArray[ pointer++ ] = getCell(minX, minY);
+	public List<Role> getRolesFor(Region r){
+		List<Role> result = new ArrayList<>();
+		for(Role role : roles){
+			if(role.hasRegion(r)){
+				result.add(role);
 			}
 		}
-			
-		return returnArray;
+		return result;
 	}
 	
-	private void createColumns(){
-		columns = createLines( c -> c.getX() );
-	}
-	
-	private void createRows(){
-		rows = createLines( c -> c.getY() );
-	}
-	
-	private Line[] createLines( Function<Cell,Index> func ){
-		Line[] retVal = new Line[9];
-		
-		for(Index i : Index.KNOWN_VALUES){
-			retVal[i.intValue()-1] = new Line(i, cellsWhere( c -> func.apply(c) == i), this);
-		}
-		
-		return retVal;
-	}
-	
-	private Cell[] cellsWhere(Predicate<Cell> test){
-		List<Cell> ret = new ArrayList<>();
-		for(Cell c : cells){
-			if(test.test(c)){
-				ret.add(c);
-			}
-		}
-		return ret.toArray( new Cell[]{} );
-	}
-	
-	private int cellArrayIndexFromXY(Index x, Index y){
-		return cellArrayIndexFromXY(x.intValue(), y.intValue());
-	}
-	
-	private int cellArrayIndexFromXY(int x, int y){
-		return (y-1)*8 + (x-1);
-	}
-	
-	/*
-	 * Extracts the contents of the parameter file and 
-	 * returns it as a String.
-	 */
-	private static String fileContent(File file) throws FileNotFoundException, IOException{
-		
-		if(!file.canRead())
-			throw new IOException("cannot read "+file.getName());
-		
-		StringBuilder returnString = new StringBuilder();
-		Scanner scanner = new Scanner(file);
-		
-		for(int i=0; scanner.hasNextLine(); i++){
-			if(i!=0)
-				returnString.append("\n");
-			returnString.append(scanner.nextLine());
-		}
-		
-		scanner.close();
-		return returnString.toString();
-	}
-	
-	
-	
-	/**
-	 * Returns a 2D array of all the cells in this target, 
-	 * arranged so that cells[i][j] is the same cell 
-	 * returned by getCell( i-1, j-1 ). X increases to the 
-	 * right, and Y increases going down.
-	 * @return					Returns a 2D array of 
-	 * all the cells in this target, arranged so that 
-	 * cells[i][j] is the same cell returned by 
-	 * getCell( i-1, j-1 ). X increases to the right, 
-	 * and Y increases going down.
-	 */
-	public Cell[] getCells(){
-		return cells;
-	}
-	
-	/**
-	 * Returns an array of all the rows in this target.
-	 * @return					Returns an array of all 
-	 * the rows in this target.
-	 */
-	public Line[] getRows(){
-		return rows;
-	}
-	
-	/**
-	 * Returns an array of all the columns in this target.
-	 * @return					Returns an array of all 
-	 * the columns in this target.
-	 */
-	public Line[] getColumns(){
-		return columns;
-	}
-	
-	/**
-	 * Returns a list of all the regions (boxes, rows, 
-	 * and columns) of this target.
-	 * @return					Returns a list of all 
-	 * the regions (boxes, rows, and columns) of this 
-	 * target.
-	 */
-	public ArrayList<Region> getRegions(){
-		ArrayList<Region> returnList = new ArrayList<Region>();
-		
-		for(Box currentBlock : boxes)
-			returnList.add( (Region) currentBlock);
-		
-		for(Line currentRow : rows)
-			returnList.add( (Region) currentRow);
-		
-		for(Line currentColumn : columns)
-			returnList.add( (Region) currentColumn);
-		
-		return returnList;
-	}
-	
-	/**
-	 * Returns an array of the regions to which the parameter cell 
-	 * belongs in this target.
-	 * @param cell				The cell in this target for 
-	 * which its regions should be returned.
-	 * @return					Returns an array of the regions 
-	 * to which the parameter cell belongs in this target.
-	 */
-	public Region[] getRegions(Cell cell){
-		if(!contains(cell))
-			throw new IllegalArgumentException("That cell does not belong to this target.");
-		
-		Region[] returnArray = new Region[Cell.REGION_COUNT];
-		
-		returnArray[0] = cell.getBlock();
-		returnArray[1] = cell.getRow();
-		returnArray[2] = cell.getColumn();
-		
-		return returnArray;
-	}
-	
-	/**
-	 * Returns the cell at coordinates x,y in this target.
-	 * @param x					The x-coordinate of the cell
-	 * to be returned.
-	 * @param y					The y-coordinate of the cell
-	 * the be returned.
-	 * @return					Returns the cell at 
-	 * coordinates x,x in this target.
-	 */
-	public Cell getCell(Index x, Index y){
-		return cells[cellArrayIndexFromXY(x,y)];
-	}
-	
-	public Cell getCell(int x, int y){
-		return cells[cellArrayIndexFromXY(x,y)];
-	}
-	
-	/**
-	 * Returns the column from this target with the parameter index.
-	 * @param columnIndex		The index for which a column from this
-	 * target is to be returned.
-	 * @return					Returns the column from this target 
-	 * with the parameter index.
-	 */
-	public Line getColumn(Index columnIndex){
-		for( Line currentColumn : columns )
-			if( currentColumn.getIndex() == columnIndex )
-				return currentColumn;
-		throw new IllegalArgumentException("unknown column index");
-	}
-	
-	/**
-	 * Returns the row from this target with the parameter index.
-	 * @param rowIndex			The index for which a row from 
-	 * this target is to be returned..
-	 * @return					Returns the row from this target 
-	 * with the parameter index.
-	 */
-	public Line getRow(Index rowIndex){
-		for( Line currentRow : rows )
-			if( currentRow.getIndex() == rowIndex )
-				return currentRow;
-		throw new IllegalArgumentException("unknown row index");
-	}
-	
-	/**
-	 * Returns an array of all this target's boxes.
-	 * @return					Returns an array of all this 
-	 * target's boxes.
-	 */
-	public Box[] getBlocks(){
-		return boxes;
-	}
-	
-	/**
-	 * Returns the block from this target that has 
-	 * the parameter index.
-	 * @param blockIndex		The index for which 
-	 * a block is to be returned.
-	 * @return					Returns the block 
-	 * from this target that has the parameter index.
-	 */
-	public Box getBlock(Index blockIndex){
-		return boxes[ blockIndex.intValue() - 1];
-	}
-	
-	/* 
-	 * Returns a list of the cells that would be affected 
-	 * by setting the value in the parameter cell.
-	 * 
-	 * External code should use the neighbors() method 
-	 * in the Cell class on a cell instance.
-	 */
-	ArrayList<Cell> neighbors(Cell cell){
-		ArrayList<Cell> returnList = new ArrayList<Cell>();
-		
-		for( Region region : getRegions(cell) )
-			for( Cell currentCell : region.getCells())
-				if( !returnList.contains(currentCell) && currentCell != cell)
-					returnList.add(currentCell);
-		
-		return returnList;
-	}
-	
-	/**
-	 * Returns whether the parameter cell is contained 
-	 * in this target.
-	 * @param cell				The cell to be tested 
-	 * for membership in this target.
-	 * @return					Returns whether the 
-	 * parameter cell is contained in this target.
-	 */
-	public boolean contains(Cell cell){
-		for( int i = 0; i<cells.length; i++ )
-			if( cells[i] == cell )
-				return true;
-		return false;
-	}
-	
-	/**
-	 * Returns whether the target is solved.
-	 * @return					Returns whether the target is 
-	 * solved.
-	 */
 	public boolean isSolved(){
-		if(isSolved)
-			return isSolved;
-		
-		for(Cell currentCell : cells)
-			if(!currentCell.isSolved())
-				return isSolved;
-		
-		return isSolved = true;
+		return roles.size() == SIZE*SIZE;
 	}
 	
-	/*
-	 * Returns a String representation of all the possibilities 
-	 * of all the cells in the target, arranged in distinct cells 
-	 * and boxes, like a target itself.
-	 */
-	String possibilitiesAsString(){
+	//FIXME Remove regions whose symbols are localized from possibility lists of roles for other symbols in intersecting regions.
+	private void unifyAll(Symbol s, Index x, Index y){
+		Region col = getCol(x);
+		Region row = getRow(y);
 		
-		final String topLine = "\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2564\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2564\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2566\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2564\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2564\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2566\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2564\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2564\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557";
+		merge(getRole(s,row), getRole(s,col));
+	}
+	
+	public boolean merge(Role r1, Role r2){
+		if(r1.symbol() != r2.symbol()){
+			throw new IllegalArgumentException("Symbol mismatch: "+r1.symbol()+" != "+r2.symbol());
+		}
 		
-		final String cellBorder = "\u255F\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256B\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u256B\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253C\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2562";
+		if( r1.isRow() && r2.isCol() ){ //r1 and r2 are row and column roles
+			
+			return tripleJoin(r1,r2);
+			
+		} else if(r1.isCol() && r2.isRow()){ 
+			
+			return tripleJoin(r2,r1);
+			
+		} else{
+			int initSize = roles.size();
+			roles.remove(r1);
+			roles.remove(r2);
+			roles.add(new Role(r1,r2));
+			return initSize - roles.size() >= MIN_NET_REM_COUNT_FOR_SUCCESSFUL_MERGE;
+		}
+	}
+	
+	public static final int MIN_NET_REM_COUNT_FOR_SUCCESSFUL_MERGE = 1;
+	
+	private boolean tripleJoin(Role rowRole, Role colRole){
 		
-		final String blockBorder = "\u2560\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256A\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256A\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256C\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256A\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256A\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256C\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256A\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u256A\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2563";
+		Region row = rowRole.getRow();
+		Region col = colRole.getCol();
 		
-		final String bottomLine = "\u255A\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2567\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2567\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2569\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2567\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2567\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2569\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2567\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2567\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255D";
+		Index y = row.index();
+		Index x = col.index();
 		
-		final String blockEdge = "\u2551";
+		Role boxRole = getRole( rowRole.symbol(), getBox( Index.boxIndex(x,y) ) );
 		
-		final String cellEdge = "\u2502";
+		int initSize = roles.size();
+		roles.remove(boxRole);
+		roles.remove(rowRole);
+		roles.remove(colRole);
+		roles.add(new Role(rowRole, colRole, boxRole));
 		
-		final int FIRST_BLOCK_BOTTOM = 2;
-		final int SECOND_BLOCK_BOTTOM = 5;
-		
-		String returnString = topLine + "\n";
-		
-		for(int i=0; i<rows.length; i++){
-			returnString += rows[i].getPossibilitiesStringForEndDisplay(blockEdge, cellEdge);
-			if( i==rows.length-1 ){
-				returnString += bottomLine + "\n";
-			}
-			else if( i==FIRST_BLOCK_BOTTOM || i==SECOND_BLOCK_BOTTOM ){
-				returnString += blockBorder + "\n";
-			}
-			else{
-				returnString += cellBorder + "\n";
+		for(Symbol s : Symbol.values()){
+			if(s!=rowRole.symbol()){
+				Role r = getRole(s, row);
+				Role c = getRole(s, col);
+				differentiateRoles(r,c);
 			}
 		}
 		
-		return returnString;
+		return initSize - roles.size() >= MIN_NET_REM_COUNT_FOR_SUCCESSFUL_MERGE;
+	}
+	
+	private static List<Region> initColumns(Puzzle p){
+		List<Region> result = new ArrayList<>(SIZE);
+		for(Index i : Index.values()){
+			result.add(new Column(p,i));
+		}
+		return result;
+	}
+	
+	private static List<Region> initRows(Puzzle p){
+		List<Region> result = new ArrayList<>(SIZE);
+		for(Index i : Index.values()){
+			result.add(new Row(p,i));
+		}
+		return result;
+	}
+	
+	private static List<Region> initBoxes(Puzzle p){
+		List<Region> result = new ArrayList<>(SIZE);
+		for(Index i : Index.values()){
+			result.add(new Box(p,i));
+		}
+		return result;
+	}
+	
+	public List<Region> getRegions(){
+		return new ArrayList<>(regions);
+	}
+	
+	public List<Region> getBoxes(){
+		return new ArrayList<>(boxes);
+	}
+	
+	public List<Region> getRows(){
+		return new ArrayList<>(rows);
+	}
+	
+	public List<Region> getCols(){
+		return new ArrayList<>(columns);
 	}
 	
 	/**
-	 * Returns a String representation of the target, 
-	 * specifying the values of all the cells, arranged 
-	 * in rows and columns.
+	 * <p>alters the roles' internal lists of possible regions such that 
+	 * r1 and r2 are indicated to be {@link Sameness#DIFFERENT different} 
+	 * roles.</p>
+	 * @param r1
+	 * @param r2
 	 */
+	public boolean differentiateRoles(Role r1, Role r2){
+		boolean result = r2.setImpossibleRegions(r1.localizedRegions());
+		result |= r1.setImpossibleRegions(r2.localizedRegions());
+		return result;
+	}
+	
+	public List<Role> getRoles(){
+		return new ArrayList<>(roles);
+	}
+	
+	public Role getRole(Symbol s, Region r){
+		for(Role role : roles){
+			if( role.symbol()==s && role.hasRegion(r) ){
+				return role;
+			}
+		}
+		throw new IllegalStateException("No role found for that region.");
+	}
+	
+	private Region getReg(Index i, List<Region> regs, String type){
+		for(Region b : regs){
+			if(b.index()==i){
+				return b;
+			}
+		}
+		throw new IllegalStateException("No "+type+" found with that index.");
+	}
+	
+	public Region getCol(Index i){
+		return getReg(i, columns, "column");
+	}
+	
+	public Region getRow(Index i){
+		return getReg(i, rows, "row");
+	}
+	
+	public Region getBox(Index i){
+		return getReg(i, boxes, "box");
+	}
+	
+	public List<Region> boxesIntersecting(Region r){
+		if(boxes.contains(r)){
+			List<Region> result = new ArrayList<>(1);
+			result.add(r);
+			return result;
+		} else if(rows.contains(r)){
+			switch(r.index()){
+			case I1 : case I2 : case I3 : return boxes.subList(0,3);
+			case I4 : case I5 : case I6 : return boxes.subList(3,6);
+			default : return boxes.subList(6,9);
+			}
+		} else if(columns.contains(r)){
+			List<Region> result = new ArrayList<>();
+			switch(r.index()){
+			case I1 : case I2 : case I3 : 
+				result.add(getBox(Index.I1));
+				result.add(getBox(Index.I4));
+				result.add(getBox(Index.I7));
+				return result;
+			case I4 : case I5 : case I6 : 
+				result.add(getBox(Index.I2));
+				result.add(getBox(Index.I5));
+				result.add(getBox(Index.I8));
+				return result;
+			default : 
+				result.add(getBox(Index.I3));
+				result.add(getBox(Index.I6));
+				result.add(getBox(Index.I9));
+				return result;
+			}
+		} else{
+			throw new IllegalArgumentException("Region "+r.toString()+" is not contianed in this target.");
+		}
+	}
+	
+	public List<Region> colsIntersecting(Region r){
+		if(columns.contains(r)){
+			List<Region> result = new ArrayList<>(1);
+			result.add(r);
+			return result;
+		} else if(rows.contains(r)){
+			return new ArrayList<>(columns);
+		} else if(boxes.contains(r)){
+			switch(r.index()){
+			case I1 : case I4 : case I7 : return columns.subList(0,3); //FIXME ensure rows/columns are sorted when initialized
+			case I2 : case I5 : case I8 : return columns.subList(3,6);
+			default : return rows.subList(6,9);
+			}
+		} else{
+			throw new IllegalArgumentException("Region "+r.toString()+" is not contianed in this target.");
+		}
+	}
+	
+	public List<Region> rowsIntersecting(Region r){
+		if(rows.contains(r)){
+			List<Region> result = new ArrayList<>(1);
+			result.add(r);
+			return result;
+		} else if(columns.contains(r)){
+			return new ArrayList<>(rows);
+		} else if(boxes.contains(r)){
+			switch(r.index()){
+			case I1 : case I2 : case I3 : return rows.subList(0,3);
+			case I4 : case I5 : case I6 : return rows.subList(3,6);
+			default : return rows.subList(6,9);
+			}
+		} else{
+			throw new IllegalArgumentException("Region "+r.toString()+" is not contained in this target.");
+		}
+	}
+	
 	@Override
 	public String toString(){
-		StringBuilder returnString = new StringBuilder();
-		for(int y = Index.MINIMUM.intValue(); y <= Index.MAXIMUM.intValue(); y++){
-			returnString.append( cells[cellArrayIndexFromXY(Index.MINIMUM,Index.fromInt(y))].getValue().intValue() );
-			
-			for(int x = Index.MINIMUM.intValue()+1; x <= Index.MAXIMUM.intValue(); x++)
-				returnString.append(" ").append(cells[cellArrayIndexFromXY(Index.fromInt(x), Index.fromInt(y))].getValue().intValue());
-			
-			if(y != Index.MAXIMUM.intValue())
-				returnString.append("\n");
+		StringBuilder sb = new StringBuilder();
+		for(Region row : rows){
+			for(Region col : columns){
+				sb.append(printingText(row,col)).append(" ");
+			}
+			sb.append(System.getProperty("line.separator"));
 		}
-		return returnString.toString();
+		return sb.toString();
+	}
+	
+	private int printingText(Region row, Region col){
+		for(Symbol s : Symbol.values()){
+			if( getRole(s,row) == getRole(s,col) ){
+			//if( getRole(s,row).hasRegion(col) ){
+				return s.intValue();
+			}
+		}
+		return Symbol.NONE;
 	}
 }

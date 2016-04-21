@@ -1,122 +1,159 @@
 package sudoku;
 
-import common.ComboGen;
 import java.util.*;
 
-/**
- * Represents a technique for solving sudoku puzzles.
- * If there exists a set of N cells in a region (box, 
- * row, or column)  which together have a collective 
- * set of exactly N possible values, then no other 
- * cells in the region can hold any of those values.
- * @author fiveham
- */
-public class GroupLocalizationExternal extends Technique{
+import common.ComboGen;
+
+public class GroupLocalizationExternal extends Technique {
 	
-	/** Least number of cells that can be used to take action */
 	public static final int MIN_CELL_COUNT = 2;
-	
-	/** Greatest number of cells that can be used to take action */
-	public static final int MAX_CELL_COUNT = 7;
-	
-	/**
-	 * Constructor.
-	 * @param target				The sudoku target 
-	 * to which this instance of this solution 
-	 * technique pertains.
-	 */
-	public GroupLocalizationExternal(Puzzle puzzle){
+
+	public GroupLocalizationExternal(Puzzle puzzle) {
 		super(puzzle);
 	}
 	
-	/**
-	 * Looks in every region and looks at every validly 
-	 * sized combination of unsolved cells in that region
-	 * and checks them each for a combined set of possible
-	 * values the same size as the set of cells. If this 
-	 * is found, then check whether setting those values 
-	 * to impossible in the other cells in the region 
-	 * would change any possibility values. If some values 
-	 * would get changed, then set all the values in the 
-	 * current value set to impossible in all the cells 
-	 * in the region other than those in the current cell 
-	 * set.
-	 * @return					Returns whether any changes 
-	 * were made to the target as a result of this analysis.
-	 */
+	@Override
 	public boolean digest(){
-		boolean puzzleHasUpdated = false;
+		boolean result = false;
 		
-		if(puzzle.isSolved())
-			return puzzleHasUpdated;
+		if(puzzle.isSolved()){
+			return result;
+		}
 		
-		// iterate over the regions
-		for(Region currentRegion : puzzle.getRegions()){
+		for(Region region : puzzle.getRegions()){
 			
-			List<Cell> unsolveds = currentRegion.unsolvedCells();
+			List<Cell> regionCells = regionCells(region);
+			List<Cell> unsolvedCells = unsolvedCells(regionCells);
 			
-			if(unsolveds.size() >= MIN_CELL_COUNT)
-			// iterate over the properly sized combinations of unsolved cells
-				for( List<Cell> currentCombination : 
-						new ComboGen<>(unsolveds, 
-								inBounds(ComboGen.MIN_COMBO_SIZE, unsolveds.size(), MIN_CELL_COUNT), 
-								inBounds(ComboGen.MIN_COMBO_SIZE, unsolveds.size(), MAX_CELL_COUNT))){
-				
-					// check that the size of the combined set of candidate values
-					// from all the cells in the current combination is
-					// equal to the size of the current combination
-					// e.g. four cells with a total of four unassigned values
-					List<Value> values = getValuesSet(currentCombination);
+			if(unsolvedCells.size() >= MIN_CELL_COUNT){
+				ComboGen<Cell> combinationGenerator = new ComboGen<>(unsolvedCells, MIN_CELL_COUNT);
+				for(List<Cell> combo : combinationGenerator){
+					Set<Symbol> possibleSymbols = possibleSymbols(unsolvedCells);
 					
-					if(values.size() == currentCombination.size())
-						
-						// This seems to mean that propagation is in order
-						// (unless it wouldn't change any possibilities)
-						
-						// check that propagation would do something
-						//if( regionHasOtherCellsPossibleForValues(currentRegion, currentCombination, values) )
-						if( !currentCombination.equals(currentRegion.cellsPossibleForValues(values) ))
-							puzzleHasUpdated |= resolve(currentRegion, currentCombination, values);
+					if(possibleSymbols.size() == combo.size()){
+						result |= resolve(regionCells, combo, possibleSymbols);
+					}
+				}
+			}
+			
+		}
+		
+		return result;
+	}
+	
+	private boolean resolve(List<Cell> regionCells, List<Cell> combo, Set<Symbol> symbols){
+		boolean retVal = false;
+		
+		for(Cell currentRegionCell : regionCells){
+			if(!combo.contains(currentRegionCell)){
+				for(Symbol s : symbols){
+					Role r1 = puzzle.getRole(s, currentRegionCell.col);
+					Role r2 = puzzle.getRole(s, currentRegionCell.row);
+					retVal |= puzzle.differentiateRoles(r1, r2);
+				}
 			}
 		}
-		return puzzleHasUpdated;
+		
+		return retVal;
 	}
 	
-	/*
-	 * Returns a list of all the values that are possible 
-	 * values of the cells from a parameter cell list.
-	 */
-	private List<Value> getValuesSet(List<Cell> cells){
-		List<Value> allValues = new ArrayList<Value>();
+	private Set<Symbol> possibleSymbols(List<Cell> cells){
+		Set<Symbol> union = new HashSet<>(9);
 		
-		for( int i=0; i<cells.size(); i++ ){
-			Cell currentCell = cells.get(i);
-			for(Value currentValue : Value.KNOWN_VALUES)
-				if(currentCell.isPossibleValue(currentValue))
-					allValues.add(currentValue);
+		for(Cell c : cells){
+			union.addAll(c.possibleSymbols());
 		}
 		
-		return allValues;
+		return union;
 	}
 	
-	/*
-	 * Marks all the values in the values list as impossible 
-	 * in each of the cells in the cells list.
-	 * 
-	 * Returns whether any changes were made.
-	 */
-	private static boolean resolve(Region region, List<Cell> cells, List<Value> values){
-		boolean returnValue = false;
+	private List<Cell> regionCells(Region region){
+		List<Cell> cells = new ArrayList<>(9);
 		
-		// iterate over the cells in the region other than 
-		// those in the cells list
-		for(Cell currentCell : region.getCells())
-			if(!cells.contains(currentCell))
+		List<Region> rows = puzzle.rowsIntersecting(region);
+		List<Region> cols = puzzle.colsIntersecting(region);
+		
+		for(Region row : rows){
+			for(Region col : cols){
+				cells.add( new Cell((Row) row, (Column) col) );
+			}
+		}
+		
+		return cells;
+	}
+	
+	/*private List<Cell> unsolvedCells(Region region){
+		return unsolvedCells(regionCells(region));
+	}*/
+	
+	private List<Cell> unsolvedCells(List<Cell> regionCells){
+		List<Cell> retVal = new ArrayList<>(regionCells.size());
+		for(Cell c : regionCells){
+			if(!c.isSolved()){
+				retVal.add(c);
+			}
+		}
+		return retVal;
+	}
+	
+	/*private List<Role> unlocalizedRoles(Region region){
+		List<Role> result = target.getRolesFor(region);
+		
+		for(int i=result.size()-1; i>=0; --i){
+			Role item = result.get(i);
+			if(item.isBox() && item.isRow() && item.isCol()){
+				result.remove(i);
+			}
+		}
+		
+		return result;
+	}*/
+	
+	public class Cell{
+		Row row;
+		Column col;
+		
+		public Cell(Row row, Column col){
+			this.row = row;
+			this.col = col;
+		}
+		
+		public boolean isSolved(){
+			return possibleSymbols().size() == 1;
+		}
+		
+		public Set<Symbol> possibleSymbols(){
+			Set<Symbol> retVal = new HashSet<>(Symbol.values().length);
+			
+			for(Symbol s : Symbol.values()){
+				Role rowRole = puzzle.getRole(s, row);
+				Role colRole = puzzle.getRole(s, col);
 				
-				// mark all the entries in the values list
-				// as impossible in the current cell
-				for(Value currentValue : values)
-					returnValue |= currentCell.setValueImpossible(currentValue);
-		return returnValue;
+				int successCount = 0;
+				if(rowRole.hasPossCol(col)){
+					++successCount;
+				}
+				if(colRole.hasPossRow(row)){
+					++successCount;
+				}
+				
+				switch(successCount){
+				case 2 : retVal.add(s);
+				case 0 : break;
+				default : throw new IllegalStateException("Inconsistent row/col possibilities.");
+				}
+			}
+			
+			return retVal;
+		}
+		
+		public void setImpossibleSymbol(Symbol s){
+			Puzzle p = row.puzzle;
+			
+			Role rowRole = p.getRole(s, row);
+			Role colRole = p.getRole(s, col);
+			
+			p.differentiateRoles(rowRole,colRole);
+		}
 	}
 }

@@ -45,7 +45,7 @@ public abstract class Technique {
 		return puzzle;
 	}
 	
-	/**
+	/* *
 	 * Returns whether the parameter cells are considered
 	 * to connect for the purposes of the technique.
 	 * 
@@ -54,18 +54,9 @@ public abstract class Technique {
 	 * @param cell2			Second cell
 	 * @return 				Returns whether the parameter cells are considered
 	 * to connect for the purposes of the technique.
-	 */
+	 * /
 	public boolean connect(Cell cell1, Cell cell2){
 		return false;
-	}
-	
-	public static int inBounds(int lowerBound, int value, int upperBound){
-		if(value < lowerBound){
-			return lowerBound;
-		} else if(value > upperBound){
-			return upperBound;
-		} else{
-			return value;
-		}
-	}
+	}/**/
 }
+
