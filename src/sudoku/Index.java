@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
-public enum Index{
+public enum Index implements SudokuEnum{
 	
 	I1,I2,I3,I4,I5,I6,I7,I8,I9;
 	
@@ -32,6 +32,7 @@ public enum Index{
 		return values()[i-1];
 	}
 	
+	@Override
 	public int intValue(){
 		return ordinal()+1;
 	}

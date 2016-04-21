@@ -1,18 +1,28 @@
 package sudoku;
 
-import java.util.*;
-import java.io.*;
+import common.Pair;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
+import java.util.Set;
+import java.util.function.Predicate;
+import java.util.function.Function;
 
 public class Puzzle {
 	
-	public static final int SIZE = 9;
+	public static final int MAGNITUDE = 3;
+	public static final int SIDE_LENGTH = MAGNITUDE*MAGNITUDE;
 	
-	private List<Region> columns;
-	private List<Region> rows;
-	private List<Region> boxes;
-	private List<Region> regions;
+	private SpaceMap claims;
 	
-	private List<Role> roles;
+	private List<FactBag> factbags = new ArrayList<>();
+
+	private List<Resolvable> tasks;
 	
 	public Puzzle(File f) throws FileNotFoundException{
 		this(new Scanner(f));
@@ -23,288 +33,424 @@ public class Puzzle {
 	}
 	
 	public Puzzle(Scanner s){
-		columns = initColumns(this);
-		columns.sort(null);
+		this.claims = new SpaceMap(SIDE_LENGTH);
+		List<Claim> cellValues = parseText(s, claims);
+		s.close();
 		
-		rows = initRows(this);
-		rows.sort(null);
+		this.tasks = new ArrayList<>();
+		this.factbags = new ArrayList<FactBag>();
+		populateFactbags();
 		
-		boxes = initBoxes(this);
-		boxes.sort(null);
-		
-		regions = new ArrayList<>();
-		regions.addAll(columns);
-		regions.addAll(rows);
-		regions.addAll(boxes);
-		
-		roles = new ArrayList<>(SIZE*SIZE*3);
-		for(Symbol symbol : Symbol.values()){
-			for(Region r : regions){
-				roles.add(new Role(symbol, r));
-			}
+		for(Claim c : cellValues){
+			c.setTrue_ONLY_Puzzle_AND_Resolvable_MAY_CALL_THIS_METHOD();
 		}
 		
-		for(Index y : Index.values()){
-			for(Index x : Index.values()){
-				int value = s.nextInt();
-				if(value != Symbol.NONE){
-					Symbol symbol = Symbol.fromInt(value);
-					unifyAll(symbol, x, y);
-				}
-			}
+		while( !tasks.isEmpty() ){
+			resolveTasks();
 		}
 	}
 	
-	public List<Role> getRolesFor(Region r){
-		List<Role> result = new ArrayList<>();
-		for(Role role : roles){
-			if(role.hasRegion(r)){
-				result.add(role);
+	public SpaceMap claims(){
+		return claims;
+	}
+	
+	public List<FactBag> getFactbags(){
+		return new ArrayList<>(factbags);
+	}
+	
+	/**
+	 * Returns a set of pairs of FactBags, each of which represents an existing 
+	 * intersection (overlap) between two factbags in this target.
+	 * @return
+	 */
+	public Set<Pair<FactBag,FactBag>> getFactBagIntersections(){
+		Set<Pair<FactBag,FactBag>> result = new HashSet<Pair<FactBag,FactBag>>();
+		for(FactBag currentFactBag : factbags){
+			for(Claim currentClaim : currentFactBag){
+				for(FactBag claimOwner : currentClaim.getOwners()){
+					if( claimOwner != currentFactBag ){
+						result.add( new Pair<FactBag,FactBag>(currentFactBag, claimOwner) );
+					}
+				}
 			}
 		}
 		return result;
 	}
 	
 	public boolean isSolved(){
-		return roles.size() == SIZE*SIZE;
-	}
-	
-	//FIXME Remove regions whose symbols are localized from possibility lists of roles for other symbols in intersecting regions.
-	private void unifyAll(Symbol s, Index x, Index y){
-		Region col = getCol(x);
-		Region row = getRow(y);
-		
-		merge(getRole(s,row), getRole(s,col));
-	}
-	
-	public boolean merge(Role r1, Role r2){
-		if(r1.symbol() != r2.symbol()){
-			throw new IllegalArgumentException("Symbol mismatch: "+r1.symbol()+" != "+r2.symbol());
+		for(FactBag bag : factbags){
+			if(bag.size() != FactBag.SIZE_WHEN_SOLVED){
+				return false;
+			}
 		}
 		
-		if( r1.isRow() && r2.isCol() ){ //r1 and r2 are row and column roles
-			
-			return tripleJoin(r1,r2);
-			
-		} else if(r1.isCol() && r2.isRow()){ 
-			
-			return tripleJoin(r2,r1);
-			
-		} else{
-			int initSize = roles.size();
-			roles.remove(r1);
-			roles.remove(r2);
-			roles.add(new Role(r1,r2));
-			return initSize - roles.size() >= MIN_NET_REM_COUNT_FOR_SUCCESSFUL_MERGE;
-		}
+		return true;
 	}
 	
-	public static final int MIN_NET_REM_COUNT_FOR_SUCCESSFUL_MERGE = 1;
+	public Claim getClaimAt(Puzzle.Dimension dim1, Puzzle.Dimension dim2, Puzzle.Dimension heldConstant){
+		Index x = decodeX(dim1, dim2, heldConstant);
+		Index y = decodeY(dim1, dim2, heldConstant);
+		Symbol s = decodeSymbol(dim1, dim2, heldConstant);
+		
+		return claims.get(x, y, s);
+	}
 	
-	private boolean tripleJoin(Role rowRole, Role colRole){
+	public static Index decodeX(Puzzle.Dimension... dims){
+		return (Index) decodeDim((d) -> d.contributionX(), (i) -> Index.fromInt(i), dims);
+	}
+	
+	public static Index decodeY(Puzzle.Dimension... dims){
+		return (Index) decodeDim((d) -> d.contributionY(), (i) -> Index.fromInt(i), dims);
+	}
+	
+	public static Symbol decodeSymbol(Puzzle.Dimension... dims){
+		return (Symbol) decodeDim((d) -> d.contributionZ(), (i) -> Symbol.fromInt(i), dims);
+	}
+	
+	public static final int DIMENSION_COUNT = 3;
+	
+	private static SudokuEnum decodeDim( Function<Puzzle.Dimension,Integer> contrib, 
+			Function<Integer,? extends SudokuEnum> fromInt, 
+			Puzzle.Dimension[] dims){
+		if(dims.length != DIMENSION_COUNT){
+			throw new IllegalArgumentException("Need 3 dimensions, but "+dims.length+" were provided");
+		}
 		
-		Region row = rowRole.getRow();
-		Region col = colRole.getCol();
+		int score = 0;
+		for(Puzzle.Dimension dim : dims){
+			score += contrib.apply(dim);
+		}
 		
-		Index y = row.index();
-		Index x = col.index();
+		return fromInt.apply(score);
+	}
+	
+	private void populateFactbags(){
 		
-		Role boxRole = getRole( rowRole.symbol(), getBox( Index.boxIndex(x,y) ) );
+		for(Region region : Region.values()){
+			
+			for(Dimension dimA : region.dimA()){
+				for(Dimension dimB : region.dimB()){
+					
+					FactBag regionBag = new FactBag(this, region, Region.SIZE_OF_A_REGION, region.boundingBox(dimA, dimB));
+					for(Dimension dimC : region.dimC()){
+						regionBag.add( getClaimAt(dimA, dimB, dimC) );
+					}
+					//region.factBagReference.apply(this).add(regionBag);
+					factbags.add(regionBag);
+				}
+			}
+			
+		}
 		
-		int initSize = roles.size();
-		roles.remove(boxRole);
-		roles.remove(rowRole);
-		roles.remove(colRole);
-		roles.add(new Role(rowRole, colRole, boxRole));
+		/*//fact bags for cells
+		for(IndexValue y : IndexValue.values()){
+			for(IndexValue x : IndexValue.values()){
+				Rule cell = new Rule(Symbol.values().length);
+				for(Symbol s : Symbol.values()){
+					cell.add( claims.get(x, y, s) );
+				}
+				factbagsCell.add(cell);
+			}
+		}
 		
+		//fact bags for rows
 		for(Symbol s : Symbol.values()){
-			if(s!=rowRole.symbol()){
-				Role r = getRole(s, row);
-				Role c = getRole(s, col);
-				differentiateRoles(r,c);
+			for(IndexValue y : IndexValue.values()){
+				Rule row = new Rule(IndexValue.values().length);
+				for(IndexValue x : IndexValue.values()){
+					row.add( claims.get(x, y, s) );
+				}
+				factbagsRow.add(row);
 			}
 		}
 		
-		return initSize - roles.size() >= MIN_NET_REM_COUNT_FOR_SUCCESSFUL_MERGE;
+		//fact bags for columns
+		for(Symbol s : Symbol.values()){
+			for(IndexValue x : IndexValue.values()){
+				Rule col = new Rule(IndexValue.values().length);
+				for(IndexValue y : IndexValue.values()){
+					col.add( claims.get(x, y, s) );
+				}
+				factbagsCol.add(col);
+			}
+		}
+		
+		//fact bags for boxes
+		for(Symbol s : Symbol.values()){
+			for(IndexValue i : IndexValue.values()){
+				int xLo = boxLowX(i);
+				int yLo = boxLowY(i);
+				int xHi = xLo + MAGNITUDE;
+				int yHi = yLo + MAGNITUDE;
+				
+				Rule box = new Rule(MAGNITUDE*MAGNITUDE);
+				
+				for(int j = xLo; j<xHi; ++j){
+					IndexValue boxX = IndexValue.fromInt(j);
+					for(int k = yLo; k<yHi; ++k){
+						IndexValue boxY = IndexValue.fromInt(k);
+						box.add(claims.get(boxX, boxY, s));
+					}
+				}
+				
+				factbagsBox.add(box);
+			}
+		}*/
+		
+		/*for(List<Rule> bagList : listOfListsOfbags){
+			factbags.addAll(bagList);
+		}*/
 	}
 	
-	private static List<Region> initColumns(Puzzle p){
-		List<Region> result = new ArrayList<>(SIZE);
-		for(Index i : Index.values()){
-			result.add(new Column(p,i));
+	void registerResolvable(Resolvable res){
+		tasks.add(res);
+	}
+	
+	boolean resolveTasks(){
+		boolean result = false;
+		for(Resolvable r : new ArrayList<>(tasks)){
+			r.resolve();
+			tasks.remove(r);
 		}
 		return result;
-	}
-	
-	private static List<Region> initRows(Puzzle p){
-		List<Region> result = new ArrayList<>(SIZE);
-		for(Index i : Index.values()){
-			result.add(new Row(p,i));
-		}
-		return result;
-	}
-	
-	private static List<Region> initBoxes(Puzzle p){
-		List<Region> result = new ArrayList<>(SIZE);
-		for(Index i : Index.values()){
-			result.add(new Box(p,i));
-		}
-		return result;
-	}
-	
-	public List<Region> getRegions(){
-		return new ArrayList<>(regions);
-	}
-	
-	public List<Region> getBoxes(){
-		return new ArrayList<>(boxes);
-	}
-	
-	public List<Region> getRows(){
-		return new ArrayList<>(rows);
-	}
-	
-	public List<Region> getCols(){
-		return new ArrayList<>(columns);
-	}
-	
-	/**
-	 * <p>alters the roles' internal lists of possible regions such that 
-	 * r1 and r2 are indicated to be {@link Sameness#DIFFERENT different} 
-	 * roles.</p>
-	 * @param r1
-	 * @param r2
-	 */
-	public boolean differentiateRoles(Role r1, Role r2){
-		boolean result = r2.setImpossibleRegions(r1.localizedRegions());
-		result |= r1.setImpossibleRegions(r2.localizedRegions());
-		return result;
-	}
-	
-	public List<Role> getRoles(){
-		return new ArrayList<>(roles);
-	}
-	
-	public Role getRole(Symbol s, Region r){
-		for(Role role : roles){
-			if( role.symbol()==s && role.hasRegion(r) ){
-				return role;
-			}
-		}
-		throw new IllegalStateException("No role found for that region.");
-	}
-	
-	private Region getReg(Index i, List<Region> regs, String type){
-		for(Region b : regs){
-			if(b.index()==i){
-				return b;
-			}
-		}
-		throw new IllegalStateException("No "+type+" found with that index.");
-	}
-	
-	public Region getCol(Index i){
-		return getReg(i, columns, "column");
-	}
-	
-	public Region getRow(Index i){
-		return getReg(i, rows, "row");
-	}
-	
-	public Region getBox(Index i){
-		return getReg(i, boxes, "box");
-	}
-	
-	public List<Region> boxesIntersecting(Region r){
-		if(boxes.contains(r)){
-			List<Region> result = new ArrayList<>(1);
-			result.add(r);
-			return result;
-		} else if(rows.contains(r)){
-			switch(r.index()){
-			case I1 : case I2 : case I3 : return boxes.subList(0,3);
-			case I4 : case I5 : case I6 : return boxes.subList(3,6);
-			default : return boxes.subList(6,9);
-			}
-		} else if(columns.contains(r)){
-			List<Region> result = new ArrayList<>();
-			switch(r.index()){
-			case I1 : case I2 : case I3 : 
-				result.add(getBox(Index.I1));
-				result.add(getBox(Index.I4));
-				result.add(getBox(Index.I7));
-				return result;
-			case I4 : case I5 : case I6 : 
-				result.add(getBox(Index.I2));
-				result.add(getBox(Index.I5));
-				result.add(getBox(Index.I8));
-				return result;
-			default : 
-				result.add(getBox(Index.I3));
-				result.add(getBox(Index.I6));
-				result.add(getBox(Index.I9));
-				return result;
-			}
-		} else{
-			throw new IllegalArgumentException("Region "+r.toString()+" is not contianed in this target.");
-		}
-	}
-	
-	public List<Region> colsIntersecting(Region r){
-		if(columns.contains(r)){
-			List<Region> result = new ArrayList<>(1);
-			result.add(r);
-			return result;
-		} else if(rows.contains(r)){
-			return new ArrayList<>(columns);
-		} else if(boxes.contains(r)){
-			switch(r.index()){
-			case I1 : case I4 : case I7 : return columns.subList(0,3); //FIXME ensure rows/columns are sorted when initialized
-			case I2 : case I5 : case I8 : return columns.subList(3,6);
-			default : return rows.subList(6,9);
-			}
-		} else{
-			throw new IllegalArgumentException("Region "+r.toString()+" is not contianed in this target.");
-		}
-	}
-	
-	public List<Region> rowsIntersecting(Region r){
-		if(rows.contains(r)){
-			List<Region> result = new ArrayList<>(1);
-			result.add(r);
-			return result;
-		} else if(columns.contains(r)){
-			return new ArrayList<>(rows);
-		} else if(boxes.contains(r)){
-			switch(r.index()){
-			case I1 : case I2 : case I3 : return rows.subList(0,3);
-			case I4 : case I5 : case I6 : return rows.subList(3,6);
-			default : return rows.subList(6,9);
-			}
-		} else{
-			throw new IllegalArgumentException("Region "+r.toString()+" is not contained in this target.");
-		}
 	}
 	
 	@Override
 	public String toString(){
-		StringBuilder sb = new StringBuilder();
-		for(Region row : rows){
-			for(Region col : columns){
-				sb.append(printingText(row,col)).append(" ");
+		StringBuilder result = new StringBuilder();
+		
+		for(Index y : Index.values()){
+			for(Index x : Index.values()){
+				result.append( claims.getValue(x,y) ).append(" ");
 			}
-			sb.append(System.getProperty("line.separator"));
+			
+			result.append(System.getProperty("line.separator"));
 		}
-		return sb.toString();
+		
+		return result.toString();
 	}
 	
-	private int printingText(Region row, Region col){
-		for(Symbol s : Symbol.values()){
-			if( getRole(s,row) == getRole(s,col) ){
-			//if( getRole(s,row).hasRegion(col) ){
-				return s.intValue();
+	public static final int MIN_COORD_FIRST_HOUSE = 1;
+	public static final int MIN_COORD_SECOND_HOUSE = 4;
+	public static final int MIN_COORD_THIRD_HOUSE = 7;
+	
+	public static Index boxIndex(Index x, Index y){
+		int xInt = x.intValue()-1;
+		int yInt = y.intValue()-1;
+		
+		xInt /= MAGNITUDE;
+		yInt /= MAGNITUDE;
+		yInt *= MAGNITUDE;
+		
+		return Index.fromInt( xInt + yInt + 1 );
+	}
+	
+	public static int boxLowX(Index boxIndex){
+		switch(boxIndex){
+		case I1 : case I4 : case I7 : return MIN_COORD_FIRST_HOUSE;
+		case I2 : case I5 : case I8 : return MIN_COORD_SECOND_HOUSE;
+		default : return MIN_COORD_THIRD_HOUSE;
+		}
+	}
+	
+	public static int boxLowY(Index boxIndex){
+		switch(boxIndex){
+		case I1 : case I2 : case I3 : return MIN_COORD_FIRST_HOUSE;
+		case I4 : case I5 : case I6 : return MIN_COORD_SECOND_HOUSE;
+		default : return MIN_COORD_THIRD_HOUSE;
+		}
+	}
+	
+	public static List<Claim> parseText(Scanner s, SpaceMap claims){
+		List<Claim> knownTrueClaims = new ArrayList<>();
+		
+		for(Index y : Index.values()){
+			for(Index x : Index.values()){
+				String item;
+				try{
+					item = s.next();
+				} catch(NoSuchElementException e){
+					throw new IllegalArgumentException("Fewer than "+Index.values().length * Index.values().length+" tokens in source text", e);
+				}
+				int equiv;
+				try{
+					equiv = Integer.parseInt(item);
+				} catch(NumberFormatException e){
+					throw new IllegalArgumentException("Illegal sudoku symbol in first 81 tokens of source text", e);
+				}
+				
+				if(equiv != Symbol.NONE){ //TODO account for numbers too large
+					//knownTrueClaims.add( new Claim(x,y,Symbol.fromInt(equiv)) );
+					knownTrueClaims.add( claims.get(x, y, Symbol.fromInt(equiv)) );
+				}
 			}
 		}
-		return Symbol.NONE;
+		
+		return knownTrueClaims;
+	}
+	
+	public Collection<FactBag> factBagsWhere(Predicate<FactBag> p){
+		List<FactBag> result = new ArrayList<>();
+		for(FactBag bag : factbags){
+			if(p.test(bag)){
+				result.add(bag);
+			}
+		}
+		return result;
+	}
+	
+	public static enum Region{
+		CELL	(Dimension.Type.Y, 		Dimension.Type.X, 	Dimension.Type.SYMBOL), 
+		BOX		(Dimension.Type.SYMBOL, Dimension.Type.BOX,	Dimension.Type.CELL_ID_IN_BOX), 
+		ROW		(Dimension.Type.SYMBOL, Dimension.Type.Y, 	Dimension.Type.X),
+		COLUMN	(Dimension.Type.SYMBOL, Dimension.Type.X, 	Dimension.Type.Y);
+		
+		public static final int SIZE_OF_A_REGION = 9;
+		
+		private List<Dimension> dimAList;
+		private List<Dimension> dimBList;
+		private List<Dimension> dimCList;
+		
+		private Region(Dimension.Type dimA, Dimension.Type dimB, Dimension.Type dimC/*, Function<Puzzle,List<Rule>> factBagReference*/){
+			this.dimAList = dimA.valuesOfPertinentSudokuEnumAsDims();
+			this.dimBList = dimB.valuesOfPertinentSudokuEnumAsDims();
+			this.dimCList = dimC.valuesOfPertinentSudokuEnumAsDims();
+		}
+		
+		public FactBag.BoundingBox boundingBox(Dimension dimA, Dimension dimB){
+			Index x = decodeX(dimA, dimB);
+			Index y = decodeY(dimA, dimB);
+			Symbol s = decodeSymbol(dimA, dimB);
+			switch(this){
+			case CELL : 
+				x = decodeX(dimA, dimB);
+				y = decodeY(dimA, dimB);
+				return new FactBag.BoundingBox(x, x, y, y, Symbol.S1, Symbol.S9);
+			case BOX : 
+				x = decodeX(dimA, dimB);
+				y = decodeY(dimA, dimB);
+				s = decodeSymbol(dimA, dimB);
+				return new FactBag.BoundingBox(x, Index.fromInt(x.intValue()+MAGNITUDE-1), y, Index.fromInt(y.intValue()+MAGNITUDE-1), s, s);
+			case ROW : 
+				y = decodeY(dimA, dimB);
+				s = decodeSymbol(dimA, dimB);
+				return new FactBag.BoundingBox(Index.I1, Index.I9, y, y, s, s);
+			case COLUMN : default : 
+				x = decodeX(dimA, dimB);
+				s = decodeSymbol(dimA, dimB);
+				return new FactBag.BoundingBox(x, x, Index.I1, Index.I9, s, s);
+			}
+		}
+		
+		public List<Dimension> dimA(){
+			return new ArrayList<>(dimAList);
+		}
+		
+		public List<Dimension> dimB(){
+			return new ArrayList<>(dimBList);
+		}
+		
+		public List<Dimension> dimC(){
+			return new ArrayList<>(dimCList);
+		}
+	}
+	
+	public static class Dimension{
+		
+		private Type type;
+		private SudokuEnum val;
+		
+		public Dimension(Type type, SudokuEnum val){
+			this.type = type;
+			this.val = val;
+		}
+		
+		public Dimension(Type type, int val){
+			this.type = type;
+			this.val = type.getSudokuEnumFromInt(val);
+		}
+		
+		@Override
+		public boolean equals(Object o){
+			if(o instanceof Dimension){
+				Dimension d = (Dimension) o;
+				return d.type.equals(type) && d.val.equals(val);
+			}
+			return false;
+		}
+		
+		public Type getType(){
+			return type;
+		}
+		
+		public int contributionX(){
+			return type.contribX.apply(val);
+		}
+		
+		public int contributionY(){
+			return type.contribY.apply(val);
+		}
+		
+		public int contributionZ(){
+			return type.contribZ.apply(val);
+		}
+		
+		public static final Function<SudokuEnum,Integer> ZERO            = (i) -> 0;
+		public static final Function<SudokuEnum,Integer> INT_VALUE       = (i) -> i.intValue();
+		public static final Function<SudokuEnum,Integer> X_POS_COMP_CELL = (i) -> (i.intValue()%MAGNITUDE+1);
+		public static final Function<SudokuEnum,Integer> Y_POS_COMP_CELL = (i) -> (i.intValue()/MAGNITUDE+1);
+		public static final Function<SudokuEnum,Integer> X_POS_COMP_BOX  = (i) -> (i.intValue()%MAGNITUDE)*MAGNITUDE;
+		public static final Function<SudokuEnum,Integer> Y_POS_COMP_BOX  = (i) -> (i.intValue()/MAGNITUDE)*MAGNITUDE;
+		
+		public enum Type{
+			X				(INT_VALUE,       ZERO,            ZERO, 	  SudokuEnum.RegisteredType.INDEX),
+			Y				(ZERO,            INT_VALUE,       ZERO, 	  SudokuEnum.RegisteredType.INDEX),
+			SYMBOL			(ZERO,            ZERO,            INT_VALUE, SudokuEnum.RegisteredType.SYMBOL),
+			BOX				(X_POS_COMP_BOX,  Y_POS_COMP_BOX,  ZERO, 	  SudokuEnum.RegisteredType.INDEX), 
+			CELL_ID_IN_BOX	(X_POS_COMP_CELL, Y_POS_COMP_CELL, ZERO, 	  SudokuEnum.RegisteredType.INDEX);
+		
+		/*public static final Function<SudokuEnum,Integer> ZERO = (i) -> 0;
+		public static final Function<SudokuEnum,Integer> INT_VALUE = (i) -> i.intValue();
+		public static final Function<SudokuEnum,Integer> X_POS_COMP = (i) -> boxLowX((IndexValue) i);
+		public static final Function<SudokuEnum,Integer> Y_POS_COMP = (i) -> boxLowY((IndexValue) i);
+		
+		public enum DimensionType{
+			X				( INT_VALUE,                    ZERO,                         ZERO, 	 SudokuEnum.RegisteredType.INDEX),
+			Y				( ZERO,                         INT_VALUE,                    ZERO, 	 SudokuEnum.RegisteredType.INDEX),
+			SYMBOL			( ZERO,                         ZERO,                         INT_VALUE, SudokuEnum.RegisteredType.SYMBOL),
+			BOX				( X_POS_COMP,                   Y_POS_COMP,                   ZERO, 	 SudokuEnum.RegisteredType.INDEX), 
+			CELL_ID_IN_BOX	( (i) -> X_POS_COMP.apply(i)-1, (i) -> Y_POS_COMP.apply(i)-1, ZERO, 	 SudokuEnum.RegisteredType.INDEX);*/
+			
+			private Function<SudokuEnum,Integer> contribX;
+			private Function<SudokuEnum,Integer> contribY;
+			private Function<SudokuEnum,Integer> contribZ;
+			private SudokuEnum.RegisteredType usedEnum;
+			
+			private Type(Function<SudokuEnum,Integer> contribX, Function<SudokuEnum,Integer> contribY, Function<SudokuEnum,Integer> contribZ, SudokuEnum.RegisteredType usedEnum){
+				this.contribX = contribX;
+				this.contribY = contribY;
+				this.contribZ = contribZ;
+				this.usedEnum = usedEnum;
+			}
+			
+			public SudokuEnum getSudokuEnumFromInt(int val){
+				return this.usedEnum.fromInt(val);
+			}
+			
+			public SudokuEnum[] valuesOfPertinentSudokuEnum(){
+				return usedEnum.referencedValues();
+			}
+			
+			public List<Dimension> valuesOfPertinentSudokuEnumAsDims(){
+				SudokuEnum[] enumVals = valuesOfPertinentSudokuEnum();
+				List<Dimension> result = new ArrayList<>(enumVals.length);
+				
+				for(SudokuEnum se : enumVals){
+					result.add( new Dimension(this,se) );
+				}
+				
+				return result;
+			}
+		}
 	}
 }

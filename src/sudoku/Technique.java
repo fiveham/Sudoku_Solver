@@ -33,7 +33,11 @@ public abstract class Technique {
 	 * @return				Returns whether any changes were made
 	 * to the underlying target.
 	 */
-	public abstract boolean digest();
+	final public boolean digest(){
+		return puzzle.isSolved() ? false : process();
+	}
+	
+	public abstract boolean process();
 	
 	/**
 	 * Returns a reference to the target to which this instance of 
@@ -59,4 +63,5 @@ public abstract class Technique {
 		return false;
 	}/**/
 }
+
 

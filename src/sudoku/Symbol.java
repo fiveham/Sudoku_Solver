@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
-public enum Symbol{
+public enum Symbol implements SudokuEnum{
 	
 	S1,S2,S3,S4,S5,S6,S7,S8,S9;
 	
@@ -16,6 +16,7 @@ public enum Symbol{
 		return values()[src-1];
 	}
 	
+	@Override
 	public int intValue(){
 		return ordinal();
 	}
