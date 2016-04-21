@@ -4,12 +4,14 @@ import sudoku.Claim;
 import sudoku.FalsifiedTime;
 import sudoku.Puzzle;
 import sudoku.Puzzle.IndexInstance;
+import sudoku.SolutionEvent;
 import sudoku.Solver;
 import common.graph.Graph;
 import common.graph.BasicGraph;
 import common.graph.Wrap;
 import common.time.Time;
-
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,7 +56,7 @@ public class PuzzleVizApp extends Application {
     }
 	
 	@Override
-	public void start(Stage primaryStage) throws Exception {
+	public void start(Stage primaryStage) throws Exception{
 		primaryStage.setResizable(false);
 		
 		Puzzle puzzle = createAndSolvePuzzle();
@@ -433,7 +435,7 @@ public class PuzzleVizApp extends Application {
 	
 	private Timeline genTimeline(Group voxelModels, Puzzle puzzle){
 		List<Frame1> overall = new ArrayList<>(puzzle.timeBuilder().children().size());
-		for(FalsifiedTime trunk : puzzle.timeBuilder().children().stream().filter((t)->t instanceof FalsifiedTime).map((t)->(FalsifiedTime)t).collect(Collectors.toList())){
+		for(FalsifiedTime trunk : falsifiedTimeChildren(puzzle.timeBuilder().children())){
 			overall.add(new Frame1(trunk));
 		}
 		
@@ -443,7 +445,7 @@ public class PuzzleVizApp extends Application {
 		for(Frame1 f1 : overall){
 			for(Frame2 f2 : f1.frames){
 				for(FalsifiedTime ft : f2.automaticEvents){
-					timelines.add(genTimelineForAutoEvent(ft, modelHandler));
+					timelines.add(genTimelineForAutoEvent(ft.falsified(), modelHandler));
 				}
 			}
 		}
@@ -507,34 +509,22 @@ public class PuzzleVizApp extends Application {
 		return first;
 	}
 	
-	private Timeline genTimelineForAutoEvent(FalsifiedTime ft, Map<Claim,List<VoxelModel>> modelHandler){
+	@Deprecated
+	private Timeline genTimelineForAutoEvent(/*FalsifiedTime ft,*/Set<Claim> falsified, Map<Claim,List<VoxelModel>> modelHandler){
 		final Timeline result = new Timeline();
 		
-		for(Claim c : ft.falsified()){
+		for(Claim c : /*ft.*/falsified/*()*/){
 			for(VoxelModel vm : modelHandler.get(c)){
 				result.getKeyFrames().addAll(vm.disoccupy());
 			}
 		}
 		
-		Set<BagModel> affectedBags = affectedBags(ft.falsified(), modelHandler);
+		Set<BagModel> affectedBags = affectedBags(/*ft.*/falsified/*()*/, modelHandler);
 		for(BagModel bag : affectedBags){
 			bag.trimUnoccupiedExtremeVoxels(result);
 		}
 		
 		return result;
-	}
-	
-	private Set<BagModel> affectedBags(Collection<Claim> falseClaims, Map<Claim,List<VoxelModel>> modelHandler){
-		Set<VoxelModel> affectedVoxels = new HashSet<>();
-		for(Claim c : falseClaims){
-			affectedVoxels.addAll(modelHandler.get(c));
-		}
-		
-		Set<BagModel> affectedBags = new HashSet<>(); //bagmodels affected by the mass disoccupation that just occurred.
-		for(VoxelModel vm : affectedVoxels){
-			affectedBags.add(vm.getOwnerBag());
-		}
-		return affectedBags;
 	}
 	
 	/**
@@ -657,11 +647,62 @@ public class PuzzleVizApp extends Application {
 		return new ParallellizableTimeline(isFirstFrame, timelinesForEvents.iterator());
 	}*/
 	
-	private Puzzle createAndSolvePuzzle(){
+	private Puzzle createAndSolvePuzzle() throws FileNotFoundException{
 		List<String> args = getParameters().getRaw();
-        Puzzle puzzle = new Puzzle(args.get(0));
+        Puzzle puzzle = new Puzzle(new File(args.get(0)));
         Solver solver = new Solver(puzzle);
         solver.solve();
         return puzzle;
+	}
+	
+	public static Timeline solutionEventTimeline(SolutionEvent event, Map<Claim,List<VoxelModel>> modelHandler){
+		Timeline result = new Timeline();
+		
+		//add content for direct SolutionEvent
+		addFalsificationAnimation(result, event.falsified(), modelHandler);
+		
+		//add content for precipitated AutoResolve events
+		addAutoResolveContent(result, falsifiedTimeChildren(event), modelHandler);
+		
+		return result;
+	}
+	
+	private static List<FalsifiedTime> falsifiedTimeChildren(Time time){
+		return time.children().stream().filter((t)->t instanceof FalsifiedTime).map((t)->(FalsifiedTime)t).collect(Collectors.toList());
+	}
+	
+	public static void addFalsificationAnimation(final Timeline timeline, Set<Claim> falsified, Map<Claim,List<VoxelModel>> modelHandler){
+		for(Claim c : falsified){
+			for(VoxelModel vm : modelHandler.get(c)){
+				timeline.getKeyFrames().addAll(vm.disoccupy());
+			}
+		}
+		
+		Set<BagModel> affectedBags = affectedBags(falsified, modelHandler);
+		for(BagModel bag : affectedBags){
+			bag.trimUnoccupiedExtremeVoxels(timeline);
+		}
+	}
+	
+	public static void addAutoResolveContent(Timeline timeline, List<FalsifiedTime> children, Map<Claim,List<VoxelModel>> modelHandler){
+		for(FalsifiedTime child : children){
+			addFalsificationAnimation(timeline, child.falsified(), modelHandler);
+			if(child.defers()){ //if it has children TODO account for this concept properly
+				addAutoResolveContent(timeline, falsifiedTimeChildren(child), modelHandler);
+			}
+		}
+	}
+	
+	private static Set<BagModel> affectedBags(Collection<Claim> falseClaims, Map<Claim,List<VoxelModel>> modelHandler){
+		Set<VoxelModel> affectedVoxels = new HashSet<>();
+		for(Claim c : falseClaims){
+			affectedVoxels.addAll(modelHandler.get(c));
+		}
+		
+		Set<BagModel> affectedBags = new HashSet<>(); //bagmodels affected by the mass disoccupation that just occurred.
+		for(VoxelModel vm : affectedVoxels){
+			affectedBags.add(vm.getOwnerBag());
+		}
+		return affectedBags;
 	}
 }
