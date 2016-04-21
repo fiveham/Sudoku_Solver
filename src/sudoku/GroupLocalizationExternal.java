@@ -1,8 +1,7 @@
 package sudoku;
 
-import java.util.*;
-
 import common.ComboGen;
+import java.util.*;
 
 public class GroupLocalizationExternal extends Technique {
 	

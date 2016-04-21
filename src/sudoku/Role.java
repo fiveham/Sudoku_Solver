@@ -27,9 +27,9 @@ public class Role {
 
 		this.puzzle = r.getPuzzle();
 		
-		this.possibleRows  = puzzle.rowsIntersecting(r);
+		this.possibleRows = puzzle.rowsIntersecting(r);
 		this.possibleBoxes = puzzle.colsIntersecting(r);
-		this.possibleCols  = puzzle.boxesIntersecting(r);
+		this.possibleCols = puzzle.boxesIntersecting(r);
 	}
 	
 	public static final int MIN_ROLE_COUNT_FOR_MERGE = 2;
@@ -69,9 +69,9 @@ public class Role {
 		}
 	}
 	
-	private static Function<Role,Function<Role,List<Region>>> ROWS = (role) -> ( (r) -> r.possibleRows );
-	private static Function<Role,Function<Role,List<Region>>> COLS = (role) -> ( (r) -> r.possibleCols );
-	private static Function<Role,Function<Role,List<Region>>> BOXES = (role) -> ( (r) -> r.possibleBoxes );
+	private final static Function<Role,Function<Role,List<Region>>> ROWS  = (role) -> ( (r) -> r.possibleRows );
+	private final static Function<Role,Function<Role,List<Region>>> COLS  = (role) -> ( (r) -> r.possibleCols );
+	private final static Function<Role,Function<Role,List<Region>>> BOXES = (role) -> ( (r) -> r.possibleBoxes );
 	
 	private List<Region> regionIntersection(Role[] roles, Function<Role,List<Region>> regionType){
 		Set<Region> result = new HashSet<>(regionType.apply(roles[0]));
@@ -176,16 +176,12 @@ public class Role {
 		return retVal;
 	}
 	
-	private List<List<Region>> groups = null;
-	
 	private List<List<Region>> groups(){
-		if(groups == null){
-			groups = new ArrayList<>(3);
-			groups.add(possibleRows);
-			groups.add(possibleBoxes);
-			groups.add(possibleCols);
-		}
-		return groups;
+		List<List<Region>> result = new ArrayList<>(3);
+		result.add(possibleRows);
+		result.add(possibleBoxes);
+		result.add(possibleCols);
+		return result;
 	}
 	
 	public Symbol symbol(){

@@ -1,9 +1,7 @@
 package sudoku;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.util.*;
+import java.io.*;
 
 public class Solver {
 	
@@ -26,11 +24,11 @@ public class Solver {
 				index < techniqueList.size(); 
 				index = techniqueList.get(index).digest() ? 0 : (index+1) );
 	}
-	
+
 	public static void main(String[] args) throws FileNotFoundException{
 		Solver s = new Solver(new Puzzle(new File(args[0])));
 		s.digest();
 		System.out.println(s.puzzle.toString());
 	}
-	
+
 }

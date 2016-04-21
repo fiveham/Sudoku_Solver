@@ -282,7 +282,7 @@ public class Puzzle {
 			default : return rows.subList(6,9);
 			}
 		} else{
-			throw new IllegalArgumentException("Region "+r.toString()+" is not contained in this target.");
+			throw new IllegalArgumentException("Region "+r.toString()+" is not contianed in this target.");
 		}
 	}
 	
