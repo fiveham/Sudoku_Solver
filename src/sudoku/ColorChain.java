@@ -47,7 +47,7 @@ public class ColorChain extends Technique {
 	}
 	
 	@Override
-	public boolean process() {
+	protected boolean process() {
 		boolean result = false;
 		
 		//iterate over the symbol-layers of the cube form of the target

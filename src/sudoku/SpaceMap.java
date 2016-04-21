@@ -14,13 +14,13 @@ public class SpaceMap {
 		for(Index x : Index.values()){
 			for(Index y : Index.values()){
 				for(Index s : Index.values()){
-					stuff[x.intValue()-1][y.intValue()-1][s.intValue()-1] = new Claim(x,y,s);
+					stuff[x.intValue()][y.intValue()][s.intValue()] = new Claim(x,y,s);
 				}
 			}
 		}
 	}
 	
-	public int getValue(Index x, Index y){
+	public int getPrintingValue(Index x, Index y){
 		List<Index> symbols = new ArrayList<>();
 		
 		for(Index s : Index.values()){
@@ -32,12 +32,12 @@ public class SpaceMap {
 		
 		//XXX magic no
 		return symbols.size() == FactBag.SIZE_WHEN_SOLVED 
-				? symbols.get(0).intValue() 
+				? symbols.get(0).intValue()+1 
 				: Index.NO_SYMBOL;
 	}
 	
 	public Claim get(Index x, Index y, Index s){
-		return stuff[x.intValue()-1][y.intValue()-1][s.intValue()-1];
+		return stuff[x.intValue()][y.intValue()][s.intValue()];
 	}
 	
 	public Collection<Claim> claimsWhere(Predicate<Claim> p){

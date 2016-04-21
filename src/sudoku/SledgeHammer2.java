@@ -51,7 +51,7 @@ public class SledgeHammer2 extends Technique {
 	private final int MIN_SRC_COMBO_SIZE = 1;
 	
 	@Override
-	public boolean process() {
+	protected boolean process() {
 		boolean puzzleHasUpdated = false;
 		
 		for(List<FactBag> srcCombo : new ComboGen<>(puzzle.getFactbags(), MIN_SRC_COMBO_SIZE, MAX_SRC_COMBO_SIZE)){

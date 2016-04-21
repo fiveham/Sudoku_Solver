@@ -1,15 +1,12 @@
 package sudoku;
 
-import common.Pair;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Function;
 
@@ -44,10 +41,6 @@ public class Puzzle {
 		for(Claim c : cellValues){
 			c.setTrue_ONLY_Puzzle_AND_Resolvable_MAY_CALL_THIS_METHOD();
 		}
-		
-		while( !tasks.isEmpty() ){
-			resolveTasks();
-		}
 	}
 	
 	public SpaceMap claims(){
@@ -58,24 +51,24 @@ public class Puzzle {
 		return new ArrayList<>(factbags);
 	}
 	
-	/**
+	/* *
 	 * Returns a set of pairs of FactBags, each of which represents an existing 
 	 * intersection (overlap) between two factbags in this target.
 	 * @return
 	 */
-	public Set<Pair<FactBag,FactBag>> getFactBagIntersections(){
-		Set<Pair<FactBag,FactBag>> result = new HashSet<Pair<FactBag,FactBag>>();
-		for(FactBag currentFactBag : factbags){
+	/*private Set<Pair<Rule,Rule>> getFactBagIntersections(){
+		Set<Pair<Rule,Rule>> result = new HashSet<Pair<Rule,Rule>>();
+		for(Rule currentFactBag : factbags){
 			for(Claim currentClaim : currentFactBag){
-				for(FactBag claimOwner : currentClaim.getOwners()){
+				for(Rule claimOwner : currentClaim.getOwners()){
 					if( claimOwner != currentFactBag ){
-						result.add( new Pair<FactBag,FactBag>(currentFactBag, claimOwner) );
+						result.add( new Pair<Rule,Rule>(currentFactBag, claimOwner) );
 					}
 				}
 			}
 		}
 		return result;
-	}
+	}*/
 	
 	public boolean isSolved(){
 		for(FactBag bag : factbags){
@@ -96,15 +89,15 @@ public class Puzzle {
 	}
 	
 	public static Index decodeX(Puzzle.Dimension... dims){
-		return (Index) decodeDim((d) -> d.contributionX(), dims);
+		return decodeDim((d) -> d.contributionX(), dims);
 	}
 	
 	public static Index decodeY(Puzzle.Dimension... dims){
-		return (Index) decodeDim((d) -> d.contributionY(), dims);
+		return decodeDim((d) -> d.contributionY(), dims);
 	}
 	
 	public static Index decodeSymbol(Puzzle.Dimension... dims){
-		return (Index) decodeDim((d) -> d.contributionZ(), dims);
+		return decodeDim((d) -> d.contributionZ(), dims);
 	}
 	
 	public static final int DIMENSION_COUNT = 3;
@@ -141,14 +134,13 @@ public class Puzzle {
 		tasks.add(res);
 	}
 	
-	boolean resolveTasks(){
+	/*boolean resolveTasks(){
 		boolean result = false;
-		for(Resolvable r : new ArrayList<>(tasks)){
-			r.resolve();
-			tasks.remove(r);
+		for(int i=tasks.size()-1; 0<=i; --i){
+			tasks.remove(i).resolve();
 		}
 		return result;
-	}
+	}*/
 	
 	@Override
 	public String toString(){
@@ -156,7 +148,7 @@ public class Puzzle {
 		
 		for(Index y : Index.values()){
 			for(Index x : Index.values()){
-				result.append( claims.getValue(x,y) ).append(" ");
+				result.append( claims.getPrintingValue(x,y) ).append(" ");
 			}
 			
 			result.append(System.getProperty("line.separator"));
@@ -165,35 +157,27 @@ public class Puzzle {
 		return result.toString();
 	}
 	
-	public static final int MIN_COORD_FIRST_HOUSE = 1;
-	public static final int MIN_COORD_SECOND_HOUSE = 4;
-	public static final int MIN_COORD_THIRD_HOUSE = 7;
+	public static final int MIN_COORD_FIRST_HOUSE = 0;
+	public static final int MIN_COORD_SECOND_HOUSE = 3;
+	public static final int MIN_COORD_THIRD_HOUSE = 6;
 	
 	public static Index boxIndex(Index x, Index y){
-		int xInt = x.intValue()-1;
-		int yInt = y.intValue()-1;
+		int xInt = x.intValue();
+		int yInt = y.intValue();
 		
 		xInt /= MAGNITUDE;
 		yInt /= MAGNITUDE;
 		yInt *= MAGNITUDE;
 		
-		return Index.fromInt( xInt + yInt + 1 );
+		return Index.fromInt( xInt + yInt );
 	}
 	
 	public static int boxLowX(Index boxIndex){
-		switch(boxIndex){
-		case I1 : case I4 : case I7 : return MIN_COORD_FIRST_HOUSE;
-		case I2 : case I5 : case I8 : return MIN_COORD_SECOND_HOUSE;
-		default : return MIN_COORD_THIRD_HOUSE;
-		}
+		return (boxIndex.intValue()%3)*3;
 	}
 	
 	public static int boxLowY(Index boxIndex){
-		switch(boxIndex){
-		case I1 : case I2 : case I3 : return MIN_COORD_FIRST_HOUSE;
-		case I4 : case I5 : case I6 : return MIN_COORD_SECOND_HOUSE;
-		default : return MIN_COORD_THIRD_HOUSE;
-		}
+		return (boxIndex.intValue()/3)*3;
 	}
 	
 	public static List<Claim> parseText(Scanner s, SpaceMap claims){
@@ -215,8 +199,8 @@ public class Puzzle {
 				}
 				
 				if(equiv != Index.NO_SYMBOL){ //TODO account for numbers too large
-					//knownTrueClaims.add( new Claim(x,y,Index.fromInt(equiv)) );
-					knownTrueClaims.add( claims.get(x, y, Index.fromInt(equiv)) );
+					//knownTrueClaims.add( new Claim(x,y,Index.fromInt(equiv-1)) );
+					knownTrueClaims.add( claims.get(x,y,Index.fromInt(equiv-1)) );
 				}
 			}
 		}
@@ -300,10 +284,10 @@ public class Puzzle {
 			this.val = val;
 		}
 		
-		public Dimension(Type type, int val){
+		/*public IndexInstance(DimensionType type, int val){
 			this.type = type;
-			this.val = Index.fromInt(val);
-		}
+			this.val = IndexValue.fromInt(val);
+		}*/
 		
 		@Override
 		public boolean equals(Object o){
@@ -334,8 +318,8 @@ public class Puzzle {
 		public static final Function<Index,Integer> INT_VALUE       = (i) -> i.intValue();
 		public static final Function<Index,Integer> X_POS_COMP_CELL = (i) -> (i.intValue()%MAGNITUDE);
 		public static final Function<Index,Integer> Y_POS_COMP_CELL = (i) -> (i.intValue()/MAGNITUDE);
-		public static final Function<Index,Integer> X_POS_COMP_BOX  = (i) -> (i.intValue()%MAGNITUDE)*MAGNITUDE+1;
-		public static final Function<Index,Integer> Y_POS_COMP_BOX  = (i) -> (i.intValue()/MAGNITUDE)*MAGNITUDE+1;
+		public static final Function<Index,Integer> X_POS_COMP_BOX  = (i) -> (i.intValue()%MAGNITUDE)*MAGNITUDE;
+		public static final Function<Index,Integer> Y_POS_COMP_BOX  = (i) -> (i.intValue()/MAGNITUDE)*MAGNITUDE;
 		
 		public enum Type{
 			X				(INT_VALUE,       ZERO,            ZERO),
@@ -343,18 +327,6 @@ public class Puzzle {
 			SYMBOL			(ZERO,            ZERO,            INT_VALUE),
 			BOX				(X_POS_COMP_BOX,  Y_POS_COMP_BOX,  ZERO), 
 			CELL_ID_IN_BOX	(X_POS_COMP_CELL, Y_POS_COMP_CELL, ZERO);
-		
-		/*public static final Function<IndexValue,Integer> ZERO = (i) -> 0;
-		public static final Function<IndexValue,Integer> INT_VALUE = (i) -> i.intValue();
-		public static final Function<IndexValue,Integer> X_POS_COMP = (i) -> boxLowX(i);
-		public static final Function<IndexValue,Integer> Y_POS_COMP = (i) -> boxLowY(i);
-		
-		public enum DimensionType{
-			X				( INT_VALUE,                    ZERO,                         ZERO),
-			Y				( ZERO,                         INT_VALUE,                    ZERO),
-			SYMBOL			( ZERO,                         ZERO,                         INT_VALUE),
-			BOX				( X_POS_COMP,                   Y_POS_COMP,                   ZERO), 
-			CELL_ID_IN_BOX	( (i) -> X_POS_COMP.apply(i)-1, (i) -> Y_POS_COMP.apply(i)-1, ZERO);*/
 			
 			private Function<Index,Integer> contribX;
 			private Function<Index,Integer> contribY;
@@ -376,6 +348,30 @@ public class Puzzle {
 				
 				return result;
 			}
+		}
+	}
+	
+	private ResolveResolvables rr = null;
+	
+	public Technique resolveResolvables(){
+		if(rr==null){
+			rr = new ResolveResolvables();
+		}
+		return rr;
+	}
+	
+	public class ResolveResolvables extends Technique{
+		private ResolveResolvables(){
+			super(Puzzle.this);
+		}
+		
+		@Override
+		protected boolean process(){
+			boolean result = false;
+			for(int i=tasks.size(); 0<i;){
+				result |= tasks.remove(--i).resolve();
+			}
+			return result;
 		}
 	}
 }

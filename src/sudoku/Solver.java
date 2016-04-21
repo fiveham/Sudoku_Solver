@@ -73,6 +73,7 @@ public class Solver {
 		 * 
 		 */
 		
+		techniqueList.add(puzzle.resolveResolvables());
 		techniqueList.add(new SledgeHammer2(puzzle));
 		techniqueList.add(new ColorChain(puzzle));
 		

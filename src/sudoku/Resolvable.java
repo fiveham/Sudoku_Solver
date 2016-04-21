@@ -20,9 +20,10 @@ public class Resolvable {
 		this.source = src;
 	}
 	
-	public void resolve(){
+	public boolean resolve(){
 		for(Claim c : source){
-			c.setTrue_ONLY_Puzzle_AND_Resolvable_MAY_CALL_THIS_METHOD();
+			return c.setTrue_ONLY_Puzzle_AND_Resolvable_MAY_CALL_THIS_METHOD();
 		}
+		throw new IllegalStateException("No claims in Rule.");
 	}
 }

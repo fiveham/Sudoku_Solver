@@ -37,7 +37,7 @@ public abstract class Technique {
 		return puzzle.isSolved() ? false : process();
 	}
 	
-	public abstract boolean process();
+	protected abstract boolean process();
 	
 	/**
 	 * Returns a reference to the target to which this instance of 
