@@ -23,7 +23,7 @@ import java.util.function.Predicate;
  */
 public class ColorChain extends Technique {
 	
-	public static final Function<Symbol,Predicate<FactBag>> FactBag_TEST_GENERATOR = (s) -> ((fb) -> fb.size() == FactBag.SIZE_WHEN_XOR && fb.zMax() == s && fb.zMin() == s );
+	public static final Function<Index,Predicate<FactBag>> FactBag_TEST_GENERATOR = (s) -> ((fb) -> fb.size() == FactBag.SIZE_WHEN_XOR && fb.zMax() == s && fb.zMin() == s );
 	
 	public ColorChain(Puzzle puzzle) {
 		super(puzzle);
@@ -51,7 +51,7 @@ public class ColorChain extends Technique {
 		boolean result = false;
 		
 		//iterate over the symbol-layers of the cube form of the target
-		for(Symbol symbol : Symbol.values()){
+		for(Index symbol : Index.values()){
 			
 			Collection<FactBag> binaryBags = puzzle.factBagsWhere( FactBag_TEST_GENERATOR.apply(symbol) );
 			List<Claim> claimsInBinaryBags = new ArrayList<>(SledgeHammer2.unionAll(binaryBags));

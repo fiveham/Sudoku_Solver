@@ -62,11 +62,11 @@ public class FactBag extends ToolSet<Claim> {
 		return boundingBox.yMax;
 	}
 	
-	public Symbol zMin(){
+	public Index zMin(){
 		return boundingBox.zMin;
 	}
 	
-	public Symbol zMax(){
+	public Index zMax(){
 		return boundingBox.zMax;
 	}
 	
@@ -157,9 +157,8 @@ public class FactBag extends ToolSet<Claim> {
 	}
 	
 	public static class BoundingBox{
-		private final Index xMin, xMax, yMin, yMax;
-		private final Symbol zMin, zMax;
-		public BoundingBox(Index xMin, Index xMax, Index yMin, Index yMax, Symbol zMin, Symbol zMax){
+		private final Index xMin, xMax, yMin, yMax, zMin, zMax;
+		public BoundingBox(Index xMin, Index xMax, Index yMin, Index yMax, Index zMin, Index zMax){
 			this.xMin = xMin;
 			this.xMax = xMax;
 			this.yMin = yMin;

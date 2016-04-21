@@ -13,7 +13,7 @@ public class SpaceMap {
 		stuff = new Claim[linearMeasure][linearMeasure][linearMeasure];
 		for(Index x : Index.values()){
 			for(Index y : Index.values()){
-				for(Symbol s : Symbol.values()){
+				for(Index s : Index.values()){
 					stuff[x.intValue()-1][y.intValue()-1][s.intValue()-1] = new Claim(x,y,s);
 				}
 			}
@@ -21,9 +21,9 @@ public class SpaceMap {
 	}
 	
 	public int getValue(Index x, Index y){
-		List<Symbol> symbols = new ArrayList<>();
+		List<Index> symbols = new ArrayList<>();
 		
-		for(Symbol s : Symbol.values()){
+		for(Index s : Index.values()){
 			Claim c = get(x, y, s);
 			if( !c.isKnownFalse() ){
 				symbols.add(s);
@@ -33,10 +33,10 @@ public class SpaceMap {
 		//XXX magic no
 		return symbols.size() == FactBag.SIZE_WHEN_SOLVED 
 				? symbols.get(0).intValue() 
-				: Symbol.NONE;
+				: Index.NO_SYMBOL;
 	}
 	
-	public Claim get(Index x, Index y, Symbol s){
+	public Claim get(Index x, Index y, Index s){
 		return stuff[x.intValue()-1][y.intValue()-1][s.intValue()-1];
 	}
 	

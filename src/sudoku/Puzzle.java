@@ -90,27 +90,26 @@ public class Puzzle {
 	public Claim getClaimAt(Puzzle.Dimension dim1, Puzzle.Dimension dim2, Puzzle.Dimension heldConstant){
 		Index x = decodeX(dim1, dim2, heldConstant);
 		Index y = decodeY(dim1, dim2, heldConstant);
-		Symbol s = decodeSymbol(dim1, dim2, heldConstant);
+		Index s = decodeSymbol(dim1, dim2, heldConstant);
 		
 		return claims.get(x, y, s);
 	}
 	
 	public static Index decodeX(Puzzle.Dimension... dims){
-		return (Index) decodeDim((d) -> d.contributionX(), (i) -> Index.fromInt(i), dims);
+		return (Index) decodeDim((d) -> d.contributionX(), dims);
 	}
 	
 	public static Index decodeY(Puzzle.Dimension... dims){
-		return (Index) decodeDim((d) -> d.contributionY(), (i) -> Index.fromInt(i), dims);
+		return (Index) decodeDim((d) -> d.contributionY(), dims);
 	}
 	
-	public static Symbol decodeSymbol(Puzzle.Dimension... dims){
-		return (Symbol) decodeDim((d) -> d.contributionZ(), (i) -> Symbol.fromInt(i), dims);
+	public static Index decodeSymbol(Puzzle.Dimension... dims){
+		return (Index) decodeDim((d) -> d.contributionZ(), dims);
 	}
 	
 	public static final int DIMENSION_COUNT = 3;
 	
-	private static SudokuEnum decodeDim( Function<Puzzle.Dimension,Integer> contrib, 
-			Function<Integer,? extends SudokuEnum> fromInt, 
+	private static Index decodeDim( Function<Puzzle.Dimension,Integer> contrib, 
 			Puzzle.Dimension[] dims){
 		if(dims.length != DIMENSION_COUNT){
 			throw new IllegalArgumentException("Need 3 dimensions, but "+dims.length+" were provided");
@@ -121,85 +120,21 @@ public class Puzzle {
 			score += contrib.apply(dim);
 		}
 		
-		return fromInt.apply(score);
+		return Index.fromInt(score);
 	}
 	
 	private void populateFactbags(){
-		
 		for(Region region : Region.values()){
-			
 			for(Dimension dimA : region.dimA()){
 				for(Dimension dimB : region.dimB()){
-					
 					FactBag regionBag = new FactBag(this, region, Region.SIZE_OF_A_REGION, region.boundingBox(dimA, dimB));
 					for(Dimension dimC : region.dimC()){
 						regionBag.add( getClaimAt(dimA, dimB, dimC) );
 					}
-					//region.factBagReference.apply(this).add(regionBag);
 					factbags.add(regionBag);
 				}
 			}
-			
 		}
-		
-		/*//fact bags for cells
-		for(IndexValue y : IndexValue.values()){
-			for(IndexValue x : IndexValue.values()){
-				Rule cell = new Rule(Symbol.values().length);
-				for(Symbol s : Symbol.values()){
-					cell.add( claims.get(x, y, s) );
-				}
-				factbagsCell.add(cell);
-			}
-		}
-		
-		//fact bags for rows
-		for(Symbol s : Symbol.values()){
-			for(IndexValue y : IndexValue.values()){
-				Rule row = new Rule(IndexValue.values().length);
-				for(IndexValue x : IndexValue.values()){
-					row.add( claims.get(x, y, s) );
-				}
-				factbagsRow.add(row);
-			}
-		}
-		
-		//fact bags for columns
-		for(Symbol s : Symbol.values()){
-			for(IndexValue x : IndexValue.values()){
-				Rule col = new Rule(IndexValue.values().length);
-				for(IndexValue y : IndexValue.values()){
-					col.add( claims.get(x, y, s) );
-				}
-				factbagsCol.add(col);
-			}
-		}
-		
-		//fact bags for boxes
-		for(Symbol s : Symbol.values()){
-			for(IndexValue i : IndexValue.values()){
-				int xLo = boxLowX(i);
-				int yLo = boxLowY(i);
-				int xHi = xLo + MAGNITUDE;
-				int yHi = yLo + MAGNITUDE;
-				
-				Rule box = new Rule(MAGNITUDE*MAGNITUDE);
-				
-				for(int j = xLo; j<xHi; ++j){
-					IndexValue boxX = IndexValue.fromInt(j);
-					for(int k = yLo; k<yHi; ++k){
-						IndexValue boxY = IndexValue.fromInt(k);
-						box.add(claims.get(boxX, boxY, s));
-					}
-				}
-				
-				factbagsBox.add(box);
-			}
-		}*/
-		
-		/*for(List<Rule> bagList : listOfListsOfbags){
-			factbags.addAll(bagList);
-		}*/
 	}
 	
 	void registerResolvable(Resolvable res){
@@ -279,9 +214,9 @@ public class Puzzle {
 					throw new IllegalArgumentException("Illegal sudoku symbol in first 81 tokens of source text", e);
 				}
 				
-				if(equiv != Symbol.NONE){ //TODO account for numbers too large
-					//knownTrueClaims.add( new Claim(x,y,Symbol.fromInt(equiv)) );
-					knownTrueClaims.add( claims.get(x, y, Symbol.fromInt(equiv)) );
+				if(equiv != Index.NO_SYMBOL){ //TODO account for numbers too large
+					//knownTrueClaims.add( new Claim(x,y,Index.fromInt(equiv)) );
+					knownTrueClaims.add( claims.get(x, y, Index.fromInt(equiv)) );
 				}
 			}
 		}
@@ -312,20 +247,20 @@ public class Puzzle {
 		private List<Dimension> dimCList;
 		
 		private Region(Dimension.Type dimA, Dimension.Type dimB, Dimension.Type dimC/*, Function<Puzzle,List<Rule>> factBagReference*/){
-			this.dimAList = dimA.valuesOfPertinentSudokuEnumAsDims();
-			this.dimBList = dimB.valuesOfPertinentSudokuEnumAsDims();
-			this.dimCList = dimC.valuesOfPertinentSudokuEnumAsDims();
+			this.dimAList = dimA.valuesAsDims();
+			this.dimBList = dimB.valuesAsDims();
+			this.dimCList = dimC.valuesAsDims();
 		}
 		
 		public FactBag.BoundingBox boundingBox(Dimension dimA, Dimension dimB){
 			Index x = decodeX(dimA, dimB);
 			Index y = decodeY(dimA, dimB);
-			Symbol s = decodeSymbol(dimA, dimB);
+			Index s = decodeSymbol(dimA, dimB);
 			switch(this){
 			case CELL : 
 				x = decodeX(dimA, dimB);
 				y = decodeY(dimA, dimB);
-				return new FactBag.BoundingBox(x, x, y, y, Symbol.S1, Symbol.S9);
+				return new FactBag.BoundingBox(x, x, y, y, Index.MINIMUM, Index.MAXIMUM);
 			case BOX : 
 				x = decodeX(dimA, dimB);
 				y = decodeY(dimA, dimB);
@@ -358,16 +293,16 @@ public class Puzzle {
 	public static class Dimension{
 		
 		private Type type;
-		private SudokuEnum val;
+		private Index val;
 		
-		public Dimension(Type type, SudokuEnum val){
+		public Dimension(Type type, Index val){
 			this.type = type;
 			this.val = val;
 		}
 		
 		public Dimension(Type type, int val){
 			this.type = type;
-			this.val = type.getSudokuEnumFromInt(val);
+			this.val = Index.fromInt(val);
 		}
 		
 		@Override
@@ -395,58 +330,48 @@ public class Puzzle {
 			return type.contribZ.apply(val);
 		}
 		
-		public static final Function<SudokuEnum,Integer> ZERO            = (i) -> 0;
-		public static final Function<SudokuEnum,Integer> INT_VALUE       = (i) -> i.intValue();
-		public static final Function<SudokuEnum,Integer> X_POS_COMP_CELL = (i) -> (i.intValue()%MAGNITUDE+1);
-		public static final Function<SudokuEnum,Integer> Y_POS_COMP_CELL = (i) -> (i.intValue()/MAGNITUDE+1);
-		public static final Function<SudokuEnum,Integer> X_POS_COMP_BOX  = (i) -> (i.intValue()%MAGNITUDE)*MAGNITUDE;
-		public static final Function<SudokuEnum,Integer> Y_POS_COMP_BOX  = (i) -> (i.intValue()/MAGNITUDE)*MAGNITUDE;
+		public static final Function<Index,Integer> ZERO            = (i) -> 0;
+		public static final Function<Index,Integer> INT_VALUE       = (i) -> i.intValue();
+		public static final Function<Index,Integer> X_POS_COMP_CELL = (i) -> (i.intValue()%MAGNITUDE);
+		public static final Function<Index,Integer> Y_POS_COMP_CELL = (i) -> (i.intValue()/MAGNITUDE);
+		public static final Function<Index,Integer> X_POS_COMP_BOX  = (i) -> (i.intValue()%MAGNITUDE)*MAGNITUDE+1;
+		public static final Function<Index,Integer> Y_POS_COMP_BOX  = (i) -> (i.intValue()/MAGNITUDE)*MAGNITUDE+1;
 		
 		public enum Type{
-			X				(INT_VALUE,       ZERO,            ZERO, 	  SudokuEnum.RegisteredType.INDEX),
-			Y				(ZERO,            INT_VALUE,       ZERO, 	  SudokuEnum.RegisteredType.INDEX),
-			SYMBOL			(ZERO,            ZERO,            INT_VALUE, SudokuEnum.RegisteredType.SYMBOL),
-			BOX				(X_POS_COMP_BOX,  Y_POS_COMP_BOX,  ZERO, 	  SudokuEnum.RegisteredType.INDEX), 
-			CELL_ID_IN_BOX	(X_POS_COMP_CELL, Y_POS_COMP_CELL, ZERO, 	  SudokuEnum.RegisteredType.INDEX);
+			X				(INT_VALUE,       ZERO,            ZERO),
+			Y				(ZERO,            INT_VALUE,       ZERO),
+			SYMBOL			(ZERO,            ZERO,            INT_VALUE),
+			BOX				(X_POS_COMP_BOX,  Y_POS_COMP_BOX,  ZERO), 
+			CELL_ID_IN_BOX	(X_POS_COMP_CELL, Y_POS_COMP_CELL, ZERO);
 		
-		/*public static final Function<SudokuEnum,Integer> ZERO = (i) -> 0;
-		public static final Function<SudokuEnum,Integer> INT_VALUE = (i) -> i.intValue();
-		public static final Function<SudokuEnum,Integer> X_POS_COMP = (i) -> boxLowX((IndexValue) i);
-		public static final Function<SudokuEnum,Integer> Y_POS_COMP = (i) -> boxLowY((IndexValue) i);
+		/*public static final Function<IndexValue,Integer> ZERO = (i) -> 0;
+		public static final Function<IndexValue,Integer> INT_VALUE = (i) -> i.intValue();
+		public static final Function<IndexValue,Integer> X_POS_COMP = (i) -> boxLowX(i);
+		public static final Function<IndexValue,Integer> Y_POS_COMP = (i) -> boxLowY(i);
 		
 		public enum DimensionType{
-			X				( INT_VALUE,                    ZERO,                         ZERO, 	 SudokuEnum.RegisteredType.INDEX),
-			Y				( ZERO,                         INT_VALUE,                    ZERO, 	 SudokuEnum.RegisteredType.INDEX),
-			SYMBOL			( ZERO,                         ZERO,                         INT_VALUE, SudokuEnum.RegisteredType.SYMBOL),
-			BOX				( X_POS_COMP,                   Y_POS_COMP,                   ZERO, 	 SudokuEnum.RegisteredType.INDEX), 
-			CELL_ID_IN_BOX	( (i) -> X_POS_COMP.apply(i)-1, (i) -> Y_POS_COMP.apply(i)-1, ZERO, 	 SudokuEnum.RegisteredType.INDEX);*/
+			X				( INT_VALUE,                    ZERO,                         ZERO),
+			Y				( ZERO,                         INT_VALUE,                    ZERO),
+			SYMBOL			( ZERO,                         ZERO,                         INT_VALUE),
+			BOX				( X_POS_COMP,                   Y_POS_COMP,                   ZERO), 
+			CELL_ID_IN_BOX	( (i) -> X_POS_COMP.apply(i)-1, (i) -> Y_POS_COMP.apply(i)-1, ZERO);*/
 			
-			private Function<SudokuEnum,Integer> contribX;
-			private Function<SudokuEnum,Integer> contribY;
-			private Function<SudokuEnum,Integer> contribZ;
-			private SudokuEnum.RegisteredType usedEnum;
+			private Function<Index,Integer> contribX;
+			private Function<Index,Integer> contribY;
+			private Function<Index,Integer> contribZ;
 			
-			private Type(Function<SudokuEnum,Integer> contribX, Function<SudokuEnum,Integer> contribY, Function<SudokuEnum,Integer> contribZ, SudokuEnum.RegisteredType usedEnum){
+			private Type(Function<Index,Integer> contribX, Function<Index,Integer> contribY, Function<Index,Integer> contribZ){
 				this.contribX = contribX;
 				this.contribY = contribY;
 				this.contribZ = contribZ;
-				this.usedEnum = usedEnum;
 			}
 			
-			public SudokuEnum getSudokuEnumFromInt(int val){
-				return this.usedEnum.fromInt(val);
-			}
-			
-			public SudokuEnum[] valuesOfPertinentSudokuEnum(){
-				return usedEnum.referencedValues();
-			}
-			
-			public List<Dimension> valuesOfPertinentSudokuEnumAsDims(){
-				SudokuEnum[] enumVals = valuesOfPertinentSudokuEnum();
+			public List<Dimension> valuesAsDims(){
+				Index[] enumVals = Index.values();
 				List<Dimension> result = new ArrayList<>(enumVals.length);
 				
-				for(SudokuEnum se : enumVals){
-					result.add( new Dimension(this,se) );
+				for(Index i : enumVals){
+					result.add( new Dimension(this,i) );
 				}
 				
 				return result;

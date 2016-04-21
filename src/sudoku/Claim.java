@@ -23,11 +23,11 @@ public class Claim {
 	
 	private Index x;
 	private Index y;
-	private Symbol symbol;
+	private Index symbol;
 	
 	private List<FactBag> owners;
 	
-	public Claim(Index x, Index y, Symbol symbol) {
+	public Claim(Index x, Index y, Index symbol) {
 		this.x = x;
 		this.y = y;
 		this.symbol = symbol;
