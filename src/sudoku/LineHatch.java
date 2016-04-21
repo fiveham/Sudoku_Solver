@@ -1,11 +1,7 @@
 package sudoku;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import common.ComboGen;
+import java.util.*;
 
 /**
  * Represents a technique for solving sudoku puzzles.
@@ -19,7 +15,7 @@ import common.ComboGen;
  * orientation, house the value in question.
  * @author fiveham
  */
-class LineHatch extends Technique{
+public class LineHatch extends Technique{
 	
 	/** 
 	 * Minimum number of lines of each orientation 
@@ -67,38 +63,24 @@ class LineHatch extends Technique{
 				//Create a set of individual master sets.
 				//One element is the master set of rows not solved for the current value,
 				//and the other is the master set of columns not solved for the current value.
-				Set<Set<Line>> multiUnsolved = new HashSet<>();
+				List<List<Line>> multiUnsolved = new ArrayList<>();
 				multiUnsolved.add(rowsNotSolvedForValue(currentValue));
 				multiUnsolved.add(columnsNotSolvedForValue(currentValue));
 				
 				//Iterate over this set of sets
-				for( Set<Line> unsolveds : multiUnsolved )
-					
-					if( unsolveds.size() >= MIN_LINE_COUNT )
-						for( List<Line> currentOriginatingCombination : 
-								new ComboGen<Line>(unsolveds, 
-										inBounds(0, MIN_LINE_COUNT, unsolveds.size()), 
-										inBounds(0, MAX_LINE_COUNT, unsolveds.size())))
+				for( List<Line> unsolveds : multiUnsolved ){
+					if( unsolveds.size() >= MIN_LINE_COUNT ){
+						for( List<Line> currentOriginatingCombination : new ComboGen<>(unsolveds, 
+								inBounds(ComboGen.MIN_COMBO_SIZE, unsolveds.size(), MIN_LINE_COUNT), 
+								inBounds(ComboGen.MIN_COMBO_SIZE, unsolveds.size(), MAX_LINE_COUNT))){
 							puzzleHasUpdated |= digestEachLineSet(currentValue, currentOriginatingCombination);
-				
+						}
+					}
+				}
 			}
 		}
 		
 		return puzzleHasUpdated;
-	}
-	
-	/**
-	 * Returns a value between or at the specified lower and 
-	 * upper bounds.  If the value to be kept in bounds is 
-	 * greater or less than the upper or lower bound respectively,
-	 * then the upper or lower bound (respectively) is returned.
-	 * @param lowerBound
-	 * @param upperBound
-	 * @param value
-	 * @return
-	 */
-	static int inBounds(int lowerBound, int value, int upperBound){
-		return (lowerBound <= value && value <= upperBound) ? value : (value < lowerBound ? lowerBound : upperBound);
 	}
 	
 	private boolean digestEachLineSet(Value currentValue, List<Line> currentOriginatingCombination){
@@ -108,7 +90,7 @@ class LineHatch extends Technique{
 		// get a list of complementary regions--columns or rows that intersect the
 		// rows or columns (respectively) in the currentCombination at cells that 
 		// have the currentValue still possible
-		Set<Line> complement = getComplement(puzzle, currentValue, new ArrayList<>(currentOriginatingCombination));
+		List<Line> complement = getComplement(puzzle, currentValue, currentOriginatingCombination);
 		
 		if( !complement.isEmpty() )
 			// check whether propagating based on this xwing/swordfish/jellyfish/etc would do anything 
@@ -118,8 +100,8 @@ class LineHatch extends Technique{
 		return puzzleHasUpdated;
 	}
 	
-	private Set<Line> rowsNotSolvedForValue(Value value){
-		Set<Line> rows = new HashSet<>();
+	private List<Line> rowsNotSolvedForValue(Value value){
+		List<Line> rows = new ArrayList<>();
 		
 		for(Line currentRow : puzzle.getRows())
 			if( !currentRow.isSolvedForValue(value) )
@@ -128,8 +110,8 @@ class LineHatch extends Technique{
 		return rows;
 	}
 	
-	private Set<Line> columnsNotSolvedForValue(Value value){
-		Set<Line> columns = new HashSet<>();
+	private List<Line> columnsNotSolvedForValue(Value value){
+		List<Line> columns = new ArrayList<>();
 		
 		for(Line currentRow : puzzle.getRows())
 			if( !currentRow.isSolvedForValue(value) )
@@ -139,40 +121,13 @@ class LineHatch extends Technique{
 	}
 	
 	/*
-	 * Returns a set of combinations of rows and combinations 
-	 * of columns from the parameter target; all such rows and 
-	 * columns are not solved for the parameter value.
-	 */
-	/*private static Set<Set<Line>> getCombinations(Puzzle target, Value value){
-		Set<Set<Line>> returnList = new Set<Set<Line>>();
-		
-		Set<Line> rows = new Set<Line>();
-		for(Line currentRow : target.getRows())
-			if( !currentRow.isSolvedForValue(value) )
-				rows.add( currentRow);
-		
-		Set<Line> columns = new Set<Line>();
-		for(Line currentColumn : target.getColumns())
-			if( !currentColumn.isSolvedForValue(value) )
-				columns.add(currentColumn);
-		
-		returnList.addAll( Set.powerSet( rows, MIN_LINE_COUNT, 
-				Math.min( rows.size(), MAX_LINE_COUNT)));
-		
-		returnList.addAll( Set.powerSet( columns, MIN_LINE_COUNT, 
-				Math.min( columns.size(), MAX_LINE_COUNT)));
-														
-		return returnList;
-	}/**/
-	
-	/*
 	 * Returns whether marking the parameter value impossible in 
 	 * those cells in the regions in the parameter complement that 
 	 * are also not in the regions in the parameter originator 
 	 * would change the possibility-states of any of those cells.
 	 */
 	private static boolean propagationWouldHaveEffect(Value value, 
-			List<Line> originator, Set<Line> complement){
+			List<Line> originator, List<Line> complement){
 		
 		for(Line currentRecipient : complement )
 			for( Cell currentCell : currentRecipient.getCells())
@@ -203,13 +158,14 @@ class LineHatch extends Technique{
 	 * the cells of its Lines can house the parameter value, 
 	 * then an empty list is returned.
 	 */
-	private static Set<Line> getComplement(Puzzle puzzle, Value value, List<Line> originator){
+	private static List<Line> getComplement(Puzzle puzzle, Value value, 
+			List<Line> originator){
 		
-		Set<Line> complement = new HashSet<Line>();
+		List<Line> complement = new ArrayList<Line>();
 		
 		// get a list of the coordinates for which the originating regions
 		// have at least one cell that could hold the value in question
-		Set<Index> ableCellCoords = new HashSet<Index>();
+		List<Index> ableCellCoords = new ArrayList<Index>();
 		for( Index currentCoordinate : Index.KNOWN_VALUES )
 			for( Line currentOriginatingRegion : originator)
 				if( currentOriginatingRegion.getCell(currentCoordinate).isPossibleValue(value) )
@@ -221,14 +177,12 @@ class LineHatch extends Technique{
 		
 		// add all the complementary regions to the complement list
 		if(originator.get(0).isRow()){							//originator is made of rows
-			for( Index index : ableCellCoords ){
+			for( Index index : ableCellCoords )
 				complement.add( puzzle.getColumn(index) );		//complement is made of columns
-			}
 		}
 		else{													//originator is made of columns
-			for( Index index : ableCellCoords ){
+			for( Index index : ableCellCoords )
 				complement.add( puzzle.getRow(index) );			//complement is made of rows
-			}
 		}
 		
 		return complement;
@@ -239,11 +193,10 @@ class LineHatch extends Technique{
 	 * have been located in the parameter target.
 	 */
 	private static boolean puzzleIsSolvedForValue(Puzzle puzzle, Value value){
-		for(Block currentBlock : puzzle.getBlocks()){
-			if( !currentBlock.isSolvedForValue(value) ){
+		
+		for(Box currentBlock : puzzle.getBlocks())
+			if( !currentBlock.isSolvedForValue(value) )
 				return false;
-			}
-		}
 		return true;
 	}
 	
@@ -263,12 +216,11 @@ class LineHatch extends Technique{
 	 * @return					Returns whether changes were made to 
 	 * any of the recipient regions.
 	 */
-	private static boolean resolve(Value value, List<Line> originators, Set<Line> recipients){
+	private static boolean resolve(Value value, List<Line> originators, List<Line> recipients){
 		boolean returnValue = false;
 		
-		for( Line currentRecipient : recipients ){
+		for( Line currentRecipient : recipients )
 			returnValue |= currentRecipient.propagateValueOutsideRegions(value, originators);
-		}
 		
 		return returnValue;
 	}

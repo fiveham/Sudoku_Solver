@@ -1,13 +1,6 @@
 package sudoku;
 
-import java.util.ArrayList;
-import java.util.function.BiPredicate;
-
-import common.ComboGen;
-
-import java.util.Set;
-import java.util.List;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * A technique for solving sudoku puzzles.
@@ -72,17 +65,17 @@ public class RemotePairs extends Technique{
 			return puzzleHasUpdated;
 		
 		// get a list of all existing value pairs in the target
-		ArrayList<Set<Value>> pairsList = candidatePairs(puzzle);
+		List<List<Value>> pairsList = candidatePairs(puzzle);
 		// for each one,
-		for(Set<Value> currentPair : pairsList ){
+		for(List<Value> currentPair : pairsList ){
 			// get the list of cells with that value pair for its candidate list
-			Set<Cell> cellsForNetworks = cellsWithCandidateList(puzzle, currentPair);
+			List<Cell> cellsForNetworks = cellsWithCandidateList(puzzle, currentPair);
 			
 			// get the list of valid connected components of the current list of cells
-			Set<? extends Set<Cell>> networks = GraphTheory.connectedComponents(cellsForNetworks, MIN_COMPONENT_SIZE, this);
+			List<List<Cell>> networks = GraphTheory.connectedComponents(cellsForNetworks, MIN_COMPONENT_SIZE, this);
 			
 			// for each connected component
-			for(Set<Cell> currentNetwork : networks){
+			for(List<Cell> currentNetwork : networks){
 				
 				// get the list of all cells that share at least 
 				// two regions with the cells of the network
@@ -107,21 +100,21 @@ public class RemotePairs extends Technique{
 	 * or cells in the target has or have as its or their list 
 	 * of possible values.
 	 */
-	private static ArrayList<Set<Value>> candidatePairs(Puzzle puzzle){
-		ArrayList<Set<Value>> returnList = new ArrayList<Set<Value>>();
+	private static List<List<Value>> candidatePairs(Puzzle puzzle){
+		List<List<Value>> returnList = new ArrayList<>();
 		
-		for(int y=Index.MINIMUM.toInt(); y<=Index.MAXIMUM.toInt(); y++)
-			for(int x=Index.MINIMUM.toInt(); x<=Index.MAXIMUM.toInt(); x++){
-				Set<Value> possibleValues = puzzle.getCells()[x-1][y-1].getPossibleValues();
+		for(int y=Index.MINIMUM.intValue(); y<=Index.MAXIMUM.intValue(); y++)
+			for(int x=Index.MINIMUM.intValue(); x<=Index.MAXIMUM.intValue(); x++){
+				List<Value> possibleValues = puzzle.getCell(x,y).getPossibleValues();
 				
 				if( possibleValues.size() == PAIR_SIZE && 
 						!returnList.contains(possibleValues) ){
 					
 					//Determine how many cells have this 
 					int currentPairCount = 1;
-					for(int yy = y; yy <= Index.MAXIMUM.toInt(); yy++)
-						for(int xx = x+1; xx <= Index.MAXIMUM.toInt(); xx++)
-							if( puzzle.getCells()[xx-1][yy-1].getPossibleValues().equals(possibleValues) )
+					for(int yy = y; yy <= Index.MAXIMUM.intValue(); yy++)
+						for(int xx = x+1; xx <= Index.MAXIMUM.intValue(); xx++)
+							if( puzzle.getCell(xx, yy).getPossibleValues().equals(possibleValues) )
 								currentPairCount++;
 							
 					if(currentPairCount >= MIN_COMPONENT_SIZE)
@@ -137,12 +130,12 @@ public class RemotePairs extends Technique{
 	 * have the parameter pair as their list of possible 
 	 * values.
 	 */
-	private static Set<Cell> cellsWithCandidateList(Puzzle puzzle, Set<Value> pair){
-		Set<Cell> returnList = new HashSet<Cell>();
+	private static List<Cell> cellsWithCandidateList(Puzzle puzzle, List<Value> pair){
+		List<Cell> returnList = new ArrayList<>();
 		
-		for(int y=Index.MINIMUM.toInt(); y<=Index.MAXIMUM.toInt(); y++)
-			for(int x=Index.MINIMUM.toInt(); x<=Index.MAXIMUM.toInt(); x++){
-				Cell currentCell = puzzle.getCells()[x-1][y-1];
+		for(int y=Index.MINIMUM.intValue(); y<=Index.MAXIMUM.intValue(); y++)
+			for(int x=Index.MINIMUM.intValue(); x<=Index.MAXIMUM.intValue(); x++){
+				Cell currentCell = puzzle.getCell(x, y);
 				if(currentCell.getPossibleValues().equals(pair))
 					returnList.add(currentCell);
 			}
@@ -154,14 +147,14 @@ public class RemotePairs extends Technique{
 	 * Returns a list of cells from the parameter target that are 
 	 * able to be affected by the network.
 	 */
-	private ArrayList<Cell> affectableCells(Puzzle puzzle, Set<Cell> pairNetwork){
+	private ArrayList<Cell> affectableCells(Puzzle puzzle, List<Cell> pairNetwork){
 		ArrayList<Cell> returnList = new ArrayList<Cell>();
 		
-		for(int y=Index.MINIMUM.toInt(); y<=Index.MAXIMUM.toInt(); y++)
-			for(int x=Index.MINIMUM.toInt(); x<=Index.MAXIMUM.toInt(); x++){
-				Cell currentCell = puzzle.getCells()[x-1][y-1];
+		for(int y=Index.MINIMUM.intValue(); y<=Index.MAXIMUM.intValue(); y++)
+			for(int x=Index.MINIMUM.intValue(); x<=Index.MAXIMUM.intValue(); x++){
+				Cell currentCell = puzzle.getCell(x,y);
 				
-				if(cellIsAffectedByNetwork(currentCell, new Graph(pairNetwork)))
+				if(cellIsAffectedByNetwork(currentCell, pairNetwork))
 					returnList.add(currentCell);
 			}
 		
@@ -172,7 +165,7 @@ public class RemotePairs extends Technique{
 	 * Returns whether the parameter cell is affected by 
 	 * the parameter network (list of cells).
 	 */
-	private boolean cellIsAffectedByNetwork(Cell cell, Graph network){
+	private boolean cellIsAffectedByNetwork(Cell cell, List<Cell> network){
 		
 		final int MIN_CONNECTED_CELLS = 2;
 		
@@ -180,23 +173,17 @@ public class RemotePairs extends Technique{
 		 * If there's no intersection in the candidate lists of the cell and the network
 		 * then the cell isn't affected by the network
 		 */
-		//if( Set.intersection(cell.getPossibleValues(), network.extract().getPossibleValues()).isEmpty() )
-		Set<Value> cellPossVals = cell.getPossibleValues();
-		Set<Value> netElemPossVals = network.element().getPossibleValues();
-		cellPossVals.retainAll(netElemPossVals);
-		if( cellPossVals.isEmpty() ){
+		if( SetTheory.intersection(cell.getPossibleValues(), network.get(0).getPossibleValues()).isEmpty() )
 			return false;
-		}
 		
 		//If the cell is in the network, then it is not affected by the network
 		//in the way that this analysis technique is meant to deal with.
-		if(network.contains(cell)){
+		if(network.contains(cell))
 			return false;
-		}
 		 
 		//get the list of cells from the network that are connected to
 		//the cell in question
-		Set<Cell> connectedCells = new HashSet<Cell>();
+		List<Cell> connectedCells = new ArrayList<>();
 		for(Cell networkCell : network)
 			if( cell.sharesRegionWith(networkCell) )
 				connectedCells.add(networkCell);
@@ -219,14 +206,15 @@ public class RemotePairs extends Technique{
 	 * any two cells from the parameter neighbors through the graph 
 	 * defined by the parameter network.
 	 */
-	private boolean cellsContainBothPhasesInNetwork(Set<Cell> neighbors, Set<Cell> network){
-		//Set<Set<Cell>> pairsList = Set.combinationsForMagnitude(neighbors, PAIR_SIZE);
-		//for(Set<Cell> cellPair : pairsList){
-		for(List<Cell> cellPair : new ComboGen<Cell>(neighbors, PAIR_SIZE, PAIR_SIZE)){
-			if( GraphTheory.walkLengthInNetwork(cellPair.get(0), cellPair.get(1), new ArrayList<>(network), this) % 2 == 1 ){	//Step length is odd
+	private boolean cellsContainBothPhasesInNetwork(List<Cell> neighbors, List<Cell> network){
+		
+		final int PAIR_SIZE = 2;
+		
+		List<List<Cell>> pairsList =
+				GraphTheory.combinationsForMagnitude(neighbors, PAIR_SIZE);
+		for(List<Cell> cellPair : pairsList)
+			if( GraphTheory.walkLengthInNetwork(cellPair.get(0), cellPair.get(1), network, this) % 2 == 1 )	//Step length is odd
 				return true;
-			}
-		}
 		
 		return false;
 	}
@@ -238,17 +226,17 @@ public class RemotePairs extends Technique{
 	 * 
 	 * Returns whether any changes were made.
 	 */
-	private boolean resolve(ArrayList<Cell> cells, Set<Value> values){
+	private boolean resolve(ArrayList<Cell> cells, List<Value> values){
 		boolean returnValue = false;
 		
 		for( Cell currentCell : cells )
 			for( Value currentValue : values )
-				returnValue |= currentCell.setImpossibleValue(currentValue);
+				returnValue |= currentCell.setValueImpossible(currentValue);
 		
 		return returnValue;
 	}
 	
-	/* *
+	/**
 	 * Returns whether two cells are connected by the standards 
 	 * of this analysis technique.
 	 * 
@@ -263,14 +251,7 @@ public class RemotePairs extends Technique{
 	 * connected if they share a region in common--if any one 
 	 * block, row, or column contains them both.
 	 */
-	/*public boolean connect(Cell cell1, Cell cell2){
+	public boolean connect(Cell cell1, Cell cell2){
 		return cell1.sharesRegionWith(cell2);
-	}*/
-	
-	public static final BiPredicate<Cell,Cell> CELL_CONNECTION = (c1, c2) -> c1.sharesRegionWith(c2);
-	
-	@Override
-	public BiPredicate<Cell,Cell> connection(){
-		return CELL_CONNECTION;
 	}
 }

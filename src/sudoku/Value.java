@@ -48,7 +48,7 @@ public enum Value {
 	 * @return					Returns the int value of 
 	 * this instance of the enum.
 	 */
-	public int toInt() {
+	public int intValue() {
 		return value;
 	}
 	

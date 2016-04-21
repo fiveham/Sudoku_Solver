@@ -1,6 +1,6 @@
 package sudoku;
 
-import java.util.Set;
+import java.util.*;
 
 /**
  * Represents a technique for solving sudoku puzzles
@@ -9,7 +9,7 @@ import java.util.Set;
  * values can be that cell's value.
  * @author fiveham
  */
-class CellDeath extends Technique{
+public class CellDeath extends Technique{
 	
 	/**
 	 * The number of values possible for a given
@@ -41,15 +41,12 @@ class CellDeath extends Technique{
 		if(puzzle.isSolved())
 			return puzzleHasUpdated;
 		
-		// iterate over all the cells in the target
-		for(Cell[] currentCellArray : puzzle.getCells())
-			for(Cell currentCell : currentCellArray){
-				// check whether the current cell has only one value not impossible
-				Set<Value> possibleValues = currentCell.getPossibleValues();
-				if(possibleValues.size() == POSSIBLE_VALUES_COUNT)
-					for(Value value : possibleValues)
-						puzzleHasUpdated |= currentCell.setValue( value );
-			}
+		for(Cell currentCell : puzzle.getCells()){
+			List<Value> possibleValues = currentCell.getPossibleValues();
+			if(possibleValues.size() == POSSIBLE_VALUES_COUNT)
+				for(Value value : possibleValues)
+					puzzleHasUpdated |= currentCell.setValue( value );
+		}
 		return puzzleHasUpdated;
 	}
 }

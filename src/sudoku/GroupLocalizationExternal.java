@@ -1,9 +1,7 @@
 package sudoku;
 
 import common.ComboGen;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Represents a technique for solving sudoku puzzles.
@@ -55,20 +53,20 @@ public class GroupLocalizationExternal extends Technique{
 		// iterate over the regions
 		for(Region currentRegion : puzzle.getRegions()){
 			
-			Set<Cell> unsolveds = currentRegion.unsolvedCells();
+			List<Cell> unsolveds = currentRegion.unsolvedCells();
 			
-			if(unsolveds.size() >= MIN_CELL_COUNT){
+			if(unsolveds.size() >= MIN_CELL_COUNT)
 			// iterate over the properly sized combinations of unsolved cells
 				for( List<Cell> currentCombination : 
 						new ComboGen<>(unsolveds, 
-								LineHatch.inBounds(0, MIN_CELL_COUNT, unsolveds.size()), 
-								LineHatch.inBounds(0, MAX_CELL_COUNT, unsolveds.size()))){
+								inBounds(ComboGen.MIN_COMBO_SIZE, unsolveds.size(), MIN_CELL_COUNT), 
+								inBounds(ComboGen.MIN_COMBO_SIZE, unsolveds.size(), MAX_CELL_COUNT))){
 				
 					// check that the size of the combined set of candidate values
 					// from all the cells in the current combination is
 					// equal to the size of the current combination
 					// e.g. four cells with a total of four unassigned values
-					Set<Value> values = getValuesSet(currentCombination);
+					List<Value> values = getValuesSet(currentCombination);
 					
 					if(values.size() == currentCombination.size())
 						
@@ -79,37 +77,17 @@ public class GroupLocalizationExternal extends Technique{
 						//if( regionHasOtherCellsPossibleForValues(currentRegion, currentCombination, values) )
 						if( !currentCombination.equals(currentRegion.cellsPossibleForValues(values) ))
 							puzzleHasUpdated |= resolve(currentRegion, currentCombination, values);
-				}
 			}
 		}
 		return puzzleHasUpdated;
 	}
 	
 	/*
-	 * returns a set containing all the combinations of
-	 * unsolved cells in a region.  Each combination is
-	 * contained as a set, as well.
-	 * @param region
-	 * @return
-	 */
-	/*private Set<Set<Cell>> getUnsolvedCellCombinations(Region region){
-		
-		// get the unsolved cells in the region
-		Set<Cell> unsolvedCells = new Set<Cell>();
-		for(Cell currentCell : region.getCells())
-			if(!currentCell.isSolved())
-				unsolvedCells.add(currentCell);
-		
-		//return the partial power set of the set of unsolved cells
-		return Set.powerSet(unsolvedCells, MIN_CELL_COUNT, Math.min(MAX_CELL_COUNT, unsolvedCells.size()));
-	}/**/
-	
-	/*
 	 * Returns a list of all the values that are possible 
 	 * values of the cells from a parameter cell list.
 	 */
-	private Set<Value> getValuesSet(List<Cell> cells){
-		Set<Value> allValues = new HashSet<Value>();
+	private List<Value> getValuesSet(List<Cell> cells){
+		List<Value> allValues = new ArrayList<Value>();
 		
 		for( int i=0; i<cells.size(); i++ ){
 			Cell currentCell = cells.get(i);
@@ -122,34 +100,12 @@ public class GroupLocalizationExternal extends Technique{
 	}
 	
 	/*
-	 * Returns true if at least one cell in the parameter region
-	 * other than the cells in the parameter cells list has 
-	 * at least one of the values in the parameter values list
-	 * not marked as impossible or certain.
-	 * @param region
-	 * @param cells
-	 * @param values
-	 * @return
-	 */
-	/*private static boolean regionHasOtherCellsPossibleForValues(Region region, 
-			Set<Cell> cells, Set<Value> values){
-		
-		Set<Cell> possibleCells = new Set<Cell>();
-		for(Value value : values)
-			possibleCells.addAll(region.cellsPossibleForValue(value));
-		
-		if( possibleCells.minus(cells).size() > 0)
-			return true;
-		return false;
-	}/**/
-	
-	/*
 	 * Marks all the values in the values list as impossible 
 	 * in each of the cells in the cells list.
 	 * 
 	 * Returns whether any changes were made.
 	 */
-	private static boolean resolve(Region region, List<Cell> cells, Set<Value> values){
+	private static boolean resolve(Region region, List<Cell> cells, List<Value> values){
 		boolean returnValue = false;
 		
 		// iterate over the cells in the region other than 
@@ -160,7 +116,7 @@ public class GroupLocalizationExternal extends Technique{
 				// mark all the entries in the values list
 				// as impossible in the current cell
 				for(Value currentValue : values)
-					returnValue |= currentCell.setImpossibleValue(currentValue);
+					returnValue |= currentCell.setValueImpossible(currentValue);
 		return returnValue;
 	}
 }

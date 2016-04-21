@@ -58,7 +58,7 @@ public enum Index {
 	 * @return					Returns the internal 
 	 * value field for this index.
 	 */
-	public int toInt(){
+	public int intValue(){
 		return index;
 	}
 	

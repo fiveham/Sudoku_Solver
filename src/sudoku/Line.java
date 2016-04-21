@@ -53,7 +53,7 @@ public final class Line extends Region{
 		
 		String returnString = "";
 		
-		returnString += ((isVertical) ? "Column " : "Row ") + index.toInt();
+		returnString += ((isVertical) ? "Column " : "Row ") + index.intValue();
 		
 		return returnString;
 	}
@@ -139,7 +139,7 @@ public final class Line extends Region{
 				returnString += " ";
 				
 				// add either cellEdge or blockEdge
-				boolean cellIsAtBlockEdge = currentCell.getX().toInt() % Block.WIDTH == 0;
+				boolean cellIsAtBlockEdge = currentCell.getX().intValue() % Box.WIDTH == 0;
 				returnString += cellIsAtBlockEdge ? blockEdge : cellEdge;
 			}
 			returnString += "\n";

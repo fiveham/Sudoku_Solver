@@ -1,9 +1,6 @@
 package sudoku;
 
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * Represents a cell in a sudoku target.
@@ -36,9 +33,12 @@ public final class Cell{
 	
 	private final Index x;
 	private final Index y;
-	private Value value;
 	private final Puzzle puzzle;
 	private final Possibility[] possibilities;
+	
+	private Value value;
+	
+	private Symbol symbol = null;
 	
 	/*
 	 * Constructor.
@@ -69,7 +69,7 @@ public final class Cell{
 	 */
 	private void solvePossibilities(Value value){
 		for( Value currentValue : Value.KNOWN_VALUES )
-			possibilities[currentValue.toInt()-1] = (currentValue == value) 
+			possibilities[currentValue.intValue()-1] = (currentValue == value) 
 			? Possibility.CERTAIN 
 			: Possibility.IMPOSSIBLE;
 	}
@@ -102,7 +102,7 @@ public final class Cell{
 			this.value = value;
 			solvePossibilities(value);
 			for( Cell currentNeighbor : neighbors() )
-				currentNeighbor.setImpossibleValue(value);
+				currentNeighbor.setValueImpossible(value);
 			returnValue = true;
 		}
 		
@@ -119,9 +119,9 @@ public final class Cell{
 	 * @return					Returns whether any change 
 	 * was made to this cell.
 	 */
-	public boolean setImpossibleValue(Value value){
+	public boolean setValueImpossible(Value value){
 		boolean returnValue = false;
-		int index = value.toInt()-1;
+		int index = value.intValue()-1;
 		if(possibilities[index] == Possibility.UNKNOWN){
 			possibilities[index] = Possibility.IMPOSSIBLE;
 			returnValue = true;
@@ -147,7 +147,7 @@ public final class Cell{
 	 * value is marked impossible in this cell.
 	 */
 	public boolean isImpossibleValue(Value value){
-		return possibilities[value.toInt()-1] == Possibility.IMPOSSIBLE;
+		return possibilities[value.intValue()-1] == Possibility.IMPOSSIBLE;
 	}
 	
 	/**
@@ -159,7 +159,7 @@ public final class Cell{
 	 * value is marked unknown in this cell.
 	 */
 	public boolean isPossibleValue(Value value){
-		return possibilities[value.toInt()-1] == Possibility.UNKNOWN;
+		return possibilities[value.intValue()-1] == Possibility.UNKNOWN;
 	}
 	
 	/*
@@ -178,7 +178,7 @@ public final class Cell{
 	 * this cell shares a region (block, row, or 
 	 * column) with the parameter cell.
 	 */
-	protected boolean sharesRegionWith(Cell cell){
+	public boolean sharesRegionWith(Cell cell){
 
 		if(puzzle.getBlock( getBlockIndex() ).contains(cell))
 			return true;
@@ -197,7 +197,7 @@ public final class Cell{
 	 * block that contains this cell must have.
 	 */
 	public Index getBlockIndex(){
-		return Index.fromInt(BLOCK_INDEX_INT[x.toInt()-1][y.toInt()-1]);
+		return Index.fromInt(BLOCK_INDEX_INT[x.intValue()-1][y.intValue()-1]);
 	}
 	
 	/**
@@ -206,11 +206,11 @@ public final class Cell{
 	 * @return					Returns a list of the 
 	 * values that could be this cell's value.
 	 */
-	public Set<Value> getPossibleValues(){
-		Set<Value> returnSet = new HashSet<Value>();
+	public List<Value> getPossibleValues(){
+		List<Value> returnSet = new ArrayList<Value>();
 		
 		for(Value value : Value.KNOWN_VALUES)
-			if( possibilities[ value.toInt()-1 ] == Possibility.UNKNOWN )
+			if( possibilities[ value.intValue()-1 ] == Possibility.UNKNOWN )
 				returnSet.add( value );
 		
 		return returnSet;
@@ -268,7 +268,7 @@ public final class Cell{
 	 * of the parameter value in this cell.
 	 */
 	public Possibility getPossibility(Value value) {
-		return possibilities[value.toInt()-1];
+		return possibilities[value.intValue()-1];
 	}
 	
 	/**
@@ -295,7 +295,7 @@ public final class Cell{
 	 * @return					Returns a reference 
 	 * to the block to which this cell belongs.
 	 */
-	public Block getBlock(){
+	public Box getBlock(){
 		return puzzle.getBlock(getBlockIndex());
 	}
 	
@@ -338,11 +338,10 @@ public final class Cell{
 	 * '-' for unknown; '0' for impossible, and; '1' 
 	 * for certain.
 	 */
-	@Override
 	public String toString(){
-		String returnString = x.toInt()+","+y.toInt()+";";
+		String returnString = x.intValue()+","+y.intValue()+";";
 		
-		returnString += value.toInt() + ";";
+		returnString += value.intValue() + ";";
 		for(int i=0; i<possibilities.length; i++)
 			returnString += (Integer.toString(possibilities[i].toInt())).charAt(0);
 		
@@ -417,19 +416,5 @@ public final class Cell{
 			return "CERTAINs and UNKNOWNs coexisting for Cell "+toString();
 		
 		return "";
-	}
-	
-	@Override
-	public int hashCode(){
-		return y.toInt()*10+x.toInt();
-	}
-	
-	@Override
-	public boolean equals(Object o){
-		if( o instanceof Cell ){
-			Cell c = (Cell) o;
-			return puzzle == c.puzzle && x == c.x && y == c.y && value == c.value && possibilities.equals(c.possibilities);
-		}
-		return false;
 	}
 }

@@ -1,8 +1,6 @@
 package sudoku;
 
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * A technique for solving sudoku puzzles.
@@ -72,15 +70,15 @@ public class ValueClaim extends Technique{
 		for(Value currentValue :  Value.KNOWN_VALUES){
 			
 			// iterate over the blocks
-			for(Block currentBlock : puzzle.getBlocks()){
+			for(Box currentBlock : puzzle.getBlocks()){
 				
 				// Check if the number of cells possible for the current value
 				// is in the range to pertain to a claim
-				Set<Cell> possibleCellsList = currentBlock.cellsPossibleForValue(currentValue);
+				List<Cell> possibleCellsList = currentBlock.cellsPossibleForValue(currentValue);
 				if(MIN_CELLS_COUNT <= possibleCellsList.size() && possibleCellsList.size() <= MAX_CELLS_COUNT){
 					
 					// Check whether all the cells share a row or column, and determine which is the case if so.
-					Set<Line> lineBox = new HashSet<>();		//Empty container to receive line in the method called on next line.
+					List<Line> lineBox = new ArrayList<>();		//Empty container to receive line in the method called on next line.
 					int sharedLineType = sharedLineType(possibleCellsList, lineBox);
 					
 					//Extract the Line from the lineBox.
@@ -109,16 +107,16 @@ public class ValueClaim extends Technique{
 				
 				// Check if the number of cells possible for the current value
 				// in the current region is in the range to pertain to a claim
-				Set<Cell> possibleCells = currentOriginator.cellsPossibleForValue(currentValue);
+				List<Cell> possibleCells = currentOriginator.cellsPossibleForValue(currentValue);
 				if(MIN_CELLS_COUNT <= possibleCells.size() && possibleCells.size() <= MAX_CELLS_COUNT){
 					
 					// Check whether all the cells share a common block
-					Set<Block> blockBox = new HashSet<>();
+					List<Box> blockBox = new ArrayList<>();
 					if( shareCommonBlock(possibleCells, blockBox)){
 						
 						//Extract the Box from blockBox.
-						Block receivingBlock = null;
-						for( Block b : blockBox )
+						Box receivingBlock = null;
+						for( Box b : blockBox )
 							receivingBlock = b;
 						
 						// propagate impossibilities in the receiving region
@@ -138,48 +136,19 @@ public class ValueClaim extends Technique{
 	 * @param blockBox
 	 * @return
 	 */
-	private static boolean shareCommonBlock(Set<Cell> cells, Set<Block> blockBox){
-		Set<Block> blocks = new HashSet<>();
+	private static boolean shareCommonBlock(List<Cell> cells, List<Box> blockBox){
+		List<Box> boxes = new ArrayList<>();
 		
 		for(Cell c : cells)
-			blocks.add(c.getBlock());
+			boxes.add(c.getBlock());
 		
-		if(blocks.size() == 1){		//If they're all the same block, the set will end up with only one entry.
-			blockBox.addAll(blocks);
+		if(boxes.size() == 1){		//If they're all the same block, the set will end up with only one entry.
+			blockBox.addAll(boxes);
 			return true;
 		}
 		return false;
 		
 	}
-	
-	/*private static Line sharedLine(Set<Cell> cells){
-		Set<Line> rows = new Set<>();
-		Set<Line> columns = new Set<>();
-		
-		for(Cell c : cells){
-			rows.add(c.getRow());
-			columns.add(c.getColumn());
-		}
-		
-		if(rows.size()==1){
-			Line retRow = null;
-			for(Line r : rows){
-				retRow = r;
-			}
-			return retRow;
-		}
-		
-		if(columns.size()==1){
-			Line retColumn = null;
-			for(Line c : columns){
-				retColumn = c;
-			}
-			return retColumn;
-		}
-		
-		return null;
-		
-	}/**/
 	
 	/**
 	 * Returns an int value indicating what kind of line the 
@@ -189,9 +158,9 @@ public class ValueClaim extends Technique{
 	 * @param lineBox
 	 * @return
 	 */
-	private static int sharedLineType(Set<Cell> cells, Set<Line> lineBox){
-		Set<Line> rows = new HashSet<>();
-		Set<Line> columns = new HashSet<>();
+	private static int sharedLineType(List<Cell> cells, List<Line> lineBox){
+		List<Line> rows = new ArrayList<>();
+		List<Line> columns = new ArrayList<>();
 		
 		for(Cell c : cells){
 			rows.add(c.getRow());

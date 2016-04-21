@@ -1,7 +1,5 @@
 package sudoku;
 
-import java.util.function.*;
-
 /**
  * Represents a technique used in solving sudoku puzzles.
  * @author fiveham
@@ -47,7 +45,7 @@ public abstract class Technique {
 		return puzzle;
 	}
 	
-	/* *
+	/**
 	 * Returns whether the parameter cells are considered
 	 * to connect for the purposes of the technique.
 	 * 
@@ -57,13 +55,17 @@ public abstract class Technique {
 	 * @return 				Returns whether the parameter cells are considered
 	 * to connect for the purposes of the technique.
 	 */
-	/*public boolean connect(Cell cell1, Cell cell2){
+	public boolean connect(Cell cell1, Cell cell2){
 		return false;
-	}*/
+	}
 	
-	public static final BiPredicate<Cell,Cell> DEFAULT_CONNECTION = (c1,c2) -> false;
-	
-	public BiPredicate<Cell,Cell> connection(){
-		return DEFAULT_CONNECTION;
+	public static int inBounds(int lowerBound, int value, int upperBound){
+		if(value < lowerBound){
+			return lowerBound;
+		} else if(value > upperBound){
+			return upperBound;
+		} else{
+			return value;
+		}
 	}
 }

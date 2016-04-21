@@ -1,10 +1,6 @@
 package sudoku;
 
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.function.BiPredicate;
-import java.util.List;
-import java.util.HashSet;
+import java.util.*;
 
 public class XYWing extends Technique {
 	
@@ -37,13 +33,15 @@ public class XYWing extends Technique {
 	 */
 	public boolean digest(){
 		
+		final int SHARED_VALUE_COUNT = 1;
+		
 		boolean puzzleHasUpdated = false;
 		
 		if(puzzle.isSolved())
 			return puzzleHasUpdated;
 		
 		//first, get a list of the cells with two candidates
-		Set<Cell> candidatePairCells = cellsWithTwoCandidates(puzzle);
+		List<Cell> candidatePairCells = cellsWithTwoCandidates(puzzle);
 		
 		//iterate over all the size-3 subcomponents of the available cells
 		for(List<Cell> currentTriad : GraphTheory.subgraphs(candidatePairCells, 3, this) )
@@ -54,14 +52,15 @@ public class XYWing extends Technique {
 				
 				//Check whether the hydrogen-positioned cells have
 				//different candidate lists
-				List<Cell> wingTips = getWingTips(currentTriad);
-				Cell cell1 = wingTips.get(0);
-				Cell cell2 = wingTips.get(1);
-				if( intersection(cell1.getPossibleValues(),cell2.getPossibleValues()).size() == SHARED_VALUE_COUNT ){
+				Cell[] wingTips = getWingTips(currentTriad);
+				Cell cell1 = wingTips[0];
+				Cell cell2 = wingTips[1];
+				if( SetTheory.intersection( cell1.getPossibleValues(), 
+						cell2.getPossibleValues() ).size() == SHARED_VALUE_COUNT ){
 					
 					//Get the list of cells that connect to the two
 					//"wing tip" cells from the current XY-Wing triad
-					Set<Cell> affectedCells = affectableCells(puzzle, currentTriad);
+					List<Cell> affectedCells = affectableCells(puzzle, currentTriad);
 					
 					//normally at this point you would want to check each cell to see if
 					//it has candidates pertaining to the XY-wing under analysis, but
@@ -70,41 +69,25 @@ public class XYWing extends Technique {
 					
 					//thus, it is now time to resolve
 					for(Cell currentCell : affectedCells)
-						puzzleHasUpdated |= currentCell.setImpossibleValue(getTipSharedValue( wingTips ));
+						puzzleHasUpdated |= currentCell.setValueImpossible(getTipSharedValue( wingTips ));
 				}
 			}
 		
 		return puzzleHasUpdated;
 	}
 	
-	/**
-	 * Returns a new set equal to the intersection of a and b.
-	 * The returned set must contain only elements found in both
-	 * a and b.
-	 * @param a					A set
-	 * @param b					A set
-	 * @return					Returns a new set equal to the 
-	 * intersection of a and b. The returned set must contain 
-	 * only elements found in both a and b.
-	 */
-	public static <T> Set<T> intersection(Set<T> a, Set<T> b){
-		Set<T> returnSet = new HashSet<>(a);
-		returnSet.retainAll(b);
-		return returnSet;
-	}
-	
 	/*
 	 * returns a set of cells able to be affected by the triad
 	 */
-	private Set<Cell> affectableCells(Puzzle puzzle, List<Cell> triad){
-		Set<Cell> returnList = new HashSet<Cell>();
+	private List<Cell> affectableCells(Puzzle puzzle, List<Cell> triad){
+		List<Cell> returnList = new ArrayList<Cell>();
 		
 		//get the list of the two cells that can actually affect cells
-		ArrayList<Cell> wingTips = getWingTips(triad);
+		Cell[] wingTips = getWingTips(triad);
 		
 		//get all the neighbor cells of the meaningful network cells
-		ArrayList<Cell> cellsInRegions = wingTips.get(0).neighbors();
-		ArrayList<Cell> neighbors2 = wingTips.get(1).neighbors();
+		ArrayList<Cell> cellsInRegions = wingTips[0].neighbors();
+		ArrayList<Cell> neighbors2 = wingTips[1].neighbors();
 		
 		//combine those two lists
 		for( Cell currentCell : neighbors2 )
@@ -125,41 +108,34 @@ public class XYWing extends Technique {
 	 * triad that do not connect to each other
 	 * @throws IllegalArgumentException
 	 */
-	private ArrayList<Cell> getWingTips(List<Cell> triad){
-		ArrayList<Cell> wingTips = new ArrayList<Cell>();
+	private Cell[] getWingTips(List<Cell> triad){
 		Cell cell1 = triad.get(0);
 		Cell cell2 = triad.get(1);
 		Cell cell3 = triad.get(2);
-		if( !connection().test(cell1, cell2) ){
-			wingTips.add(cell1);
-			wingTips.add(cell2);
+		if( !connect(cell1, cell2) ){
+			return new Cell[]{cell1, cell2};
 		}
-		else if( !connection().test(cell2, cell3) ){
-			wingTips.add(cell2);
-			wingTips.add(cell3);
+		else if( !connect(cell2, cell3) ){
+			return new Cell[]{cell2, cell3};
 		}
-		else if( !connection().test(cell1, cell3) ){
-			wingTips.add(cell1);
-			wingTips.add(cell3);
+		else if( !connect(cell1, cell3) ){
+			return new Cell[]{cell1, cell3};
 		}
 		else{								//This code should never be reached
 			throw new IllegalArgumentException("cells connect triangularly");
 		}
-		return wingTips;
 	}
-	
-	private static final int SHARED_VALUE_COUNT = 1;
 	
 	/*
 	 * Returns the value shared by the two cells in a triad 
 	 * that do not connect with each other.
 	 */
-	private Value getTipSharedValue(List<Cell> wingTips){
+	private Value getTipSharedValue(Cell[] wingTips){
 		
-		List<Value> sharedValues = new ArrayList<>(wingTips.get(0).getPossibleValues());
-		sharedValues.retainAll( wingTips.get(1).getPossibleValues() );
-		/*Set<Value> sharedValues = Set.intersection(
-				wingTips.get(0).getPossibleValues(), wingTips.get(1).getPossibleValues() );*/
+		final int SHARED_VALUE_COUNT = 1;
+		
+		List<Value> sharedValues = SetTheory.intersection(
+				wingTips[0].getPossibleValues(), wingTips[1].getPossibleValues() );
 		
 		if(sharedValues.size() != SHARED_VALUE_COUNT)
 			throw new IllegalArgumentException("cells do not share 1 value (they share "+sharedValues.size()+" instead)");
@@ -190,15 +166,15 @@ public class XYWing extends Technique {
 	 * Returns a set of the cells in the parameter target that 
 	 * have only two values possible.
 	 */
-	private static Set<Cell> cellsWithTwoCandidates(Puzzle puzzle){
+	private static List<Cell> cellsWithTwoCandidates(Puzzle puzzle){
 		
 		final int VALUE_PAIR_SIZE = 2;
 		
-		Set<Cell> returnList = new HashSet<Cell>();
+		List<Cell> returnList = new ArrayList<>();
 		
-		for(int y=Index.MINIMUM.toInt(); y<=Index.MAXIMUM.toInt(); y++)
-			for(int x=Index.MINIMUM.toInt(); x<=Index.MAXIMUM.toInt(); x++){
-				Cell currentCell = puzzle.getCells()[x-1][y-1];
+		for(int y=Index.MINIMUM.intValue(); y<=Index.MAXIMUM.intValue(); y++)
+			for(int x=Index.MINIMUM.intValue(); x<=Index.MAXIMUM.intValue(); x++){
+				Cell currentCell = puzzle.getCell(x,y);
 				
 				if( currentCell.getPossibleValues().size() == VALUE_PAIR_SIZE )
 					returnList.add(currentCell);
@@ -206,11 +182,6 @@ public class XYWing extends Technique {
 		
 		return returnList;
 	}
-	
-	public static final int SHARED_CANDIDATE_COUNT = 1;
-	
-	public static final BiPredicate<Cell,Cell> CELL_CONNECTION = (cell1,cell2) -> intersection(cell1.getPossibleValues(), cell2.getPossibleValues()).size() == SHARED_CANDIDATE_COUNT
-			&& cell1.sharesRegionWith(cell2);
 	
 	/**
 	 * Returns whether two cells connect according to the 
@@ -225,7 +196,9 @@ public class XYWing extends Technique {
 	 * candidate lists.
 	 */
 	@Override
-	public BiPredicate<Cell,Cell> connection(){
-		return CELL_CONNECTION;
+	public boolean connect(Cell cell1, Cell cell2){
+		final int SHARED_CANDIDATE_COUNT = 1;
+		return SetTheory.intersection(cell1.getPossibleValues(), cell2.getPossibleValues()).size() == SHARED_CANDIDATE_COUNT
+				&& cell1.sharesRegionWith(cell2);
 	}
 }

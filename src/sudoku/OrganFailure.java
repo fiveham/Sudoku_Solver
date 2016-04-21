@@ -1,6 +1,6 @@
 package sudoku;
 
-import java.util.Set;
+import java.util.*;
 
 /**
  * Represents a technique for solving sudoku puzzles.
@@ -9,7 +9,7 @@ import java.util.Set;
  * that value must be that cell's value.
  * @author fiveham
  */
-class OrganFailure extends Technique{
+public class OrganFailure extends Technique{
 	
 	/** 
 	 * The number of cells in a given block that should be able to
@@ -52,7 +52,7 @@ class OrganFailure extends Technique{
 					// create a list of cells that are neither known to
 					// be unable to contain the current value
 					// nor known to already contain the current value
-					Set<Cell> possibleCellsList = currentRegion.cellsPossibleForValue(currentValue);
+					List<Cell> possibleCellsList = currentRegion.cellsPossibleForValue(currentValue);
 					
 					// If there's only one cell in the current region that is capable of containing
 					// the value in question, then that's the cell in the current region that holds that value;

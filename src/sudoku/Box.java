@@ -7,7 +7,7 @@ import java.util.ArrayList;
  * also known as a box.
  * @author fiveham
  */
-public class Block extends Region{
+public class Box extends Region{
 	
 	/** The height of a block measured in cells */
 	public static final int HEIGHT = 3;
@@ -39,11 +39,7 @@ public class Block extends Region{
 	 * @param target				The target to which this 
 	 * block belongs.
 	 */
-	/*
-	 * Constructor is package-private to prevent external code from 
-	 * arbitrarily creating Blocks.
-	 */
-	Block(Index index, Cell[] cells, Puzzle puzzle){
+	Box(Index index, Cell[] cells, Puzzle puzzle){
 		super(index, cells, puzzle);
 		
 		// Check arrangement of parameter cells in their target of origin
@@ -51,11 +47,11 @@ public class Block extends Region{
 			throw new IllegalArgumentException("Bad cells array");
 		
 		// set the min and max X and Y
-		minX = properMinXForBlockIndex(index);
-		maxX = Index.fromInt( WIDTH + minX.toInt() - 1 );
+		minX = minXForBlockIndex(index);
+		maxX = Index.fromInt( WIDTH + minX.intValue() - 1 );
 		// depending on the blockIndex
-		minY = properMinYForBlockIndex(index);
-		maxY = Index.fromInt( HEIGHT + minY.toInt() - 1 );
+		minY = minYForBlockIndex(index);
+		maxY = Index.fromInt( HEIGHT + minY.intValue() - 1 );
 	}
 	
 	/*
@@ -77,13 +73,13 @@ public class Block extends Region{
 		final int CELLS_PER_COORD_PAIR = 1;
 		
 		// get min and max X and Y
-		int minX = Index.MAXIMUM.toInt() + 1;
-		int maxX = Index.MINIMUM.toInt() - 1;
-		int minY = Index.MAXIMUM.toInt() + 1;
-		int maxY = Index.MINIMUM.toInt() - 1;
+		int minX = Index.MAXIMUM.intValue() + 1;
+		int maxX = Index.MINIMUM.intValue() - 1;
+		int minY = Index.MAXIMUM.intValue() + 1;
+		int maxY = Index.MINIMUM.intValue() - 1;
 		for( Cell currentCell : cells ){
-			int currentX = currentCell.getX().toInt();
-			int currentY = currentCell.getY().toInt();
+			int currentX = currentCell.getX().intValue();
+			int currentY = currentCell.getY().intValue();
 			
 			minX = (currentX < minX)?currentX:minX;
 			maxX = (maxX < currentX)?currentX:maxX;
@@ -99,9 +95,9 @@ public class Block extends Region{
 		
 		// return false if the min x and y are not proper values (1,4,7)
 		// has to be the correct 1, 4, or 7 depending on the block index
-		if( minX != properMinXForBlockIndex(index).toInt() )
+		if( minX != minXForBlockIndex(index).intValue() )
 			return false;
-		if( minY != properMinYForBlockIndex(index).toInt() )
+		if( minY != minYForBlockIndex(index).intValue() )
 			return false;
 		
 		for(int x = minX; x <= maxX; x++){
@@ -110,7 +106,7 @@ public class Block extends Region{
 				/* get a list of cells with position x,y */
 				ArrayList<Cell> cellsList = new ArrayList<Cell>();
 				for(Cell currentCell : cells){
-					if( currentCell.getX().toInt() == x && currentCell.getY().toInt() == y)
+					if( currentCell.getX().intValue() == x && currentCell.getY().intValue() == y)
 						cellsList.add(currentCell);
 				}
 				
@@ -131,9 +127,9 @@ public class Block extends Region{
 	 * @return					Returns the correct min 
 	 * x-coordinate for a block with the specified index.
 	 */
-	public static Index properMinXForBlockIndex(Index blockIndex){
+	public static Index minXForBlockIndex(Index blockIndex){
 		final int[] minXByBlockIndex = {1, 4, 7, 1, 4, 7, 1, 4, 7};
-		return Index.fromInt(minXByBlockIndex[blockIndex.toInt() - 1]);
+		return Index.fromInt(minXByBlockIndex[blockIndex.intValue() - 1]);
 	}
 	
 	/**
@@ -145,9 +141,9 @@ public class Block extends Region{
 	 * y-coordinate for a block the index of which is 
 	 * the parameter index.
 	 */
-	public static Index properMinYForBlockIndex(Index index){
+	public static Index minYForBlockIndex(Index index){
 		final int[] minYByBlockIndex = {1, 1, 1, 4, 4, 4, 7, 7, 7};
-		return Index.fromInt(minYByBlockIndex[index.toInt() - 1]);
+		return Index.fromInt(minYByBlockIndex[index.intValue() - 1]);
 	}
 	
 	/**
@@ -194,6 +190,6 @@ public class Block extends Region{
 	 * this is a block and its index.
 	 */
 	public String toString(){
-		return "Box " + index.toInt();
+		return "Box " + index.intValue();
 	}
 }

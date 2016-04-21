@@ -59,7 +59,6 @@ public class SudokuSolver {
 		techniqueList.add(new ValueClaim(puzzle));
 		techniqueList.add(new CellDeath(puzzle));
 		techniqueList.add(new GroupLocalizationExternal(puzzle));
-		//techniqueList.add(new GroupLocalizationInternal(target));
 		techniqueList.add(new XYWing(puzzle));
 		techniqueList.add(new LineHatch(puzzle));
 		techniqueList.add(new RemotePairs(puzzle));
@@ -76,7 +75,7 @@ public class SudokuSolver {
 	 */
 	public SudokuSolver(Puzzle puzzle, ArrayList<Technique> techniqueList){
 		this.puzzle = puzzle;
-		this.techniqueList = new ArrayList<>(techniqueList);
+		this.techniqueList = techniqueList;
 	}
 	
 	/**
@@ -131,22 +130,11 @@ public class SudokuSolver {
 	 * the next technique.
 	 */
 	public void digest(){
-		
 		for(int index = 0; 
 				index < techniqueList.size(); 
-				index = techniqueList.get(index).digest() ? 0 : (index+1) ){}
-		
-		//boolean madeChanges = false;
-		//for(int index = 0; index < techniqueList.size(); index = madeChanges ? 0 : (index+1) ){
-		//	madeChanges = techniqueList.get(index).digest();
-		//	if(madeChanges){
-		//		//System.out.println("index = "+index);
-		//		techniqueSuccesses += index;
-		//	}
-		//}
-		
-		//TO DO: remove this at the end of study
-		//techniqueSuccesses += " " + (target.isSolved() ? 'Y' : 'n');
+				index = techniqueList.get(index).digest() 
+						? 0 
+						: index+1 );
 	}
 	
 	/**
@@ -177,10 +165,10 @@ public class SudokuSolver {
 		
 		System.out.println("Blocks:");
 		for(Index index : Index.KNOWN_VALUES){
-			Block block = puzzle.getBlock(index);
-			if(block.hasError()){
-				System.out.println("Box "+index.toInt()+":");
-				System.out.println(block.error());
+			Box box = puzzle.getBlock(index);
+			if(box.hasError()){
+				System.out.println("Box "+index.intValue()+":");
+				System.out.println(box.error());
 			}
 		}
 		
@@ -188,7 +176,7 @@ public class SudokuSolver {
 		for(Index index : Index.KNOWN_VALUES){
 			Line row = puzzle.getRow(index);
 			if(row.hasError()){
-				System.out.println("Row "+index.toInt()+":");
+				System.out.println("Row "+index.intValue()+":");
 				System.out.println(row.error());
 			}
 		}
@@ -197,16 +185,15 @@ public class SudokuSolver {
 		for(Index index : Index.KNOWN_VALUES){
 			Line column = puzzle.getColumn(index);
 			if(column.hasError()){
-				System.out.println("Column "+index.toInt()+":");
+				System.out.println("Column "+index.intValue()+":");
 				System.out.println(column.error());
 			}
 		}
 		
 		System.out.println("Cell errors:");
-		for(Cell[] currentArray : puzzle.getCells())
-			for(Cell currentCell : currentArray)
-				if(currentCell.hasError())
-					System.out.println(currentCell.error());
+		for(Cell currentCell : puzzle.getCells())
+			if(currentCell.hasError())
+				System.out.println(currentCell.error());
 		
 		System.out.println("");
 	}

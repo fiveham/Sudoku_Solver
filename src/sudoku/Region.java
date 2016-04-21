@@ -1,9 +1,6 @@
 package sudoku;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * Represents a portion of a sudoku target that has
@@ -72,22 +69,22 @@ public abstract class Region{
 	 * Returns all the unsolved cells in the region
 	 * @return
 	 */
-	public Set<Cell> unsolvedCells(){
-		Set<Cell> returnSet = new HashSet<Cell>();
+	public List<Cell> unsolvedCells(){
+		List<Cell> retVal = new ArrayList<>();
 		
 		for(Cell c : cells)
 			if( !c.isSolved() )
-				returnSet.add(c);
+				retVal.add(c);
 		
-		return returnSet;
+		return retVal;
 	}
 	
 	/**
 	 * Returns all the solved cells in the region
 	 * @return
 	 */
-	public Set<Cell> solvedCells(){
-		Set<Cell> returnSet = new HashSet<Cell>();
+	public List<Cell> solvedCells(){
+		List<Cell> returnSet = new ArrayList<>();
 		
 		for(Cell c : cells)
 			if( c.isSolved() )
@@ -101,8 +98,8 @@ public abstract class Region{
 	 * is unsolved
 	 * @return
 	 */
-	public Set<Value> unsolvedValues(){
-		Set<Value> retVal = new HashSet<>();
+	public List<Value> unsolvedValues(){
+		List<Value> retVal = new ArrayList<>();
 		
 		for(Value v : Value.KNOWN_VALUES)
 			if(isSolvedForValue(v))
@@ -120,8 +117,8 @@ public abstract class Region{
 	 * @return						A list of the cells in the region
 	 * that could contain the parameter Value.
 	 */
-	public Set<Cell> cellsPossibleForValue(Value value){
-		Set<Cell> returnList = new HashSet<>();
+	public List<Cell> cellsPossibleForValue(Value value){
+		List<Cell> returnList = new ArrayList<>();
 		
 		for(Cell currentCell : cells)
 			if(currentCell.isPossibleValue(value))
@@ -130,8 +127,8 @@ public abstract class Region{
 		return returnList;
 	}
 	
-	public <T extends Collection<Value>> Set<Cell> cellsPossibleForValues(T collection){
-		Set<Cell> returnSet = new HashSet<>();
+	public List<Cell> cellsPossibleForValues(Collection<Value> collection){
+		List<Cell> returnSet = new ArrayList<>();
 		
 		for(Value val : collection){
 			returnSet.addAll( cellsPossibleForValue(val) );
@@ -157,7 +154,7 @@ public abstract class Region{
 		boolean retVal = false;
 		for(Cell c : cells)
 			if( !region.contains(c))
-				retVal |= c.setImpossibleValue(value);
+				retVal |= c.setValueImpossible(value);
 		return retVal;
 	}
 	
@@ -178,7 +175,7 @@ public abstract class Region{
 		
 		//Get a set containing only the cells in this region that
 		//are also not in any of the specified regions.
-		Set<Cell> propCells = cells();
+		List<Cell> propCells = cells();
 		for(Region r : regions)
 			propCells.removeAll( r.cells() );
 		
@@ -186,7 +183,7 @@ public abstract class Region{
 		//whether any changes were made as a result.
 		boolean retVal = false;
 		for(Cell c : propCells)
-			retVal |= c.setImpossibleValue(value);
+			retVal |= c.setValueImpossible(value);
 		return retVal;
 	}
 	
@@ -359,11 +356,11 @@ public abstract class Region{
 		}
 		
 		if(certainCount > MAX_CERTAINS)
-			return certainCount+" CERTAINs for Value "+value.toInt();
+			return certainCount+" CERTAINs for Value "+value.intValue();
 		if(impossibleCount > MAX_IMPOSSIBLES)
-			return impossibleCount+" IMPOSSIBLEs for Value "+value.toInt();
+			return impossibleCount+" IMPOSSIBLEs for Value "+value.intValue();
 		if(certainCount != 0 && impossibleCount != cells.length - certainCount)
-			return "CERTAINs and UNKNOWNs coexisting for Value "+value.toInt();
+			return "CERTAINs and UNKNOWNs coexisting for Value "+value.intValue();
 		
 		return "";
 	}
@@ -409,8 +406,8 @@ public abstract class Region{
 		return cells;
 	}/**/
 	
-	public Set<Cell> cells(){
-		Set<Cell> retSet = new HashSet<>();
+	public List<Cell> cells(){
+		List<Cell> retSet = new ArrayList<>();
 		for(Cell c : cells)
 			retSet.add(c);
 		return retSet;
@@ -436,7 +433,7 @@ public abstract class Region{
 	 * the next row.
 	 */
 	public Cell getCell(Index index){
-		return cells[index.toInt()-1];
+		return cells[index.intValue()-1];
 	}
 	
 	/**

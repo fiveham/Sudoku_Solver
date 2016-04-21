@@ -1,10 +1,6 @@
 package sudoku;
 
-import common.ComboGen;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Collection;
+import java.util.*;
 
 /**
  * Provides services derived from graph theory for 
@@ -20,7 +16,6 @@ import java.util.Collection;
  */
 public final class GraphTheory {
 	
-	//TODO move functionality to BasicGraph
 	/**
 	 * Returns a list of graphs, each of which is a single 
 	 * connected component from the parameter graph.
@@ -36,56 +31,39 @@ public final class GraphTheory {
 	 * each of which is a single connected component from 
 	 * the parameter graph.
 	 */
-	public static Set<Graph> connectedComponents(Collection<Cell> cells,
-			int minComponentSize, Technique technique){
+	public static List<List<Cell>> connectedComponents(List<Cell> cells,
+			int minComponentSize, Technique technique){	//TODO replace reference to a technique with a wrapped method reference
 		
-		Set<Graph> listOfComponents = new HashSet<>();
+		List<List<Cell>> listOfComponents = new ArrayList<>();
 		
-		//local copy to be modified
-		Graph source = new Graph(cells);
+		List<Cell> source = new ArrayList<>(cells);
 		
 		while( !source.isEmpty() ){
 			
-			Graph component = new Graph();
+			List<Cell> component = new ArrayList<>();
 			
-			//move an item from source to component
-			Cell item = source.element();
-			component.add( item );
-			source.remove( item );
+			component.add( source.get(0) );
+			source.remove( component.get(0) );
 			
-			while( stupidHelperMethod(source, component, technique) );
-			/*boolean changes = false;
+			boolean changes = false;
 			do{
 				changes = false;
+				
 				for(Cell cell : source)
 					if( cellConnectsToNetwork(cell, component, technique) )
 						changes = component.add(cell);
+				
 				source.removeAll( component );
-			}while( changes );*/
+				
+			}while( changes );
 			
-			if( component.size() >= minComponentSize ){
+			if( component.size() >= minComponentSize )
 				listOfComponents.add(component);
-			}
 		}
 		
 		return listOfComponents;
 	}
 	
-	private static boolean stupidHelperMethod(Graph source, Graph component, Technique technique){
-		boolean result = false;
-		
-		for(Cell cell : source){
-			if( cellConnectsToNetwork(cell, component, technique) ){
-				result = component.add(cell); //TODO verify that "=" is appropriate here rather than "|="
-			}
-		}
-		
-		source.removeAll( component );
-		
-		return result;
-	}
-	
-	//TODO move functionality to BasicGraph
 	/**
 	 * Returns a list of graphs, each of which is a single 
 	 * connected component from the parameter graph.
@@ -99,7 +77,7 @@ public final class GraphTheory {
 	 * each of which is a single connected component from 
 	 * the parameter graph.
 	 */
-	public static Set<? extends Set<Cell>> connectedComponents(Set<Cell> cells,
+	public static List<List<Cell>> connectedComponents(List<Cell> cells,
 			Technique technique){
 		
 		final int DEFAULT_MIN_COMPONENT_SIZE = 1;
@@ -122,10 +100,10 @@ public final class GraphTheory {
 	 * according to the standard for connection provided by the 
 	 * parameter technique.
 	 */
-	private static boolean cellConnectsToNetwork( Cell cell, Set<Cell> network, Technique technique){
+	private static boolean cellConnectsToNetwork( Cell cell, List<Cell> network, Technique technique){
 		
 		for( Cell networkCell : network )
-			if( technique.connection().test(cell, networkCell) )
+			if( technique.connect(cell, networkCell) )
 				return true;
 		
 		return false;
@@ -193,11 +171,11 @@ public final class GraphTheory {
 		for(int i = 0; i < returnMatrix.length; i++)
 			returnMatrix[i][i] = UNCONNECTED;
 		
-		/* set values on a triangular half of the matrix */
+		//set values on a triangular half of the matrix
 		for(int i=1; i<returnMatrix.length; i++)
 			for(int j=0; j<i; j++){
-				/* test for cell connectivity */
-				returnMatrix[i][j] = technique.connection().test(graph.get(i), graph.get(j))
+				// test for cell connectivity
+				returnMatrix[i][j] = technique.connect(graph.get(i), graph.get(j))
 										? CONNECTED
 										: UNCONNECTED;
 				//set the value on the other half of the matrix
@@ -261,28 +239,20 @@ public final class GraphTheory {
 	 * @return					Returns a list of subgraphs of 
 	 * a specified size from a graph.
 	 */
-	public static Set<List<Cell>> subgraphs(Set<Cell> network, int size, Technique technique){
+	public static List<List<Cell>> subgraphs(List<Cell> network, int size, Technique technique){
 		
 		final int CONNECTED_COMPONENT_COUNT = 1;
 		final int MIN_CELLS = 1;
 		
-		Set<List<Cell>> returnList = new HashSet<List<Cell>>();
+		List<List<Cell>> returnList = new ArrayList<>();
 		
 		//Consider the problem in terms of individual connected components of 
 		//the overall network.  If the overall network is not singly connected, 
 		//then a lot of effort could be wasted; so, it's better to check.
-		for( Set<Cell> component : connectedComponents(network, size, technique) ){
+		for( List<Cell> component : connectedComponents(network, size, technique) ){
 			
-			
-			//remove all not-properly-connected combinations of nodes
-			for( List<Cell> subcomponent : new ComboGen<Cell>(component, size, size) ){
-				if( connectedComponents(subcomponent, MIN_CELLS, technique).size() == CONNECTED_COMPONENT_COUNT ){
-					returnList.add(subcomponent);
-				}
-			}
-			
-			/*//List all the appropriately-sized subsets of nodes in the current connected component
-			Set<Set<Cell>> combosForComponent = Set.combinationsForMagnitude(component, size);
+			//List all the appropriately-sized subsets of nodes in the current connected component
+			List<List<Cell>> combosForComponent = combinationsForMagnitude(component, size);
 			
 			//remove all not-properly-connected combinations of nodes
 			for( int i=combosForComponent.size()-1; i>=0; i--){
@@ -291,18 +261,78 @@ public final class GraphTheory {
 				//Specify the subcomponent (which we hope is an internally connected 
 				//subcomponent) of the current overal connected component) that 
 				//is being focused on.
-				Set<Cell> subcomponent = combosForComponent.get(i);
+				List<Cell> subcomponent = combosForComponent.get(i);
 				
 				//Make sure that the in-focus subcomponent is singly connected by 
 				//enumerating and then counting its subcomponents
 				if( connectedComponents(subcomponent, MIN_CELLS, technique).size() != CONNECTED_COMPONENT_COUNT )
 					combosForComponent.remove(i);
-			}*/
+			}
 			
-			//returnList.addAll( combosForComponent );
+			returnList.addAll( combosForComponent );
 		}
 		
 		return returnList;
+	}
+	
+	/**
+ 	 * Returns all the combinations of size magnitude 
+ 	 * of items from the set items.
+ 	 * @param items				Set of items for which 
+ 	 * all combinations of size magnitude of items are 
+ 	 * to be returned.
+ 	 * @param magnitude			The size of all 
+ 	 * combinations to be returned.
+ 	 * @return					Returns all the 
+ 	 * combinations of size magnitude 
+ 	 * of items from the set items.
+ 	 */
+	public static <Type> List<List<Type>> combinationsForMagnitude(List<Type> items, int magnitude){
+ 		List<List<Type>> combinations = new ArrayList<>();
+ 		
+		combinationsForMagnitude(combinations, items, magnitude, new ArrayList<Type>());
+		
+		return combinations;
+	}
+	
+	/*
+	 * Returns a set of all the combinations of items that have 
+	 * a certain number of items in them out of the parameter 
+	 * set items.
+	 */
+ 	private static <Type> void combinationsForMagnitude(List<List<Type>> combinations, 
+			List<Type> items, int magnitude, List<Type> currentCombination){
+		
+		// When magnitude is 1, recursion needs to not happen
+		final int BASE_CASE_MAGNITUDE = 1;
+		
+		// iterate over the portion of the parameter items list that
+		// is valid for this level of iteration as determined by the
+		// parameter magnitude
+		for( int i=0; i<=items.size()-magnitude; i++ ){
+			Type currentItem = items.get(i);
+			
+			currentCombination.add(currentItem);
+			
+			if( magnitude == BASE_CASE_MAGNITUDE ){						//recursion shouldn't go any deeper
+				combinations.add( new ArrayList<>(currentCombination) );
+			}
+			else{														//recursion should go deeper
+				
+				// Create a shortenedItemsList to pass to a recursive copy 
+				// of this method. The list contains the items from this 
+				// instance's parameter itemsList that have an index higher 
+				// than that of the currentItem in the modifiedItemsList
+				List<Type> shortenedItemsList = new ArrayList<>();
+				int index = items.indexOf(currentItem);
+				for(int j=index+1; j<items.size(); j++)
+					shortenedItemsList.add(items.get(j));
+				
+				combinationsForMagnitude(combinations, shortenedItemsList, magnitude-1, currentCombination);
+			}
+			
+			currentCombination.remove( currentItem );
+		}
 	}
 	
 	/**
