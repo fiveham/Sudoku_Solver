@@ -1,3 +1,13 @@
+#Eclipse settings folder
+.settings
+
+#Eclipse stuff
+.classpath
+.project
+
+#Eclipse compiled files
+bin
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
