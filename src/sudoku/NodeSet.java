@@ -62,13 +62,13 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		this.puzzle = puzzle;
 	}
 	
-	/* *
+	/**
 	 * <p>Returns the target to which this NodeSet belongs.</p>
 	 * @return the target to which this NodeSet belongs
 	 */
-	/*public Puzzle getPuzzle(){ //TO DO determine whether this method is needed. If so, account for the Puzzle/Sudoku distinction
+	public Puzzle getPuzzle(){
 		return puzzle;
-	}*/
+	}
 	
 	/**
 	 * <p>Sets this NodeSet's target to <tt>null</tt>, enabling 

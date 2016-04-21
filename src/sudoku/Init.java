@@ -26,21 +26,17 @@ public class Init extends Fact {
 	
 	public Init(Puzzle puzzle) {
 		super(puzzle);
-		// TODO Auto-generated constructor stub
 	}
 	
 	public Init(Puzzle puzzle, Collection<Claim> c) {
 		super(puzzle, c);
-		// TODO Auto-generated constructor stub
 	}
 	
 	public Init(Puzzle puzzle, int initialCapacity) {
 		super(puzzle, initialCapacity);
-		// TODO Auto-generated constructor stub
 	}
 	
 	public Init(Puzzle puzzle, int initialCapacity, float loadFactor) {
 		super(puzzle, initialCapacity, loadFactor);
-		// TODO Auto-generated constructor stub
 	}
 }

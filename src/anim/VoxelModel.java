@@ -45,12 +45,6 @@ public class VoxelModel extends Box{
 	private final int y;
 	private final int z;
 	private final PuzzleVizApp.RegionSpecies type;
-	/*private final double xNeg;
-	private final double xPos;
-	private final double yNeg;
-	private final double yPos;
-	private final double zNeg;
-	private final double zPos;*/
 	private BagModel ownerBag;
 	
 	/* 

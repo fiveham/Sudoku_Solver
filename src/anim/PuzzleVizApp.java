@@ -508,7 +508,7 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	private Timeline genTimelineForAutoEvent(FalsifiedTime ft, Map<Claim,List<VoxelModel>> modelHandler){
-		Timeline result = new Timeline();
+		final Timeline result = new Timeline();
 		
 		for(Claim c : ft.falsified()){
 			for(VoxelModel vm : modelHandler.get(c)){

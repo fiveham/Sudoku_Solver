@@ -122,9 +122,9 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	}
 	
 	@Override
-	public Graph<T> componentForSeed(List<T> unassignedNodes, /*Function<List<T>,T> seedSrc*/ T seed, List<Consumer<Set<T>>> contractEventListeners){
+	public Graph<T> componentForSeed(List<T> unassignedNodes, T seed, List<Consumer<Set<T>>> contractEventListeners){
 		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(nodes.size(), contractEventListeners);
-		newComponent.add(/*seedSrc.apply(unassignedNodes)*/seed);
+		newComponent.add(seed);
 		
 		while( !newComponent.cuttingEdge().isEmpty() ){
 			newComponent.contract();
@@ -134,7 +134,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 			unassignedNodes.removeAll(newComponent.cuttingEdge());
 		}
 		
-		return new BasicGraph<T>(newComponent.contract(), contractEventListenerFactories); //TODO should the event-listener-factories be sent or not?
+		return new BasicGraph<T>(newComponent.contract());
 	}
 	
 	/**

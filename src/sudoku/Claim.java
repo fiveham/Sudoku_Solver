@@ -273,13 +273,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * false when a Rule is removed from this Claim without 
 	 * accommodating the Rule's role via another remaining Rule.</p>
 	 */
-	/*@Override
-	protected void validateFinalState(){ //TODO make sure this doesn't break Rule-class operations still in-progress
-		if(!isEmpty() && !hasAllRules()){
-			setFalse();
-		}
-	}*/
-	
 	@Override
 	protected void validateFinalState(SolutionEvent time){ //TODO make sure this doesn't break Rule-class operations still in-progress
 		if(!isEmpty() && !hasAllRules()){
