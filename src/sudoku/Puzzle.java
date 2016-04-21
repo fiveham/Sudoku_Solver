@@ -1,21 +1,15 @@
 package sudoku;
 
-import common.graph.BasicGraph;
-import common.time.Root;
-import common.time.TimeBuilder;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import common.time.TimeBuilder;
 
 /**
  * <p>Represents a sudoku target as a bipartite graph of 
@@ -37,19 +31,7 @@ import java.util.stream.StreamSupport;
  * @author fiveham
  *
  */
-public class Puzzle extends BasicGraph<NodeSet<?,?>>{
-	
-	/**
-	 * <p>The fundamental order of this Puzzle, equal to the square 
-	 * root of the {@link #sideLength side length}.</p>
-	 */
-	private int magnitude;
-	
-	/**
-	 * <p>The number of coordinates along a dimension 
-	 * of this Puzzle.</p>
-	 */
-	private int sideLength;
+public class Puzzle extends SudokuNetwork{
 	
 	/**
 	 * <p>A three-dimensional array of this Puzzle's Claims.</p>
@@ -69,11 +51,6 @@ public class Puzzle extends BasicGraph<NodeSet<?,?>>{
 	private List<List<IndexInstance>> dimensions;
 	
 	/**
-	 * <p>The root of this Puzzle's time-tree for solution-events.</p>
-	 */
-	private final TimeBuilder root;
-	
-	/**
 	 * <p>Constructs a Puzzle using the text in the specified file <tt>f</tt>.</p>
 	 * 
 	 * @param f the file containing the target in text form at the start of the file
@@ -81,7 +58,7 @@ public class Puzzle extends BasicGraph<NodeSet<?,?>>{
 	 * @throws FileNotFoundException if <tt>f</tt> cannot be found or read
 	 */
 	public Puzzle(File f) throws FileNotFoundException{
-		this(new Scanner(f));
+		this(new Scanner(f), null);
 	}
 	
 	/**
@@ -90,7 +67,7 @@ public class Puzzle extends BasicGraph<NodeSet<?,?>>{
 	 * @param s the target in text
 	 */
 	public Puzzle(String s){
-		this(new Scanner(s));
+		this(new Scanner(s), null);
 	}
 	
 	/**
@@ -100,15 +77,11 @@ public class Puzzle extends BasicGraph<NodeSet<?,?>>{
 	 * create the Puzzle object
 	 */
 	public Puzzle(Scanner s){
-		this.removalListeners = new ArrayList<>();
-		this.root = new Root();
-		
-		Parser p = new Parser();
-		List<Integer> values = p.parse(s);
-		s.close();
-		
-		this.magnitude = p.mag;
-		this.sideLength = magnitude*magnitude;
+		this(s, null);
+	}
+	
+	private Puzzle(Scanner s, Parser parser){
+		super((parser = new Parser(s)).mag());
 		
 		this.indices = genIndices(sideLength, this);
 		this.dimensions = genDimensions(indices, this);
@@ -118,32 +91,30 @@ public class Puzzle extends BasicGraph<NodeSet<?,?>>{
 		this.nodes.ensureCapacity(nodes.size()+sideLength*sideLength*sideLength);
 		StreamSupport.stream(claims.spliterator(), false).forEach((claim)->nodes.add(claim));
 		
-		Initialization init = new Initialization();
-		this.root.push(init);
-		for(Claim c : parseText(values)){
-			init.falsified().addAll(claimStream().filter((claim)->claim.intersects(c)).collect(Collectors.toList()));
-			c.setTrue();
+		for(Claim c : parseText(parser.values())){
+			Init specificValue = new Init(this, 1);
+			nodes.add(specificValue);
+			specificValue.add(c);
 		}
-		this.root.pop();
 	}
 	
-	/**
+	/* *
 	 * <p>The Time node gathering all initial-value-installation events 
 	 * together as children of a meaningful common node.</p>
 	 * 
 	 * @author fiveham
 	 *
 	 */
-	public class Initialization extends SolutionEvent{
+	/*public class Initialization extends SolutionEvent{
 		
-		/**
+		*//**
 		 * <p>Constructs an Initialization whose {@link Time#parent() parent} is 
 		 * this target's {@link Puzzle#timeBuilder() root}.</p>
-		 */
+		 *//*
 		private Initialization(){
 			super(root);
 		}
-	}
+	}*/
 	
 	/**
 	 * <p>Generates the Rules for <tt>p</tt>.</p>
@@ -211,103 +182,12 @@ public class Puzzle extends BasicGraph<NodeSet<?,?>>{
 	}
 	
 	/**
-	 * <p>Removes the specified <tt>node</tt> from this Puzzle's underlying graph.</p>
-	 * @see #removalListeners
-	 * @param node the Rule or Claim to be removed
-	 */
-	void removeNode(NodeSet<?,?> node){
-		if(nodes.remove(node)){
-			node.losePuzzle();
-			removalListeners.stream().forEach((listener)->listener.accept(node));
-		}
-	}
-	
-	/**
-	 * <p>A list of event-listeners that respond when a node 
-	 * {@link #removeNode(NodeSet) is removed} from this target.</p>
-	 */
-	private final List<Consumer<NodeSet<?,?>>> removalListeners;
-	
-	/**
-	 * <p>Adds <tt>listener</tt> to this target's list of 
-	 * {@link #removalListeners removal-listeners}.</p>
-	 * @param listener a removal-event listener
-	 * @return true if the list of removal-event listeners was 
-	 * changed by calling this method, false otherwise
-	 */
-	public boolean addRemovalListener(Consumer<NodeSet<?,?>> listener){
-		return removalListeners.add(listener);
-	}
-	
-	/**
-	 * <p>Removes <tt>listener</tt> from this target's list of 
-	 * {@link #removalListeners removal-listeners}.</p>
-	 * @param listener a removal-event listener
-	 * @return true if the list of removal-event listeners was 
-	 * changed by calling this method, false otherwise
-	 */
-	public boolean removeRemovalListener(Consumer<NodeSet<?,?>> listener){
-		return removalListeners.remove(listener);
-	}
-	
-	/**
-	 * <p>Returns the root of this Puzzle's resolution time-tree.</p>
-	 * @return the root of this Puzzle's resolution time-tree
-	 */
-	public TimeBuilder timeBuilder(){
-		return root;
-	}
-	
-	/**
-	 * <p>Returns the underlying order of this Puzzle, the 
-	 * square root of the side length.</p>
-	 * @return the underlying order of this Puzzle, the 
-	 * square root of the side length
-	 */
-	public int magnitude(){
-		return magnitude;
-	}
-	
-	/**
 	 * <p>Returns this target's SpaceMap of claims.</p>
 	 * @return this target's SpaceMap of claims
 	 */
 	public SpaceMap claims(){
 		return claims;
 	}
-	
-	/**
-	 * <p>Returns a Stream of those nodes of this Puzzle's underlying graph 
-	 * that are of the type <tt>Rule</tt>. The nodes returned are cast as 
-	 * Rule, as well.</p>
-	 * @return a Stream of all the <tt>Rule</tt>-type nodes from this Puzzle's 
-	 * underlying graph.
-	 */
-	public Stream<Rule> ruleStream(){
-		return nodes.stream().filter(IS_RULE).map((ns)->(Rule)ns);
-	}
-	
-	/**
-	 * <p>Returns a Stream of all the <tt>Claim</tt>-type nodes in this 
-	 * Puzzle's underlying graph.</p>
-	 * @return a Stream of all the <tt>Claim</tt>-type nodes in this 
-	 * Puzzle's underlying graph.
-	 */
-	public Stream<Claim> claimStream(){
-		return nodes.stream().filter(IS_CLAIM).map((ns)->(Claim)ns);
-	}
-	
-	/**
-	 * <p>Returns true if and only if the specified <tt>NodeSet<?,?></tt> is 
-	 * a <tt>Rule</tt>.</p>
-	 */
-	public static final Predicate<NodeSet<?,?>> IS_RULE  = (ns)->ns instanceof Rule;
-	
-	/**
-	 * <p>Returns true if and only if the specified <tt>NodeSet<?,?></tt> is 
-	 * a <tt>Rule</tt>.</p>
-	 */
-	public static final Predicate<NodeSet<?,?>> IS_CLAIM = (ns)->ns instanceof Claim;
 	
 	/**
 	 * <p>Returns a list (sorted) of all the {@link #IndexValue index values} 
@@ -373,7 +253,7 @@ public class Puzzle extends BasicGraph<NodeSet<?,?>>{
 	 * @return true if this Puzzle is solved, false otherwise.
 	 */
 	public boolean isSolved(){
-		return ruleStream().anyMatch((rule)->rule.size()!=Rule.SIZE_WHEN_SOLVED);
+		return factStream().allMatch((rule)->rule.size()==Fact.SIZE_WHEN_SOLVED);
 	}
 	
 	/**
@@ -540,16 +420,6 @@ public class Puzzle extends BasicGraph<NodeSet<?,?>>{
 	}
 	
 	/**
-	 * <p>Returns the length of a side of this Puzzle, which is 
-	 * also the number of rows, the number of columns, and the 
-	 * number of boxes.</p>
-	 * @return the length of a side of this target
-	 */
-	public int sideLength(){
-		return sideLength;
-	}
-	
-	/**
 	 * <p>Returns the index of the box that includes the specified 
 	 * x and y coordinates.</p>
 	 * @param x the x-coordinate of a point whose surrounding box's 
@@ -636,73 +506,6 @@ public class Puzzle extends BasicGraph<NodeSet<?,?>>{
 	 * cell or to the value in a blank cell.</p>
 	 */
 	public static final int BLANK_CELL = 0;
-	
-	/**
-	 * <p>A utility class that tries to parse a target out of a text 
-	 * source via a specified Scanner that scans from that text.</p>
-	 * @author fiveham
-	 *
-	 */
-	private static class Parser{
-		
-		private volatile int mag = 2;
-		
-		/**
-		 * <p>Returns the radix to be used for {@link Integer#parseInt(String) parsing} 
-		 * human-readable text integers into <tt>int</tt>s for internal use. The value 
-		 * returned depends on the current value of {@link #mag mag}.</p>
-		 * @return the radix to be used for parsing the human-readable values of the 
-		 * cells specified in the text source for this target into <tt>int</tt>s for 
-		 * internal use, depending on the current value of <tt>mag</tt>
-		 */
-		private int radix(){
-			return mag*mag+1;
-		}
-		
-		/**
-		 * <p>Converts a human-readable integer in an unknown base, from a target of 
-		 * unknown size, into an <tt>int</tt> while determining what base is appropriate 
-		 * for parsing the current and remaining text into ints.</p>
-		 * @param token the string to be parsed into an int
-		 * @return the int parsed from the specified token
-		 */
-		private int parseInt(String token){
-			Integer result = null;
-			while( result == null ){
-				try{
-					result = Integer.parseInt(token, radix());
-				} catch(NumberFormatException e){
-					++mag;
-				}
-			}
-			return result;
-		}
-		
-		/**
-		 * <p>Gets tokens one-at-a-time from the specified Scanner, and 
-		 * parses them into ints while determining the size of the target 
-		 * represented in the text that the Scanner scans.</p>
-		 * @param s the Scanner used to access the target's source text
-		 * @return a list of integers each of which is the value of a 
-		 * cell in the target; the mapping between cells and the list is 
-		 * a snake starting in the upper left corner (low x,y), moving 
-		 * right (increasing x), then wrapping around to the next y-level 
-		 * until the snake reaches the lower right (high x,y)
-		 */
-		private List<Integer> parse(Scanner s){
-			List<Integer> result = new ArrayList<>();
-			
-			while(s.hasNext() && mag*mag*mag*mag > result.size()){
-				String token = s.next();
-				if(token.length() > 1){
-					throw new IllegalArgumentException(token+" is more than a single char");
-				}
-				result.add(parseInt(token));
-			}
-			
-			return result;
-		}
-	}
 	
 	/**
 	 * <p>Entries in this enum describe properties of the four types of regions in a sudoku target: 

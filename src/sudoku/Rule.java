@@ -1,25 +1,19 @@
 package sudoku;
 
-import sudoku.Puzzle.RegionSpecies;
-import sudoku.Puzzle.IndexInstance;
+import common.time.Time;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import sudoku.Puzzle.RegionSpecies;
+import sudoku.Puzzle.IndexInstance;
 
-public class Rule extends NodeSet<Claim,Rule> {
+public class Rule extends Fact{
 	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 2191355198146127036L;
-	
-	/**
-	 * <p>The number ({@value}) of elements (neighbors) of a Rule when 
-	 * the Claim satisfying the Rule has been completely 
-	 * identified.</p>
-	 */
-	public static final int SIZE_WHEN_SOLVED = 1;
 	
 	/**
 	 * <p>The number ({@value}) of elements (neighbors) of a Rule that 
@@ -161,7 +155,7 @@ public class Rule extends NodeSet<Claim,Rule> {
 		return sb.toString();
 	}
 	
-	/**
+	/* *
 	 * <p>Collapses this set down to be equal to <tt>src</tt>, 
 	 * while ensuring that all released Claims are freed from 
 	 * all other Rules.</p>
@@ -178,15 +172,25 @@ public class Rule extends NodeSet<Claim,Rule> {
 	 * @return true if the target was changed by calling this 
 	 * method, false otherwise
 	 */
-	boolean merge(Rule src){
-		boolean result = retainAll(src);
+	/*boolean merge(SolutionEvent time, Rule src){
+		boolean result = retainAll(time, src);
 		
 		this.types |= src.types;
 		src.types = 0;
 		
-		src.clear();
+		src.clear(time);
 		puzzle.removeNode(src);
 		return result;
+	}*/
+	
+	void mergeDetails(Fact src){
+		if(src instanceof Rule){
+			Rule r = (Rule) src;
+			this.types |= r.types;
+			r.types = 0;
+		} else{
+			
+		}
 	}
 	
 	/**
@@ -199,15 +203,15 @@ public class Rule extends NodeSet<Claim,Rule> {
 	 * @throws IllegalStateException if this Rule is empty
 	 */
 	@Override
-	protected void validateFinalState(){
-		if( size() == SIZE_WHEN_SOLVED ){
+	protected void validateFinalState(SolutionEvent time){
+		if(size() == SIZE_WHEN_SOLVED){
 			for(Claim c : this){
-				puzzle.timeBuilder().push(new TimeTotalLocalization(c.visibleClaims()));
-				c.setTrue();
-				puzzle.timeBuilder().pop();
+				time.push(new TimeTotalLocalization(time.top(), c.visibleClaims()));
+				c.setTrue(time);
+				time.pop();
 			}
 		} else if( shouldCheckForValueClaim() ){
-			findAndAddressValueClaim();
+			findAndAddressValueClaim(time);
 		} else if( isEmpty() ){
 			throw new IllegalStateException("A Rule is not allowed to be empty. this.toString(): "+toString());
 		}
@@ -222,8 +226,8 @@ public class Rule extends NodeSet<Claim,Rule> {
 	 *
 	 */
 	public class TimeTotalLocalization extends AutoResolve{
-		private TimeTotalLocalization(Collection<Claim> falseClaims){
-			super(falseClaims);
+		private TimeTotalLocalization(Time parent, Collection<Claim> falseClaims){
+			super(parent, falseClaims);
 		}
 	}
 	
@@ -232,25 +236,23 @@ public class Rule extends NodeSet<Claim,Rule> {
 	 * if found. These are scenarios where one Rule is a subset 
 	 * of another.</p>
 	 */
-	private void findAndAddressValueClaim(){
-		Set<Rule> possibleSupersets = new HashSet<>();
-		
+	private void findAndAddressValueClaim(SolutionEvent time){
+		Set<Fact> possibleSupersets = new HashSet<>();
 		for(Claim c : this){
 			possibleSupersets.addAll(c);
 		}
 		possibleSupersets.remove(this);
 		
-		for(Rule possibleSuperset : possibleSupersets){
+		for(Fact possibleSuperset : possibleSupersets){
 			if(possibleSuperset.hasProperSubset(this)){
-				TimeValueClaim time = new TimeValueClaim(
+				time.push(new TimeValueClaim(time.top(), 
 						possibleSuperset.stream()
-								.filter((e)->!contains(e))
-								.collect(Collectors.toSet()));
-				puzzle.timeBuilder().push(time);
+						.filter((e)->!contains(e))
+						.collect(Collectors.toSet())));
 				
-				possibleSuperset.merge(this);
+				possibleSuperset.merge(time, this);
 				
-				puzzle.timeBuilder().pop();
+				time.pop();
 				return;
 			}
 		}
@@ -264,8 +266,8 @@ public class Rule extends NodeSet<Claim,Rule> {
 	 *
 	 */
 	public class TimeValueClaim extends AutoResolve{
-		private TimeValueClaim(Collection<Claim> falseClaims){
-			super(falseClaims);
+		private TimeValueClaim(Time parent, Collection<Claim> falseClaims){
+			super(parent, falseClaims);
 		}
 	}
 	
@@ -305,8 +307,8 @@ public class Rule extends NodeSet<Claim,Rule> {
 	 *
 	 */
 	public class AutoResolve extends FalsifiedTime{
-		private AutoResolve(Collection<Claim> falseClaims){
-			super(puzzle.timeBuilder().top());
+		private AutoResolve(Time parent, Collection<Claim> falseClaims){
+			super(parent);
 			falsified().addAll(falseClaims);
 		}
 	}

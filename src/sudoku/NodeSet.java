@@ -1,8 +1,14 @@
 package sudoku;
 
 import common.graph.Vertex;
+import common.time.Time;
+
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <p>A set that's a node in {@link Puzzle a graph representation of a sudoku target}, 
@@ -23,13 +29,19 @@ import java.util.Iterator;
  * for this type itself.
  */
 public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends ToolSet<T> implements Vertex<NodeSet<?,?>>{
+	/*
+	 * TODO get a real solution for the lack of a context Time in regular Collection methods
+	 * 
+	 * Idea: Include a (real) Time stack in each NodeSet, and require external use of the time 
+	 * stack by the calling context before and after calls to the standard Collection methods
+	 */
 	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -5327679229184923974L;
 	
-	protected Puzzle puzzle;
+	protected Puzzle puzzle; //nodes are created only once; so, genericizing to allow non-Puzzle Sudokus is not needed
 
 	public NodeSet(Puzzle puzzle){
 		this.puzzle = puzzle;
@@ -50,9 +62,13 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		this.puzzle = puzzle;
 	}
 	
-	public Puzzle getPuzzle(){
+	/* *
+	 * <p>Returns the target to which this NodeSet belongs.</p>
+	 * @return the target to which this NodeSet belongs
+	 */
+	/*public Puzzle getPuzzle(){ //TO DO determine whether this method is needed. If so, account for the Puzzle/Sudoku distinction
 		return puzzle;
-	}
+	}*/
 	
 	/**
 	 * <p>Sets this NodeSet's target to <tt>null</tt>, enabling 
@@ -88,7 +104,17 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		boolean result = remove_internal(o);
 		
 		if(result){
-			validateFinalState();
+			validateFinalState(new DummyTime());
+		}
+		
+		return result;
+	}
+	
+	public boolean remove(SolutionEvent time, Object o){
+		boolean result = remove_internal(time, o);
+		
+		if(result){
+			validateFinalState(time);
 		}
 		
 		return result;
@@ -111,6 +137,15 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		}
 		return result;
 	}
+
+	@SuppressWarnings("unchecked")
+	private boolean remove_internal(SolutionEvent time, Object o){
+		boolean result = super.remove(o);
+		if(result){
+			((T)o).remove(time, this);
+		}
+		return result;
+	}
 	
 	@Override
 	public final boolean removeAll(Collection<?> c){
@@ -120,7 +155,20 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 			result |= remove_internal(o);
 		}
 		if(result){
-			validateFinalState();
+			validateFinalState(new DummyTime());
+		}
+		
+		return result;
+	}
+	
+	public final boolean removeAll(SolutionEvent time, Collection<?> c){
+		boolean result = false;
+		
+		for(Object o : c){
+			result |= remove_internal(time, o);
+		}
+		if(result){
+			validateFinalState(time);
 		}
 		
 		return result;
@@ -138,10 +186,35 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 			}
 		}
 		if(result){
-			validateFinalState();
+			validateFinalState(new DummyTime());
 		}
 		
 		return result;
+	}
+	
+	public final boolean retainAll(SolutionEvent time, Collection<?> c){
+		boolean result = false;
+		
+		Iterator<T> iter = super.iterator();
+		for(T t; iter.hasNext();){
+			if(!c.contains(t = iter.next())){
+				remove_internal(time, t);
+				result = true;
+			}
+		}
+		if(result){
+			validateFinalState(time);
+		}
+		
+		return result;
+	}
+	
+	public final void clear(SolutionEvent time){
+		SafeRemovingIterator iter = new SafeRemovingIterator();
+		while(iter.hasNext()){
+			iter.next();
+			iter.remove(time);
+		}
 	}
 	
 	@Override
@@ -175,6 +248,10 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 			wrappee.remove();
 			lastResult.remove(NodeSet.this);
 		}
+		public void remove(SolutionEvent time){
+			wrappee.remove();
+			lastResult.remove(time, NodeSet.this);
+		}
 		@Override
 		public T next(){
 			return lastResult = wrappee.next();
@@ -185,7 +262,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		}
 	}
 	
-	/**
+	/* *
 	 * <p>Checks if this NodeSet obeys its own rules after some modification 
 	 * operation has been performed on it, and enforces the consequences of 
 	 * consequence-bearing rules that are broken, including throwing an 
@@ -194,12 +271,36 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	 * operations can call it while subclasses provide meaningful 
 	 * implementation.</p>
 	 */
-	protected void validateFinalState(){
+	protected void validateFinalState(SolutionEvent time){
 		//do nothing
 	}
 	
 	@Override
 	public Collection<T> neighbors(){
 		return this;
+	}
+	
+	private class DummyTime extends SolutionEvent{
+		private DummyTime(){
+		}
+		public void pop(){
+			//do nothing
+		}
+		public Time top(){
+			return this;
+		}
+		public void push(Time time){
+			//do nothing
+		}
+		public Set<Claim> falsified(){
+			return new HashSet<Claim>(0);
+		}
+		public List<Time> children(){
+			return new ArrayList<Time>(0);
+		}
+		public boolean addChild(Time child){
+			return false;
+		}
+		//FIXME add in all the other dummy methods
 	}
 }

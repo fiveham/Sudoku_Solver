@@ -15,7 +15,7 @@ public abstract class Technique {
 	/**
 	 * <p>The target to which this instance of this technique pertains.</p>
 	 */
-	protected Puzzle puzzle; //Privacy is protected to allow access from subclasses
+	protected Sudoku target; //Privacy is protected to allow access from subclasses
 	
 	/**
 	 * <p>Constructs a Technique object. Specifies the target
@@ -23,8 +23,8 @@ public abstract class Technique {
 	 * @param target The target to which this 
 	 * instance of this solution technique pertains.
 	 */
-	protected Technique(Puzzle puzzle){
-		this.puzzle = puzzle;
+	protected Technique(Sudoku puzzle){
+		this.target = puzzle;
 	}
 	
 	/**
@@ -32,25 +32,24 @@ public abstract class Technique {
 	 * <p>If opportunities to set values in any cells or to mark values
 	 * impossible in any cells arise, such an opportunity must be 
 	 * exploited before the method returns.<p>
-	 * @return true if any changes were made
-	 * to the underlying target, false otherwise
+	 * @return a Time node describing the solution event that was performed, 
+	 * and whose subordinate Time nodes describe subordinate steps of the 
+	 * solution event, such as {@link Rule#validateFinalState() automatic resolution} 
+	 * of Rule-subset scenarios, or returns null of no changes were made
 	 */
-	final public boolean digest(){
-		//target.timeBuilder().push(techTime());
-		
-		boolean result = puzzle.isSolved() ? false : process();
-		
-		//target.timeBuilder().pop();
-		return result;
+	final public SolutionEvent digest(){
+		return target.isSolved() ? null : process();
 	}
 	
 	/**
 	 * <p>Performs this technique's analysis on the underlying target.</p>
-	 * <p>If opportunities to make changes to the target arise, they are 
-	 * exploited before the method returns.</p>
-	 * @return true if changes were made to the target, false otherwise
+	 * <p>As soon as any change is made, the method returns.</p>
+	 * @return a Time node describing the solution event that was performed, 
+	 * and whose subordinate Time nodes describe subordinate steps of the 
+	 * solution event, such as {@link Rule#validateFinalState() automatic resolution} 
+	 * of Rule-subset scenarios, or returns null of no changes were made
 	 */
-	protected abstract boolean process();
+	protected abstract SolutionEvent process();
 	
 	/**
 	 * <p>Returns the target to which this instance of 
@@ -58,8 +57,8 @@ public abstract class Technique {
 	 * @return the target to which this instance of this 
 	 * technique pertains.
 	 */
-	public Puzzle getPuzzle(){
-		return puzzle;
+	public Sudoku getPuzzle(){
+		return target;
 	}
 }
 

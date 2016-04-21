@@ -1,20 +1,18 @@
 package sudoku;
 
 import common.ComboGenIso;
-import common.ComboGenIso.ComboIterator;
 import common.NCuboid;
+import common.TestIterator;
 import common.graph.BasicGraph;
 import common.graph.Graph;
 import common.graph.Wrap;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Iterator;
 import java.util.stream.Collectors;
+import java.util.function.BiPredicate;
 
 /**
  * <p>The sledgehammer technique for solving sudoku puzzles is defined 
@@ -73,7 +71,7 @@ public class SledgeHammer2 extends Technique {
 	 * <p>Constructs a SledgeHammer2 that works to solve the specified Puzzle.</p>
 	 * @param target the Puzzle that this SledgeHammer2 tries to solve.
 	 */
-	public SledgeHammer2(Puzzle puzzle) {
+	public SledgeHammer2(Sudoku puzzle) {
 		super(puzzle);
 	}
 	
@@ -93,72 +91,248 @@ public class SledgeHammer2 extends Technique {
 	 * component for the sake of efficiency.</p>
 	 */
 	@Override
-	protected boolean process(){
+	/*protected boolean process(){
 		boolean puzzleUpdated = false;
 		
-		Graph<Wrap<Rule>> ruleGraph = new BasicGraph<Wrap<Rule>>(
-				Wrap.wrap(puzzle.ruleStream().filter((n)->n.size()>Rule.SIZE_WHEN_SOLVED).collect(Collectors.toList()), 
-						(r1,r2) -> r1.intersects(r2)));
-		Collection<Graph<Wrap<Rule>>> unsolvedComponents = ruleGraph.connectedComponents();
 		
-		while(!unsolvedComponents.isEmpty()){
-			Collection<Graph<Wrap<Rule>>> newUC = new ArrayList<>();
+		 * Get a collection of connected subnetworks of unsolved Rules.
+		 * 
+		 * Operating on an arbitrary known-unsolved Sudoku eliminates the need 
+		 * to separate the solved Rules away from the unsolved ones.
+		 * 
+		 * processComponent() is all that needs to be adapted, since pre-breaking 
+		 * the target into arbitrary Sudoku networks means you're only working 
+		 * on a component at any one time.
+		 
+		Graph<Wrap<Rule>> ruleGraph = new BasicGraph<Wrap<Rule>>(
+				Wrap.wrap(target.ruleStream().filter((n)->n.size()>Rule.SIZE_WHEN_SOLVED).collect(Collectors.toList()), 
+						(r1,r2) -> r1.intersects(r2)));
+		
+		for(Collection<Graph<Wrap<Rule>>> newUnsolvedComponents, unsolvedComponents = ruleGraph.connectedComponents(); 
+				!unsolvedComponents.isEmpty() && (newUnsolvedComponents = new ArrayList<>()) != null;
+				unsolvedComponents = newUnsolvedComponents){
 			for(Graph<Wrap<Rule>> unsolvedComponent : unsolvedComponents){
 				if(processComponent(unsolvedComponent)){
-					puzzleUpdated |= newUC.addAll(unsolvedComponent.connectedComponents());
+					puzzleUpdated |= newUnsolvedComponents.addAll(unsolvedComponent.connectedComponents());
 				}
 			}
-			unsolvedComponents = newUC;
 		}
 		
 		return puzzleUpdated;
+	}*/
+	
+	public SolutionEvent process(){
+		Graph<Wrap<Fact>> ruleSubgraph = new BasicGraph<>(
+				Wrap.wrap(target.factStream().filter((n)->n.size()>Rule.SIZE_WHEN_SOLVED).collect(Collectors.toList()), 
+						RULES_CONNECT));
+		
+		//For each disjoint source combo
+		List<Fact> rules = ruleSubgraph.nodeStream().map((n)->n.wrapped()).collect(Collectors.toList());
+		ComboGenIso<Fact> reds = new ComboGenIso<>(rules, MIN_SRC_COMBO_SIZE, ruleSubgraph.size()/2);
+		for(UnionIterator redIterator = new UnionIterator(reds.iterator()); redIterator.hasNext(); ){
+			List<Fact> srcCombo = redIterator.next();
+			ToolSet<Claim> srcUnion = redIterator.getUnion();
+			
+			//For each conceivable recipient combo
+			Set<Fact> nearbyRules = rulesIntersecting(srcUnion, srcCombo);
+			for(List<Fact> recipientCombo : new ComboGenIso<>(nearbyRules, srcCombo.size(), srcCombo.size())){
+				
+				//If the source and recipient combos make a valid sledgehammer scenario
+				Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo, srcUnion); 
+				if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
+					return resolve(claimsToSetFalse);
+				}
+			}
+		}
+		
+		return null;
 	}
 	
-	private boolean processComponent(Graph<Wrap<Rule>> unsolvedComponent){
+	private class UnionIterator extends TestIterator<List<Fact>>{
+		
+		ToolSet<Claim> union;
+		
+		UnionIterator(Iterator<List<Fact>> wrappedIterator){
+			super(wrappedIterator);
+			addTest((ruleList)->setUnion(sideEffectUnion(ruleList,true))!=null);
+		}
+		
+		ToolSet<Claim> setUnion(ToolSet<Claim> union){
+			return this.union = union;
+		}
+		
+		ToolSet<Claim> getUnion(){
+			return this.union;
+		}
+	}
+	
+	public static final BiPredicate<Fact,Fact> RULES_CONNECT = (f1,f2) -> f1.intersects(f2);
+	
+	/*private boolean processComponent2(Graph<Wrap<Rule>> unsolvedComponent){
 		boolean puzzleUpdated = false;
 		
-		//For each source combo
-		List<Rule> rules = unsolvedComponent.nodeStream().map((n)->n.wrapped()).collect(Collectors.toList());
-		ComboGenIso<Rule> reds = new ComboGenIso<>(rules, MIN_SRC_COMBO_SIZE, unsolvedComponent.size()/2);
-		for(Iterator<List<Rule>> redIterator = reds.iterator(); redIterator.hasNext(); ){
-			List<Rule> srcCombo = redIterator.next();
+		class UnionIterator extends TestIterator<List<Rule>>{
 			
-			//Make sure source combo Rules are mutually disjoint
-			for(ToolSet<Claim> srcUnion = sideEffectUnion(srcCombo, true); srcUnion != null; srcUnion=null){
-				
-				//For each conceivable recipient combo
-				Set<Rule> nearbyRules = rulesIntersecting(srcUnion, srcCombo);
-				final ComboIterator<Rule> recipIter = new ComboGenIso<>(nearbyRules, srcCombo.size(), srcCombo.size()).comboIterator();
-				Consumer<NodeSet<?,?>> listener = LISTENER_GENERATOR.apply(recipIter);
-				puzzle.addRemovalListener(listener);
-				while(recipIter.hasNext()){
-					List<Rule> recipientCombo = recipIter.next();
-					
-					//If the source and recipient combos make a valid sledgehammer scenario
-					for(Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo, srcUnion); 
-							claimsToSetFalse != null && resolve(claimsToSetFalse); 
-							claimsToSetFalse=null){
-						redIterator.remove();
-						puzzleUpdated = true;
-					}
-				}
-				puzzle.removeRemovalListener(listener);
+			ToolSet<Claim> union;
+			
+			UnionIterator(Iterator<List<Rule>> wrappedIterator){
+				super(wrappedIterator);
 			}
+			
+			ToolSet<Claim> setUnion(ToolSet<Claim> union){
+				return this.union = union;
+			}
+			
+			ToolSet<Claim> getUnion(){
+				return this.union;
+			}
+		}
+		
+		class SolveStateSourceSledgeHammer2 implements Iterator<Boolean>{
+			UnionIterator redIterator;
+			List<Rule> srcCombo;
+			ComboIterator<Rule> recipIter;
+			Consumer<NodeSet<?,?>> listener = null;
+			
+			SolveStateSourceSledgeHammer2(Graph<Wrap<Rule>> unsolvedComponent){
+				redIterator = new UnionIterator(new ComboGenIso<>(
+						unsolvedComponent.nodeStream().map((n)->n.wrapped()).collect(Collectors.toList()), 
+						MIN_SRC_COMBO_SIZE, 
+						unsolvedComponent.size()/2).iterator());
+				redIterator.addTest((ruleList)->redIterator.setUnion(sideEffectUnion(ruleList,true))!=null);
+				
+				update();
+			}
+			
+			@Override
+			public boolean hasNext(){
+				return recipIter != null && (redIterator.hasNext() || recipIter.hasNext());
+			}
+			
+			@Override
+			public Boolean next(){
+				if(!hasNext()){
+					throw new NoSuchElementException();
+				}
+				
+				Boolean result = false;
+				
+				Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipIter.next(), redIterator.getUnion());
+				if(claimsToSetFalse != null && resolve(claimsToSetFalse)){
+					redIterator.remove();
+					result = true;
+				}
+				
+				if(!recipIter.hasNext()){
+					update();
+				}
+				
+				return result;
+			}
+			
+			private void update(){
+				target.removeRemovalListener(listener);
+				if(redIterator.hasNext()){
+					srcCombo = redIterator.next();
+					recipIter = new ComboGenIso<>(rulesIntersecting(redIterator.getUnion(), srcCombo), srcCombo.size(), srcCombo.size()).comboIterator();
+				} else{
+					srcCombo = null;
+					recipIter = null;
+				}
+				target.addRemovalListener(listener=LISTENER_GENERATOR.apply(recipIter));
+			}
+		}
+		
+		SolveStateSourceSledgeHammer2 sm = new SolveStateSourceSledgeHammer2(unsolvedComponent);
+		while(sm.hasNext()){
+			puzzleUpdated |= sm.next();
 		}
 		
 		return puzzleUpdated;
 	}
 	
-	/**
-	 * <p>Outputs a consumer that removes a specified NodeSet<?,?> from the 
-	 * underlying collection of a specified ComboIterator<Rule>.</p>
-	 */
-	private static final Function<ComboIterator<Rule>,Consumer<NodeSet<?,?>>> LISTENER_GENERATOR = (recipIter) -> (ns) -> {
-		if(ns instanceof Rule){
-			Rule r = (Rule) ns;
-			recipIter.remove(r);
+	private boolean processComponent3(Graph<Wrap<Rule>> unsolvedComponent){
+		boolean puzzleUpdated = false;
+		
+		class UnionIterator extends TestIterator<List<Rule>>{
+			
+			ToolSet<Claim> union;
+			
+			UnionIterator(Iterator<List<Rule>> wrappedIterator){
+				super(wrappedIterator);
+			}
+			
+			ToolSet<Claim> setUnion(ToolSet<Claim> union){
+				return this.union = union;
+			}
+			
+			ToolSet<Claim> getUnion(){
+				return this.union;
+			}
 		}
-	};
+		
+		class SolveStateSourceSledgeHammer2 implements Iterator<Boolean>{
+			UnionIterator redIterator;
+			List<Rule> srcCombo;
+			ComboIterator<Rule> recipIter;
+			Consumer<NodeSet<?,?>> listener = null;
+			
+			SolveStateSourceSledgeHammer2(Graph<Wrap<Rule>> unsolvedComponent){
+				redIterator = new UnionIterator(new ComboGenIso<>(
+						unsolvedComponent.nodeStream().map((n)->n.wrapped()).collect(Collectors.toList()), 
+						MIN_SRC_COMBO_SIZE, 
+						unsolvedComponent.size()/2).iterator());
+				redIterator.addTest((ruleList)->redIterator.setUnion(sideEffectUnion(ruleList,true))!=null);
+				
+				update();
+			}
+			
+			@Override
+			public boolean hasNext(){
+				return recipIter != null && (redIterator.hasNext() || recipIter.hasNext());
+			}
+			
+			@Override
+			public Boolean next(){
+				if(!hasNext()){
+					throw new NoSuchElementException();
+				}
+				
+				Boolean result = false;
+				
+				Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipIter.next(), redIterator.getUnion());
+				if(claimsToSetFalse != null && resolve(claimsToSetFalse)){
+					redIterator.remove();
+					result = true;
+				}
+				
+				if(!recipIter.hasNext()){
+					update();
+				}
+				
+				return result;
+			}
+			
+			private void update(){
+				target.removeRemovalListener(listener);
+				if(redIterator.hasNext()){
+					srcCombo = redIterator.next();
+					recipIter = new ComboGenIso<>(rulesIntersecting(redIterator.getUnion(), srcCombo), srcCombo.size(), srcCombo.size()).comboIterator();
+				} else{
+					srcCombo = null;
+					recipIter = null;
+				}
+				target.addRemovalListener(listener=LISTENER_GENERATOR.apply(recipIter));
+			}
+		}
+		
+		SolveStateSourceSledgeHammer2 sm = new SolveStateSourceSledgeHammer2(unsolvedComponent);
+		while(sm.hasNext()){
+			puzzleUpdated |= sm.next();
+		}
+		
+		return puzzleUpdated;
+	}*/
 	
 	/**
 	 * <p>If the specified lists of source and recipient Rules together constitute a valid 
@@ -194,7 +368,7 @@ public class SledgeHammer2 extends Technique {
 	 * <tt>greens</tt> is not valid, a set of the Claims to be set false if the specified 
 	 * solution scenario is valid
 	 */
-	private static Set<Claim> sledgehammerValidityCheck(List<Rule> reds, List<Rule> greens, ToolSet<Claim> srcUnion/*, ComboIterator<Rule> recipIter*/){
+	private static Set<Claim> sledgehammerValidityCheck(List<Fact> reds, List<Fact> greens, ToolSet<Claim> srcUnion){
 		
 		Set<Claim> greenClaims = sideEffectUnion(greens,false).stream()
 				.filter((e)->!srcUnion.contains(e))
@@ -276,16 +450,10 @@ public class SledgeHammer2 extends Technique {
 	 * @return true if any of the <tt>claimsToSetFalse</tt> were set 
 	 * from possible to false, false otherwise.
 	 */
-	private boolean resolve(Collection<Claim> claimsToSetFalse){
-		boolean result = false;
-		puzzle.timeBuilder().push(new TimeSledgeHammer2Found(claimsToSetFalse));
-		
-		for(Claim c : claimsToSetFalse){
-			result |= c.setFalse();
-		}
-		
-		puzzle.timeBuilder().pop();
-		return result;
+	private SolutionEvent resolve(Collection<Claim> claimsToSetFalse){
+		SolutionEvent time = new SolveEventSledgeHammer2(claimsToSetFalse);
+		claimsToSetFalse.stream().forEach((c)->c.setFalse(time));
+		return time;
 	}
 	
 	/**
@@ -294,9 +462,8 @@ public class SledgeHammer2 extends Technique {
 	 * @author fiveham
 	 *
 	 */
-	public class TimeSledgeHammer2Found extends SolutionEvent{
-		private TimeSledgeHammer2Found(Collection<Claim> claimsToSetFalse){
-			super(puzzle.timeBuilder().top());
+	public class SolveEventSledgeHammer2 extends SolutionEvent{
+		private SolveEventSledgeHammer2(Collection<Claim> claimsToSetFalse){
 			falsified().addAll(claimsToSetFalse);
 		}
 	}
@@ -311,14 +478,10 @@ public class SledgeHammer2 extends Technique {
 	 * @return a set of all the Rules that intersect any of the Rules 
 	 * in <tt>sources</tt>, excluding the Rules in <tt>sources</tt>.
 	 */
-	private Set<Rule> rulesIntersecting(Set<Claim> union, List<Rule> sources){
-		Set<Rule> result = new HashSet<>();
-		
-		for(Claim c : union){
-			result.addAll(c);
-		}
+	private Set<Fact> rulesIntersecting(Set<Claim> union, List<Fact> sources){
+		Set<Fact> result = new HashSet<>();
+		union.stream().forEach( (c)->result.addAll(c) );
 		result.removeAll(sources);
-		
 		return result;
 	}
 }

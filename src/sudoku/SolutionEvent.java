@@ -1,6 +1,7 @@
 package sudoku;
 
 import common.time.Time;
+import common.time.TimeBuilder;
 
 /**
  * <p>A time node denoting and encapsulating an event in which some 
@@ -16,14 +17,27 @@ import common.time.Time;
  * @author fiveham
  *
  */
-public class SolutionEvent extends FalsifiedTime {
+public abstract class SolutionEvent extends FalsifiedTime implements TimeBuilder {
 	
-	public SolutionEvent(Time parent) {
-		super(parent);
+	protected Time top;
+	
+	public SolutionEvent(){
+		super(null);
 	}
 	
-	public SolutionEvent(Time parent, Time focus) {
-		super(parent, focus);
+	@Override
+	public void pop() {
+		top = top.parent();
 	}
 	
+	@Override
+	public void push(Time time) {
+		top.addChild(time);
+		top = time;
+	}
+	
+	@Override
+	public Time top() {
+		return top;
+	}
 }

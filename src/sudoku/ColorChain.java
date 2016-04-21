@@ -1,8 +1,6 @@
 package sudoku;
 
 import common.ComboGen;
-import common.ComboGenIso;
-import common.ComboGenIso.ComboIterator;
 import common.Pair;
 import common.graph.Graph;
 import common.graph.BasicGraph;
@@ -53,11 +51,11 @@ public class ColorChain extends Technique {
 	 * @param target the Puzzle that this Technique works 
 	 * to solve.
 	 */
-	public ColorChain(Puzzle puzzle) {
+	public ColorChain(Sudoku puzzle) {
 		super(puzzle);
 	}
 	
-	/**
+	/* *
 	 * <p>Imitates the slide structure of {@link Solver#solve() Solver.solve()}, 
 	 * with subtechniques for {@link #internal() chain self-interaction}, 
 	 * {@link #bridge() chain-chain interaction}, and 
@@ -71,24 +69,23 @@ public class ColorChain extends Technique {
 	 * @return true if changes were made to the target, false otherwise
 	 */
 	@Override
-	protected boolean process(){
-		boolean result = false;
-		
-		List<Supplier<Boolean>> actions = new ArrayList<>();
+	protected SolutionEvent process(){
+		List<Supplier<SolutionEvent>> actions = new ArrayList<>();
 		actions.add(()->internal());
 		actions.add(()->bridge());
 		actions.add(()->external());
 		
-		for(int i=0; i<actions.size();){
-			boolean now = actions.get(i).get();
-			result |= now;
-			i = now ? 0 : i+1;
+		for(Supplier<SolutionEvent> test : actions){
+			SolutionEvent result = test.get();
+			if(result != null){
+				return result;
+			}
 		}
 		
-		return result;
+		return null;
 	}
 	
-	/**
+	/*
 	 * <p>Checks the {@link #generateChains() chains} in the <tt>target</tt> for 
 	 * internal contradictions and resolves each chain in which internal contradictions 
 	 * are encountered.</p>
@@ -105,17 +102,17 @@ public class ColorChain extends Technique {
 	 * @return true if any changes to the <tt>target</tt> were made by this call 
 	 * to this method
 	 */
-	private boolean internal(){
-		boolean result = false;
-		
+	private SolutionEvent internal(){
 		for(Graph<ColorClaim> chain : generateChains()){
-			result |= hasChainContradiction(chain);
+			SolutionEvent result = contradictionInternal(chain);
+			if( result != null ){
+				return result;
+			}
 		}
-		
-		return result;
+		return null;
 	}
 	
-	/**
+	/* *
 	 * <p>Checks pairs of chains for bridge-based interactions that force 
 	 * one of the chains to collapse.</p>
 	 * 
@@ -130,85 +127,52 @@ public class ColorChain extends Technique {
 	 * @return true if calling this method made changes to <tt>target</tt>, 
 	 * false otherwise
 	 */
-	private boolean bridge(){
-		boolean result = false;
-		
-		for(Graph<NodeSet<?,?>> component : puzzle.connectedComponents().stream().filter((g)->hasMultipleClaims(g)).collect(Collectors.toList()) ){
-			
-			for(ComboIterator<Graph<ColorClaim>> comboIterator = new ComboGenIso<>(generateChains(component),CHAINS_FOR_BRIDGE,CHAINS_FOR_BRIDGE).comboIterator(); comboIterator.hasNext(); ){
-				List<Graph<ColorClaim>> chainPair = comboIterator.next();
-				
-				Pair<Graph<ColorClaim>,Integer> evenSideAndFalseColor = evenSideAndFalseColor(chainPair);
-				if(evenSideAndFalseColor != null){
-					Graph<ColorClaim> collapseMe = evenSideAndFalseColor.getA();
-					result |= setChainFalseForColor(new TimeColorChainCollapseBridges(), collapseMe, evenSideAndFalseColor.getB());
-					comboIterator.remove(collapseMe);
-					Graph<ColorClaim> other = chainPair.get(0) == collapseMe 
-							? chainPair.get(1) 
-							: chainPair.get(0);
-					if( isCollapsed(other) ){
-						comboIterator.remove(other);
-					}
-				}
+	private SolutionEvent bridge(){
+		for(List<Graph<ColorClaim>> chainPair : new ComboGen<>(generateChains(), CHAINS_FOR_BRIDGE, CHAINS_FOR_BRIDGE)){
+			Pair<Graph<ColorClaim>,Integer> evenSideAndFalseColor = evenSideAndFalseColor(chainPair);
+			if(evenSideAndFalseColor != null){
+				Graph<ColorClaim> falseEvenSideChain = evenSideAndFalseColor.getA();
+				return setChainFalseForColor(new SolveEventColorChainBridge(), falseEvenSideChain, evenSideAndFalseColor.getB());
 			}
 		}
 		
-		return result;
+		return null;
 	}
 	
 	public static final int CHAINS_FOR_BRIDGE = 2;
 	
-	private static boolean hasMultipleClaims(Graph<NodeSet<?,?>> graph){
-		int count = 0;
-		for(NodeSet<?,?> c : graph){
-			if(c instanceof Claim){
-				++count;
-			}
-			if(count>1){
-				return true;
-			}
-		}
-		return count>1;
-	}
-	
-	/**
+	/* *
 	 * <p>Any claims in the target that {@link ToolSet#intersects(Set<T>) can see} 
 	 * Claims with opposite colors from the same chain must be false, no matter 
 	 * which color from that chain is true and which is false.</p>
 	 * @return true if calling this method made changes to <tt>target</tt>, 
 	 * false otherwise
 	 */
-	private boolean external(){
-		boolean result = false;
-		
+	private SolutionEvent external(){
 		for(Graph<ColorClaim> chain : generateChains()){
-			result |= hasExternalContradictions(chain);
+			SolutionEvent result = contradictionExternal(chain);
+			if( result != null ){
+				return result;
+			}
 		}
-		
-		return result;
+		return null;
 	}
 	
-	/**
+	/* *
 	 * <p>Detects and {@link Claim#setFalse() sets false} Claims that 
 	 * can see Claims from <tt>concom</tt> with opposite colors.</p>
 	 * @param concom a xor-chain
 	 * @return true if changes were made to the target, false otherwise
 	 */
-	private boolean hasExternalContradictions(Graph<ColorClaim> concom){
-		boolean result = false;
-		
-		List<Claim> claimsToSetFalse = puzzle.claimStream().filter((claim)->claimContradictsChain(claim,concom)).collect(Collectors.toList());
+	private SolutionEvent contradictionExternal(Graph<ColorClaim> concom){
+		List<Claim> claimsToSetFalse = target.claimStream().filter((claim)->claimContradictsChain(claim,concom)).collect(Collectors.toList());
 		if(!claimsToSetFalse.isEmpty()){
-			puzzle.timeBuilder().push(new TimeColorChainExternalContradiction(claimsToSetFalse));
-			
-			for(Claim c : claimsToSetFalse){
-				result |= c.setFalse();
-			}
-			
-			puzzle.timeBuilder().pop();
+			SolutionEvent result = new SolveEventColorChainExternal(claimsToSetFalse);
+			claimsToSetFalse.stream().forEach((c)->c.setFalse(result));
+			return result;
 		}
 		
-		return result;
+		return null;
 	}
 	
 	/**
@@ -226,30 +190,8 @@ public class ColorChain extends Technique {
 	 * at the time when this method is called
 	 */
 	private Collection<Graph<ColorClaim>> generateChains(){
-		/*List<Rule> xors = target.ruleStream()
-				.filter(RULE_IS_XOR)
-				.collect(Collectors.toList());
-		Set<Claim> claimsInXors = SledgeHammer2.sideEffectUnion(xors, false);
-		
-		Graph<ColorClaim> wg = new BasicGraph<>(Wrap.wrap(claimsInXors.stream().map(ColorClaim::new).collect(Collectors.toList()), 
-				(cc1,cc2)->cc1.wrapped().intersects(cc2.wrapped())));
-		
-		Consumer<Set<ColorClaim>> painter = (cuttingEdge) -> {
-			for(ColorClaim ccNode : cuttingEdge){
-				ccNode.wrapped().setColor(colorSource.get());
-			}
-			colorSource.invertColor();
-		};
-		
-		wg.addContractEventListenerFactory(()->nextColorReturnList(painter));
-		
-		return wg.connectedComponents();*/
-		return generateChains(puzzle);
-	}
-	
-	private Collection<Graph<ColorClaim>> generateChains(Graph<NodeSet<?,?>> graph){
-		List<Rule> xors = graph.nodeStream()
-				.filter((ns)->(ns instanceof Rule) && ns.size()==Rule.SIZE_WHEN_XOR)
+		List<Rule> xors = target.nodeStream()
+				.filter((ns)->(ns.size()==Rule.SIZE_WHEN_XOR && ns instanceof Rule))
 				.map((ns)->(Rule)ns)
 				.collect(Collectors.toList());
 		Set<Claim> claimsInXors = SledgeHammer2.sideEffectUnion(xors, false);
@@ -257,14 +199,11 @@ public class ColorChain extends Technique {
 		Graph<ColorClaim> wg = new BasicGraph<ColorClaim>(link(claimsInXors, (c1,c2)->c1.intersects(c2)));
 		
 		Consumer<Set<ColorClaim>> painter = (cuttingEdge) -> {
-			for(ColorClaim ccNode : cuttingEdge){
-				ccNode.setColor(colorSource.get());
-			}
+			cuttingEdge.stream().forEach((e)->e.setColor(colorSource.get()));
 			colorSource.invertColor();
 		};
 		
 		wg.addContractEventListenerFactory(()->nextColorReturnList(painter));
-		
 		return wg.connectedComponents();
 	}
 	
@@ -309,33 +248,32 @@ public class ColorChain extends Technique {
 	 * @param chain the xor-chain being analysed
 	 * @return true if the target was changed by the call to this method, false otherwise
 	 */
-	private boolean hasChainContradiction(Graph<ColorClaim> chain){
+	private SolutionEvent contradictionInternal(Graph<ColorClaim> chain){
 		List<ColorClaim> chainList = chain.nodeStream().collect(Collectors.toList());
 		for(int i=0; i<chainList.size(); ++i){
 			ColorClaim cc1 = chainList.get(i);
 			for(int j=0; j<i; ++j){
 				ColorClaim cc2 = chainList.get(j);
 				if(cc1.color() == cc2.color() && cc1.wrapped().intersects(cc2.wrapped())){
-					return setChainFalseForColor(new TimeColorChainInternalContradiction(), chain, cc1.color());
+					return setChainFalseForColor(new SolveEventColorChainInternal(), chain, cc1.color());
 				}
 			}
 		}
-		return false;
+		return null;
 	}
 	
-	/**
+	/* *
 	 * <p>A time node encapsulating events that occur while checking 
 	 * a xor-chain for a collapse-initiating self-interaction.</p>
 	 * @author fiveham
 	 *
 	 */
-	public class TimeColorChainInternalContradiction extends SolutionEvent{
-		private TimeColorChainInternalContradiction(){
-			super(puzzle.timeBuilder().top());
+	public class SolveEventColorChainInternal extends SolutionEvent{
+		private SolveEventColorChainInternal(){
 		}
 	}
 	
-	/**
+	/* *
 	 * <p>Sets all the Claims in this chain false if they are decorated with the 
 	 * specified <tt>color</tt>.</p>
 	 * @param time the contextual time node which needs to store a collection of 
@@ -344,51 +282,30 @@ public class ColorChain extends Technique {
 	 * @param color the color of the Claims being set false
 	 * @return true if the target was changed by the call to this method, false otherwise
 	 */
-	private boolean setChainFalseForColor(FalsifiedTime time, Graph<ColorClaim> chain, final int color){
-		boolean result = false;
-		puzzle.timeBuilder().push(time);
-		
+	private SolutionEvent setChainFalseForColor(SolutionEvent time, Graph<ColorClaim> chain, final int color){
 		List<Claim> setFalse = chain.nodeStream()
-				.filter((wc)->wc.color()==color)
-				.map( (wc)->wc.wrapped() )
+				.filter((cc)->cc.color()==color)
+				.map( (cc)->cc.wrapped() )
 				.collect(Collectors.toList());
 		time.falsified().addAll(setFalse);
 		
 		for(Claim c : setFalse){
-			result |= c.setFalse();
+			c.setFalse(time);
 		}
 		
-		puzzle.timeBuilder().pop();
-		return result;
+		return time;
 	}
 	
-	/**
+	/* *
 	 * <p>A time node encapsulating the events occurring during a period of 
 	 * analysis where two xor-chains are checked for collapse due to 
 	 * bridge interaction.</p>
 	 * @author fiveham
 	 *
 	 */
-	public class TimeColorChainCollapseBridges extends SolutionEvent{
-		private TimeColorChainCollapseBridges(){
-			super(puzzle.timeBuilder().top());
+	public class SolveEventColorChainBridge extends SolutionEvent{
+		private SolveEventColorChainBridge(){
 		}
-	}
-	
-	/**
-	 * <p>Returns true if the specified <tt>chain</tt> is collapsed, false otherwise.</p>
-	 * 
-	 * <p>A chain is not collapsed if it is intact. If a chain is collapsed, then the 
-	 * uncertainty about its Claims' truth-states has been resolved and all its Claims 
-	 * are each known to either be false or to be true.</p>
-	 * @param chain a xor-chain being checked for collapsedness
-	 * @return true if <tt>chain</tt> is collapsed, false otherwise
-	 */
-	private boolean isCollapsed(Graph<ColorClaim> chain){
-		for(Claim claim : chain.nodeStream().map((cc)->cc.wrapped()).collect(Collectors.toList())){
-			return claim.isKnownTrue() || claim.isKnownFalse();
-		}
-		return false;
 	}
 	
 	/**
@@ -408,15 +325,15 @@ public class ColorChain extends Technique {
 		Graph<ColorClaim> chain0 = chains.get(0);
 		Graph<ColorClaim> chain1 = chains.get(1);
 		
-		Set<Rule> chainUnion0 = SledgeHammer2.sideEffectUnion( chain0.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
-		Set<Rule> chainUnion1 = SledgeHammer2.sideEffectUnion( chain1.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
+		Set<Fact> chainUnion0 = SledgeHammer2.sideEffectUnion( chain0.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
+		Set<Fact> chainUnion1 = SledgeHammer2.sideEffectUnion( chain1.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
 		
-		Set<Rule> bridges = new HashSet<>(chainUnion0);
+		Set<Fact> bridges = new HashSet<>(chainUnion0);
 		bridges.retainAll(chainUnion1);
 		
-		for(List<Rule> bridge : new ComboGen<>(bridges, 2, 2)){
-			Rule lane0 = bridge.get(0);
-			Rule lane1 = bridge.get(1);
+		for(List<Fact> bridge : new ComboGen<>(bridges, 2, 2)){
+			Fact lane0 = bridge.get(0);
+			Fact lane1 = bridge.get(1);
 			
 			int dist0 = dist(lane0, lane1, chain0);
 			int dist1 = dist(lane0, lane1, chain1);
@@ -447,7 +364,7 @@ public class ColorChain extends Technique {
 	 * @return the int color of the Claims belonging to <tt>chain</tt> 
 	 * that are on the bridge made of <tt>lane0</tt> and <tt>lane1</tt>
 	 */
-	private int bridgeColor(Graph<ColorClaim> chain, Rule lane0, Rule lane1){
+	private int bridgeColor(Graph<ColorClaim> chain, Fact lane0, Fact lane1){
 		Map<Claim,ColorClaim> map = claimToColorMap(chain);
 		
 		Set<Claim> allBridgeClaims = new HashSet<>(lane0);
@@ -503,7 +420,7 @@ public class ColorChain extends Technique {
 	 * @return the number of steps between <tt>lane0</tt> and <tt>lane1</tt> 
 	 * in <tt>chain</tt>
 	 */
-	private int dist(Rule lane0, Rule lane1, Graph<ColorClaim> chain){
+	private int dist(Fact lane0, Fact lane1, Graph<ColorClaim> chain){
 		ColorClaim lane0Intersection = getBridgeIntersection(lane0, chain);
 		ColorClaim lane1Intersection = getBridgeIntersection(lane1, chain);
 		
@@ -518,7 +435,7 @@ public class ColorChain extends Technique {
 	 * @return the vertex from <tt>chain</tt> where <tt>lane</tt> and <tt>chain</tt> 
 	 * intersect
 	 */
-	private ColorClaim getBridgeIntersection(Rule lane, Graph<ColorClaim> chain){
+	private ColorClaim getBridgeIntersection(Fact lane, Graph<ColorClaim> chain){
 		for(ColorClaim wgccn : chain){
 			if(lane.contains(wgccn.wrapped())){
 				return wgccn;
@@ -527,15 +444,14 @@ public class ColorChain extends Technique {
 		throw new IllegalArgumentException("Specified chain and bridge-lane do not intersect.");
 	}
 	
-	/**
+	/* *
 	 * <p>A time node encapsulating the events that occur in searching 
 	 * for and falsifying Claims that see both colors in a xor-chain.</p>
 	 * @author fiveham
 	 *
 	 */
-	public class TimeColorChainExternalContradiction extends SolutionEvent{
-		private TimeColorChainExternalContradiction(Collection<Claim> falseClaims){
-			super(puzzle.timeBuilder().top());
+	public class SolveEventColorChainExternal extends SolutionEvent{
+		private SolveEventColorChainExternal(Collection<Claim> falseClaims){
 			falsified().addAll(falseClaims);
 		}
 	}

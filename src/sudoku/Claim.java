@@ -13,7 +13,7 @@ import java.util.Set;
  * @author fiveham
  *
  */
-public class Claim extends NodeSet<Rule,Claim>{
+public class Claim extends NodeSet<Fact,Claim>{
 	
 	/**
 	 * 
@@ -73,12 +73,13 @@ public class Claim extends NodeSet<Rule,Claim>{
 	 * @return true if this Claim is known to be true, false otherwise
 	 */
 	public boolean isKnownTrue(){
-		for(Rule owner : this){
+		/*for(Fact owner : this){
 			if(owner.size() == Rule.SIZE_WHEN_SOLVED){
 				return true;
 			}
 		}
-		return false;
+		return false;*/
+		return stream().anyMatch((owner)->owner.size()==Fact.SIZE_WHEN_SOLVED);
 	}
 	
 	/**
@@ -100,17 +101,15 @@ public class Claim extends NodeSet<Rule,Claim>{
 	 * @return true if calling this method changed the state of 
 	 * this Claim, false otherwise
 	 */
-	boolean setTrue(){
-		//target.timeBuilder().push(new TimeSetTrue());
+	boolean setTrue(SolutionEvent time){
 		boolean result = false;
 		
-		Iterator<Rule> i = iterator();
-		Rule r1 = i.next();
+		Iterator<Fact> i = iterator();
+		Fact f1 = i.next();
 		while(i.hasNext()){
-			result |= r1.merge(i.next());
+			result |= f1.merge(time, i.next());
 		}
 		
-		//target.timeBuilder().pop();
 		return result;
 	}
 	
@@ -131,21 +130,19 @@ public class Claim extends NodeSet<Rule,Claim>{
 		}
 	}*/
 	
-	/**
+	/* *
 	 * <p>Sets this Claim false. Removes all elements from this 
 	 * set, and removes this Claim from all its neighbors. Adds 
 	 * a TimeSetFalse to the target's time stack.</p>
 	 * @return true if calling this method changed the state of 
 	 * this Claim, false otherwise
 	 */
-	public boolean setFalse(){
+	public boolean setFalse(SolutionEvent time){
 		int initSize = size();
-		//target.timeBuilder().push(new TimeSetFalse(this));
 		
-		clear();
+		clear(time);
 		puzzle.removeNode(this);
 		
-		//target.timeBuilder().pop();
 		return size() != initSize;
 	}
 	
@@ -188,14 +185,6 @@ public class Claim extends NodeSet<Rule,Claim>{
 	 */
 	public int getZ(){
 		return symbol.intValue();
-	}
-	
-	/**
-	 * <p>Returns the Puzzle to which this Claim belongs.</p>
-	 * @return the Puzzle to which this Claim belongs
-	 */
-	public Puzzle getPuzzle(){
-		return puzzle;
 	}
 	
 	/**
@@ -284,10 +273,17 @@ public class Claim extends NodeSet<Rule,Claim>{
 	 * false when a Rule is removed from this Claim without 
 	 * accommodating the Rule's role via another remaining Rule.</p>
 	 */
-	@Override
+	/*@Override
 	protected void validateFinalState(){ //TODO make sure this doesn't break Rule-class operations still in-progress
 		if(!isEmpty() && !hasAllRules()){
 			setFalse();
+		}
+	}*/
+	
+	@Override
+	protected void validateFinalState(SolutionEvent time){ //TODO make sure this doesn't break Rule-class operations still in-progress
+		if(!isEmpty() && !hasAllRules()){
+			setFalse(time);
 		}
 	}
 	
@@ -313,7 +309,7 @@ public class Claim extends NodeSet<Rule,Claim>{
 	 */
 	private boolean hasAllRules(){
 		byte mask = 0;
-		for(Rule rule : this){
+		for(Fact rule : this){
 			mask |= rule.getType();
 		}
 		return mask == Puzzle.RegionSpecies.ALL_TYPES;
