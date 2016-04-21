@@ -1,222 +1,244 @@
 package sudoku;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import common.ComboGen;
 import common.ComboGenIso;
+import common.ComboGenIso.ComboIterator;
+import common.NCuboid;
 import common.graph.BasicGraph;
 import common.graph.Graph;
 import common.graph.Wrap;
-import common.Pair;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.Iterator;
-import common.NCuboid;
 import java.util.stream.Collectors;
 
 /**
- * Defines a process for finding false claims in a sudoku target.  
+ * <p>The sledgehammer technique for solving sudoku puzzles is defined 
+ * at http://onigame.livejournal.com/18580.html and at 
+ * http://onigame.livejournal.com/20626.html and uses one collection 
+ * of specific statements of the rules of a sudoku target against 
+ * another collection of such statements to determine that certain 
+ * claims about the sudoku target are false.</p>
+ * 
+ * <p>The sledgehammer technique relies on the fact that the target can 
+ * be interpreted as a collection of {@link Claim truth-claims} about the values of the 
+ * cells ("Cell x,y, has value z.") and {@link Rule groupings of those truth-claims} of 
+ * which exactly one claim from a grouping is true and all the rest are 
+ * false.</p>
+ * 
+ * <p>These groupings of claims are pedantic and precise statements 
+ * of the rules that specify what makes a solution to a sudoku target valid. 
+ * For example, the rule that any row contains each value exactly once 
+ * pedantically expands into 81 statements in a 9x9 target: 9 statements 
+ * about an individual row, each of which is actually 9 statements 
+ * specifying a particular value: "Row y has value z in exactly one cell." 
+ * The rule that any cell contains exactly one value similarly becomes 81 
+ * pedantic statements: "For cell x,y, only one z value is correct."</p>
+ * 
+ * <p>The sledgehammer technique generalizes a great number of analysis 
+ * techniques including
+ * <ul><li>cell death</li>
+ * <li>organ failure</li>
+ * <li>naked pairs/triples/etc.</li>
+ * <li>x-wing, swordfish, jellyfish, etc.</li>
+ * <li>xy-wing, xyz-wing, etc.</li>
+ * </ul></p>
+ * 
+ * <p>This is effected by modeling those situation as the collapse of several 
+ * recipient rules onto several source rules so that all the claims belonging 
+ * to the recipient rules but not belonging to any of the source rules are 
+ * known to be false. No matter which (viable) set of claims among the source 
+ * rules is the source rules' set of true claims, all the recipient rules' 
+ * claims that aren't also source claims must be false.</p>
+ * 
  * @author fiveham
  *
  */
 public class SledgeHammer2 extends Technique {
 	
-	/*
-	 * Can generalize this for cases where multiple small sets overlap 
-	 * multiple larger sets.  To do so, account for any number of 
-	 * smaller sets (instead of only accounting for cases with just one 
-	 * event-triggering smaller set) and account similarly for the 
-	 * possibility of multiple larger sets to be reduced.  The essential 
-	 * test remains mostly the same: union your candidate originating 
-	 * sets, union your candidate receiving sets, and then perform the 
-	 * extant test using those unioned originating and receiving sets 
-	 * instead of using the naked sets directly.
+	/**
+	 * <p>The minimum number ({@value}) of Rules in a source combo relevant to Sledgehammer analysis. 
+	 * Because Rules {@link Rule#verifyFinalState() automatically detect} when they need to 
+	 * collapse and also automatically perform the resulting collapse, single-source 
+	 * Sledgehammers won't be available in the target. This leaves two-Rule sources as 
+	 * the smallest source combinations.</p>
 	 */
+	private static final int MIN_SRC_COMBO_SIZE = 2;
 	
-	/*
-	 * This is a generalization of the class currently named SledgeHammer.
-	 * In this class, generalization from a single source factbag with a single 
-	 * recipient factbag will occur enabling use of a set of source factbags 
-	 * and a set of recipient factbags.
+	/**
+	 * <p>Constructs a SledgeHammer2 that works to solve the specified Puzzle.</p>
+	 * @param target the Puzzle that this SledgeHammer2 tries to solve.
 	 */
-	
-	/*
-	 * DONE The "N sources and N recipients" model doesn't directly (efficiently) account 
-	 * for CellDeath and OrganFailure, as it requires several separate one-to-one analyses 
-	 * comparing a single source bag to a single recipient bag at a time. This requires three 
-	 * separate analysis steps to perform what the original SledgeHammer techinque could do 
-	 * in a single step.
-	 * 
-	 * DONE single-bag-originated sledgehammer cases are now accounted for by the bag detecting 
-	 * its own need to initiate a collapse. See Rule#verifyFinalState()
-	 * 
-	 * Personal note: The thing I liked the least about the Table-based solution perspective 
-	 * was the fact that it takes multiple passes to resolve a CellDeath or an OrganFailure. 
-	 * Ironically, by trying to incorporate all of the disjoint-bag cases covered by table-
-	 * based analysis into the sledgehammer, I have also brought that weakness of table-
-	 * based analysis into the sledgehammer.
-	 * 
-	 * 
-	 */
-	
-	private final int MAX_SRC_COMBO_SIZE = puzzle.sideLength()-1; //XXX Find out what the actual largest possible source-combo size is.
-	private final int MIN_SRC_COMBO_SIZE = 2;
-	
 	public SledgeHammer2(Puzzle puzzle) {
 		super(puzzle);
 	}
 	
+	/**
+	 * <p>Divides the target into a collection of connected graphs whose 
+	 * vertices are Rules and whose edges are Claims connecting Rules. 
+	 * For each of those connected components, {@link #processComponent(Graph<Wrap<Rule>>) individual-component analysis} 
+	 * is done, and the {@link Graph#connectedComponents() connected components} 
+	 * of each such connected component that was changed are added to a 
+	 * list of connected components to be analysed in the next cycle of 
+	 * processing. Processing continues to cycle until there are no more 
+	 * connected components to analyse.</p>
+	 * 
+	 * <p>Once a component has been changed by sledgehammer analysis, it 
+	 * may or may not have been broken into multiple smaller connected 
+	 * components, each of which should be analysed as its own separate 
+	 * component for the sake of efficiency.</p>
+	 */
 	@Override
-	protected boolean process() {
-		boolean puzzleHasUpdated = false;
+	protected boolean process(){
+		boolean puzzleUpdated = false;
 		
-		for(List<FactBag> srcCombo : new ComboGen<>(puzzle.factBagsWhere((fb)->fb.size()>1), MIN_SRC_COMBO_SIZE, MAX_SRC_COMBO_SIZE)){
-			ToolSet<Claim> srcUnion = new ToolSet<>();
-			int cumulativeSize = unionAllNullIfNonDisjoint(srcUnion, srcCombo);
+		Graph<Wrap<Rule>> ruleGraph = new BasicGraph<Wrap<Rule>>(
+				Wrap.wrap(puzzle.ruleStream().filter((n)->n.size()>Rule.SIZE_WHEN_SOLVED).collect(Collectors.toList()), 
+						(r1,r2) -> r1.intersects(r2)));
+		Collection<Graph<Wrap<Rule>>> unsolvedComponents = ruleGraph.connectedComponents();
+		
+		while(!unsolvedComponents.isEmpty()){
+			Collection<Graph<Wrap<Rule>>> newUC = new ArrayList<>();
+			for(Graph<Wrap<Rule>> unsolvedComponent : unsolvedComponents){
+				if(processComponent(unsolvedComponent)){
+					puzzleUpdated |= newUC.addAll(unsolvedComponent.connectedComponents());
+				}
+			}
+			unsolvedComponents = newUC;
+		}
+		
+		return puzzleUpdated;
+	}
+	
+	private boolean processComponent(Graph<Wrap<Rule>> unsolvedComponent){
+		boolean puzzleUpdated = false;
+		
+		//For each source combo
+		List<Rule> rules = unsolvedComponent.nodeStream().map((n)->n.wrapped()).collect(Collectors.toList());
+		ComboGenIso<Rule> reds = new ComboGenIso<>(rules, MIN_SRC_COMBO_SIZE, unsolvedComponent.size()/2);
+		for(Iterator<List<Rule>> redIterator = reds.iterator(); redIterator.hasNext(); ){
+			List<Rule> srcCombo = redIterator.next();
 			
-			if( cumulativeSize == srcUnion.size() ){
-				Set<FactBag> nearbyBags = bagsIntersecting(srcUnion, srcCombo);
+			//Make sure source combo Rules are mutually disjoint
+			for(ToolSet<Claim> srcUnion = sideEffectUnion(srcCombo, true); srcUnion != null; srcUnion=null){
 				
-				for(List<FactBag> recipCombo : new ComboGen<>(nearbyBags, srcCombo.size(), srcCombo.size())){
-					ToolSet<Claim> recipUnion = unionAll(recipCombo);
+				//For each conceivable recipient combo
+				Set<Rule> nearbyRules = rulesIntersecting(srcUnion, srcCombo);
+				final ComboIterator<Rule> recipIter = new ComboGenIso<>(nearbyRules, srcCombo.size(), srcCombo.size()).comboIterator();
+				Consumer<NodeSet<?,?>> listener = LISTENER_GENERATOR.apply(recipIter);
+				puzzle.addRemovalListener(listener);
+				while(recipIter.hasNext()){
+					List<Rule> recipientCombo = recipIter.next();
 					
-					if(recipUnion.hasProperSubset(srcUnion) 
-							&& eachElementIntersectsAtLeastTwoElementsFromOtherCombo(srcCombo, recipCombo)){
-						puzzleHasUpdated |= resolve(recipUnion.complement(srcUnion));
+					//If the source and recipient combos make a valid sledgehammer scenario
+					for(Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo, srcUnion); 
+							claimsToSetFalse != null && resolve(claimsToSetFalse); 
+							claimsToSetFalse=null){
+						redIterator.remove();
+						puzzleUpdated = true;
 					}
 				}
+				puzzle.removeRemovalListener(listener);
 			}
 		}
 		
-		return puzzleHasUpdated;
+		return puzzleUpdated;
 	}
 	
 	/**
-	 * Get a 
-	 * @return
+	 * <p>Outputs a consumer that removes a specified NodeSet<?,?> from the 
+	 * underlying collection of a specified ComboIterator<Rule>.</p>
 	 */
-	protected boolean process2(){
-		boolean puzzleHasUpdated = false;
-		
-		//create a BasicGraph of the target
-		Graph<Wrap<FactBag>> pGraph = new BasicGraph<>(Wrap.wrap(puzzle.getFactbags(), (f1,f2)->f1.intersects(f2)));
-		Collection<Graph<Wrap<FactBag>>> pCCs = pGraph.connectedComponents();
-		
-		for(Graph<Wrap<FactBag>> bagNetwork : pCCs){
-			
-			List<FactBag> noDupes = noDuplicates(bagNetwork.nodeStream().map((wfb)->wfb.wrapped()).collect(Collectors.toList()));//Also, check for dupes every time you need to use some collection of FBs
-			ComboGenIso<FactBag> reds = new ComboGenIso<>( noDupes, 1, noDupes.size()/2);
-			for(Iterator<List<FactBag>> redIter=reds.iterator(); redIter.hasNext();){
-				List<FactBag> srcCombo = redIter.next();
-				
-				ToolSet<Claim> srcUnion = sideEffectUnion(srcCombo,true);
-				if( srcUnion != null ){
-					Set<FactBag> nearbyBags = possibleGreenBags(srcUnion, srcCombo, noDupes=noDuplicates(noDupes));
-					
-					ComboGenIso<FactBag> greens = new ComboGenIso<>(nearbyBags, srcCombo.size(), nearbyBags.size(), ComboGenIso.Direction.DECREASE);
-					for(Iterator<List<FactBag>> greenIter = greens.iterator(); greenIter.hasNext();){ //implicitly accounts for greenbags.size() >= redbags.size()
-						List<FactBag> recipCombo = greenIter.next();
-						
-						ToolSet<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipCombo, srcUnion);
-						if( claimsToSetFalse != null && resolve(claimsToSetFalse)){
-							redIter.remove();
-							puzzleHasUpdated = true;
-						}
-					}
-				}
-			}
+	private static final Function<ComboIterator<Rule>,Consumer<NodeSet<?,?>>> LISTENER_GENERATOR = (recipIter) -> (ns) -> {
+		if(ns instanceof Rule){
+			Rule r = (Rule) ns;
+			recipIter.remove(r);
 		}
-		
-		return puzzleHasUpdated;
-	}
-
-	protected boolean process3(){
-		boolean puzzleHasUpdated = false;
-		
-		for(Graph<Wrap<FactBag>> bagNetwork : new BasicGraph<>(Wrap.wrap(puzzle.getFactbags(), (f1,f2)->f1.intersects(f2))).connectedComponents()){
-			
-			List<FactBag> noDupes = noDuplicates(bagNetwork.nodeStream().map((wfb)->wfb.wrapped()).collect(Collectors.toList())); //Also, check for dupes every time you need to use some collection of FBs
-			ComboGenIso<FactBag> reds = new ComboGenIso<>( noDupes, 1, noDupes.size()/2);
-			for(Iterator<List<FactBag>> redIter=reds.iterator(); redIter.hasNext();){
-				List<FactBag> srcCombo = redIter.next();
-				
-				ToolSet<Claim> srcUnion = sideEffectUnion(srcCombo,true);
-				if( srcUnion != null ){
-					Set<FactBag> nearbyBags = possibleGreenBags(srcUnion, srcCombo, noDupes=noDuplicates(noDupes));
-					
-					//ComboGenIso<Rule> greens = new ComboGenIso<>(nearbyBags, srcCombo.size(), nearbyBags.size(), ComboGenIso.Direction.DECREASE);
-					ComboGenIso<FactBag> greens = new ComboGenIso<>(nearbyBags, srcCombo.size(), srcCombo.size());
-					for(Iterator<List<FactBag>> greenIter = greens.iterator(); greenIter.hasNext();){ //implicitly accounts for greenbags.size() >= redbags.size()
-						List<FactBag> recipCombo = greenIter.next();
-						
-						ToolSet<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipCombo, srcUnion);
-						if( claimsToSetFalse != null && resolve(claimsToSetFalse)){
-							redIter.remove();
-							puzzleHasUpdated = true;
-						}
-					}
-				}
-			}
-		}
-		
-		return puzzleHasUpdated;
-	}
+	};
 	
 	/**
-	 * <p>Returns true if the specified collection of "green" recipient FactBags and 
-	 * the specified collection of "red" source FactBags together constitute a 
-	 * valid Sledgehammer solution scenario, false otherwise. 
-	 * They are a valid Sledgehammer solution scenario if <ul>
-	 * <li>The union of all the green FactBags contains as a subset (or 
-	 * as a proper subset in order for resolution to make any difference) the 
-	 * union of all the red FactBags.</li>
-	 * <li>Each red Rule intersects at least a certain number of the green FactBags.</li>
-	 * <li>Each green Rule intersects at least a certain number of the red FactBags.</li>
+	 * <p>If the specified lists of source and recipient Rules together constitute a valid 
+	 * Sledgehammer solution scenario, then a set of the Claims (from the recipients) 
+	 * to be set false is returned, otherwise <tt>null</tt> is returned.</p>
+	 * 
+	 * <p><tt>reds</tt> and <tt>greens</tt> are a valid Sledgehammer solution scenario if <ul>
+	 * <li>The union of all the recipient Rules contains as a proper subset the union of all 
+	 * the source Rules.</li>
+	 * <li>None of the source Rules shares any Claims with any other source Rule (accounted 
+	 * for by a call to {@link #sideEffectUnion(Collection,boolean) sideEffectUnion(reds,true)} 
+	 * in <tt>process()</tt> before this method is called)</li>
+	 * <li>The number of recipient Rules equals the number of source Rules</li>
+	 * <li>The source and recipient Rules constitute a connected subgraph of the target, 
+	 * such that a Rule is a vertex and such that two such vertices are connected if their 
+	 * Rules share at least one Claim.</li>
 	 * </ul></p>
+	 * 
+	 * @param reds source Rules, for which every {@link #isPossibleSolution(List) possible} 
+	 * solution must falsify all the non-<tt>reds</tt> Claims in <tt>greens</tt> in 
+	 * order for the specified Sledgehammer solution scenario constituted by those two parameter 
+	 * to be valid
+	 * 
+	 * @param greens recipient Rules. Every Claim among these that is not also accounted for 
+	 * among <tt>reds</tt> must be guaranteed false in every {@link #isPossibleSolution(List) possible}
+	 * solution-state of the <tt>reds</tt>
+	 * 
+	 * @param srcUnion the union of all the elements of <tt>reds</tt>, specified as a 
+	 * parameter for convenience since it is needed here, was previously generated in 
+	 * the {@link #process() calling context}, and remains unchanged since then
+	 * 
+	 * @return null if the Sledgehammer solution scenario defined by <tt>reds</tt> and 
+	 * <tt>greens</tt> is not valid, a set of the Claims to be set false if the specified 
+	 * solution scenario is valid
 	 */
-	private static ToolSet<Claim> sledgehammerValidityCheck(List<FactBag> reds, List<FactBag> greens, ToolSet<Claim> srcUnion){
-		ToolSet<Claim> recipUnion = sideEffectUnion(greens,false);
-		if(!recipUnion.hasSubset(srcUnion)){
+	private static Set<Claim> sledgehammerValidityCheck(List<Rule> reds, List<Rule> greens, ToolSet<Claim> srcUnion/*, ComboIterator<Rule> recipIter*/){
+		
+		Set<Claim> greenClaims = sideEffectUnion(greens,false).stream()
+				.filter((e)->!srcUnion.contains(e))
+				.collect(Collectors.toSet());
+		if(greenClaims.isEmpty()){
 			return null;
 		}
 		
-		recipUnion.removeAll(srcUnion);
 		for(List<Claim> solutionState : new NCuboid<Claim>(reds)){
 			if(isPossibleSolution(solutionState)){
-				for(Claim c : recipUnion){
+				for(Claim c : greenClaims){
 					if( isPossibleClaim(c,solutionState) ){
 						return null;
 					}
 				}
 			}
 		}
-		return recipUnion;
+		return greenClaims;
 	}
 	
 	/**
-	 * Returns false if the specified solution-state is impossible, true 
+	 * <p>Returns false if the specified solution-state is impossible, true 
 	 * otherwise. A solution-state is impossible if any two specified Claims 
-	 * share at least one {@link Claim#getOwners() owner}.
+	 * share at least one Rule in common.</p>
+	 * @return false if the specified solution-state is impossible, true 
+	 * otherwise
 	 */
 	private static boolean isPossibleSolution(List<Claim> solutionState){
-		List<List<FactBag>> ownerList = new ArrayList<>(solutionState.size());
-		
-		for(Claim c : solutionState){
-			ownerList.add(c.getOwners());
-		}
-		
-		return sideEffectUnion(ownerList,true) != null;
+		return sideEffectUnion(solutionState,true) != null;
 	}
 	
 	/**
-	 * Returns true if <tt>c</tt> can still be true given that all the 
-	 * Claims in <tt>givens</tt> are known true, false otherwise.
+	 * <p>Returns true if <tt>c</tt> can still be true given that all the 
+	 * Claims in <tt>givens</tt> are known true, false otherwise.</p>
+	 * 
+	 * @param c the Claim whose truth is being assessed
+	 * @param givens the Claims whose truth is assumed while assessing 
+	 * the truth of <tt>c</tt>.
+	 * @return true if <tt>c</tt> is not guaranteed to be false given 
+	 * that all the claims in <tt>givens</tt> are true, false otherwise.
 	 */
 	private static boolean isPossibleClaim(Claim c, List<Claim> givens){
 		for(Claim given : givens){
-			if(c.sharesBagWith(given)){
+			if(c.intersects(given)){
 				return false;
 			}
 		}
@@ -224,35 +246,23 @@ public class SledgeHammer2 extends Technique {
 	}
 	
 	/**
-	 * returns a set of factbags from noDupes and not found in srcCombo, each of which 
-	 * intersects at least a certain number of the factbags from srcCombo and such that 
-	 * each member of srcCombo intersects at least of certain number of the factbags in 
-	 * the returned set.  The certain number of intersections is usually 2 but is 1 when 
-	 * srcCombo.size()==1.
-	 * @param srcUnion
-	 * @param srcCombo
-	 * @param noDupes
-	 * @return
+	 * <p>Unions all the collections in <tt>srcCombo</tt> into one set and returns 
+	 * that set, unless some elements are shared among the collections in 
+	 * srcCombo, in which case, if <tt>nullIfNotDisjoint</tt> is true, null is 
+	 * returned instead.</p>
+	 * @param colcol a collection of collections whose elements are combined 
+	 * into one set and returned.
+	 * @param nullIfNotDisjoint controls whether an intersection among the elements 
+	 * of <tt>srcCombo</tt> results in <tt>null</tt> being returned.
+	 * @return <tt>null</tt> if <tt>nullIfNotDisjoint</tt> is <tt>true</tt> and 
+	 * some of the elements of <tt>srcCombo</tt> intersect each other, or otherwise 
+	 * the mass-union of all the elements of <tt>srcCombo</tt>.
 	 */
-	private Set<FactBag> possibleGreenBags(ToolSet<Claim> srcUnion, List<FactBag> srcCombo, List<FactBag> noDupes){
-		Set<FactBag> neighb = bagsIntersecting(srcUnion, srcCombo);
-		neighb.retainAll(noDupes);
-		return neighb;
-	}
-	
-	/**
-	 * Unions all the FactBags in srcCombo into one set and returns 
-	 * that set, unless some Claims are shared among the FactBags in 
-	 * srcCombo, in which case null is returned instead.
-	 * @return a set containing all the Claims in all the FactBags that 
-	 * are contained as elements of srcCombo or null if any of those 
-	 * Claims are shared among more than one of the FactBags in srcCombo.
-	 */
-	private static <T> ToolSet<T> sideEffectUnion(List<? extends Collection<T>> srcCombo, boolean nullIfNotDisjoint){
+	static <T> ToolSet<T> sideEffectUnion(Collection<? extends Collection<T>> colcol, boolean nullIfNotDisjoint){
 		ToolSet<T> result = new ToolSet<>();
 		
 		int cumulativeSize = 0;
-		for(Collection<T> redBag : srcCombo){
+		for(Collection<T> redBag : colcol){
 			result.addAll(redBag);
 			cumulativeSize += redBag.size();
 		}
@@ -261,104 +271,54 @@ public class SledgeHammer2 extends Technique {
 	}
 	
 	/**
-	 * Returns a collection of Rule such that no element is equal (when interpreted as 
-	 * an ordinary Set) to any other.  FactBags that are set-equal are not necessarily 
-	 * equal as FactBags, since their object-sameness as FactBags is dependent on their 
-	 * RegionSpecies, initial bounding box, or other factors as well as Set contents.
-	 * @param c
-	 * @return
+	 * <p>Sets all the Claims in <tt>claimsToSetFalse</tt> false.</p>
+	 * @param claimsToSetFalse the Claims to be set false
+	 * @return true if any of the <tt>claimsToSetFalse</tt> were set 
+	 * from possible to false, false otherwise.
 	 */
-	private static List<FactBag> noDuplicates(Iterable<FactBag> c){
-		List<Pair<FactBag,HashSet<Claim>>> shit = new ArrayList<>();
-		List<FactBag> result = new ArrayList<>();
-		for(FactBag bag : c){
-			HashSet<Claim> h = new HashSet<>(bag);
-			if(!contain(shit, h)){
-				shit.add( new Pair<>(bag, h) );
-				result.add(bag);
-			}
-		}
-		
-		return result;
-	}
-	
-	private static boolean contain(List<Pair<FactBag,HashSet<Claim>>> shit, HashSet<Claim> h){
-		for(Pair<FactBag,HashSet<Claim>> thing : shit){
-			if(thing.getB().equals(h) ){
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private boolean eachElementIntersectsAtLeastTwoElementsFromOtherCombo(List<FactBag> src, List<FactBag> recip){
-		
-		int[] srcValues = new int[src.size()];
-		Arrays.fill(srcValues, 0);
-		int[] recipValues = new int[recip.size()];
-		Arrays.fill(recipValues, 0);
-		
-		for(int s=0; s<src.size(); ++s){
-			for(int r=0; r<recip.size(); ++r){
-				if(src.get(s).intersects(recip.get(r))){
-					++srcValues[s];
-					++recipValues[r];
-				}
-			}
-		}
-		
-		for(int[] array : new int[][]{srcValues, recipValues}){
-			for(int v : array){
-				if(v<2){ //XXX magic no
-					return false;
-				}
-			}
-		}
-		
-		return true;
-	}
-	
 	private boolean resolve(Collection<Claim> claimsToSetFalse){
 		boolean result = false;
+		puzzle.timeBuilder().push(new TimeSledgeHammer2Found(claimsToSetFalse));
+		
 		for(Claim c : claimsToSetFalse){
 			result |= c.setFalse();
 		}
-		if(result){
-			puzzle.addSolveEvent(claimsToSetFalse);
-		}
+		
+		puzzle.timeBuilder().pop();
 		return result;
 	}
 	
-	private Set<FactBag> bagsIntersecting(Set<Claim> union, List<FactBag> sources){
-		Set<FactBag> result = new HashSet<>();
+	/**
+	 * <p>Represents an event (group) when a valid sledgehamemr 
+	 * has been found and is being resolved.</p>
+	 * @author fiveham
+	 *
+	 */
+	public class TimeSledgeHammer2Found extends SolutionEvent{
+		private TimeSledgeHammer2Found(Collection<Claim> claimsToSetFalse){
+			super(puzzle.timeBuilder().top());
+			falsified().addAll(claimsToSetFalse);
+		}
+	}
+	
+	/**
+	 * <p>Returns a set of all the Rules that intersect any of the 
+	 * Rules in <tt>sources</tt>.</p>
+	 * @param union a pre-computed {@link SledgeHammer2#sideEffectUnion(Collection, boolean) mass-union} 
+	 * of the Claims in the Rules in <tt>sources</tt>
+	 * @param sources a collection of Rules to be used as an originating 
+	 * combination for a sledgehammer solution event
+	 * @return a set of all the Rules that intersect any of the Rules 
+	 * in <tt>sources</tt>, excluding the Rules in <tt>sources</tt>.
+	 */
+	private Set<Rule> rulesIntersecting(Set<Claim> union, List<Rule> sources){
+		Set<Rule> result = new HashSet<>();
 		
 		for(Claim c : union){
-			result.addAll(c.getOwners());
+			result.addAll(c);
 		}
 		result.removeAll(sources);
 		
 		return result;
-	}
-	
-	static ToolSet<Claim> unionAll(Collection<FactBag> bags){
-		ToolSet<Claim> result = new ToolSet<>();
-		
-		for(FactBag bag : bags){
-			result.addAll(bag);
-		}
-		
-		return result;
-	}
-	
-	private static int unionAllNullIfNonDisjoint(ToolSet<Claim> outputSet, List<FactBag> bags){
-		int cumulativeSize = 0;
-		for(FactBag bag : bags){
-			outputSet.addAll(bag);
-			cumulativeSize += bag.size();
-			if(cumulativeSize!=outputSet.size()){
-				return -1;
-			}
-		}
-		return cumulativeSize/* == result.size() ? result : UNION_OF_NON_DISJOINT_SETS*/;
 	}
 }

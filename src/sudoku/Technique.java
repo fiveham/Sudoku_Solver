@@ -1,7 +1,7 @@
 package sudoku;
 
 /**
- * Represents a technique used in solving sudoku puzzles.
+ * <p>Represents a technique used for solving sudoku puzzles.</p>
  * @author fiveham
  */
 
@@ -12,13 +12,15 @@ public abstract class Technique {
 	 * the constructor should only be visible to subclasses.
 	 */
 	
-	/** The target to which this instance of this technique pertains */
-	protected Puzzle puzzle;			//Privacy is protected to allow access from subclasses
+	/**
+	 * <p>The target to which this instance of this technique pertains.</p>
+	 */
+	protected Puzzle puzzle; //Privacy is protected to allow access from subclasses
 	
 	/**
-	 * Constructs a Technique object. Specifies the target
-	 * to which this technique pertains
-	 * @param target			The target to which this 
+	 * <p>Constructs a Technique object. Specifies the target
+	 * to which this technique pertains.</p>
+	 * @param target The target to which this 
 	 * instance of this solution technique pertains.
 	 */
 	protected Technique(Puzzle puzzle){
@@ -26,25 +28,35 @@ public abstract class Technique {
 	}
 	
 	/**
-	 * Performs this technique's analysis on the underlying target.
-	 * If opportunities to set values in any cells or to mark values
+	 * <p>Performs this technique's analysis on the underlying target.</p>
+	 * <p>If opportunities to set values in any cells or to mark values
 	 * impossible in any cells arise, such an opportunity must be 
-	 * exploited before the method returns.
-	 * @return				Returns whether any changes were made
-	 * to the underlying target.
+	 * exploited before the method returns.<p>
+	 * @return true if any changes were made
+	 * to the underlying target, false otherwise
 	 */
 	final public boolean digest(){
-		puzzle.newEventFrame();
-		return puzzle.isSolved() ? false : process();
+		//target.timeBuilder().push(techTime());
+		
+		boolean result = puzzle.isSolved() ? false : process();
+		
+		//target.timeBuilder().pop();
+		return result;
 	}
 	
+	/**
+	 * <p>Performs this technique's analysis on the underlying target.</p>
+	 * <p>If opportunities to make changes to the target arise, they are 
+	 * exploited before the method returns.</p>
+	 * @return true if changes were made to the target, false otherwise
+	 */
 	protected abstract boolean process();
 	
 	/**
-	 * Returns a reference to the target to which this instance of 
-	 * this technique pertains.
-	 * @return			Returns a reference to the target to which 
-	 * this instance of this technique pertains.
+	 * <p>Returns the target to which this instance of 
+	 * this technique pertains.</p>
+	 * @return the target to which this instance of this 
+	 * technique pertains.
 	 */
 	public Puzzle getPuzzle(){
 		return puzzle;
