@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -488,7 +489,7 @@ public class PuzzleVizApp extends Application {
 		return result;
 	}
 	
-	private Timeline stitch(List<Timeline> timelines){
+	private static Timeline stitch(List<Timeline> timelines){
 		Iterator<Timeline> iter = timelines.iterator();
 		Timeline first = iter.next();
 		
@@ -710,7 +711,35 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	public static Timeline depthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
+		ArrayList<Timeline> timelineList = new ArrayList<>(treeSize(event));
+		timelineList.add(solutionEventTimeline(event.wrapped(), modelHandler));
 		
+		for(ThreadEvent child : threadEventChildren(event)){
+			depthFirstRecursion(timelineList, child, modelHandler);
+		}
+		
+		return stitch(timelineList);
+	}
+	
+	private static int treeSize(Time time){
+		AtomicInteger ai = new AtomicInteger(0);
+		treeSize(time, ai);
+		return ai.get();
+	}
+	
+	private static void treeSize(Time time, AtomicInteger ai){
+		ai.incrementAndGet();
+		time.children().parallelStream().forEach((child) -> treeSize(child,ai));
+	}
+	
+	private static List<Timeline> depthFirstRecursion( List<Timeline> timelineList, ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
+		timelineList.add(solutionEventTimeline(event.wrapped(), modelHandler));
+		
+		for(ThreadEvent child : threadEventChildren(event)){
+			timelineList.addAll(depthFirstRecursion(timelineList, child, modelHandler));
+		}
+		
+		return timelineList;
 	}
 	
 	public static Timeline breadthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
@@ -762,6 +791,10 @@ public class PuzzleVizApp extends Application {
 	
 	private static List<FalsifiedTime> falsifiedTimeChildren(Time time){
 		return time.children().stream().filter((t)->t instanceof FalsifiedTime).map((t)->(FalsifiedTime)t).collect(Collectors.toList());
+	}
+	
+	private static List<ThreadEvent> threadEventChildren(Time time){
+		return time.children().stream().filter(IS_THREADEVENT).map(AS_THREADEVENT).collect(Collectors.toList());
 	}
 	
 	public static void addFalsificationAnimation(final Timeline timeline, Set<Claim> falsified, Map<Claim,List<VoxelModel>> modelHandler){
