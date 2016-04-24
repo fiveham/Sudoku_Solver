@@ -2,7 +2,6 @@ package anim;
 
 import javafx.animation.Timeline;
 import java.util.Iterator;
-import javafx.event.ActionEvent;
 
 /**
  * This class wraps a Timeline and an Iterator<Timeline> in such a way that 
@@ -26,7 +25,7 @@ public class CleverTimeline{
 	
 	public CleverTimeline(Iterator<Timeline> tIter){
 		this.tIter = tIter;
-		tailRecursion(null, false);
+		tailRecursion(false);
 		if(timeline==null){
 			throw new IllegalArgumentException("The specified iterator did not have any Timelines available via next().");
 		}
@@ -34,10 +33,10 @@ public class CleverTimeline{
 	
 	private void setTimeline(Timeline t){
 		this.timeline = t;
-		this.timeline.setOnFinished((ae) -> tailRecursion(ae,true));
+		this.timeline.setOnFinished((ae) -> tailRecursion(true));
 	}
 	
-	private void tailRecursion(ActionEvent ae, boolean play){
+	private void tailRecursion(boolean play){
 		if(tIter.hasNext()){
 			setTimeline(tIter.next());
 			if(play){

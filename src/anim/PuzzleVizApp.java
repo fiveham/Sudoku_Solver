@@ -6,6 +6,7 @@ import sudoku.Puzzle;
 import sudoku.Puzzle.IndexInstance;
 import sudoku.SolutionEvent;
 import sudoku.Solver;
+import sudoku.ThreadEvent;
 import common.graph.Graph;
 import common.graph.BasicGraph;
 import common.graph.Wrap;
@@ -433,7 +434,7 @@ public class PuzzleVizApp extends Application {
 //		return new CleverTimeline(new CleverTimeline.WrapIterator(timelines.iterator()));
 	}*/
 	
-	private Timeline genTimeline(Group voxelModels, Puzzle puzzle){
+	/*private Timeline genTimeline(Group voxelModels, Puzzle puzzle){
 		List<Frame1> overall = new ArrayList<>(puzzle.timeBuilder().children().size());
 		for(FalsifiedTime trunk : falsifiedTimeChildren(puzzle.timeBuilder().children())){
 			overall.add(new Frame1(trunk));
@@ -451,19 +452,7 @@ public class PuzzleVizApp extends Application {
 		}
 		
 		return stitch(timelines);
-	}
-	
-	private Map<Claim,List<VoxelModel>> genModelHandler(Puzzle puzzle, Group voxelModels){
-		Map<Claim,List<VoxelModel>> result = new HashMap<>( (int)Math.pow(puzzle.sideLength(), Puzzle.DIMENSION_COUNT) );
-		
-		List<Node> voxels = voxelModels.getChildren();
-		
-		for(Claim claim : puzzle.claims()){
-			result.put(claim, associates(claim,voxels));
-		}
-		
-		return result;
-	}
+	}*/
 	
 	public static final int MODELS_PER_CLAIM = 4;
 	
@@ -655,7 +644,80 @@ public class PuzzleVizApp extends Application {
         return puzzle;
 	}
 	
-	public static Timeline solutionEventTimeline(SolutionEvent event, Map<Claim,List<VoxelModel>> modelHandler){
+	/*public static List<Timeline> linearizeTimeTree(Puzzle puzzle, Group voxelModels, ThreadEvent root){
+		List<Timeline> result = new ArrayList<>();
+		
+		Map<Claim,List<VoxelModel>> modelHandler = genModelHandler(puzzle, voxelModels);
+		
+		Iterator<ThreadEvent> treeTraverser = treeTraverser(root);
+		while(treeTraverser.hasNext()){
+			result.add(solutionEventTimeline(treeTraverser.next().wrapped(), modelHandler));
+		}
+		
+		return result;
+	}
+	
+	private static Iterator<ThreadEvent> treeTraverser(ThreadEvent root){
+		
+	}*/
+	
+	/*
+	 * XXX different styles of solution-animation can exist:
+	 * 
+	 * Simultaneous: the splitting of the solution process is represented 
+	 * in the animation, as independent components of the puzzle continue solving 
+	 * in parallel at the same time.
+	 * Details: timelineForThreadEvent.setOnFinished( (ae) -> {} );
+	 * 
+	 * Linear: several separate options
+	 * Deep: Root, child 1, gchild 1, gchild 2, ... final gchild, child 2, gchild 1, ... final gchild, ... final child, gchild 1, ... final gchild
+	 * Wide: Root, child 1, child 2, ... final child, gchild1, ... final gchild, ggchild 1, ... 
+	 * various mixed protocol, such as wide for the first two generations, then deep thereafter.
+	 */
+	
+	/**
+	 * <p>Wraps <tt>parallelTimeline()</tt></p>
+	 * @param voxelModels
+	 * @param puzzle
+	 * @return
+	 */
+	public static Timeline genTimeline(Group voxelModels, Puzzle puzzle){
+		return parallelTimeline(puzzle.getTimeBuilder(), voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
+		//return depthFirstLinearTimeline(puzzle.getTimeBuilder(), voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
+		//return breadthFirstLinearTimeline(puzzle.getTimeBuilder(), voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
+	}
+	
+	/**
+	 * <p>Returns a Timeline which, when it finishes playing, starts </p>
+	 * @param event
+	 * @param voxelModels
+	 * @param puzzle
+	 * @param modelHandler
+	 * @return
+	 */
+	public static Timeline parallelTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
+		Timeline result = solutionEventTimeline(event.wrapped(), modelHandler);
+		
+		result.setOnFinished((ae) -> event.children().parallelStream()
+				.filter((ct) -> ct instanceof ThreadEvent)
+				.forEach((ct) -> parallelTimeline((ThreadEvent)ct, voxelModels, puzzle, modelHandler).play()));
+		
+		return result;
+	}
+	
+	public static Timeline depthFirstLinearTimeline(){
+		
+	}
+	
+	public static Timeline breadthFirstLinearTimeline(){
+		
+	}
+	
+	public static ThreadEventWrapper timeMap(ThreadEvent root, Puzzle puzzle, Group voxelModels){
+		return new ThreadEventWrapper(null, root, genModelHandler(puzzle, voxelModels));
+	}
+	
+	public static Timeline solutionEventTimeline(FalsifiedTime event, Map<Claim,List<VoxelModel>> modelHandler){
 		Timeline result = new Timeline();
 		
 		//add content for direct SolutionEvent
@@ -677,6 +739,7 @@ public class PuzzleVizApp extends Application {
 				timeline.getKeyFrames().addAll(vm.disoccupy());
 			}
 		}
+		//falsified.stream().forEach( (c) -> modelHandler.get(c).stream().forEach( (vm) -> timeline.getKeyFrames().addAll(vm.disoccupy()) ) );
 		
 		Set<BagModel> affectedBags = affectedBags(falsified, modelHandler);
 		for(BagModel bag : affectedBags){
@@ -687,7 +750,7 @@ public class PuzzleVizApp extends Application {
 	public static void addAutoResolveContent(Timeline timeline, List<FalsifiedTime> children, Map<Claim,List<VoxelModel>> modelHandler){
 		for(FalsifiedTime child : children){
 			addFalsificationAnimation(timeline, child.falsified(), modelHandler);
-			if(child.defers()){ //if it has children TODO account for this concept properly
+			if(child.defers()){ //if it has children FIXME account for this concept properly
 				addAutoResolveContent(timeline, falsifiedTimeChildren(child), modelHandler);
 			}
 		}
@@ -704,5 +767,17 @@ public class PuzzleVizApp extends Application {
 			affectedBags.add(vm.getOwnerBag());
 		}
 		return affectedBags;
+	}
+	
+	private static Map<Claim,List<VoxelModel>> genModelHandler(Puzzle puzzle, Group voxelModels){
+		Map<Claim,List<VoxelModel>> result = new HashMap<>( (int)Math.pow(puzzle.sideLength(), Puzzle.DIMENSION_COUNT) );
+		
+		List<Node> voxels = voxelModels.getChildren();
+		
+		for(Claim claim : puzzle.claims()){
+			result.put(claim, associates(claim,voxels));
+		}
+		
+		return result;
 	}
 }

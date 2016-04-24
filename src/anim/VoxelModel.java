@@ -87,13 +87,6 @@ public class VoxelModel extends Box{
 		
 		this.type = type;
 		
-		/*this.xNeg = xNeg;
-		this.xPos = xPos;
-		this.yNeg = yNeg;
-		this.yPos = yPos;
-		this.zNeg = zNeg;
-		this.zPos = zPos;*/
-		
 		this.ownerBag = null;
 		getTransforms().add(new Translate(x+(xPos-xNeg)/2, y+(yPos-yNeg)/2, z+(zPos-zNeg)/2));
 	}
