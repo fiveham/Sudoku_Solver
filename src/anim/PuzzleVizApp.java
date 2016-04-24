@@ -713,10 +713,6 @@ public class PuzzleVizApp extends Application {
 		
 	}
 	
-	public static ThreadEventWrapper timeMap(ThreadEvent root, Puzzle puzzle, Group voxelModels){
-		return new ThreadEventWrapper(null, root, genModelHandler(puzzle, voxelModels));
-	}
-	
 	public static Timeline solutionEventTimeline(FalsifiedTime event, Map<Claim,List<VoxelModel>> modelHandler){
 		Timeline result = new Timeline();
 		
