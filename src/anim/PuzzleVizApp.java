@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javafx.beans.property.DoubleProperty;
 import javafx.animation.Timeline;
@@ -43,6 +44,9 @@ import javafx.stage.Stage;
 
 //TODO accomodate animation of Rule mergers by having the merging Rules shift colors simultaneously until they share the same color, then one goes invisible.
 public class PuzzleVizApp extends Application {
+	
+	public static final Function<Time,ThreadEvent> AS_THREADEVENT = (time) -> (ThreadEvent) time;
+	public static final Predicate<Time> IS_THREADEVENT = (time) -> time instanceof ThreadEvent;
 	
 	public PuzzleVizApp() {
 	}
@@ -705,12 +709,43 @@ public class PuzzleVizApp extends Application {
 		return result;
 	}
 	
-	public static Timeline depthFirstLinearTimeline(){
+	public static Timeline depthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
 		
 	}
 	
-	public static Timeline breadthFirstLinearTimeline(){
+	public static Timeline breadthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
+		Iterator<ThreadEvent> layerIterator = breadthFirstLinearizeTime(event);
+		Timeline result = solutionEventTimeline(layerIterator.next().wrapped(), modelHandler);
 		
+		Timeline earlier = result;
+		while(layerIterator.hasNext()){
+			Timeline later = solutionEventTimeline(layerIterator.next().wrapped(), modelHandler);
+			earlier.setOnFinished((ae) -> later.play());
+			earlier = later;
+		}
+		
+		return result;
+	}
+	
+	private static Iterator<ThreadEvent> breadthFirstLinearizeTime(ThreadEvent event){
+		List<ThreadEvent> snake = new ArrayList<>();
+		
+		for(List<ThreadEvent> layer; !(layer = Collections.singletonList(event)).isEmpty();){
+			snake.addAll(layer);
+			layer = nextLayer(layer);
+		}
+		
+		return snake.iterator();
+	}
+	
+	private static List<ThreadEvent> nextLayer(List<ThreadEvent> layer){
+		List<ThreadEvent> result = new ArrayList<>();
+		
+		for(ThreadEvent event : layer){
+			result.addAll(event.children().stream().filter(IS_THREADEVENT).map(AS_THREADEVENT).collect(Collectors.toList()));
+		}
+		
+		return result;
 	}
 	
 	public static Timeline solutionEventTimeline(FalsifiedTime event, Map<Claim,List<VoxelModel>> modelHandler){
