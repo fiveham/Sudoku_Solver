@@ -2,6 +2,7 @@ package sudoku;
 
 import common.time.Time;
 import common.time.TimeBuilder;
+import java.util.Collection;
 
 /**
  * <p>A time node denoting and encapsulating an event in which some 
@@ -23,6 +24,10 @@ public abstract class SolutionEvent extends FalsifiedTime implements TimeBuilder
 	
 	public SolutionEvent(){
 		super(null);
+	}
+	
+	public SolutionEvent(Collection<Claim> falsified){
+		super(null, falsified);
 	}
 	
 	@Override

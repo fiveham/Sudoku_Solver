@@ -4,12 +4,8 @@ import sudoku.Claim;
 import sudoku.FalsifiedTime;
 import sudoku.Puzzle;
 import sudoku.Puzzle.IndexInstance;
-import sudoku.SolutionEvent;
 import sudoku.Solver;
 import sudoku.ThreadEvent;
-import common.graph.Graph;
-import common.graph.BasicGraph;
-import common.graph.Wrap;
 import common.time.Time;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -65,16 +61,26 @@ public class PuzzleVizApp extends Application {
 	public void start(Stage primaryStage) throws Exception{
 		primaryStage.setResizable(false);
 		
-		Puzzle puzzle = createAndSolvePuzzle();
-		List<Parent> createdContent = createContent(puzzle);
-		Scene scene = new Scene(createdContent.get(TRUE_ROOT_INDEX_IN_createContent_LIST));
-		primaryStage.setScene(scene);
+		Puzzle puzzle;
+		ThreadEvent timeRoot;
+		{
+			Solver solver = createAndSolvePuzzle();
+			puzzle = (Puzzle) solver.getPuzzle();//.get(0);
+			timeRoot = (ThreadEvent) solver.getEvent();
+		}
 		
-		Group voxelModels = (Group) createdContent.get(VOXEL_MODELS_INDEX_IN_createContent_LIST);
+		Scene scene;
+		Group voxelModels;
+		{
+			List<Parent> createdContent = createContent(puzzle);
+			scene = new Scene(createdContent.get(TRUE_ROOT_INDEX_IN_createContent_LIST));
+			voxelModels = (Group) createdContent.get(VOXEL_MODELS_INDEX_IN_createContent_LIST);
+		}
+		primaryStage.setScene(scene);
 		
         primaryStage.show();
         
-        genTimeline(voxelModels,puzzle).play();
+        genTimeline(voxelModels, puzzle, timeRoot).play();
 	}
 	
 	/**
@@ -157,38 +163,6 @@ public class PuzzleVizApp extends Application {
 		
 		return result;
 	}
-	
-	/*private static final int REGION_INDEX = 3;
-	private static final int X_INDEX = 2;
-	private static final int Y_INDEX = 1;
-	private static final int Z_INDEX = 0;
-	
-	private Group genVoxelModels(Puzzle target){
-		Group result = new Group();
-		
-		for(List<Integer> ints : new NCuboid<>(nCuboidDims(target))){
-			result.getChildren().add( RegionSpecies.values()[ints.get(REGION_INDEX)].newVoxelModel(target, ints.get(X_INDEX), ints.get(Y_INDEX), ints.get(Z_INDEX) ) );
-		}
-		
-		genBagModels(result.getChildren(), target);
-		
-		return result;
-	}
-	private static List<List<Integer>> nCuboidDims(Puzzle target){
-		List<List<Integer>> result = new ArrayList<>(Puzzle.DIMENSION_COUNT + 1);
-		
-		List<Integer> spatialDimension = new ArrayList<>(target.sideLength());
-		for(int i=0; i<target.sideLength(); ++i){
-			spatialDimension.add(i);
-		}
-		
-		for(int i=0; i<Puzzle.DIMENSION_COUNT; ++i){
-			result.add(spatialDimension);
-		}
-		result.add(spatialDimension.subList(0, RegionSpecies.values().length)); //Puzzles of order 1 won't work, but that won't ever matter.
-		
-		return result;
-	}*/
 	
 	private Group genContentParent(SubScene subScene){
 		Group contentParent = new Group();
@@ -370,95 +344,6 @@ public class PuzzleVizApp extends Application {
 		}
 	}
 	
-	/*
-	 * The switchover from nested-list time to tree time messed some things up, 
-	 * including, most importantly, eliminating the concept of the event-frame.
-	 * 
-	 * Now, we need to work out how we'll parse the time-tree into useable animatable 
-	 * timeline features.
-	 * 
-	 * First off, the tree timeline will begin with a bunch of Initialization 
-	 * events in which known cell values are installed in the target.  That 
-	 * initialization block will be parsed into layers, like a central-american 
-	 * pyramid.  The layers play sequentially, and the elements of each layer play 
-	 * in parallel.  So, all the setTrue events from seed values are animated 
-	 * simultaneously, then all the collapses initiated by those initial values 
-	 * being realized are animated simultaneously(, and then all the collapses initiated 
-	 * by THOSE collapses are animated simultaneously)^N., where N is some nonnegative 
-	 * integer.  That goes on as deep as the timeline goes.
-	 * 
-	 * You can find the divisions between layers of the time-pyramid by finding Time 
-	 * nodes of certain types.  Initialization, SledgeHammer events, and ColorChain 
-	 * events are all inter-layer nodes, by necessity, and the nodes for automatic 
-	 * collapse triggered in a Rule are inter-layer nodes, too.
-	 * 
-	 * While we grouped all the Initialization events into one cluster, we'll leave 
-	 * each Technique-related solution-event as its own thing.
-	 * 
-	 * EDIT: We'll go back to Puzzle and make it put all the Initialization events under 
-	 * one node.
-	 * 
-	 * Problem:
-	 * Due to auto-collapse in Rule, sometimes a claim set false by a solution operation 
-	 * will not be set false BY the solution operation per se but instead is set false by 
-	 * a nested (higher partition number) auto-collapse event.  We need to make sure that 
-	 * we can identify all the Claims that a solution-event itself knows to set false.
-	 * 
-	 * Solution-event:	Claims to remark upon
-	 * Initialization	Claims visible to the claims set true
-	 * SledgeHammer2	non-red green claims
-	 * CCIntern			claims with self-contradicting color
-	 * CCBridge			claims with the even-bridge color
-	 * CCExtern			claims for which a chain-external contradiction was in fact detected and resolved
-	 * 
-	 * 
-	 */
-	/*private CleverTimeline genTimeline(Group voxelModels, Puzzle target){
-		
-		List<Frame1> overall = new ArrayList<>(target.timeBuilder().children().size());
-		for(FalsifiedTime trunk : target.timeBuilder().children().stream().filter((t)->t instanceof FalsifiedTime).map((t)->(FalsifiedTime)t).collect(Collectors.toList())){
-			overall.add(new Frame1(trunk));
-		}
-		
-		List<CleverTimeline> timelines = new ArrayList<>();
-		for(Frame1 f1 : overall){
-			timelines.add(genTimelineForFrame(f1));
-		}
-		
-		return new CleverTimeline(new CleverTimeline.WrapIterator(timelines.iterator()));
-		
-//		List<List<List<Claim>>> solveEventFrames = target.getSolveEvents();
-//		
-//		Map<Claim,List<VoxelModel>> modelHandler = genModelHandler(target, solveEventFrames, voxelModels);
-//		
-//		List<CleverTimeline> timelines = new ArrayList<>();
-//		for(int i=0; i<solveEventFrames.size(); ++i){
-//			timelines.add(genTimelineForFrame(i==0, solveEventFrames.get(i), modelHandler));
-//		}
-//		
-//		return new CleverTimeline(new CleverTimeline.WrapIterator(timelines.iterator()));
-	}*/
-	
-	/*private Timeline genTimeline(Group voxelModels, Puzzle puzzle){
-		List<Frame1> overall = new ArrayList<>(puzzle.timeBuilder().children().size());
-		for(FalsifiedTime trunk : falsifiedTimeChildren(puzzle.timeBuilder().children())){
-			overall.add(new Frame1(trunk));
-		}
-		
-		Map<Claim,List<VoxelModel>> modelHandler = genModelHandler(puzzle, voxelModels);
-		
-		List<Timeline> timelines = new ArrayList<>();
-		for(Frame1 f1 : overall){
-			for(Frame2 f2 : f1.frames){
-				for(FalsifiedTime ft : f2.automaticEvents){
-					timelines.add(genTimelineForAutoEvent(ft.falsified(), modelHandler));
-				}
-			}
-		}
-		
-		return stitch(timelines);
-	}*/
-	
 	public static final int MODELS_PER_CLAIM = 4;
 	
 	/**
@@ -503,113 +388,6 @@ public class PuzzleVizApp extends Application {
 		return first;
 	}
 	
-	@Deprecated
-	private Timeline genTimelineForAutoEvent(/*FalsifiedTime ft,*/Set<Claim> falsified, Map<Claim,List<VoxelModel>> modelHandler){
-		final Timeline result = new Timeline();
-		
-		for(Claim c : /*ft.*/falsified/*()*/){
-			for(VoxelModel vm : modelHandler.get(c)){
-				result.getKeyFrames().addAll(vm.disoccupy());
-			}
-		}
-		
-		Set<BagModel> affectedBags = affectedBags(/*ft.*/falsified/*()*/, modelHandler);
-		for(BagModel bag : affectedBags){
-			bag.trimUnoccupiedExtremeVoxels(result);
-		}
-		
-		return result;
-	}
-	
-	/**
-	 * An nth-level event-frame meant for trunk-level time elements.
-	 * @author fiveham
-	 *
-	 */
-	public class Frame1{
-		private final List<Frame2> frames;
-		public Frame1(FalsifiedTime trunk){
-			this.frames = new ArrayList<>();
-			
-			List<Wrap<FalsifiedTime>> list = Wrap.wrap(asList(trunk), (t1,t2)->t1==t2.parent() || t2==t1.parent());
-			final Wrap<FalsifiedTime> trunkWrap = list.stream().filter((w)->w.wrapped()==trunk).findFirst().get();
-			
-			Graph<Wrap<FalsifiedTime>> graph = new BasicGraph<>(list);
-			
-			list.remove(trunkWrap);
-			graph.componentForSeed(
-					list, 
-					/*(l)->*/trunkWrap, 
-					Collections.singletonList((cuttingEdge)->frames.add(new Frame2(cuttingEdge))) );
-		}
-		
-		private List<FalsifiedTime> asList(Time time){
-			List<Time> result = Collections.singletonList(time);
-			for(Time t : time.children()){
-				result.addAll(asList(t));
-			}
-			return result.stream()
-					.filter((t)->t instanceof FalsifiedTime)
-					.map((t)->(FalsifiedTime)t)
-					.collect(Collectors.toList());
-		}
-		
-		public List<Frame2> frames(){
-			return frames;
-		}
-		
-		/*private void generateTail(Time trunk){
-			List<Pair<Time,Integer>> partitionedLeaves = new ArrayList<>();
-			for(Time leaf : trunk){
-				List<Time> trail = leaf.currentTrail();
-				int partitionCount = countPartitions(trail);
-				partitionedLeaves.add(new Pair<>(leaf,partitionCount));
-			}
-			
-			List<Pair<Time,Integer>> partition;
-			for(int i=0; !(partition=generatePartition(i,partitionedLeaves)).isEmpty(); ++i){
-				frames.add(new Frame2(partition.stream().map((pair)->pair.getA()).collect(Collectors.toList())));
-			}
-		}*/
-		
-		/*private List<Pair<Time,Integer>> generatePartition(final int i, List<Pair<Time,Integer>> partitionedLeaves){
-			return partitionedLeaves.stream().filter((pair)->pair.getB()==i).collect(Collectors.toList());
-		}*/
-		
-		/* *
-		 * Returns the number of automated Rule collapse events there are between 
-		 * the beginning and the end of this List.  The first and last elements 
-		 * are not considered for counting.
-		 * @param trail
-		 * @return
-		 */
-		/*private int countPartitions(List<Time> trail){
-			int result = 0;
-			for(int i=1; i<trail.size()-1; ++i){
-				if(trail.get(i) instanceof AutoResolve){
-					++result;
-				}
-			}
-			return result;
-		}*/
-	}
-	
-	/**
-	 * An nth-level event-frame meant to hold a collection of event-descriptions 
-	 * for automated Rule collapses (ValueClaim and TotalLocalization).
-	 * @author fiveham
-	 *
-	 */
-	public class Frame2{
-		
-		private final List<FalsifiedTime> automaticEvents;
-		
-		public Frame2(Set<Wrap<FalsifiedTime>> times){
-			automaticEvents = times.stream().map((w)->w.wrapped()).collect(Collectors.toList());
-			automaticEvents.sort(null);
-		}
-	}
-	
 	private void genBagModels(List<? super VoxelModel> voxels, Puzzle p){
 		for(RegionSpecies reg : RegionSpecies.values()){
 			Puzzle.RegionSpecies region = reg.pertainsTo;
@@ -631,22 +409,12 @@ public class PuzzleVizApp extends Application {
 		}
 	}
 	
-	/*private CleverTimeline genTimelineForFrame(boolean isFirstFrame, List<List<Claim>> eventFrame, Map<Claim,List<VoxelModel>> modelHandler){
-		List<Timeline> timelinesForEvents = new ArrayList<>();
-		
-		for(List<Claim> event : eventFrame){
-			timelinesForEvents.add(genTimelineForEvent(event, modelHandler));
-		}
-		
-		return new ParallellizableTimeline(isFirstFrame, timelinesForEvents.iterator());
-	}*/
-	
-	private Puzzle createAndSolvePuzzle() throws FileNotFoundException{
+	private Solver createAndSolvePuzzle() throws FileNotFoundException, InterruptedException{
 		List<String> args = getParameters().getRaw();
         Puzzle puzzle = new Puzzle(new File(args.get(0)));
         Solver solver = new Solver(puzzle);
         solver.solve();
-        return puzzle;
+        return solver;
 	}
 	
 	/*public static List<Timeline> linearizeTimeTree(Puzzle puzzle, Group voxelModels, ThreadEvent root){
@@ -686,8 +454,8 @@ public class PuzzleVizApp extends Application {
 	 * @param puzzle
 	 * @return
 	 */
-	public static Timeline genTimeline(Group voxelModels, Puzzle puzzle){
-		return parallelTimeline(puzzle.getTimeBuilder(), voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
+	public static Timeline genTimeline(Group voxelModels, Puzzle puzzle, ThreadEvent timeRoot){
+		return parallelTimeline(timeRoot, voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
 		//return depthFirstLinearTimeline(puzzle.getTimeBuilder(), voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
 		//return breadthFirstLinearTimeline(puzzle.getTimeBuilder(), voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
 	}

@@ -1,5 +1,6 @@
 package sudoku;
 
+import common.time.TimeBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -8,8 +9,6 @@ import java.util.Scanner;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
-
-import common.time.TimeBuilder;
 
 /**
  * <p>Represents a sudoku target as a bipartite graph of 
@@ -97,24 +96,6 @@ public class Puzzle extends SudokuNetwork{
 			specificValue.add(c);
 		}
 	}
-	
-	/* *
-	 * <p>The Time node gathering all initial-value-installation events 
-	 * together as children of a meaningful common node.</p>
-	 * 
-	 * @author fiveham
-	 *
-	 */
-	/*public class Initialization extends SolutionEvent{
-		
-		*//**
-		 * <p>Constructs an Initialization whose {@link Time#parent() parent} is 
-		 * this target's {@link Puzzle#timeBuilder() root}.</p>
-		 *//*
-		private Initialization(){
-			super(root);
-		}
-	}*/
 	
 	/**
 	 * <p>Generates the Rules for <tt>p</tt>.</p>

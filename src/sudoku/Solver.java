@@ -122,6 +122,10 @@ public class Solver implements Runnable{
 		this(sudoku, eventParent, watcher, NO_INITIALIZER_SOURCE, processors);
 	}
 	
+	public ThreadEvent getEvent(){
+		return event;
+	}
+	
 	/**
 	 * <p>Returns the Puzzle that this Solver works to solve.</p>
 	 * @return the Puzzle that this Solver works to solve
@@ -130,14 +134,8 @@ public class Solver implements Runnable{
 		return target;
 	}
 	
-	public ThreadEvent initialize(){
-		for(Technique technique : initializers){
-			SolutionEvent solutionEvent = technique.digest();
-			if(solutionEvent != null){
-				return new ThreadEvent(eventParent, solutionEvent);
-			}
-		}
-		return null;
+	private ThreadEvent initialize(){
+		return handleTechniques(initializers, eventParent);
 	}
 	
 	/**
@@ -151,8 +149,12 @@ public class Solver implements Runnable{
 	 * 
 	 * @return true if the target is solved, false otherwise
 	 */
-	public ThreadEvent solve(){
-		for(Technique technique : processors){
+	private ThreadEvent process(){
+		return handleTechniques(processors, eventParent);
+	}
+	
+	private static ThreadEvent handleTechniques(List<Technique> techniques, ThreadEvent eventParent){
+		for(Technique technique : techniques){
 			SolutionEvent solutionEvent = technique.digest();
 			if(solutionEvent != null){
 				return new ThreadEvent(eventParent, solutionEvent);
@@ -174,7 +176,7 @@ public class Solver implements Runnable{
 			target.connectedComponents().stream().forEach( (component) -> 
 					new Thread(watcher, HAS_INITIALIZERS.apply(this, component))
 					.start());
-		} else if((event=solve()) != null){
+		} else if((event=process()) != null){
 			target.connectedComponents().stream().forEach((component) -> 
 					new Thread(watcher, HAS_NO_INITIALIZERS.apply(this, component))
 					.start());
@@ -190,28 +192,30 @@ public class Solver implements Runnable{
 	 * the target to be solved.</p>
 	 * 
 	 * @param args command line arguments
+	 * @see #run()
 	 * @throws FileNotFoundException if the file specified by the first command-line 
 	 * argument could not be found
 	 */
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException{
-		Panopticon pool = new Panopticon();
-		Solver s = new Solver(new File(args[0]), pool);
-		
-		Thread monitor = new Thread(new Panopticon());
-		monitor.setDaemon(true);
-		
-		new Thread(pool, s).start();
-		
-		monitor.start();
-		monitor.join();
-		
+		Solver s = new Solver(new File(args[0]));
+		s.solve();
 		System.out.println(s.target.toString());
 	}
 	
+	public void solve() throws InterruptedException{
+		Thread monitor = new Thread(watcher);
+		monitor.setDaemon(true);
+		
+		new Thread(watcher, this).start(); //calls run()
+		monitor.start();
+		
+		monitor.join();
+	}
+	
 	private static class Panopticon extends ThreadGroup implements Runnable{
-		public static final BiConsumer<Panopticon,Boolean> DO_NOTHING = (monitor,bool) -> {};
-		public static final BiConsumer<Panopticon,Boolean> CHECK_START = (monitor,bool) -> {
-			if(bool){
+		public static final BiConsumer<Panopticon,Boolean> DO_NOTHING = (monitor,activeCountGT0) -> {};
+		public static final BiConsumer<Panopticon,Boolean> CHECK_START = (monitor,activeCountGT0) -> {
+			if(activeCountGT0){
 				monitor.started = true;
 				monitor.action = DO_NOTHING;
 			}
@@ -226,9 +230,9 @@ public class Solver implements Runnable{
 		
 		@Override
 		public synchronized void run(){
-			boolean count;
-			while( (count = activeCount() > 0) || !started ){
-				action.accept(this,count);
+			boolean activeCountGT0;
+			while( (activeCountGT0 = activeCount() > 0) || !started ){
+				action.accept(this,activeCountGT0);
 				try{
 					wait(500);
 				} catch(InterruptedException e){

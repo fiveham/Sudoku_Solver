@@ -23,7 +23,7 @@ public class Initializer extends Technique {
 	
 	public class Initialization extends SolutionEvent{
 		private Initialization(Claim c){
-			falsified().addAll(c.visibleClaims());
+			super(c.visibleClaims());
 		}
 	}
 }

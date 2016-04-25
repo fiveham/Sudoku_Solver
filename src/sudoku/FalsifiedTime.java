@@ -1,8 +1,8 @@
 package sudoku;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-
 import common.time.AbstractTime;
 import common.time.Time;
 
@@ -13,6 +13,11 @@ public class FalsifiedTime extends AbstractTime {
 	public FalsifiedTime(Time parent) {
 		super(parent);
 		this.falsified = new HashSet<>();
+	}
+	
+	public FalsifiedTime(Time parent, Collection<Claim> falsified){
+		super(parent);
+		this.falsified = new HashSet<>(falsified);
 	}
 
 	public FalsifiedTime(Time parent, Time focus) {
