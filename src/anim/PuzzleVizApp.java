@@ -281,11 +281,19 @@ public class PuzzleVizApp extends Application {
 	 * For linear Rules/BagModels, the input int is output, but for Box types, the 
 	 * input int must be modded by the Puzzle's magnitude</li>
 	 * 
-	 * <li></li>
-	 * <li></li>
-	 * <li></li>
-	 * <li></li>
-	 * <li></li>
+	 * <li>the first physical dimension pertinent to this type of region</li>
+	 * 
+	 * <li>the second physical dimension pertinent to this type of region</li>
+	 * 
+	 * <li>the PhongMaterial color for the VoxelModels of BagModels of this type</li>
+	 * 
+	 * <li>a reference to the dimension of a VoxelModel belonging to a BagModel of 
+	 * this type along which the VoxelModel compresses when its Claim is discovered 
+	 * to be false</li>
+	 * 
+	 * <li>a reference to the component of the position of a VoxelModel belonging to 
+	 * a BagModel of this type that needs to shift as this VoxelModel compresses once 
+	 * its Claim is discovered to be false in order to keep the non-moving face stationary</li>
 	 * </ul></p>
 	 * @see Puzzle.RegionSpecies
 	 * @author fiveham
@@ -364,31 +372,33 @@ public class PuzzleVizApp extends Application {
 		}
 		
 		/**
-		 * Returns -1, 1, or 0 if <tt>dimensionValue</tt> is 0, 
-		 * <tt>dimValueWhenPos</tt>, or between 0 and 
-		 * <tt>dimValueWhenPos</tt> respectively.
+		 * <p>Returns -1, 1, or 0 if <tt>dimensionValue</tt> is 0, 
+		 * <tt>dimValueWhenPos</tt>, or between 0 and <tt>dimValueWhenPos</tt> 
+		 * respectively.</p>
 		 * 
-		 * 0 is returned when the voxel whose location within its cell, 
+		 * <p>0 is returned when the voxel whose location within its cell, 
 		 * box, row, or column or represented by <tt>dimensionValue</tt> 
 		 * is not an edge position. For cells, rows, and columns, edge voxels 
 		 * are on the edge of the typically 9x9x9 cube; for boxes, edge voxels 
-		 * are on the borders between boxes.
+		 * are on the borders between boxes.</p>
 		 * 
-		 * @param dimensionValue one dimensional component of the location of 
-		 * a voxel whose model is being developed. 0-8 for a voxel in a cell, 
-		 * row, or column of a 9x9 sudoku target; 0-2 for a voxel in a box of 
-		 * a 9x9 sudoku target.
-		 * @param dimValueWhenPos when <tt>dimensionValue</tt> is equal to 
-		 * this parameter, 1 is returned.
-		 * @return 
+		 * @param p the Puzzle whose solution process is being animated
+		 * @param xyz an adjusted component of a VoxelModel's Claim's position 
+		 * in physical space
+		 * @return -1 if the <tt>xyz</tt> is 0, indicating the VoxelModel 
+		 * in question is on the lower-valued end of the pertinent physical 
+		 * dimension, 1 if <tt>xyz</tt> equals the value output by 
+		 * <tt>farEdgeForType</tt> when passed <tt>p</tt> as a parameter, or 
+		 * 0 otherwise
 		 */
 		private int edgeSign(Puzzle p, int xyz){
 			return (xyz==0) ? -1 : xyz==farEdgeForType.apply(p) ? 1 : 0;
 		}
 		
 		/**
-		 * Selects and returns one of the three dimensions specified as parameters, 
-		 * or returns 0.
+		 * <p>Selects and returns one of the three dimensions specified 
+		 * as parameters, or returns a dummy value to choose not to 
+		 * make a selection.</p>
 		 * @author fiveham
 		 *
 		 */
