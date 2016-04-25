@@ -4,7 +4,6 @@ import common.graph.Graph;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -64,10 +63,6 @@ public class Solver implements Runnable{
 	public Solver(String filename) throws FileNotFoundException{
 		this(new Puzzle(new File(filename)), new Panopticon());
 	}
-
-	private Solver(String filename, Panopticon watcher) throws FileNotFoundException{
-		this(new Puzzle(new File(filename)), watcher);
-	}
 	
 	/**
 	 * <p>Constructs a Solver that works to solve the target 
@@ -78,10 +73,6 @@ public class Solver implements Runnable{
 	 */
 	public Solver(File f) throws FileNotFoundException{
 		this(new Puzzle(f), new Panopticon());
-	}
-
-	private Solver(File f, Panopticon watcher) throws FileNotFoundException{
-		this(new Puzzle(f), watcher);
 	}
 	
 	/**
@@ -116,10 +107,6 @@ public class Solver implements Runnable{
 	
 	private Solver(Sudoku sudoku, ThreadEvent eventParent, List<Function<Sudoku,Technique>> processors){
 		this(sudoku, eventParent, new Panopticon(), NO_INITIALIZER_SOURCE, processors);
-	}
-	
-	private Solver(Sudoku sudoku, ThreadEvent eventParent, Panopticon watcher, List<Function<Sudoku,Technique>> processors){
-		this(sudoku, eventParent, watcher, NO_INITIALIZER_SOURCE, processors);
 	}
 	
 	public ThreadEvent getEvent(){
@@ -163,12 +150,31 @@ public class Solver implements Runnable{
 		return null;
 	}
 	
-	public static final Comparator<Graph<NodeSet<?,?>>> SMALLEST_FIRST = (g1,g2) -> Integer.compare(g1.size(), g2.size());
-	
-	public static final BiFunction<Solver,Graph<NodeSet<?,?>> ,Solver> HAS_NO_INITIALIZERS = 
+	public static final BiFunction<Solver,Graph<NodeSet<?,?>>,Solver> HAS_NO_INITIALIZERS = 
 			(solver,component) -> new Solver(new SudokuNetwork(solver.target.magnitude(), component), solver.event, solver.processorSource);
-	public static final BiFunction<Solver,Graph<NodeSet<?,?>> ,Solver> HAS_INITIALIZERS = 
+	public static final BiFunction<Solver,Graph<NodeSet<?,?>>,Solver> HAS_INITIALIZERS = 
 			(solver,component) -> new Solver(new SudokuNetwork(solver.target.magnitude(), component), solver.event, solver.initializerSource, solver.processorSource);
+	
+	/**
+	 * <p>Creates a thread to {@link #run() run} this Solver and creates 
+	 * a daemon thread to watch the thread group to which the Solver thread 
+	 * belongs. Once the thread group being watched becomes empty (has 
+	 * {@link ThreadGroup#activeCount() no active threads}) the daemon thread
+	 * terminates. This method {@link Thread#join() waits} for the daemon 
+	 * thread to terminate before returning.</p>
+	 * <p>Use this method when creating a single initial Solver for a 
+	 * <tt>Puzzle</tt>.</p>
+	 * @throws InterruptedException
+	 */
+	public void solve() throws InterruptedException{
+		Thread monitor = new Thread(watcher);
+		monitor.setDaemon(true);
+		
+		new Thread(watcher, this).start(); //calls run()
+		monitor.start();
+		
+		monitor.join();
+	}
 	
 	@Override
 	public void run(){
@@ -200,16 +206,6 @@ public class Solver implements Runnable{
 		Solver s = new Solver(new File(args[0]));
 		s.solve();
 		System.out.println(s.target.toString());
-	}
-	
-	public void solve() throws InterruptedException{
-		Thread monitor = new Thread(watcher);
-		monitor.setDaemon(true);
-		
-		new Thread(watcher, this).start(); //calls run()
-		monitor.start();
-		
-		monitor.join();
 	}
 	
 	private static class Panopticon extends ThreadGroup implements Runnable{

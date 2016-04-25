@@ -1,14 +1,14 @@
 package anim;
 
+import common.Pair;
+import common.time.Time;
 import sudoku.Claim;
 import sudoku.FalsifiedTime;
 import sudoku.Puzzle;
 import sudoku.Puzzle.IndexInstance;
 import sudoku.Solver;
 import sudoku.ThreadEvent;
-import common.time.Time;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -50,7 +50,7 @@ public class PuzzleVizApp extends Application {
 	
 	public static void main(String[] args) {
 		if(args.length > 0){
-			launch(args); //calls start()
+			launch(args); //calls start(Stage)
 		} else{
 			System.out.println("Usage: java PuzzleVizApp target-sourcefile-name");
 			System.exit(1);
@@ -64,17 +64,21 @@ public class PuzzleVizApp extends Application {
 		Puzzle puzzle;
 		ThreadEvent timeRoot;
 		{
-			Solver solver = createAndSolvePuzzle();
-			puzzle = (Puzzle) solver.getPuzzle();//.get(0);
-			timeRoot = (ThreadEvent) solver.getEvent();
+			List<String> args = getParameters().getRaw();
+	        puzzle = new Puzzle(new File(args.get(0)));
+	        
+	        Solver solver = new Solver(puzzle);
+	        solver.solve();
+	        
+			timeRoot = solver.getEvent();
 		}
 		
 		Scene scene;
 		Group voxelModels;
 		{
-			List<Parent> createdContent = createContent(puzzle);
-			scene = new Scene(createdContent.get(TRUE_ROOT_INDEX_IN_createContent_LIST));
-			voxelModels = (Group) createdContent.get(VOXEL_MODELS_INDEX_IN_createContent_LIST);
+			Pair<Parent,Group> createdContent = createContent(puzzle);
+			scene = new Scene(createdContent.getA());
+			voxelModels = createdContent.getB();
 		}
 		primaryStage.setScene(scene);
 		
@@ -84,54 +88,38 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	/**
-	 * <p>The index of the voxel models in the list returned by 
-	 * {@link #createContent(Puzzle) createContent}.</p>
-	 */
-	private static final int VOXEL_MODELS_INDEX_IN_createContent_LIST = 1;
-	
-	/**
-	 * <p>The index of the root of the scene graph in the list returned 
-	 * by {@link #createContent(Puzzle) createContent}.</p>
-	 */
-	private static final int TRUE_ROOT_INDEX_IN_createContent_LIST = 0;
-	
-	/**
-	 * <p>Creates the scene graph for this application and returns a list 
+	 * <p>Creates the scene graph for this application and returns a Pair 
 	 * containing the scene graph as the first element and the Group that 
 	 * contains the voxel models as the second element.</p>
 	 * 
 	 * <p>Access to the voxel model Group is provided as an independent 
-	 * result even though it is contained in the overall scene graph (the 
-	 * other element of the returned list) because it is more efficient 
-	 * than requiring {@link #start(Stage) the calling code} to extract the 
-	 * voxel model Group out of the overall scene graph.</p>
+	 * result even though it is contained in the overall scene graph 
+	 * because it is more efficient than requiring 
+	 * {@link #start(Stage) the calling code} to extract the voxel model 
+	 * Group out of the overall scene graph.</p>
 	 * 
 	 * @param target the Puzzle whose solution process is being animated
-	 * @return a list containing the scene graph as the first element and 
+	 * @return a Pair containing the scene graph as the first element and 
 	 * the Group that contains the voxel models as the second element
 	 */
-	private List<Parent> createContent(Puzzle puzzle){
-		List<Parent> result = new ArrayList<>(2);
-		
+	private static Pair<Parent,Group> createContent(Puzzle puzzle){
 		Camera camera = genCamera();
 		Group voxelModels = genVoxelModels(puzzle);
 		
-        result.add(
-        		genContentParent(
-        				genSubScene(
-        						camera, 
-        						genRoot(
-        								genCameraGroup(camera),
-        								voxelModels,
-        								genClaimsGroup(puzzle)))));
-        result.add(voxelModels);
-        return result;
+        Parent contentParent = genContentParent(
+				genSubScene(
+						camera, 
+						genRoot(
+								genCameraGroup(camera),
+								voxelModels,
+								genClaimsGroup(puzzle))));
+        
+        return new Pair<Parent,Group>(contentParent, voxelModels);
 	}
 	
-	private Camera genCamera(){
+	private static Camera genCamera(){
 		Camera result = new PerspectiveCamera(true);
 		result.getTransforms().add(new Translate(0,0,-15));
-		
 		return result;
 	}
 	
@@ -147,7 +135,7 @@ public class PuzzleVizApp extends Application {
 	 * @return a {@link Group Group} encapsulating the voxel models for the Claims of <tt>target</tt>
 	 * @see #associates(Claim, List)
 	 */
-	private Group genVoxelModels(Puzzle puzzle){
+	private static Group genVoxelModels(Puzzle puzzle){
 		Group result = new Group();
 		for(RegionSpecies region : RegionSpecies.values()){
 			for(int x=0; x<puzzle.sideLength(); ++x){
@@ -164,44 +152,53 @@ public class PuzzleVizApp extends Application {
 		return result;
 	}
 	
-	private Group genContentParent(SubScene subScene){
-		Group contentParent = new Group();
-        contentParent.getChildren().add(subScene);
-        return contentParent;
-	}
-	
-	private SubScene genSubScene(Camera camera, Group root){
-		SubScene subScene = new SubScene(root, 300,300);
-        subScene.setFill(Color.WHITE);
-        subScene.setCamera(camera);
-        return subScene;
-	}
-	
-	private Group genRoot(Node... subGroups){
-		Group root = new Group();
-        root.getChildren().addAll(subGroups);
-        return root;
-	}
-	
-	private Group genCameraGroup(Camera camera){
-		Group cameraGroup = new Group();
-		cameraGroup.getChildren().add(camera);
-		return cameraGroup;
-	}
-	
-	public static final double CLAIM_SPHERE_RADIUS = 0.1;
-	private Group genClaimsGroup(Puzzle puzzle){
-		Group result = new Group();
-		for(int x=0; x<puzzle.sideLength(); ++x){
-			for(int y=0; y<puzzle.sideLength(); ++y){
-				for(int z=0; z<puzzle.sideLength(); ++z){
-					Sphere claim = new Sphere(CLAIM_SPHERE_RADIUS);
-					claim.getTransforms().add(new Translate(x,y,z));
-					result.getChildren().add( claim );
+	/**
+	 * <p>Creates the <tt>BagModel</tt>s for the solved Puzzle, 
+	 * and gives each VoxelModel belonging to each BagModel a 
+	 * {@link VoxelModel#getOwnerBag() reference} to that 
+	 * BagModel.</p>
+	 * 
+	 * <p>This method does not return a value and does not add 
+	 * an element to the scene graph because a BagModel's 
+	 * representation in the scene is exactly the representation 
+	 * of its voxel models; as such, any extant BagModel is 
+	 * already represented properly in the scene.</p>
+	 * 
+	 * <p>Access to the BagModels is only ever needed through 
+	 * their VoxelModels; so, that is how access to them is 
+	 * to be gained. Even the one context that calls this method 
+	 * doesn't need access to any of the BagModels once they've 
+	 * been assigned all their VoxelModels.</p>
+	 * @param voxels a List of all the VoxelModels (a List<Node> 
+	 * in the calling context, but all the child nodes listed 
+	 * are necessarily VoxelModels in that context) needed to 
+	 * animate the Puzzle <tt>p</tt>
+	 * @param p the Puzzle whose solution process is being animated
+	 */
+	private static void genBagModels(List<? super VoxelModel> voxels, Puzzle p){
+		for(RegionSpecies reg : RegionSpecies.values()){
+			
+			Puzzle.RegionSpecies region = reg.pertainsTo;
+			int offset = reg.ordinal() * (int)Math.pow(p.sideLength(), Puzzle.DIMENSION_COUNT);
+			
+			for(IndexInstance dimA : region.dimA(p)){
+				
+				for(IndexInstance dimB : region.dimB(p)){
+					List<VoxelModel> vmList = new ArrayList<>(p.sideLength());
+					
+					for(IndexInstance dimC : region.dimInsideRule(p)){
+						Puzzle.IndexValue[] i = p.decodeXYZ(dimA, dimB, dimC);
+						
+						int x = i[0].intValue();
+						int y = i[1].intValue();
+						int z = i[2].intValue();
+						int index = Claim.linearizeCoords(x, y, z, p.sideLength()) + offset;
+						vmList.add( (VoxelModel) voxels.get(index) );
+					}
+					new BagModel(p, vmList, reg.bagColor);
 				}
 			}
 		}
-		return result;
 	}
 	
 	public static final double SMALL_HALFEDGE = 0.3;
@@ -237,6 +234,63 @@ public class PuzzleVizApp extends Application {
 	private static final Function<VoxelModel,DoubleProperty> X_POS = (vm)->vm.translateXProperty();
 	private static final Function<VoxelModel,DoubleProperty> Z_POS = (vm)->vm.translateZProperty();
 	
+	/**
+	 * <p>A mapping from each type of Rule to several pieces of information 
+	 * pertinent to that type of Rule in the context of animating the 
+	 * process of solving a Puzzle.</p>
+	 * 
+	 * <p>The pieces of information mapped from each region type are 
+	 * <ul>
+	 * <li>pertinent {@link Puzzle.RegionSpecies Puzzle.RegionSpecies}</li>
+	 * 
+	 * <li>a function that takes a {@link RegionSpecies#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
+	 * the distance from the center of a VoxelModel having those signs to 
+	 * the lower-X face of that VoxelModel</li>
+	 * 
+	 * <li>a function that takes a {@link RegionSpecies#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
+	 * the distance from the center of a VoxelModel having those signs to 
+	 * the higher-X face of that VoxelModel</li>
+	 * 
+	 * <li>a function that takes a {@link RegionSpecies#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
+	 * the distance from the center of a VoxelModel having those signs to 
+	 * the lower-Y face of that VoxelModel</li>
+	 * 
+	 * <li>a function that takes a {@link RegionSpecies#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
+	 * the distance from the center of a VoxelModel having those signs to 
+	 * the higher-Y face of that VoxelModel</li>
+	 * 
+	 * <li>a function that takes a {@link RegionSpecies#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
+	 * the distance from the center of a VoxelModel having those signs to 
+	 * the lower-Z face of that VoxelModel</li>
+	 * 
+	 * <li>a function that takes a {@link RegionSpecies#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
+	 * the distance from the center of a VoxelModel having those signs to 
+	 * the higher-Z face of that VoxelModel</li>
+	 * 
+	 * <li>a function accepting a Puzzle and outputing the maximum value that a 
+	 * certain dimension withing the pertinent region type can have, to be used 
+	 * in computing the signs passed to the six functions described above: 
+	 * if a VoxelModel's (adjusted) position equals the value output by this 
+	 * function, it is on the far right edge of its BagModel, in whatever dimension 
+	 * was tested, in which case, that VoxelModel's face pointing in that direction 
+	 * is slightly closer to the center of the VoxelModel's true voxel</li>
+	 * 
+	 * <li>a function accepting a Puzzle and an int indicating a position along 
+	 * a dimension in the Puzzle and outputting an adjusted value of the input 
+	 * int that stays within the bounds implicitly incorporated in that function: 
+	 * For linear Rules/BagModels, the input int is output, but for Box types, the 
+	 * input int must be modded by the Puzzle's magnitude</li>
+	 * 
+	 * <li></li>
+	 * <li></li>
+	 * <li></li>
+	 * <li></li>
+	 * <li></li>
+	 * </ul></p>
+	 * @see Puzzle.RegionSpecies
+	 * @author fiveham
+	 *
+	 */
 	public static enum RegionSpecies{
 		CELL  (Puzzle.RegionSpecies.CELL,   MED,  MED,  MED,  MED,  L0ML, G0ML, EDGE_LIN, DIM_IN_LIN, SELECT_Z, NO_SELECTION, CELL_BLUE,    WIDTH, X_POS), 
 		COLUMN(Puzzle.RegionSpecies.COLUMN, MED,  MED,  L0ML, G0ML, MED,  MED,  EDGE_LIN, DIM_IN_LIN, SELECT_X, NO_SELECTION, COLUMN_GREEN, DEPTH, Z_POS), 
@@ -344,109 +398,46 @@ public class PuzzleVizApp extends Application {
 		}
 	}
 	
-	public static final int MODELS_PER_CLAIM = 4;
-	
-	/**
-	 * Returns a list of the VoxelModels in <tt>voxels</tt> that pertain to 
-	 * the specified <tt>claim</tt> assuming that <tt>voxels</tt> was 
-	 * created with its elements in the order implicitly assumed by this 
-	 * method.
-	 * This method assumes that the VoxelModels in <tt>voxels</tt> are 
-	 * ordered such that <tt>claim.linearizeCoords()</tt> is the index in 
-	 * <tt>voxels</tt> of the first model pertaining to <tt>claim</tt> 
-	 * and that the subsequent three models are offset by the third power of 
-	 * target.sideLength. As such, all the VoxelModels in <tt>voxels</tt> 
-	 * pertaining to a certain {@link Puzzle.RegionSpecies pertainsTo} of Rule are 
-	 * grouped together within the list.
-	 * @param claim
-	 * @param voxels
-	 * @return
-	 */
-	private static List<VoxelModel> associates(Claim claim, List<Node> voxels){
-		List<VoxelModel> result = new ArrayList<>(MODELS_PER_CLAIM);
-		
-		int sl = claim.getPuzzle().sideLength();
-		int interval = sl*sl*sl;
-		for(int i=claim.linearizeCoords(); i < voxels.size(); i += interval){
-			result.add((VoxelModel) voxels.get(i));
-		}
-		
-		return result;
+	private static Group genContentParent(SubScene subScene){
+		Group contentParent = new Group();
+        contentParent.getChildren().add(subScene);
+        return contentParent;
 	}
 	
-	private static Timeline stitch(List<Timeline> timelines){
-		Iterator<Timeline> iter = timelines.iterator();
-		Timeline first = iter.next();
-		
-		Timeline current = first;
-		while(iter.hasNext()){
-			final Timeline next = iter.next();
-			current.setOnFinished((ae)->next.play());
-			current = next;
-		}
-		
-		return first;
+	private static SubScene genSubScene(Camera camera, Group root){
+		SubScene subScene = new SubScene(root, 300,300);
+        subScene.setFill(Color.WHITE);
+        subScene.setCamera(camera);
+        return subScene;
 	}
 	
-	private void genBagModels(List<? super VoxelModel> voxels, Puzzle p){
-		for(RegionSpecies reg : RegionSpecies.values()){
-			Puzzle.RegionSpecies region = reg.pertainsTo;
-			int offset = reg.ordinal() * p.sideLength()*p.sideLength()*p.sideLength();
-			for(IndexInstance dimA : region.dimA(p)){
-				for(IndexInstance dimB : region.dimB(p)){
-					List<VoxelModel> vmList = new ArrayList<>(p.sideLength());
-					for(IndexInstance dimC : region.dimInsideRule(p)){
-						Puzzle.IndexValue[] i = p.decodeXYZ(dimA, dimB, dimC);
-						int x = i[0].intValue();
-						int y = i[1].intValue();
-						int z = i[2].intValue();
-						int index = Claim.linearizeCoords(x, y, z, p.sideLength()) + offset;
-						vmList.add( (VoxelModel) voxels.get(index) );
-					}
-					new BagModel(p, vmList, reg.bagColor);
+	private static Group genRoot(Node... subGroups){
+		Group root = new Group();
+        root.getChildren().addAll(subGroups);
+        return root;
+	}
+	
+	private static Group genCameraGroup(Camera camera){
+		Group cameraGroup = new Group();
+		cameraGroup.getChildren().add(camera);
+		return cameraGroup;
+	}
+	
+	public static final double CLAIM_SPHERE_RADIUS = 0.1;
+	
+	private static Group genClaimsGroup(Puzzle puzzle){
+		Group result = new Group();
+		for(int x=0; x<puzzle.sideLength(); ++x){
+			for(int y=0; y<puzzle.sideLength(); ++y){
+				for(int z=0; z<puzzle.sideLength(); ++z){
+					Sphere claim = new Sphere(CLAIM_SPHERE_RADIUS);
+					claim.getTransforms().add(new Translate(x,y,z));
+					result.getChildren().add( claim );
 				}
 			}
 		}
-	}
-	
-	private Solver createAndSolvePuzzle() throws FileNotFoundException, InterruptedException{
-		List<String> args = getParameters().getRaw();
-        Puzzle puzzle = new Puzzle(new File(args.get(0)));
-        Solver solver = new Solver(puzzle);
-        solver.solve();
-        return solver;
-	}
-	
-	/*public static List<Timeline> linearizeTimeTree(Puzzle puzzle, Group voxelModels, ThreadEvent root){
-		List<Timeline> result = new ArrayList<>();
-		
-		Map<Claim,List<VoxelModel>> modelHandler = genModelHandler(puzzle, voxelModels);
-		
-		Iterator<ThreadEvent> treeTraverser = treeTraverser(root);
-		while(treeTraverser.hasNext()){
-			result.add(solutionEventTimeline(treeTraverser.next().wrapped(), modelHandler));
-		}
-		
 		return result;
 	}
-	
-	private static Iterator<ThreadEvent> treeTraverser(ThreadEvent root){
-		
-	}*/
-	
-	/*
-	 * XXX different styles of solution-animation can exist:
-	 * 
-	 * Simultaneous: the splitting of the solution process is represented 
-	 * in the animation, as independent components of the puzzle continue solving 
-	 * in parallel at the same time.
-	 * Details: timelineForThreadEvent.setOnFinished( (ae) -> {} );
-	 * 
-	 * Linear: several separate options
-	 * Deep: Root, child 1, gchild 1, gchild 2, ... final gchild, child 2, gchild 1, ... final gchild, ... final child, gchild 1, ... final gchild
-	 * Wide: Root, child 1, child 2, ... final child, gchild1, ... final gchild, ggchild 1, ... 
-	 * various mixed protocol, such as wide for the first two generations, then deep thereafter.
-	 */
 	
 	/**
 	 * <p>Wraps <tt>parallelTimeline()</tt></p>
@@ -490,14 +481,16 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	private static int treeSize(Time time){
-		AtomicInteger ai = new AtomicInteger(0);
+		AtomicInteger ai = new AtomicInteger(1);
 		treeSize(time, ai);
 		return ai.get();
 	}
 	
 	private static void treeSize(Time time, AtomicInteger ai){
-		ai.incrementAndGet();
-		time.children().parallelStream().forEach((child) -> treeSize(child,ai));
+		ai.addAndGet(time.children().size());
+		if(time.hasChildren()){
+			time.children().parallelStream().forEach((child) -> treeSize(child,ai));
+		}
 	}
 	
 	private static List<Timeline> depthFirstRecursion( List<Timeline> timelineList, ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
@@ -582,7 +575,7 @@ public class PuzzleVizApp extends Application {
 	public static void addAutoResolveContent(Timeline timeline, List<FalsifiedTime> children, Map<Claim,List<VoxelModel>> modelHandler){
 		for(FalsifiedTime child : children){
 			addFalsificationAnimation(timeline, child.falsified(), modelHandler);
-			if(child.defers()){ //if it has children FIXME account for this concept properly
+			if(child.hasChildren()){
 				addAutoResolveContent(timeline, falsifiedTimeChildren(child), modelHandler);
 			}
 		}
@@ -611,5 +604,49 @@ public class PuzzleVizApp extends Application {
 		}
 		
 		return result;
+	}
+	
+	public static final int MODELS_PER_CLAIM = 4;
+	
+	/**
+	 * Returns a list of the VoxelModels in <tt>voxels</tt> that pertain to 
+	 * the specified <tt>claim</tt> assuming that <tt>voxels</tt> was 
+	 * created with its elements in the order implicitly assumed by this 
+	 * method.
+	 * This method assumes that the VoxelModels in <tt>voxels</tt> are 
+	 * ordered such that <tt>claim.linearizeCoords()</tt> is the index in 
+	 * <tt>voxels</tt> of the first model pertaining to <tt>claim</tt> 
+	 * and that the subsequent three models are offset by the third power of 
+	 * target.sideLength. As such, all the VoxelModels in <tt>voxels</tt> 
+	 * pertaining to a certain {@link Puzzle.RegionSpecies pertainsTo} of Rule are 
+	 * grouped together within the list.
+	 * @param claim
+	 * @param voxels
+	 * @return
+	 */
+	private static List<VoxelModel> associates(Claim claim, List<Node> voxels){
+		List<VoxelModel> result = new ArrayList<>(MODELS_PER_CLAIM);
+		
+		int sidelength = claim.getPuzzle().sideLength();
+		int interval = (int)Math.pow(sidelength, Puzzle.DIMENSION_COUNT);
+		for(int i=claim.linearizeCoords(); i < voxels.size(); i += interval){
+			result.add((VoxelModel) voxels.get(i));
+		}
+		
+		return result;
+	}
+	
+	private static Timeline stitch(List<Timeline> timelines){
+		Iterator<Timeline> iter = timelines.iterator();
+		Timeline first = iter.next();
+		
+		Timeline current = first;
+		while(iter.hasNext()){
+			final Timeline next = iter.next();
+			current.setOnFinished((ae)->next.play());
+			current = next;
+		}
+		
+		return first;
 	}
 }

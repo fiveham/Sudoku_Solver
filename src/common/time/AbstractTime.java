@@ -39,6 +39,11 @@ public abstract class AbstractTime implements Time{
 	}
 	
 	@Override
+	public boolean hasChildren(){
+		return !children.isEmpty();
+	}
+	
+	@Override
 	public boolean defers(){
 		return focus != this;
 	}

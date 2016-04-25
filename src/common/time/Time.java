@@ -32,6 +32,8 @@ public interface Time extends Iterable<Time>{
 	 */
 	public List<Time> children();
 	
+	public boolean hasChildren();
+	
 	/**
 	 * <p>Returns this Time's parent.</p>
 	 * @return this Time's parent
