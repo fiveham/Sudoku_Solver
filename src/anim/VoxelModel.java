@@ -1,5 +1,9 @@
 package anim;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 import javafx.beans.property.DoubleProperty;
 import javafx.scene.shape.Box;
 import javafx.scene.transform.Translate;
@@ -8,10 +12,6 @@ import javafx.animation.KeyFrame;
 import javafx.util.Duration;
 import sudoku.Claim;
 import sudoku.Puzzle;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.IntUnaryOperator;
 
 public class VoxelModel extends Box{
 	
@@ -39,7 +39,7 @@ public class VoxelModel extends Box{
 	 * <p>Thickness of a voxel model in its squished dimension after it has 
 	 * been squished pursuant to its Claim being determined false.</p>
 	 */
-	public static final double UNOCCUPIED_THICKNESS = VOXEL_EDGE * UNOCCUPIED_FRACTION;
+	public static final double COMPRESSED_THICKNESS = VOXEL_EDGE * UNOCCUPIED_FRACTION;
 	
 	private final Puzzle puzzle;
 	private final int x;
@@ -57,11 +57,8 @@ public class VoxelModel extends Box{
 	
 	/* 
 	 * TODO ensure consistent naming of VoxelModel shape-change methods: 
-	 * use "compress" for the initial squish that moves a Claim outside of its VoxelModel
-	 * use "contract" for the subsequent squish that flattens a VoxelModel so it has zero volume
-	 * "Contract" in its context is properly the name of the action taken by the BagModel, but 
-	 * having to create a third name for the sake of highly pedantic propriety would be even 
-	 * more confusing.
+	 * use "falsified" for the initial squish that moves a Claim outside of its VoxelModel
+	 * use "vanished" for the subsequent squish that flattens a VoxelModel so it has zero volume
 	 */
 	
 	/**
@@ -162,7 +159,7 @@ public class VoxelModel extends Box{
 	 * @param bm the BagModel to be the new owner
 	 * @throws IllegalStateException if <tt>ownerBag</tt> is already set
 	 */
-	public void setOwnerBag(BagModel bm){
+	void setOwnerBag(BagModel bm){
 		if(ownerBag == null ){
 			ownerBag = bm;
 		} else{
@@ -170,211 +167,14 @@ public class VoxelModel extends Box{
 		}
 	}
 	
-	/**
-	 * <p>Returns KeyValues describing the end-state of this VoxelModel's collapse into 
-	 * oblivion.</p>
-	 * @return an array of KeyValues describing the end-state of this VoxelModel's 
-	 * collapse into oblivion
-	 */
-	public KeyFrame[] contract(double initTime){
-		Duration periodStart = new Duration(initTime);
-		Duration periodEnd = durationFromTime(initTime+COMPRESS_TRANSITION_TIME);
-		
-		KeyFrame[] result = new KeyFrame[]{
-				new KeyFrame(periodStart, keyValuesCurrentState()),
-				new KeyFrame(periodEnd, (ae)->setVisible(false), keyValuesContract())
-		};
-		
-		status = Status.UNMARKED;
-		ownerBag = null;
-		
-		return result;
-	}
-	
-	/**
-	 * <p>Provides an array (suitable for use with varargs) of KeyValues specifying 
-	 * the geometry and position of this VoxelModel at the time when this method 
-	 * is called.</p>
-	 * @return an array of KeyValues specifying the geometry and position of this 
-	 * VoxelModel at the time when this method is called
-	 */
-	public KeyValue[] keyValuesCurrentState(){
-		return new KeyValue[]{
-				new KeyValue(widthProperty(), getWidth()),
-				new KeyValue(heightProperty(), getHeight()),
-				new KeyValue(depthProperty(), getDepth()),
-				new KeyValue(translateXProperty(), getTranslateX()),
-				new KeyValue(translateYProperty(), getTranslateY()),
-				new KeyValue(translateZProperty(), getTranslateZ())
-		};
-	}
-	
-	/**
-	 * <p>The factor ({@value}) by which to multiply the initial thickness of 
-	 * a voxel model to obtain the final thickness of that voxel model when the 
-	 * model is collapsing in the dimension in question. The thickness of a 
-	 * voxel model is the height, depth, or width, depending on which dimension 
-	 * is in question.</p>
-	 * @see #MOTION_SIGN_TO_FINAL_THICKNESS
-	 */
-	public static final int FLAT = 0;
-	
-	/**
-	 * </p>The factor ({@value}) by which to multiply the initial thickness of 
-	 * a voxel model to obtain the final thickness of that voxel model when the 
-	 * model is not collapsing in the dimension in question. The thickness of a 
-	 * voxel model is the height, depth, or width, depending on which dimension 
-	 * is in question.</p>
-	 * @see #MOTION_SIGN_TO_FINAL_THICKNESS
-	 */
-	public static final int SAME_THICKNESS = 1;
-	
-	/**
-	 * <p>The sign of the collapse of a voxel model collapsing such that 
-	 * the model's overall motion is in the negative direction along the 
-	 * (or a) dimension along which it is collapsing.</p>
-	 * @see #collapseSign(int, ClaimSupplierByDimension)
-	 * @see #contractSigns()
-	 */
-	public static final int CONTRACT_NEGATIVE = -1;
-	
-	/**
-	 * <p>The sign of the collapse of a voxel model collapsing such that 
-	 * the model's overall motion is in the negative direction along the 
-	 * (or a) dimension along which it is collapsing.</p>
-	 * @see #collapseSign(int, ClaimSupplierByDimension)
-	 * @see #contractSigns()
-	 */
-	public static final int CONTRACT_POSITIVE = 1;
-	
-	/**
-	 * <p>The sign of the collapse of a voxel model that is not collapsing 
-	 * in the dimension in question.</p>
-	 * @see #collapseSign(int, ClaimSupplierByDimension)
-	 * @see #contractSigns()
-	 */
-	public static final int CONTRACT_NOT = 0;
-	
-	/**
-	 * <p>If this VoxelModel's {@link #contractSigns() collapse-sign} in a given dimension 
-	 * is non-zero, then the thickness of this VoxelModel in that dimension after this 
-	 * VoxelModel has been evacuated will be zero. If this VoxelModel's collapse-sign 
-	 * in a given dimension is zero, then the thickness of this VoxelModel in that 
-	 * dimension after this VoxelModel has evacuated will be the same as it was before 
-	 * the evacuation since it is not collapsing in that dimension.</p>
-	 * 
-	 * <p><tt>SIGN_TO_THICKNESS</tt> represents these facts by converting an input sign int, 
-	 * -1, 0, or 1, into 0, 1, and 0 respectively.</p>
-	 */
-	public static final IntUnaryOperator MOTION_SIGN_TO_FINAL_THICKNESS = (i) -> i==CONTRACT_NOT ? SAME_THICKNESS : FLAT;
-	//public static final IntUnaryOperator MOTION_SIGN_TO_FINAL_THICKNESS = (i) -> 1-i*i;
-	
-	/**
-	 * <p>Returns an array of KeyValues describing the state of this VoxelModel 
-	 * after it has been contracted to zero size due to its Claim having been 
-	 * set false.</p>
-	 * @return an array of KeyValues describing the state of this VoxelModel 
-	 * after it has collapsed due to its Claim having been set false
-	 */
-	private KeyValue[] keyValuesContract(){
-		int[] collapseSigns = contractSigns();
-		return new KeyValue[]{
-				new KeyValue(widthProperty(),      MOTION_SIGN_TO_FINAL_THICKNESS.applyAsInt(collapseSigns[X_DIM])*getWidth()),
-				new KeyValue(heightProperty(),     MOTION_SIGN_TO_FINAL_THICKNESS.applyAsInt(collapseSigns[Y_DIM])*getHeight()),
-				new KeyValue(depthProperty(),      MOTION_SIGN_TO_FINAL_THICKNESS.applyAsInt(collapseSigns[Z_DIM])*getDepth()),
-				new KeyValue(translateXProperty(), getTranslateX() + collapseSigns[X_DIM]*getWidth()/2), 
-				new KeyValue(translateYProperty(), getTranslateY() + collapseSigns[Y_DIM]*getHeight()/2), 
-				new KeyValue(translateZProperty(), getTranslateZ() + collapseSigns[Z_DIM]*getDepth()/2)
-		};
-	}
-	
-	/**
-	 * <p>The index of the {@link #contractSigns() collapse-sign} for the x-dimension.</p>
-	 */
-	private static final int X_DIM = 0;
-	
-	/**
-	 * <p>The index of the {@link #contractSigns() collapse-sign} for the y-dimension.</p>
-	 */
-	private static final int Y_DIM = 1;
-	
-	/**
-	 * <p>The index of the {@link #contractSigns() collapse-sign} for the z-dimension.</p>
-	 */
-	private static final int Z_DIM = 2;
-	
-	/**
-	 * <p>Returns a three-element array each element of which is either 
-	 * -1, 0, or 1, indicating the direction in which an evacuation 
-	 * collapse can occur for this VoxelModel in the dimension indicated 
-	 * by the element's index in the array: 0 is x, 1 is y, and 2 is z.</p>
-	 * @return a three-element array each element of which is the sign of 
-	 * the collapse-motion of this voxel model in the dimension pertaining 
-	 * to the index in the returned array of the value at that index
-	 */
-	private int[] contractSigns(){
-		return new int[]{
-				contractSign(x, ownerBag, (d)->puzzle.claims().get(d,y,z)),
-				contractSign(y, ownerBag, (d)->puzzle.claims().get(x,d,z)),
-				contractSign(z, ownerBag, (d)->puzzle.claims().get(x,y,d))
-		};
-	}
-	
-	/**
-	 * <p>Returns an int ({@link #CONTRACT_NEGATIVE -1}, {@link #CONTRACT_NOT 0}, 
-	 * or {@link #CONTRACT_POSITIVE 1} specifying the direction in which this 
-	 * VoxelModel is collapsing.</p>
-	 * 
-	 * <p>If this model does not need to collapse when this method is called, 
-	 * 0 is returned. If this model needs to collapse in the positive direction 
-	 * on the dimension internally referenced by <tt>claimSrc</tt>, 1 is 
-	 * returned. Otherwise, the model needs to collapse in the negative direction 
-	 * on the dimension internally referenced by <tt>claimSrc.</tt>.</p>
-	 * 
-	 * @param dim a value 
-	 * @param claimSrc
-	 * @return an int ({@link #CONTRACT_NEGATIVE -1}, {@link #CONTRACT_NOT 0}, 
-	 * or {@link #CONTRACT_POSITIVE 1} specifying the direction in which this 
-	 * VoxelModel is collapsing
-	 */
-	private static int contractSign(int dim, BagModel ownerBag, Function<Integer,Claim> thing){
-		Claim claimNeg = thing.apply(dim-1);
-		Claim claimPos = thing.apply(dim+1);
-		
-		VoxelModel neighbVMInNegDir = ownerBag.mapGet(claimNeg);
-		VoxelModel neighbVMInPosDir = ownerBag.mapGet(claimPos);
-		
-		if( neighbVMInNegDir==null && neighbVMInPosDir!=null ){
-			return CONTRACT_POSITIVE;
-		} else if( neighbVMInNegDir!=null && neighbVMInPosDir==null ){
-			return CONTRACT_NEGATIVE;
-		} else{
-			return CONTRACT_NOT;
-		}
-	}
-	
 	public static final double COMPRESS_TRANSITION_TIME = 1000;
 	
 	/**
-	 * <p>Returns a Duration constructed using the specified <tt>time</tt> 
-	 * value.</p>
-	 * 
-	 * <p>Returned values are extracted from a HashMap cache and are added 
-	 * to the cache if they are not already present.</p>
-	 * 
-	 * @param time the time for which a {@link Duration#toMillis() corresponding} 
-	 * Duration is returned
-	 * @return a Duration constructed using the specified <tt>time</tt> 
-	 * value
+	 * <p>An empty array (varargs substitute) of KeyFrame, used to unambiguously 
+	 * indicate the case where no KeyFrames are produced by an operation.</p>
+	 * @see #disoccupy()
 	 */
-	private static Duration durationFromTime(double time){
-		if(!durationMap.containsKey(time)){
-			durationMap.put(time, new Duration(time));
-		}
-		return durationMap.get(time);
-	}
-	
-	private static final Map<Double,Duration> durationMap = new HashMap<>(13);
+	public static final KeyFrame[] NO_KEYFRAMES = {};
 	
 	/**
 	 * <p>Provides an array of KeyFrames that detail the process of this VoxelModel 
@@ -387,20 +187,54 @@ public class VoxelModel extends Box{
 	 * position it must have in order to indicate that its associated Claim is 
 	 * known false
 	 */
-	public KeyFrame[] compress(double initTime){
-		if( status != (status = Status.MARKED) ){
-			return new KeyFrame[]{ new KeyFrame(durationFromTime(COMPRESS_TRANSITION_TIME+initTime), keyValuesCompress()) };
+	KeyFrame[] falsify(double initTime){
+		if( status != (status = Status.FALSIFIED) ){
+			return new KeyFrame[]{ new KeyFrame(durationFromTime(COMPRESS_TRANSITION_TIME+initTime), keyValuesFalsify()) };
 		} else{
 			return NO_KEYFRAMES;
 		}
 	}
 	
 	/**
-	 * <p>An empty array (varargs substitute) of KeyFrame, used to unambiguously 
-	 * indicate the case where no KeyFrames are produced by an operation.</p>
-	 * @see #disoccupy()
+	 * <p>Returns KeyValues describing the end-state of this VoxelModel's contraction to a 
+	 * zero-volume plane as its BagModel contracts to pull any non-bridging compressed 
+	 * VoxelModels into the BagModel's interior.</p>
+	 * @return an array of KeyValues describing the end-state of this VoxelModel's 
+	 * collapse into oblivion
 	 */
-	public static final KeyFrame[] NO_KEYFRAMES = {};
+	KeyFrame[] vanish(double initTime){
+		Duration periodStart = durationFromTime(initTime);
+		Duration periodEnd = durationFromTime(initTime+COMPRESS_TRANSITION_TIME);
+		
+		KeyFrame[] result = new KeyFrame[]{
+				new KeyFrame(periodStart, keyValuesCurrentState()),
+				new KeyFrame(periodEnd, (ae)->setVisible(false), keyValuesVanish())
+		};
+		
+		status = Status.VANISHED;
+		ownerBag.unmap(this);
+		ownerBag = null;
+		
+		return result;
+	}
+	
+	/**
+	 * <p>Provides an array (suitable for use with varargs) of KeyValues specifying 
+	 * the geometry and position of this VoxelModel at the time when this method 
+	 * is called.</p>
+	 * @return an array of KeyValues specifying the geometry and position of this 
+	 * VoxelModel at the time when this method is called
+	 */
+	private KeyValue[] keyValuesCurrentState(){
+		return new KeyValue[]{
+				new KeyValue(widthProperty(), getWidth()),
+				new KeyValue(heightProperty(), getHeight()),
+				new KeyValue(depthProperty(), getDepth()),
+				new KeyValue(translateXProperty(), getTranslateX()),
+				new KeyValue(translateYProperty(), getTranslateY()),
+				new KeyValue(translateZProperty(), getTranslateZ())
+		};
+	}
 	
 	/**
 	 * <p>Returns a two-element array of KeyValues specifying the end-state 
@@ -427,15 +261,184 @@ public class VoxelModel extends Box{
 	 * of the voxel model after it has squished in accordance with its 
 	 * Claim being set false
 	 */
-	private KeyValue[] keyValuesCompress(){
+	private KeyValue[] keyValuesFalsify(){
 		DoubleProperty shrinkThicknessProperty = type.shrinkThicknessProperty(this);
 		DoubleProperty shiftDimensionProperty = type.shiftProperty(this);
 		
-		KeyValue squish = new KeyValue(shrinkThicknessProperty, UNOCCUPIED_THICKNESS);
+		KeyValue squish = new KeyValue(shrinkThicknessProperty, COMPRESSED_THICKNESS);
 		KeyValue shift = new KeyValue(shiftDimensionProperty, shrinkThicknessProperty.get()/2);
 		
 		return new KeyValue[]{squish, shift};
 	}
+	
+	/**
+	 * <p>The factor ({@value}) by which to multiply the initial thickness of 
+	 * a voxel model to obtain the final thickness of that voxel model when the 
+	 * model is collapsing in the dimension in question. The thickness of a 
+	 * voxel model is the height, depth, or width, depending on which dimension 
+	 * is in question.</p>
+	 */
+	private static final int FLAT = 0;
+	
+	/**
+	 * <p>The sign of the collapse of a voxel model collapsing such that 
+	 * the model's overall motion is in the negative direction along the 
+	 * (or a) dimension along which it is collapsing.</p>
+	 * @see #vanishSign(int,BagModel,Function)
+	 * @see #vanishSigns()
+	 */
+	private static final int CONTRACT_NEGATIVE = -1;
+	
+	/**
+	 * <p>The sign of the collapse of a voxel model collapsing such that 
+	 * the model's overall motion is in the negative direction along the 
+	 * (or a) dimension along which it is collapsing.</p>
+	 * @see #vanishSign(int,BagModel,Function)
+	 * @see #vanishSigns()
+	 */
+	private static final int CONTRACT_POSITIVE = 1;
+	
+	/**
+	 * <p>The sign of the collapse of a voxel model that is not collapsing 
+	 * in the dimension in question.</p>
+	 * @see #vanishSign(int,BagModel,Function)
+	 * @see #vanishSigns()
+	 */
+	private static final int CONTRACT_NOT = 0;
+	
+	/**
+	 * <p>Returns an array of KeyValues describing the state of this VoxelModel 
+	 * after it has been contracted to zero size due to its Claim having been 
+	 * set false.</p>
+	 * @return an array of KeyValues describing the state of this VoxelModel 
+	 * after it has collapsed due to its Claim having been set false
+	 */
+	private KeyValue[] keyValuesVanish(){
+		int[] vanishSigns = vanishSigns();
+		ArrayList<KeyValue> result = new ArrayList<>(6);
+		
+		for(Dimension dimension : Dimension.values()){
+			if( vanishSigns[dimension.dimNo] != CONTRACT_NOT ){
+				DoubleProperty thickness = dimension.thicknessProperty(this);
+				DoubleProperty translation = dimension.translateProperty(this);
+				result.add(new KeyValue(thickness, FLAT));
+				result.add(new KeyValue(translation, translation.get() + vanishSigns[dimension.dimNo] * thickness.get()/2));
+			}
+		}
+		
+		return result.toArray(new KeyValue[0]);
+	}
+	
+	private enum Dimension{
+		
+		X(X_DIM, (vm) -> vm.widthProperty(),  (vm) -> vm.translateXProperty()), 
+		Y(Y_DIM, (vm) -> vm.heightProperty(), (vm) -> vm.translateYProperty()), 
+		Z(Z_DIM, (vm) -> vm.depthProperty(),  (vm) -> vm.translateZProperty());
+		
+		private final int dimNo;
+		private final Function<VoxelModel,DoubleProperty> thicknessProperty;
+		private final Function<VoxelModel,DoubleProperty> translateProperty;
+		
+		private Dimension(int dimNo, Function<VoxelModel,DoubleProperty> thicknessProperty, Function<VoxelModel,DoubleProperty> translateProperty){
+			this.dimNo = dimNo;
+			this.thicknessProperty = thicknessProperty;
+			this.translateProperty = translateProperty;
+		}
+		
+		DoubleProperty thicknessProperty(VoxelModel vm){
+			return thicknessProperty.apply(vm);
+		}
+		
+		DoubleProperty translateProperty(VoxelModel vm){
+			return translateProperty.apply(vm);
+		}
+	}
+	
+	/**
+	 * <p>The index of the {@link #vanishSigns() collapse-sign} for the x-dimension.</p>
+	 */
+	private static final int X_DIM = 0;
+	
+	/**
+	 * <p>The index of the {@link #vanishSigns() collapse-sign} for the y-dimension.</p>
+	 */
+	private static final int Y_DIM = 1;
+	
+	/**
+	 * <p>The index of the {@link #vanishSigns() collapse-sign} for the z-dimension.</p>
+	 */
+	private static final int Z_DIM = 2;
+	
+	/**
+	 * <p>Returns a three-element array each element of which is either 
+	 * -1, 0, or 1, indicating the direction in which an evacuation 
+	 * collapse can occur for this VoxelModel in the dimension indicated 
+	 * by the element's index in the array: 0 is x, 1 is y, and 2 is z.</p>
+	 * @return a three-element array each element of which is the sign of 
+	 * the collapse-motion of this voxel model in the dimension pertaining 
+	 * to the index in the returned array of the value at that index
+	 */
+	private int[] vanishSigns(){
+		return new int[]{
+				vanishSign(x, ownerBag, (d)->puzzle.claims().get(d,y,z)),
+				vanishSign(y, ownerBag, (d)->puzzle.claims().get(x,d,z)),
+				vanishSign(z, ownerBag, (d)->puzzle.claims().get(x,y,d))
+		};
+	}
+	
+	/**
+	 * <p>Returns an int ({@link #CONTRACT_NEGATIVE -1}, {@link #CONTRACT_NOT 0}, 
+	 * or {@link #CONTRACT_POSITIVE 1} specifying the direction in which this 
+	 * VoxelModel is collapsing.</p>
+	 * 
+	 * <p>If this model does not need to collapse when this method is called, 
+	 * 0 is returned. If this model needs to collapse in the positive direction 
+	 * on the dimension internally referenced by <tt>claimSrc</tt>, 1 is 
+	 * returned. Otherwise, the model needs to collapse in the negative direction 
+	 * on the dimension internally referenced by <tt>claimSrc.</tt>.</p>
+	 * 
+	 * @param dim a value 
+	 * @param claimSrc
+	 * @return an int ({@link #CONTRACT_NEGATIVE -1}, {@link #CONTRACT_NOT 0}, 
+	 * or {@link #CONTRACT_POSITIVE 1} specifying the direction in which this 
+	 * VoxelModel is collapsing
+	 */
+	private static int vanishSign(int dim, BagModel ownerBag, Function<Integer,Claim> thing){
+		Claim claimNeg = thing.apply(dim-1);
+		Claim claimPos = thing.apply(dim+1);
+		
+		boolean hasNegativeDirectionNeighbor = ownerBag.map().containsKey(claimNeg);
+		boolean hasPositiveDirectionNeighbor = ownerBag.map().containsKey(claimPos);
+		
+		if( !hasNegativeDirectionNeighbor && hasPositiveDirectionNeighbor ){
+			return CONTRACT_POSITIVE;
+		} else if( hasNegativeDirectionNeighbor && !hasPositiveDirectionNeighbor ){
+			return CONTRACT_NEGATIVE;
+		} else{
+			return CONTRACT_NOT;
+		}
+	}
+	
+	/**
+	 * <p>Returns a Duration constructed using the specified <tt>time</tt> 
+	 * value.</p>
+	 * 
+	 * <p>Returned values are extracted from a HashMap cache and are added 
+	 * to the cache if they are not already present.</p>
+	 * 
+	 * @param time the time for which a {@link Duration#toMillis() corresponding} 
+	 * Duration is returned
+	 * @return a Duration constructed using the specified <tt>time</tt> 
+	 * value
+	 */
+	private static Duration durationFromTime(double time){
+		if(!durationMap.containsKey(time)){
+			durationMap.put(time, new Duration(time));
+		}
+		return durationMap.get(time);
+	}
+	
+	private static final Map<Double,Duration> durationMap = new HashMap<>(13);
 	
 	@Override
 	public int hashCode(){
@@ -452,6 +455,6 @@ public class VoxelModel extends Box{
 	}
 	
 	public enum Status{
-		OCCUPIED, MARKED, UNMARKED;
+		OCCUPIED, FALSIFIED, VANISHED;
 	}
 }

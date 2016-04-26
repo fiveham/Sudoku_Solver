@@ -626,7 +626,7 @@ public class PuzzleVizApp extends Application {
 		double initLength = timeline.totalDurationProperty().get().toMillis();
 		for(Claim c : falsified){
 			for(VoxelModel vm : modelHandler.get(c)){
-				timeline.getKeyFrames().addAll(vm.compress( initLength ));
+				timeline.getKeyFrames().addAll(vm.falsify( initLength ));
 			}
 		}
 		//falsified.stream().forEach( (c) -> modelHandler.get(c).stream().forEach( (vm) -> timeline.getKeyFrames().addAll(vm.disoccupy(initLength)) ) );

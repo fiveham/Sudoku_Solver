@@ -1,15 +1,19 @@
 package anim;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import common.graph.BasicGraph;
 import common.graph.Wrap;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
+
 import sudoku.Claim;
 import sudoku.Puzzle;
 import javafx.animation.Timeline;
@@ -54,18 +58,29 @@ public class BagModel {
 	}
 	
 	/**
-	 * <p>Returns the VoxelModel belonging to this BagModel that 
-	 * pertains to the specified Claim, or <tt>null</tt> if there 
-	 * is no VoxelModel pertaining to <tt>c</tt> in this BagModel.</p>
+	 * <p>Removes the specified VoxelModel from this BagModel's internal map.</p>
 	 * 
-	 * @param c a Claim whose corresponding VoxelModel in this 
-	 * BagModel is returned
-	 * @return the VoxelModel belonging to this BagModel that 
-	 * pertains to the specified Claim, or <tt>null</tt> if there 
-	 * is no VoxelModel pertaining to <tt>c</tt> in this BagModel
+	 * <p>Removing mappings is necessary in order for 
+	 * {@link VoxelModel#contractSign(int,BagModel,Function) VoxelModel.contractSign()} 
+	 * to work.</p>
+	 * @param vm the VoxelModel whose Claim-to-VoxelModel mapping is removed 
+	 * from this BagModel's internal map
 	 */
-	public VoxelModel mapGet(Claim c){
-		return map.get(c);
+	void unmap(VoxelModel vm){
+		map.remove(vm.getClaim());
+	}
+	
+	/**
+	 * <p>Returns this BagModel's internal map from Claims to the 
+	 * VoxelModels that pertain to those Claims and belong to this 
+	 * BagModel.</p>
+	 * 
+	 * @return this BagModel's internal map from Claims to the 
+	 * VoxelModels that pertain to those Claims and belong to this 
+	 * BagModel
+	 */
+	Map<Claim,VoxelModel> map(){
+		return map;
 	}
 	
 	/**
@@ -85,9 +100,9 @@ public class BagModel {
 	 * are added to <tt>timeline</tt>
 	 * @return
 	 */
-	public void trimUnoccupiedExtremeVoxels(Timeline timeline, double postDisoccupyLength){
+	void trimUnoccupiedExtremeVoxels(Timeline timeline, double postDisoccupyLength){
 		Set<Claim> unoccupiedMarkedVoxels = voxels.parallelStream()
-				.filter((e) -> map.get(e).getStatus() == VoxelModel.Status.MARKED)
+				.filter((e) -> map.get(e).getStatus() == VoxelModel.Status.FALSIFIED)
 				.collect(Collectors.toSet());
 		
 		for(double time = postDisoccupyLength; 
@@ -104,21 +119,32 @@ public class BagModel {
 	 * @param emptyVoxels Claims whose VoxelModels are to be removed (in terms of being 
 	 * {@link #markedVoxels marked} from this BagModel
 	 * @return the number of Claims whose VoxelModels were 
-	 * {@link VoxelModel#contract(double) removed} from this BagModel
+	 * {@link VoxelModel#vanish(double) removed} from this BagModel
 	 */
 	private int removeEmptyVoxels(Set<Claim> emptyVoxels, Timeline timeline, double time){
-		int initSize = emptyVoxels.size();
+		List<Claim> toContract = new ArrayList<>(emptyVoxels.size());
 		
 		for(Iterator<Claim> i = emptyVoxels.iterator(); i.hasNext();){
 			Claim claim = i.next();
 			if(canRemoveEmptyVoxel( claim )){
-				i.remove();
-				VoxelModel toAnimate = map.get(claim);
-				timeline.getKeyFrames().addAll(toAnimate.contract(time));
+				toContract.add(claim);
 			}
 		}
 		
-		return initSize - emptyVoxels.size();
+		for(Claim c : toContract){
+			emptyVoxels.remove(c);
+			VoxelModel toAnimate = map.get(c);
+			
+			/*
+			 * contract() removes mappings from the BagModel, allowing multiple layers of 
+			 * removals to sometimes be animated together, unless calls to contract(), which 
+			 * modifies this BagModel, all occur after the state-based analysis of this 
+			 * BagModel that occurs in calls to canRemoveEmptyVoxel()
+			 */
+			timeline.getKeyFrames().addAll(toAnimate.vanish(time));
+		}
+		
+		return toContract.size();
 	}
 	
 	public static final BiPredicate<Claim,Claim> ADJACENT_CLAIMS = (c1,c2) -> c1.spaceDistTo(c2)==1;
@@ -139,7 +165,7 @@ public class BagModel {
 	 */
 	private boolean canRemoveEmptyVoxel(Claim emptyVoxel){
 		Set<Claim> newMarkedVoxels = voxels.parallelStream()
-				.filter((e) -> e != emptyVoxel && map.get(e).getStatus() != VoxelModel.Status.UNMARKED)
+				.filter((e) -> e != emptyVoxel && map.get(e).getStatus() != VoxelModel.Status.VANISHED)
 				.collect(Collectors.toSet());
 		return new BasicGraph<Wrap<Claim>>(Wrap.wrap(newMarkedVoxels, ADJACENT_CLAIMS)).connectedComponents().size() == 1;
 	}
