@@ -10,7 +10,6 @@ import sudoku.Claim;
 import sudoku.Puzzle;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
 
@@ -54,6 +53,15 @@ public class VoxelModel extends Box{
 	/* 
 	 * TODO check for and correct evacuation-translations that assume all VMs are centered on their true voxel 
 	 * because end-cap VMs are not centered
+	 */
+	
+	/* 
+	 * TODO ensure consistent naming of VoxelModel shape-change methods: 
+	 * use "compress" for the initial squish that moves a Claim outside of its VoxelModel
+	 * use "contract" for the subsequent squish that flattens a VoxelModel so it has zero volume
+	 * "Contract" in its context is properly the name of the action taken by the BagModel, but 
+	 * having to create a third name for the sake of highly pedantic propriety would be even 
+	 * more confusing.
 	 */
 	
 	/**
@@ -110,6 +118,80 @@ public class VoxelModel extends Box{
 	}
 	
 	/**
+	 * <p>Returns the BagModel of which this VoxelModel is a part.</p>
+	 * @return the BagModel of which this VoxelModel is a part
+	 */
+	public BagModel getOwnerBag(){
+		return ownerBag;
+	}
+	
+	/**
+	 * <p>The wrapped int of the {@link Claim#getX() x-component} 
+	 * of this VoxelModel's Claim's position in claim-space.</p>
+	 * @return the wrapped int of the {@link Claim#getX() x-component} 
+	 * of this VoxelModel's Claim's position in claim-space
+	 */
+	public int getX(){
+		return x;
+	}
+	
+	/**
+	 * <p>The wrapped int of the {@link Claim#getY() y-component} 
+	 * of this VoxelModel's Claim's position in claim-space.</p>
+	 * @return the wrapped int of the {@link Claim#getY() y-component} 
+	 * of this VoxelModel's Claim's position in claim-space
+	 */
+	public int getY(){
+		return y;
+	}
+	
+	/**
+	 * <p>The wrapped int of the {@link Claim#getY() y-component} 
+	 * of this VoxelModel's Claim's position in claim-space.</p>
+	 * @return the wrapped int of the {@link Claim#getY() y-component} 
+	 * of this VoxelModel's Claim's position in claim-space
+	 */
+	public int getZ(){
+		return z;
+	}
+	
+	/**
+	 * <p>Sets the <tt>ownerBag</tt> for this VoxelModel if it is not 
+	 * already set <tt>ownerBag == null</tt>. Throws an exception if 
+	 * called while <tt>ownerBag</tt> is already set.</p>
+	 * @param bm the BagModel to be the new owner
+	 * @throws IllegalStateException if <tt>ownerBag</tt> is already set
+	 */
+	public void setOwnerBag(BagModel bm){
+		if(ownerBag == null ){
+			ownerBag = bm;
+		} else{
+			throw new IllegalStateException("Cannot set ownerBag because ownerBag has already been set.");
+		}
+	}
+	
+	/**
+	 * <p>Returns KeyValues describing the end-state of this VoxelModel's collapse into 
+	 * oblivion.</p>
+	 * @return an array of KeyValues describing the end-state of this VoxelModel's 
+	 * collapse into oblivion
+	 */
+	public KeyFrame[] contract(double initTime){
+		Duration periodStart = new Duration(initTime);
+		Duration periodEnd = durationFromTime(initTime+COMPRESS_TRANSITION_TIME);
+		
+		KeyFrame[] result = new KeyFrame[]{
+				new KeyFrame(periodStart, keyValuesCurrentState()),
+				new KeyFrame(periodEnd, (ae)->setVisible(false), keyValuesContract())
+		};
+		
+		status = Status.UNMARKED;
+		ownerBag = null;
+		
+		return result;
+	}
+	
+	/**
 	 * <p>Provides an array (suitable for use with varargs) of KeyValues specifying 
 	 * the geometry and position of this VoxelModel at the time when this method 
 	 * is called.</p>
@@ -128,30 +210,12 @@ public class VoxelModel extends Box{
 	}
 	
 	/**
-	 * <p>Returns KeyValues describing the end-state of this VoxelModel's collapse into 
-	 * oblivion.</p>
-	 * @return an array of KeyValues describing the end-state of this VoxelModel's 
-	 * collapse into oblivion
-	 */
-	public KeyFrame[] evacuate(double initTime){
-		Duration periodStart = new Duration(initTime);
-		Duration periodEnd = durationFromTime(initTime+COMPRESS_TRANSITION_TIME);
-		
-		KeyFrame[] result = new KeyFrame[]{
-				new KeyFrame(periodStart, keyValuesCurrentState()),
-				new KeyFrame(periodEnd, (ae)->setVisible(false), keyValuesForEvac())
-		};
-		disown();
-		return result;
-	}
-	
-	/**
 	 * <p>The factor ({@value}) by which to multiply the initial thickness of 
 	 * a voxel model to obtain the final thickness of that voxel model when the 
 	 * model is collapsing in the dimension in question. The thickness of a 
 	 * voxel model is the height, depth, or width, depending on which dimension 
 	 * is in question.</p>
-	 * @see #SIGN_TO_THICKNESS
+	 * @see #MOTION_SIGN_TO_FINAL_THICKNESS
 	 */
 	public static final int FLAT = 0;
 	
@@ -161,7 +225,7 @@ public class VoxelModel extends Box{
 	 * model is not collapsing in the dimension in question. The thickness of a 
 	 * voxel model is the height, depth, or width, depending on which dimension 
 	 * is in question.</p>
-	 * @see #SIGN_TO_THICKNESS
+	 * @see #MOTION_SIGN_TO_FINAL_THICKNESS
 	 */
 	public static final int SAME_THICKNESS = 1;
 	
@@ -170,29 +234,29 @@ public class VoxelModel extends Box{
 	 * the model's overall motion is in the negative direction along the 
 	 * (or a) dimension along which it is collapsing.</p>
 	 * @see #collapseSign(int, ClaimSupplierByDimension)
-	 * @see #collapseSigns()
+	 * @see #contractSigns()
 	 */
-	public static final int COLLAPSE_NEGATIVE = -1;
+	public static final int CONTRACT_NEGATIVE = -1;
 	
 	/**
 	 * <p>The sign of the collapse of a voxel model collapsing such that 
 	 * the model's overall motion is in the negative direction along the 
 	 * (or a) dimension along which it is collapsing.</p>
 	 * @see #collapseSign(int, ClaimSupplierByDimension)
-	 * @see #collapseSigns()
+	 * @see #contractSigns()
 	 */
-	public static final int COLLAPSE_POSITIVE = 1;
+	public static final int CONTRACT_POSITIVE = 1;
 	
 	/**
 	 * <p>The sign of the collapse of a voxel model that is not collapsing 
 	 * in the dimension in question.</p>
 	 * @see #collapseSign(int, ClaimSupplierByDimension)
-	 * @see #collapseSigns()
+	 * @see #contractSigns()
 	 */
-	public static final int NO_COLLAPSE = 0;
+	public static final int CONTRACT_NOT = 0;
 	
 	/**
-	 * <p>If this VoxelModel's {@link #collapseSigns() collapse-sign} in a given dimension 
+	 * <p>If this VoxelModel's {@link #contractSigns() collapse-sign} in a given dimension 
 	 * is non-zero, then the thickness of this VoxelModel in that dimension after this 
 	 * VoxelModel has been evacuated will be zero. If this VoxelModel's collapse-sign 
 	 * in a given dimension is zero, then the thickness of this VoxelModel in that 
@@ -202,38 +266,40 @@ public class VoxelModel extends Box{
 	 * <p><tt>SIGN_TO_THICKNESS</tt> represents these facts by converting an input sign int, 
 	 * -1, 0, or 1, into 0, 1, and 0 respectively.</p>
 	 */
-	public static final IntUnaryOperator SIGN_TO_THICKNESS = (i) -> i==NO_COLLAPSE ? SAME_THICKNESS : FLAT;
+	public static final IntUnaryOperator MOTION_SIGN_TO_FINAL_THICKNESS = (i) -> i==CONTRACT_NOT ? SAME_THICKNESS : FLAT;
+	//public static final IntUnaryOperator MOTION_SIGN_TO_FINAL_THICKNESS = (i) -> 1-i*i;
 	
 	/**
 	 * <p>Returns an array of KeyValues describing the state of this VoxelModel 
-	 * after it has collapsed due to its Claim having been set false.</p>
+	 * after it has been contracted to zero size due to its Claim having been 
+	 * set false.</p>
 	 * @return an array of KeyValues describing the state of this VoxelModel 
 	 * after it has collapsed due to its Claim having been set false
 	 */
-	private KeyValue[] keyValuesForEvac(){
-		int[] collapseSigns = collapseSigns();
+	private KeyValue[] keyValuesContract(){
+		int[] collapseSigns = contractSigns();
 		return new KeyValue[]{
-				new KeyValue(widthProperty(),      SIGN_TO_THICKNESS.applyAsInt(collapseSigns[X_DIM])*getWidth()),
-				new KeyValue(heightProperty(),     SIGN_TO_THICKNESS.applyAsInt(collapseSigns[Y_DIM])*getHeight()),
-				new KeyValue(depthProperty(),      SIGN_TO_THICKNESS.applyAsInt(collapseSigns[Z_DIM])*getDepth()),
-				new KeyValue(translateXProperty(), getTranslateX() + collapseSigns[X_DIM]*getWidth()/2  /*VOXEL_HALF*/), 
-				new KeyValue(translateYProperty(), getTranslateY() + collapseSigns[Y_DIM]*getHeight()/2 /*VOXEL_HALF*/), 
-				new KeyValue(translateZProperty(), getTranslateZ() + collapseSigns[Z_DIM]*getDepth()/2  /*VOXEL_HALF*/)
+				new KeyValue(widthProperty(),      MOTION_SIGN_TO_FINAL_THICKNESS.applyAsInt(collapseSigns[X_DIM])*getWidth()),
+				new KeyValue(heightProperty(),     MOTION_SIGN_TO_FINAL_THICKNESS.applyAsInt(collapseSigns[Y_DIM])*getHeight()),
+				new KeyValue(depthProperty(),      MOTION_SIGN_TO_FINAL_THICKNESS.applyAsInt(collapseSigns[Z_DIM])*getDepth()),
+				new KeyValue(translateXProperty(), getTranslateX() + collapseSigns[X_DIM]*getWidth()/2), 
+				new KeyValue(translateYProperty(), getTranslateY() + collapseSigns[Y_DIM]*getHeight()/2), 
+				new KeyValue(translateZProperty(), getTranslateZ() + collapseSigns[Z_DIM]*getDepth()/2)
 		};
 	}
 	
 	/**
-	 * <p>The index of the {@link #collapseSigns() collapse-sign} for the x-dimension.</p>
+	 * <p>The index of the {@link #contractSigns() collapse-sign} for the x-dimension.</p>
 	 */
 	private static final int X_DIM = 0;
 	
 	/**
-	 * <p>The index of the {@link #collapseSigns() collapse-sign} for the y-dimension.</p>
+	 * <p>The index of the {@link #contractSigns() collapse-sign} for the y-dimension.</p>
 	 */
 	private static final int Y_DIM = 1;
 	
 	/**
-	 * <p>The index of the {@link #collapseSigns() collapse-sign} for the z-dimension.</p>
+	 * <p>The index of the {@link #contractSigns() collapse-sign} for the z-dimension.</p>
 	 */
 	private static final int Z_DIM = 2;
 	
@@ -246,17 +312,17 @@ public class VoxelModel extends Box{
 	 * the collapse-motion of this voxel model in the dimension pertaining 
 	 * to the index in the returned array of the value at that index
 	 */
-	private int[] collapseSigns(){
+	private int[] contractSigns(){
 		return new int[]{
-				collapseSign(x, ownerBag, (d)->puzzle.claims().get(d,y,z)),
-				collapseSign(y, ownerBag, (d)->puzzle.claims().get(x,d,z)),
-				collapseSign(z, ownerBag, (d)->puzzle.claims().get(x,y,d))
+				contractSign(x, ownerBag, (d)->puzzle.claims().get(d,y,z)),
+				contractSign(y, ownerBag, (d)->puzzle.claims().get(x,d,z)),
+				contractSign(z, ownerBag, (d)->puzzle.claims().get(x,y,d))
 		};
 	}
 	
 	/**
-	 * <p>Returns an int ({@link #COLLAPSE_NEGATIVE -1}, {@link #NO_COLLAPSE 0}, 
-	 * or {@link #COLLAPSE_POSITIVE 1} specifying the direction in which this 
+	 * <p>Returns an int ({@link #CONTRACT_NEGATIVE -1}, {@link #CONTRACT_NOT 0}, 
+	 * or {@link #CONTRACT_POSITIVE 1} specifying the direction in which this 
 	 * VoxelModel is collapsing.</p>
 	 * 
 	 * <p>If this model does not need to collapse when this method is called, 
@@ -267,11 +333,11 @@ public class VoxelModel extends Box{
 	 * 
 	 * @param dim a value 
 	 * @param claimSrc
-	 * @return an int ({@link #COLLAPSE_NEGATIVE -1}, {@link #NO_COLLAPSE 0}, 
-	 * or {@link #COLLAPSE_POSITIVE 1} specifying the direction in which this 
+	 * @return an int ({@link #CONTRACT_NEGATIVE -1}, {@link #CONTRACT_NOT 0}, 
+	 * or {@link #CONTRACT_POSITIVE 1} specifying the direction in which this 
 	 * VoxelModel is collapsing
 	 */
-	private static int collapseSign(int dim, BagModel ownerBag, Function<Integer,Claim> thing){
+	private static int contractSign(int dim, BagModel ownerBag, Function<Integer,Claim> thing){
 		Claim claimNeg = thing.apply(dim-1);
 		Claim claimPos = thing.apply(dim+1);
 		
@@ -279,21 +345,12 @@ public class VoxelModel extends Box{
 		VoxelModel neighbVMInPosDir = ownerBag.mapGet(claimPos);
 		
 		if( neighbVMInNegDir==null && neighbVMInPosDir!=null ){
-			return COLLAPSE_POSITIVE;
+			return CONTRACT_POSITIVE;
 		} else if( neighbVMInNegDir!=null && neighbVMInPosDir==null ){
-			return COLLAPSE_NEGATIVE;
+			return CONTRACT_NEGATIVE;
 		} else{
-			return NO_COLLAPSE;
+			return CONTRACT_NOT;
 		}
-	}
-	
-	/**
-	 * <p>Removes this voxel model from its owner, marks this 
-	 * voxel model as having no owner.</p>
-	 */
-	private void disown(){
-		status = Status.UNMARKED;
-		ownerBag = null;
 	}
 	
 	public static final double COMPRESS_TRANSITION_TIME = 1000;
@@ -301,9 +358,12 @@ public class VoxelModel extends Box{
 	/**
 	 * <p>Returns a Duration constructed using the specified <tt>time</tt> 
 	 * value.</p>
+	 * 
 	 * <p>Returned values are extracted from a HashMap cache and are added 
 	 * to the cache if they are not already present.</p>
-	 * @param time
+	 * 
+	 * @param time the time for which a {@link Duration#toMillis() corresponding} 
+	 * Duration is returned
 	 * @return a Duration constructed using the specified <tt>time</tt> 
 	 * value
 	 */
@@ -321,14 +381,15 @@ public class VoxelModel extends Box{
 	 * transforming from its initial shape and position to the shape and 
 	 * position it must have in order to indicate that its associated Claim is 
 	 * known false.</p>
+	 * 
 	 * @return an array of KeyFrames that detail the process of this VoxelModel 
 	 * transforming from its initial shape and position to the shape and 
 	 * position it must have in order to indicate that its associated Claim is 
 	 * known false
 	 */
-	public KeyFrame[] disoccupy(double initTime){
+	public KeyFrame[] compress(double initTime){
 		if( status != (status = Status.MARKED) ){
-			return new KeyFrame[]{ new KeyFrame(durationFromTime(COMPRESS_TRANSITION_TIME+initTime), keyValuesForDisoccupy()) };
+			return new KeyFrame[]{ new KeyFrame(durationFromTime(COMPRESS_TRANSITION_TIME+initTime), keyValuesCompress()) };
 		} else{
 			return NO_KEYFRAMES;
 		}
@@ -340,251 +401,6 @@ public class VoxelModel extends Box{
 	 * @see #disoccupy()
 	 */
 	public static final KeyFrame[] NO_KEYFRAMES = {};
-	
-	/**
-	 * <p>A radius of approximation used in determining whether a VoxelModel 
-	 * is in contact with a given cube-face of the true voxel in which it lies.</p>
-	 * 
-	 * <p>Floating-point values have finite resolution; so, in order to accommodate 
-	 * the possibility of arbitrary non-integer 
-	 * {@link #VOXEL_EDGE edge-lengths for true voxels}, the geometric test used to 
-	 * establish that one face of a voxel model lies on the face of its host true 
-	 * voxel needs to be approximative instead of relying specifically on true 
-	 * equality.</p>
-	 * @see #touchesFace()
-	 */
-	public static final double ROUNDING_ERROR = 0.1;
-	
-	/**
-	 * <p>Returns true if this VoxelModel is in contact with the cube-face of 
-	 * the true voxel in which it lies.</p>
-	 * 
-	 * <p>Floating-point values have finite resolution; so, in order to accommodate 
-	 * the possibility of arbitrary non-integer 
-	 * {@link #VOXEL_EDGE edge-lengths for true voxels}, the geometric test used to 
-	 * establish that A face of a voxel model lies on the face of its host true 
-	 * voxel needs to be {@link #ROUNDING_ERROR approximative} instead of relying 
-	 * specifically on true equality.</p>
-	 * 
-	 * @param face
-	 * @see Face
-	 * @return true if this VoxelModel is in contact with the cube-face of 
-	 * the true voxel in which it lies
-	 */
-	public boolean touchesFace(Face face){
-		int sign = face.direction.sign;
-		BiPredicate<Double,Double> compare = face.direction.compare;
-		
-		double translate = face.dimension.translate(this);
-		double thickness = face.dimension.thickness(this);
-		int dim = face.dimension.dimension(this);
-		
-		return compare.test(translate + sign*thickness/2, dim + sign*(VOXEL_HALF - ROUNDING_ERROR));
-	}
-	
-	/**
-	 * <p>A face of a cubic voxel.</p>
-	 * <p>Pairs a {@link Dimension Dimension} with a 
-	 * {@link Direction Direction}</p>
-	 * @author fiveham
-	 *
-	 */
-	public static enum Face{
-		
-		/**
-		 * <p>The top face of a cubic voxel.</p>
-		 */
-		Z_POS(Dimension.Z, Direction.UP), 
-		
-		/**
-		 * <p>The bottom face of a cubic voxel.</p>
-		 */
-		Z_NEG(Dimension.Z, Direction.DOWN), 
-		
-		/**
-		 * <p>The face of a cubic voxel perpendicular to the y-axis located 
-		 * at a y-value higher than that of the other face perpendicular to 
-		 * the y-axis.</p>
-		 */
-		Y_POS(Dimension.Y, Direction.UP), 
-		
-		/**
-		 * <p>The face of a cubic voxel perpendicular to the y-axis located 
-		 * at a y-value lower than that of the other face perpendicular to 
-		 * the y-axis.</p>
-		 */
-		Y_NEG(Dimension.Y, Direction.DOWN), 
-		
-		/**
-		 * <p>The face of a cubic voxel perpendicular to the x-axis located 
-		 * at a x-value higher than that of the other face perpendicular to 
-		 * the x-axis.</p>
-		 */
-		X_POS(Dimension.X, Direction.UP), 
-		
-		/**
-		 * <p>The face of a cubic voxel perpendicular to the x-axis located 
-		 * at a x-value lower than that of the other face perpendicular to 
-		 * the x-axis.</p>
-		 */
-		X_NEG(Dimension.X, Direction.DOWN);
-		
-		private final Dimension dimension;
-		private final Direction direction;
-		
-		private Face(Dimension dimension, Direction direction){
-			this.dimension = dimension;
-			this.direction = direction;
-		}
-		
-		/**
-		 * <p>The Dimension of this Face.</p>
-		 * @return the Dimension of this Face
-		 */
-		public Dimension dimension(){
-			return dimension;
-		}
-		
-		/**
-		 * <p>The Direction of this Face.</p>
-		 * @return the Direction of this Face
-		 */
-		public Direction direction(){
-			return direction;
-		}
-	}
-	
-	/**
-	 * <p>Represents a dimension in claim-space. Groups a translation 
-	 * function, a thickness function, and a dimension-access function 
-	 * together.</p>
-	 * 
-	 * <p>Each Dimension specifies a function to extract the dimensionally-
-	 * pertinent translation, thickness, and position component.</p>
-	 * @see Face
-	 * @author fiveham
-	 *
-	 */
-	public static enum Dimension{
-		
-		/**
-		 * <p>The x-dimension.</p>
-		 */
-		X((vm) -> vm.getTranslateX(), (vm) -> vm.getWidth(),  (vm) -> vm.x), 
-		
-		/**
-		 * <p>The y-dimension.</p>
-		 */
-		Y((vm) -> vm.getTranslateY(), (vm) -> vm.getHeight(), (vm) -> vm.y), 
-		
-		/**
-		 * <p>The z-dimension.</p>
-		 */
-		Z((vm) -> vm.getTranslateZ(), (vm) -> vm.getDepth(),  (vm) -> vm.z);
-		
-		private final Function<VoxelModel,Double> translate;
-		private final Function<VoxelModel,Double> thickness;
-		private final Function<VoxelModel,Integer> dim;
-		
-		private Dimension(Function<VoxelModel,Double> translate, Function<VoxelModel,Double> dimThickness, Function<VoxelModel,Integer>  dim){
-			this.translate = translate;
-			this.thickness = dimThickness;
-			this.dim = dim;
-		}
-		
-		/**
-		 * <p>Returns the specified VoxelModel's translation term pertaining 
-		 * to this dimension.</p>
-		 * @param vm the voxel model whose pertinent data is returned
-		 * @return the specified VoxelModel's translation term pertaining 
-		 * to this dimension
-		 */
-		public double translate(VoxelModel vm){
-			return translate.apply(vm);
-		}
-		
-		/**
-		 * <p>Returns the specified VoxelModel's thickness term pertaining 
-		 * to this dimension.</p>
-		 * @param vm the voxel model whose pertinent data is returned
-		 * @return the specified VoxelModel's thickness term pertaining 
-		 * to this dimension
-		 */
-		public double thickness(VoxelModel vm){
-			return thickness.apply(vm);
-		}
-		
-		/**
-		 * <p>Returns the specified VoxelModel's position component 
-		 * pertaining to this dimension.</p>
-		 * @param vm the voxel model whose pertinent data is returned
-		 * @return the specified VoxelModel's position component 
-		 * pertaining to this dimension
-		 */
-		public int dimension(VoxelModel vm){
-			return dim.apply(vm);
-		}
-	}
-	
-	/**
-	 * <p>Outputs true if the first argument is greater than the second, 
-	 * false otherwise.</p>
-	 */
-	public static final BiPredicate<Double,Double> GREATER = (a,b)->a>b;
-	
-	/**
-	 * <p>Outputs true if the first argument is less than the second, 
-	 * false otherwise.</p>
-	 */
-	public static final BiPredicate<Double,Double> LESS = (a,b)->a<b;
-	
-	/**
-	 * <p>A direction on a dimension or number-line.</p>
-	 * @see Face
-	 * @author fiveham
-	 *
-	 */
-	public static enum Direction{
-		
-		/**
-		 * <p>The direction tending toward larger positive numbers.</p>
-		 * <p>Has a positive {@link #sign() sign}. Its {@link #compare(double,double) comparison} 
-		 * operation is <tt>a > b</tt>.</p>
-		 */
-		UP(1,  GREATER), 
-		
-		/**
-		 * <p>The direction tending toward larger negative numbers.</p>
-		 * <p>Has a negative {@link #sign() sign}. Its {@link #compare(double,double) comparison} 
-		 * operation is <tt>a < b</tt>.</p>
-		 */
-		DOWN(-1, LESS);
-		
-		private final int sign;
-		private final BiPredicate<Double,Double> compare;
-		
-		private Direction(int sign, BiPredicate<Double,Double> compare){
-			this.sign = sign;
-			this.compare = compare;
-		}
-		
-		/**
-		 * <p>Returns the sign for this direction.</p>
-		 */
-		public int sign(){
-			return sign;
-		}
-		
-		/**
-		 * <p>Applies this direction's number-comparison operation to 
-		 * <tt>a</tt> and <tt>b</tt>.</p>
-		 * @return this direction's number-comparison operation applied 
-		 * to <tt>a</tt> and <tt>b</tt>
-		 */
-		public boolean compare(double a, double b){
-			return compare.test(a, b);
-		}
-	}
 	
 	/**
 	 * <p>Returns a two-element array of KeyValues specifying the end-state 
@@ -611,7 +427,7 @@ public class VoxelModel extends Box{
 	 * of the voxel model after it has squished in accordance with its 
 	 * Claim being set false
 	 */
-	private KeyValue[] keyValuesForDisoccupy(){
+	private KeyValue[] keyValuesCompress(){
 		DoubleProperty shrinkThicknessProperty = type.shrinkThicknessProperty(this);
 		DoubleProperty shiftDimensionProperty = type.shiftProperty(this);
 		
@@ -619,61 +435,6 @@ public class VoxelModel extends Box{
 		KeyValue shift = new KeyValue(shiftDimensionProperty, shrinkThicknessProperty.get()/2);
 		
 		return new KeyValue[]{squish, shift};
-	}
-	
-	/**
-	 * <p>Sets the <tt>ownerBag</tt> for this VoxelModel if it is not 
-	 * already set <tt>ownerBag == null</tt>. Throws an exception if 
-	 * called while <tt>ownerBag</tt> is already set.</p>
-	 * @param bm the BagModel to be the new owner
-	 * @throws IllegalStateException if <tt>ownerBag</tt> is already set
-	 */
-	public void setOwnerBag(BagModel bm){
-		if(ownerBag == null ){
-			ownerBag = bm;
-		} else{
-			throw new IllegalStateException("Cannot set ownerBag because ownerBag has already been set.");
-		}
-	}
-	
-	/**
-	 * <p>Returns the BagModel of which this VoxelModel is 
-	 * a part.</p>
-	 * @return the BagModel of which this VoxelModel is 
-	 * a part
-	 */
-	public BagModel getOwnerBag(){
-		return ownerBag;
-	}
-	
-	/**
-	 * <p>The wrapped int of the {@link Claim#getX() x-component} 
-	 * of this VoxelModel's Claim's position in claim-space.</p>
-	 * @return the wrapped int of the {@link Claim#getX() x-component} 
-	 * of this VoxelModel's Claim's position in claim-space
-	 */
-	public int x(){
-		return x;
-	}
-	
-	/**
-	 * <p>The wrapped int of the {@link Claim#getY() y-component} 
-	 * of this VoxelModel's Claim's position in claim-space.</p>
-	 * @return the wrapped int of the {@link Claim#getY() y-component} 
-	 * of this VoxelModel's Claim's position in claim-space
-	 */
-	public int y(){
-		return y;
-	}
-	
-	/**
-	 * <p>The wrapped int of the {@link Claim#getY() y-component} 
-	 * of this VoxelModel's Claim's position in claim-space.</p>
-	 * @return the wrapped int of the {@link Claim#getY() y-component} 
-	 * of this VoxelModel's Claim's position in claim-space
-	 */
-	public int z(){
-		return z;
 	}
 	
 	@Override

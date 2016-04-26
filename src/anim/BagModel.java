@@ -41,9 +41,9 @@ public class BagModel {
 		this.map = new HashMap<>(p.sideLength());
 		
 		for(VoxelModel vm : voxels){
-			int x = vm.x();
-			int y = vm.y();
-			int z = vm.z();
+			int x = vm.getX();
+			int y = vm.getY();
+			int z = vm.getZ();
 			Claim c = p.claims().get(x,y,z);
 			map.put(c, vm);
 			vm.setOwnerBag(this);
@@ -104,7 +104,7 @@ public class BagModel {
 	 * @param emptyVoxels Claims whose VoxelModels are to be removed (in terms of being 
 	 * {@link #markedVoxels marked} from this BagModel
 	 * @return the number of Claims whose VoxelModels were 
-	 * {@link VoxelModel#evacuate(double) removed} from this BagModel
+	 * {@link VoxelModel#contract(double) removed} from this BagModel
 	 */
 	private int removeEmptyVoxels(Set<Claim> emptyVoxels, Timeline timeline, double time){
 		int initSize = emptyVoxels.size();
@@ -114,7 +114,7 @@ public class BagModel {
 			if(canRemoveEmptyVoxel( claim )){
 				i.remove();
 				VoxelModel toAnimate = map.get(claim);
-				timeline.getKeyFrames().addAll(toAnimate.evacuate(time));
+				timeline.getKeyFrames().addAll(toAnimate.contract(time));
 			}
 		}
 		

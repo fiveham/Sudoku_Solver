@@ -177,8 +177,6 @@ public class Rule extends Fact{
 		}
 	}
 	
-	//TODO rework hashCode() and equals() for Rule so that they rely on set-like properties so that two set-equal Rules cannot coexist in a HashSet
-	
 	/**
 	 * <p>A time node denoting a value-claim event where one Rule 
 	 * is a subset of another and the superset collapses onto the 

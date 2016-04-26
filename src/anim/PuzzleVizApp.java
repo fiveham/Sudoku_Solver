@@ -39,7 +39,6 @@ import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 
-//TODO accomodate animation of Rule mergers by having the merging Rules shift colors simultaneously until they share the same color, then one goes invisible.
 public class PuzzleVizApp extends Application {
 	
 	public static final Function<Time,ThreadEvent> AS_THREADEVENT = (time) -> (ThreadEvent) time;
@@ -57,6 +56,14 @@ public class PuzzleVizApp extends Application {
 		}
     }
 	
+	/**
+	 * <p>Creates and solves the sudoku puzzle specified in the file named by 
+	 * the first {@link #getParameters() command-line argument} sent to 
+	 * {@link main(String[]) main()}, which precipitated the call to this 
+	 * method, extracts the root of the thread-termination time-tree, 
+	 * {@link Stage#setScene(Scene) sets the Scene}, generates 
+	 * <tt>Timeline</tt>s that animate the solution process, and plays them.</p>
+	 */
 	@Override
 	public void start(Stage primaryStage) throws Exception{
 		primaryStage.setResizable(false);
@@ -98,7 +105,7 @@ public class PuzzleVizApp extends Application {
 	 * {@link #start(Stage) the calling code} to extract the voxel model 
 	 * Group out of the overall scene graph.</p>
 	 * 
-	 * @param target the Puzzle whose solution process is being animated
+	 * @param puzzle the Puzzle whose solution process is being animated
 	 * @return a Pair containing the scene graph as the first element and 
 	 * the Group that contains the voxel models as the second element
 	 */
@@ -165,10 +172,10 @@ public class PuzzleVizApp extends Application {
 	 * already represented properly in the scene.</p>
 	 * 
 	 * <p>Access to the BagModels is only ever needed through 
-	 * their VoxelModels; so, that is how access to them is 
-	 * to be gained. Even the one context that calls this method 
+	 * their VoxelModels. Even the one context that calls this method 
 	 * doesn't need access to any of the BagModels once they've 
 	 * been assigned all their VoxelModels.</p>
+	 * 
 	 * @param voxels a List of all the VoxelModels (a List<Node> 
 	 * in the calling context, but all the child nodes listed 
 	 * are necessarily VoxelModels in that context) needed to 
@@ -202,7 +209,19 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	public static final double SMALL_HALFEDGE = 0.3;
+	
+	/**
+	 * <p>The distance ({@value}) from the center of a VoxelModel's true voxel to a 
+	 * face of the VoxelModel that faces another VoxelModel belonging to the same 
+	 * BagModel.</p>
+	 */
 	public static final double LONG_HALFEDGE = 0.5;
+	
+	/**
+	 * <p>The distance ({@value}) from the center of a VoxelModel's true voxel to a 
+	 * face of the VoxelModel that does not face another VoxelModel belonging to the 
+	 * same BagModel.</p>
+	 */
 	public static final double MED_HALFEDGE = (SMALL_HALFEDGE + LONG_HALFEDGE)/2;
 	
 	private static final RegionSpecies.DimensionSelector SELECT_X = (x,y,z) -> x;
@@ -607,7 +626,7 @@ public class PuzzleVizApp extends Application {
 		double initLength = timeline.totalDurationProperty().get().toMillis();
 		for(Claim c : falsified){
 			for(VoxelModel vm : modelHandler.get(c)){
-				timeline.getKeyFrames().addAll(vm.disoccupy( initLength ));
+				timeline.getKeyFrames().addAll(vm.compress( initLength ));
 			}
 		}
 		//falsified.stream().forEach( (c) -> modelHandler.get(c).stream().forEach( (vm) -> timeline.getKeyFrames().addAll(vm.disoccupy(initLength)) ) );
