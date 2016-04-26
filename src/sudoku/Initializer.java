@@ -12,18 +12,17 @@ public class Initializer extends Technique {
 	protected SolutionEvent process() {
 		for(Fact f : target.factStream().collect(Collectors.toList())){
 			if(f instanceof Init){
-				Claim c = f.iterator().next();
-				SolutionEvent result = new Initialization(c);
-				c.setTrue(result);
+				SolutionEvent result = new Initialization((Init) f);
+				f.validateFinalState(result);
 				return result;
 			}
 		}
 		return null;
 	}
 	
-	public class Initialization extends SolutionEvent{
-		private Initialization(Claim c){
-			super(c.visibleClaims());
+	public static class Initialization extends SolutionEvent{
+		private Initialization(Init init){
+			super(init.iterator().next().visibleClaims());
 		}
 	}
 }

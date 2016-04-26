@@ -91,7 +91,7 @@ public class Puzzle extends SudokuNetwork{
 		StreamSupport.stream(claims.spliterator(), false).forEach((claim)->nodes.add(claim));
 		
 		for(Claim c : parseText(parser.values())){
-			Init specificValue = new Init(this, 1);
+			Init specificValue = new Init(this);
 			nodes.add(specificValue);
 			specificValue.add(c);
 		}
@@ -101,11 +101,8 @@ public class Puzzle extends SudokuNetwork{
 	 * <p>Generates the Rules for <tt>p</tt>.</p>
 	 * 
 	 * @param p the Puzzle whose Rules are being generated
-	 * 
 	 * @param sideLength the pre-computed side-length of <tt>p</tt>
-	 * 
 	 * @param claims the pre-built array of Claims in <tt>p</tt>
-	 * 
 	 * @return a list of the Rules for <tt>p</tt>
 	 */
 	private List<Rule> genRuleNodes(Puzzle p, int sideLength, SpaceMap claims){

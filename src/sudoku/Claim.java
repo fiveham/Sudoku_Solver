@@ -1,7 +1,6 @@
 package sudoku;
 
 import sudoku.Puzzle.IndexValue;
-import java.util.Iterator;
 import java.util.Set;
 
 /**
@@ -102,66 +101,26 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * this Claim, false otherwise
 	 */
 	boolean setTrue(SolutionEvent time){
-		boolean result = false;
+		Set<Claim> s = visibleClaims();
+		long init = s.size();
+		s.stream().forEach((c) -> c.setFalse(time));
 		
-		Iterator<Fact> i = iterator();
-		Fact f1 = i.next();
-		while(i.hasNext()){
-			result |= f1.merge(time, i.next());
-		}
-		
-		return result;
+		return init != visibleClaims().size();
 	}
 	
-	/* *
-	 * <p>A time node uniting the events that occur in the process of 
-	 * setting this Claim true.</p>
-	 * @author fiveham
-	 *
-	 */
-	/*public class TimeSetTrue extends AbstractTime{
-		private final Claim verified;
-		private TimeSetTrue(){
-			super(target.timeBuilder().top());
-			this.verified = Claim.this;
-		}
-		public Claim seed(){
-			return verified;
-		}
-	}*/
-	
-	/* *
+	/**
 	 * <p>Sets this Claim false. Removes all elements from this 
-	 * set, and removes this Claim from all its neighbors. Adds 
-	 * a TimeSetFalse to the target's time stack.</p>
+	 * set, and removes this Claim from all its neighbors.</p>
+	 * @param time the SolutionEvent which precipitated the call 
+	 * to this method
 	 * @return true if calling this method changed the state of 
 	 * this Claim, false otherwise
 	 */
 	public boolean setFalse(SolutionEvent time){
 		int initSize = size();
-		
 		clear(time);
-		puzzle.removeNode(this);
-		
 		return size() != initSize;
 	}
-	
-	/* *
-	 * <p>A time node that specifies the event of this Claim being 
-	 * set false.</p>
-	 * @author fiveham
-	 *
-	 */
-	/*public class TimeSetFalse extends AbstractTime{
-		private final Claim setFalse;
-		private TimeSetFalse(Claim falseClaim){
-			super(target.timeBuilder().top());
-			this.setFalse = falseClaim;
-		}
-		public Claim setFalse(){
-			return setFalse;
-		}
-	}*/
 	
 	/**
 	 * <p>Returns the int value of this Claim's x-coordinate.</p>

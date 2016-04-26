@@ -1,7 +1,5 @@
 package sudoku;
 
-import java.util.Collection;
-
 /**
  * <p>An expression of a specific value of a cell in a sudoku 
  * puzzle.</p>
@@ -19,24 +17,15 @@ import java.util.Collection;
  */
 public class Init extends Fact {
 	
+	public static final byte TYPES = (byte)0;
+	public static final int CAPACITY = 1;
+	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 3700799253734450539L;
 	
 	public Init(Puzzle puzzle) {
-		super(puzzle);
-	}
-	
-	public Init(Puzzle puzzle, Collection<Claim> c) {
-		super(puzzle, c);
-	}
-	
-	public Init(Puzzle puzzle, int initialCapacity) {
-		super(puzzle, initialCapacity);
-	}
-	
-	public Init(Puzzle puzzle, int initialCapacity, float loadFactor) {
-		super(puzzle, initialCapacity, loadFactor);
+		super(puzzle, TYPES, CAPACITY);
 	}
 }

@@ -58,7 +58,6 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	 * contraction event during the construction of connected components
 	 */
 	public List<Consumer<Set<T>>> contractEventListeners();
-	//TODO rework the connected-component-growth-event concept so that it's not internalized in the Graph implementation classes.
 	
 	/**
 	 * <p>Returns a collection of all the connected components of this Graph.</p>
@@ -97,6 +96,5 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	 * output by <tt>seedSrc</tt> when <tt>unassignedNodes</tt> is given to it as 
 	 * input
 	 */
-	public Graph<T> componentForSeed(List<T> unassignedNodes, /*Function<List<T>,T> seedSrc*/ T seed, List<Consumer<Set<T>>> eventListeners);
-	//TODO rework so that a seed T is sent instead of a seed-source
+	public Graph<T> componentForSeed(List<T> unassignedNodes, T seed, List<Consumer<Set<T>>> eventListeners);
 }
