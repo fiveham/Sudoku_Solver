@@ -25,6 +25,8 @@ public class Rule extends Fact{
 	 */
 	public static final int SIZE_WHEN_XOR = 2;
 	
+	private final Puzzle.RegionSpecies type;
+	
 	/**
 	 * <p>Constructs a Rule belonging to the specified Puzzle and 
 	 * having only the specified <tt>types</tt>.</p>
@@ -33,7 +35,8 @@ public class Rule extends Fact{
 	 * this Rule
 	 */
 	public Rule(Puzzle puzzle, RegionSpecies type, IndexInstance dimA, IndexInstance dimB){
-		super(puzzle, type.mask());
+		super(puzzle);
+		this.type = type;
 	}
 	
 	/**
@@ -47,7 +50,8 @@ public class Rule extends Fact{
 	 * have as elements
 	 */
 	public Rule(Puzzle puzzle, RegionSpecies type, Collection<Claim> c, IndexInstance dimA, IndexInstance dimB) {
-		super(puzzle, type.mask(), c);
+		super(puzzle, c);
+		this.type = type;
 	}
 	
 	/**
@@ -60,7 +64,8 @@ public class Rule extends Fact{
 	 * @param initialCapacity the initial capacity of this Rule
 	 */
 	public Rule(Puzzle puzzle, RegionSpecies type, int initialCapacity, IndexInstance dimA, IndexInstance dimB) {
-		super(puzzle, type.mask(), initialCapacity);
+		super(puzzle, initialCapacity);
+		this.type = type;
 	}
 	
 	/**
@@ -74,7 +79,8 @@ public class Rule extends Fact{
 	 * @param loadFactor the load factor for this Rule
 	 */
 	public Rule(Puzzle puzzle, RegionSpecies type, int initialCapacity, float loadFactor, IndexInstance dimA, IndexInstance dimB) {
-		super(puzzle, type.mask(), initialCapacity, loadFactor);
+		super(puzzle, initialCapacity, loadFactor);
+		this.type = type;
 	}
 	
 	@Override
@@ -96,21 +102,7 @@ public class Rule extends Fact{
 	 * this Rule
 	 */
 	String typeString(){
-		StringBuilder sb = new StringBuilder();
-		
-		boolean first = true;
-		for(RegionSpecies reg : RegionSpecies.values()){
-			if((types & reg.mask()) != 0){
-				if(first){
-					first = false;
-				} else{
-					sb.append(",");
-				}
-				sb.append(reg);
-			}
-		}
-		
-		return sb.toString();
+		return type.toString();
 	}
 	
 	/**
@@ -198,7 +190,7 @@ public class Rule extends Fact{
 	 * and has <tt>size() <= target.magnitude()</tt>
 	 */
 	private boolean shouldCheckForValueClaim(){
-		return (types & RegionSpecies.CELL.mask()) != 0
+		return type == RegionSpecies.CELL 
 				? false 
 				: size() <= puzzle.magnitude();
 	}

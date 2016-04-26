@@ -190,10 +190,10 @@ public class ColorChain extends Technique {
 	 * at the time when this method is called
 	 */
 	private Collection<Graph<ColorClaim>> generateChains(){
-		List<Rule> xors = target.nodeStream()
+		Set<Rule> xors = target.nodeStream()
 				.filter((ns)->(ns.size()==Rule.SIZE_WHEN_XOR && ns instanceof Rule))
 				.map((ns)->(Rule)ns)
-				.collect(Collectors.toList());
+				.collect(Collectors.toSet());
 		Set<Claim> claimsInXors = SledgeHammer2.sideEffectUnion(xors, false);
 		
 		Graph<ColorClaim> wg = new BasicGraph<ColorClaim>(link(claimsInXors, (c1,c2)->c1.intersects(c2)));

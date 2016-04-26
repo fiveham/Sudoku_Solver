@@ -53,13 +53,6 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 		return factStream().allMatch((f)->f.size() == Fact.SIZE_WHEN_SOLVED);
 	}
 	
-	/**
-	 * <p>Returns a Stream of those nodes of this Puzzle's underlying graph 
-	 * that are of the type <tt>Rule</tt>. The nodes returned are cast as 
-	 * Rule, as well.</p>
-	 * @return a Stream of all the <tt>Rule</tt>-type nodes from this Puzzle's 
-	 * underlying graph.
-	 */
 	@Override
 	public Stream<Fact> factStream(){
 		return nodes.stream().filter(IS_FACT).map((ns)->(Fact)ns);

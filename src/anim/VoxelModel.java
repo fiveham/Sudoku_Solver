@@ -329,6 +329,11 @@ public class VoxelModel extends Box{
 		return result.toArray(new KeyValue[0]);
 	}
 	
+	/**
+	 * <p></p>
+	 * @author fiveham
+	 *
+	 */
 	private enum Dimension{
 		
 		X(X_DIM, (vm) -> vm.widthProperty(),  (vm) -> vm.translateXProperty()), 

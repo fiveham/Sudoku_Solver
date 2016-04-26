@@ -72,12 +72,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * @return true if this Claim is known to be true, false otherwise
 	 */
 	public boolean isKnownTrue(){
-		/*for(Fact owner : this){
-			if(owner.size() == Rule.SIZE_WHEN_SOLVED){
-				return true;
-			}
-		}
-		return false;*/
 		return stream().anyMatch((owner)->owner.size()==Fact.SIZE_WHEN_SOLVED);
 	}
 	
@@ -102,7 +96,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 */
 	boolean setTrue(SolutionEvent time){
 		Set<Claim> s = visibleClaims();
-		long init = s.size();
+		int init = s.size();
 		s.stream().forEach((c) -> c.setFalse(time));
 		
 		return init != visibleClaims().size();
@@ -228,15 +222,11 @@ public class Claim extends NodeSet<Fact,Claim>{
 	
 	/**
 	 * <p>Verifies that this Claim's state is acceptable after 
-	 * it has been modified. Automatically sets this claim 
-	 * false when a Rule is removed from this Claim without 
-	 * accommodating the Rule's role via another remaining Rule.</p>
+	 * it has been modified.</p>
 	 */
 	@Override
-	protected void validateFinalState(SolutionEvent time){ //TODO make sure this doesn't break Rule-class operations still in-progress
-		if(!isEmpty() && !hasAllRules()){
-			setFalse(time);
-		}
+	protected void validateFinalState(SolutionEvent time){ //TO DO make sure this doesn't break Rule-class operations still in-progress
+		//do nothing
 	}
 	
 	/**
@@ -250,20 +240,5 @@ public class Claim extends NodeSet<Fact,Claim>{
 		Set<Claim> neighborsOfNeighbors = SledgeHammer2.sideEffectUnion(this,false);
 		neighborsOfNeighbors.remove(this);
 		return neighborsOfNeighbors;
-	}
-	
-	/**
-	 * <p>Returns true if this Claim's neighbors fulfill all the 
-	 * Rule-type roles that a Claim has at initialization and that 
-	 * any true Claim will have when the target is completely solved.</p>
-	 * @return true if this Claim's neighbors collectively account 
-	 * for all the Rule types, false otherwise
-	 */
-	private boolean hasAllRules(){
-		byte mask = 0;
-		for(Fact rule : this){
-			mask |= rule.getType();
-		}
-		return mask == Puzzle.RegionSpecies.ALL_TYPES;
 	}
 }

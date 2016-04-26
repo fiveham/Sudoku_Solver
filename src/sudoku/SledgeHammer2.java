@@ -91,43 +91,13 @@ public class SledgeHammer2 extends Technique {
 	 * component for the sake of efficiency.</p>
 	 */
 	@Override
-	/*protected boolean process(){
-		boolean puzzleUpdated = false;
-		
-		
-		 * Get a collection of connected subnetworks of unsolved Rules.
-		 * 
-		 * Operating on an arbitrary known-unsolved Sudoku eliminates the need 
-		 * to separate the solved Rules away from the unsolved ones.
-		 * 
-		 * processComponent() is all that needs to be adapted, since pre-breaking 
-		 * the target into arbitrary Sudoku networks means you're only working 
-		 * on a component at any one time.
-		 
-		Graph<Wrap<Rule>> ruleGraph = new BasicGraph<Wrap<Rule>>(
-				Wrap.wrap(target.ruleStream().filter((n)->n.size()>Rule.SIZE_WHEN_SOLVED).collect(Collectors.toList()), 
-						(r1,r2) -> r1.intersects(r2)));
-		
-		for(Collection<Graph<Wrap<Rule>>> newUnsolvedComponents, unsolvedComponents = ruleGraph.connectedComponents(); 
-				!unsolvedComponents.isEmpty() && (newUnsolvedComponents = new ArrayList<>()) != null;
-				unsolvedComponents = newUnsolvedComponents){
-			for(Graph<Wrap<Rule>> unsolvedComponent : unsolvedComponents){
-				if(processComponent(unsolvedComponent)){
-					puzzleUpdated |= newUnsolvedComponents.addAll(unsolvedComponent.connectedComponents());
-				}
-			}
-		}
-		
-		return puzzleUpdated;
-	}*/
-	
 	public SolutionEvent process(){
 		Graph<Wrap<Fact>> ruleSubgraph = new BasicGraph<>(
-				Wrap.wrap(target.factStream().filter((n)->n.size()>Rule.SIZE_WHEN_SOLVED).collect(Collectors.toList()), 
+				Wrap.wrap(target.factStream().filter((n)->n.size()>Rule.SIZE_WHEN_SOLVED).collect(Collectors.toSet()), 
 						RULES_CONNECT));
 		
 		//For each disjoint source combo
-		List<Fact> rules = ruleSubgraph.nodeStream().map((n)->n.wrapped()).collect(Collectors.toList());
+		Set<Fact> rules = ruleSubgraph.nodeStream().map((n)->n.wrapped()).collect(Collectors.toSet());
 		ComboGenIso<Fact> reds = new ComboGenIso<>(rules, MIN_SRC_COMBO_SIZE, ruleSubgraph.size()/2);
 		for(UnionIterator redIterator = new UnionIterator(reds.iterator()); redIterator.hasNext(); ){
 			List<Fact> srcCombo = redIterator.next();
