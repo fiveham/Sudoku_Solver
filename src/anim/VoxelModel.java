@@ -49,6 +49,8 @@ public class VoxelModel extends Box{
 	private final PuzzleVizApp.RegionSpecies type;
 	private BagModel ownerBag;
 	
+	private Status status;
+	
 	/* 
 	 * TODO check for and correct evacuation-translations that assume all VMs are centered on their true voxel 
 	 * because end-cap VMs are not centered
@@ -91,6 +93,10 @@ public class VoxelModel extends Box{
 		
 		this.ownerBag = null;
 		getTransforms().add(new Translate(x+(xPos-xNeg)/2, y+(yPos-yNeg)/2, z+(zPos-zNeg)/2));
+	}
+	
+	public Status getStatus(){
+		return status;
 	}
 	
 	/**
@@ -284,16 +290,24 @@ public class VoxelModel extends Box{
 	/**
 	 * <p>Removes this voxel model from its owner, marks this 
 	 * voxel model as having no owner.</p>
-	 * @see BagModel#notifyDisown(VoxelModel)
 	 */
 	private void disown(){
-		ownerBag.notifyDisown(this);
+		status = Status.UNMARKED;
 		ownerBag = null;
 	}
 	
 	public static final double COMPRESS_TRANSITION_TIME = 1000;
 	
-	public static Duration durationFromTime(double time){
+	/**
+	 * <p>Returns a Duration constructed using the specified <tt>time</tt> 
+	 * value.</p>
+	 * <p>Returned values are extracted from a HashMap cache and are added 
+	 * to the cache if they are not already present.</p>
+	 * @param time
+	 * @return a Duration constructed using the specified <tt>time</tt> 
+	 * value
+	 */
+	private static Duration durationFromTime(double time){
 		if(!durationMap.containsKey(time)){
 			durationMap.put(time, new Duration(time));
 		}
@@ -313,7 +327,7 @@ public class VoxelModel extends Box{
 	 * known false
 	 */
 	public KeyFrame[] disoccupy(double initTime){
-		if( ownerBag.notifyDisoccupied(this) ){
+		if( status != (status = Status.MARKED) ){
 			return new KeyFrame[]{ new KeyFrame(durationFromTime(COMPRESS_TRANSITION_TIME+initTime), keyValuesForDisoccupy()) };
 		} else{
 			return NO_KEYFRAMES;
@@ -351,6 +365,7 @@ public class VoxelModel extends Box{
 	 * establish that A face of a voxel model lies on the face of its host true 
 	 * voxel needs to be {@link #ROUNDING_ERROR approximative} instead of relying 
 	 * specifically on true equality.</p>
+	 * 
 	 * @param face
 	 * @see Face
 	 * @return true if this VoxelModel is in contact with the cube-face of 
@@ -673,5 +688,9 @@ public class VoxelModel extends Box{
 			return puzzle == vm.puzzle && x == vm.x && y == vm.y && z == vm.z && type == vm.type && ownerBag == vm.ownerBag;
 		}
 		return false;
+	}
+	
+	public enum Status{
+		OCCUPIED, MARKED, UNMARKED;
 	}
 }

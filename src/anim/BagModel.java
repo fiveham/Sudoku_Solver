@@ -25,8 +25,7 @@ import javafx.scene.paint.PhongMaterial;
  */
 public class BagModel {
 	
-	private Set<Claim> markedVoxels;
-	private Set<Claim> occupiedVoxels;
+	private Set<Claim> voxels;
 	
 	private final Map<Claim,VoxelModel> map;
 	
@@ -51,38 +50,7 @@ public class BagModel {
 			vm.setMaterial(bagColor);
 		}
 		
-		this.markedVoxels   = new HashSet<>(map.keySet());
-		this.occupiedVoxels = new HashSet<>(map.keySet());
-	}
-	
-	/**
-	 * <p>Handles an event when a VoxelModel is {@link VoxelModel#disoccupy() disoccupied}. 
-	 * Removes <tt>disoccupiedVM</tt>'s Claim from this BagModel's list of 
-	 * </tt>occupiedVoxels</tt>.</p>
-	 * 
-	 * @param disoccupiedVM a VoxelModel belonging to this BagModel which is being 
-	 * {@link VoxelModel#disoccupy() disoccupied}
-	 * @see VoxelModel#disoccupy()
-	 * @return true if the collection of </tt>occupiedVoxels</tt> of this BagModel was 
-	 * changed by this operation, false otherwise
-	 */
-	public boolean notifyDisoccupied(VoxelModel disoccupiedVM){  //TODO replace separate marked and occupied voxel lists with one voxel list and use stream.filter on properties of the VoxelModels
-		return occupiedVoxels.remove( disoccupiedVM.getClaim() );
-	}
-	
-	/**
-	 * <p>Handles an event when a VoxelModel is {@link VoxelModel#disown() disowned}. 
-	 * Removes the specified VoxelModel from <tt>markedVoxels</tt> and removes the 
-	 * mapping from the model's associated Claim to the VoxelModel.</p>
-	 * 
-	 * @param disownedVM a VoxelModel belonging to this BagModel which is being 
-	 * {@link VoxelModel#disown() disowned}
-	 * @return true if <tt>markedVoxels</tt> or the Claim-to-VoxelModel <tt>map</tt> 
-	 * is changed by this method
-	 */
-	public boolean notifyDisown(VoxelModel disownedVM){
-		Claim claim = disownedVM.getClaim();
-		return markedVoxels.remove(claim) | map.remove(claim, disownedVM);
+		this.voxels = new HashSet<>(map.keySet());
 	}
 	
 	/**
@@ -118,16 +86,13 @@ public class BagModel {
 	 * @return
 	 */
 	public void trimUnoccupiedExtremeVoxels(Timeline timeline, double postDisoccupyLength){
-		Set<Claim> emptyVoxels = markedVoxels.parallelStream()
-				.filter((e)->!occupiedVoxels.contains(e))
+		Set<Claim> unoccupiedMarkedVoxels = voxels.parallelStream()
+				.filter((e) -> map.get(e).getStatus() == VoxelModel.Status.MARKED)
 				.collect(Collectors.toSet());
 		
 		for(double time = postDisoccupyLength; 
-				0 != removeEmptyVoxels(emptyVoxels, timeline, time);
+				0 != removeEmptyVoxels(unoccupiedMarkedVoxels, timeline, time);
 				time += CONTRACT_TRANSITION_TIME);
-		
-		emptyVoxels.addAll(occupiedVoxels);
-		markedVoxels = occupiedVoxels;
 	}
 	
 	public static final double CONTRACT_TRANSITION_TIME = VoxelModel.COMPRESS_TRANSITION_TIME;
@@ -173,8 +138,9 @@ public class BagModel {
 	 * false otherwise
 	 */
 	private boolean canRemoveEmptyVoxel(Claim emptyVoxel){
-		Set<Claim> newMarkedVoxels = new HashSet<>(markedVoxels);
-		newMarkedVoxels.remove(emptyVoxel);
+		Set<Claim> newMarkedVoxels = voxels.parallelStream()
+				.filter((e) -> e != emptyVoxel && map.get(e).getStatus() != VoxelModel.Status.UNMARKED)
+				.collect(Collectors.toSet());
 		return new BasicGraph<Wrap<Claim>>(Wrap.wrap(newMarkedVoxels, ADJACENT_CLAIMS)).connectedComponents().size() == 1;
 	}
 }
