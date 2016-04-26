@@ -7,37 +7,47 @@ import java.util.Iterator;
 import java.util.Arrays;
 
 /**
- * Manages an arbitrary number of independent options in an arbitrary 
- * number of independent collections. With two options from which to select, 
- * you'd have a rectangle, and with three a rectangular prism (cuboid). 
- * Accounting for a rectangle of options can be done with two nested 
- * for loops, and accounting for three can be done with three nested for 
- * loops, but to account for arbitrary and possibly unknown numbers of 
+ * <p>Manages an arbitrary number of abstract dimensions, each of 
+ * which can take an arbitrary, constant number of different values.</p>
+ * 
+ * <p>With two dimensions, the NCuboid is a rectangle, and with three 
+ * a rectangular prism (cuboid).</p>
+ * 
+ * <p>Accounting for two options can be done with two nested <tt>for</tt> 
+ * loops, and accounting for three can be done with three nested 
+ * <tt>for</tt> loops, but to account for an arbitrary number of 
  * independent dimensions, something more adaptable than hard-coded loops 
- * is required. To that end, this class treats each possible position 
- * in an N-dimensional cuboid as a number in a variable-radix system. 
+ * is required.</p>
+ * 
+ * <p>To that end, this class treats each possible position in an 
+ * N-dimensional cuboid as a number in a variable-radix number-system. 
  * For example, in a 3-dimensional cuboid where the highest-order dimension 
  * has two options, the middle-order dimension has 8 options, and the lowest
  * -order dimension has 5 options, the digits of the equivalent number 
- * would be [1 to 2][1 to 8][1 to 5].  This abstract number is stored 
- * internally as an int array.
+ * would be [1 to 2][1 to 8][1 to 5]. This abstract number is stored 
+ * internally as an int array.</p>
  * @author fiveham
  *
  */
 public class NCuboid<T> implements Iterable<List<T>> {
 	
-	private final List<List<T>> src;
+	private final List<List<? extends T>> src;
 	private final int[] key;
 	
-	public NCuboid(Collection<? extends Collection<T>> src) {
+	/**
+	 * <p>Constructs an NCuboid whose dimensions are the elements of 
+	 * <tt>src</tt>.</p>
+	 * @param src
+	 * @throws IllegalArgumentException if any of the dimensions specified 
+	 * as elements of <tt>src</tt> is empty
+	 */
+	public NCuboid(Collection<? extends Collection<? extends T>> src) {
 		
 		this.src = new ArrayList<>(src.size());
-		for(Collection<T> dimension : src){
-			if( !dimension.isEmpty() ){
-				this.src.add(new ArrayList<>(dimension));
-			} else{
-				throw new IllegalArgumentException("One of the specified dimensions was empty.");
-			}
+		if(src.parallelStream().anyMatch((dimension)->dimension.isEmpty())){
+			throw new IllegalArgumentException("One of the specified dimensions was empty.");
+		} else{
+			src.stream().forEach((dimension)->this.src.add(new ArrayList<T>(dimension)));
 		}
 		
 		this.key = new int[this.src.size()];
@@ -51,6 +61,12 @@ public class NCuboid<T> implements Iterable<List<T>> {
 		return new CubeIterator();
 	}
 	
+	/**
+	 * <p>An Iterator which keeps track of its position in an N-dimensional 
+	 * cuboid defined by the dimensions specified as elements of <tt>src</tt>.</p>
+	 * @author fiveham
+	 *
+	 */
 	private class CubeIterator implements Iterator<List<T>>{
 		
 		private final int[] state;
@@ -67,11 +83,11 @@ public class NCuboid<T> implements Iterable<List<T>> {
 		
 		@Override
 		public List<T> next(){
-			updateState();
 			List<T> result = new ArrayList<>(state.length);
 			for(int i=0; i<state.length; ++i){
 				result.add( src.get(i).get(state[i]) );
 			}
+			updateState();
 			return result;
 		}
 		
@@ -80,7 +96,8 @@ public class NCuboid<T> implements Iterable<List<T>> {
 				if(state[i]==key[i]){
 					state[i]=0;
 				} else{
-					state[i]+=carry--;
+					state[i]++;
+					carry = 0;
 				}
 			}
 		}

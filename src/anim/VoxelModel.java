@@ -8,6 +8,8 @@ import javafx.animation.KeyFrame;
 import javafx.util.Duration;
 import sudoku.Claim;
 import sudoku.Puzzle;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.IntUnaryOperator;
@@ -127,7 +129,7 @@ public class VoxelModel extends Box{
 	 */
 	public KeyFrame[] evacuate(double initTime){
 		Duration periodStart = new Duration(initTime);
-		Duration periodEnd = new Duration(initTime+TRANSITION_TIME_DISOCCUPY.toMillis());
+		Duration periodEnd = durationFromTime(initTime+COMPRESS_TRANSITION_TIME);
 		
 		KeyFrame[] result = new KeyFrame[]{
 				new KeyFrame(periodStart, keyValuesCurrentState()),
@@ -289,6 +291,17 @@ public class VoxelModel extends Box{
 		ownerBag = null;
 	}
 	
+	public static final double COMPRESS_TRANSITION_TIME = 1000;
+	
+	public static Duration durationFromTime(double time){
+		if(!durationMap.containsKey(time)){
+			durationMap.put(time, new Duration(time));
+		}
+		return durationMap.get(time);
+	}
+	
+	private static final Map<Double,Duration> durationMap = new HashMap<>(13);
+	
 	/**
 	 * <p>Provides an array of KeyFrames that detail the process of this VoxelModel 
 	 * transforming from its initial shape and position to the shape and 
@@ -299,9 +312,9 @@ public class VoxelModel extends Box{
 	 * position it must have in order to indicate that its associated Claim is 
 	 * known false
 	 */
-	public KeyFrame[] disoccupy(){
+	public KeyFrame[] disoccupy(double initTime){
 		if( ownerBag.notifyDisoccupied(this) ){
-			return new KeyFrame[]{ new KeyFrame(TRANSITION_TIME_DISOCCUPY, keyValuesForDisoccupy()) };
+			return new KeyFrame[]{ new KeyFrame(durationFromTime(COMPRESS_TRANSITION_TIME+initTime), keyValuesForDisoccupy()) };
 		} else{
 			return NO_KEYFRAMES;
 		}
@@ -594,13 +607,6 @@ public class VoxelModel extends Box{
 	}
 	
 	/**
-	 * <p>The duration of the animation for the transition of a voxel 
-	 * model from occupied to unoccupied (when a Claim is 
-	 * {@link Claim#setFalse() set false}). Equal to 1000 milliseconds.</p>
-	 */
-	public static final Duration TRANSITION_TIME_DISOCCUPY = new Duration(1000);
-	
-	/**
 	 * <p>Sets the <tt>ownerBag</tt> for this VoxelModel if it is not 
 	 * already set <tt>ownerBag == null</tt>. Throws an exception if 
 	 * called while <tt>ownerBag</tt> is already set.</p>
@@ -653,5 +659,19 @@ public class VoxelModel extends Box{
 	 */
 	public int z(){
 		return z;
+	}
+	
+	@Override
+	public int hashCode(){
+		return Claim.linearizeCoords(x, y, z, puzzle.sideLength());
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof VoxelModel){
+			VoxelModel vm = (VoxelModel)o;
+			return puzzle == vm.puzzle && x == vm.x && y == vm.y && z == vm.z && type == vm.type && ownerBag == vm.ownerBag;
+		}
+		return false;
 	}
 }

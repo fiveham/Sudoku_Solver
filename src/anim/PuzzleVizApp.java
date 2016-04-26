@@ -456,30 +456,45 @@ public class PuzzleVizApp extends Application {
 	 * @return
 	 */
 	public static Timeline genTimeline(Group voxelModels, Puzzle puzzle, ThreadEvent timeRoot){
-		return parallelTimeline(timeRoot, voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
-		//return depthFirstLinearTimeline(puzzle.getTimeBuilder(), voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
-		//return breadthFirstLinearTimeline(puzzle.getTimeBuilder(), voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
+		return parallelTimeline(timeRoot, voxelModels, puzzle);
+		//return depthFirstLinearTimeline(puzzle.getTimeBuilder(), voxelModels, puzzle);
+		//return breadthFirstLinearTimeline(puzzle.getTimeBuilder(), voxelModels, puzzle);
+	}
+	
+	public static Timeline parallelTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle){
+		return parallelTimeline(event, voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
 	}
 	
 	/**
-	 * <p>Returns a Timeline which, when it finishes playing, starts </p>
+	 * <p>Returns a Timeline which, when it finishes playing, plays 
+	 * Timelines for each of the events that occured as a result of 
+	 * the event modeled by that Timeline. Each Timeline played in 
+	 * such a fashion exhibits the same child-producing behavior.</p>
+	 * 
+	 * <p>When one of these Timelines finishes playing, the child 
+	 * Timelines are produced at that time rather than in advance, by 
+	 * a call to this method.</p>
 	 * @param event
 	 * @param voxelModels
 	 * @param puzzle
 	 * @param modelHandler
 	 * @return
 	 */
-	public static Timeline parallelTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
+	private static Timeline parallelTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
 		Timeline result = solutionEventTimeline(event.wrapped(), modelHandler);
 		
 		result.setOnFinished((ae) -> event.children().parallelStream()
-				.filter((ct) -> ct instanceof ThreadEvent)
+				.filter(IS_THREADEVENT)
 				.forEach((ct) -> parallelTimeline((ThreadEvent)ct, voxelModels, puzzle, modelHandler).play()));
 		
 		return result;
 	}
 	
-	public static Timeline depthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
+	public static Timeline depthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle){
+		return depthFirstLinearTimeline(event, voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
+	}
+	
+	private static Timeline depthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
 		ArrayList<Timeline> timelineList = new ArrayList<>(treeSize(event));
 		timelineList.add(solutionEventTimeline(event.wrapped(), modelHandler));
 		
@@ -513,7 +528,11 @@ public class PuzzleVizApp extends Application {
 		return timelineList;
 	}
 	
-	public static Timeline breadthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
+	public static Timeline breadthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle){
+		return breadthFirstLinearTimeline(event, voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
+	}
+	
+	private static Timeline breadthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
 		Iterator<ThreadEvent> layerIterator = breadthFirstLinearizeTime(event);
 		Timeline result = solutionEventTimeline(layerIterator.next().wrapped(), modelHandler);
 		
@@ -548,6 +567,14 @@ public class PuzzleVizApp extends Application {
 		return result;
 	}
 	
+	/**
+	 * <p>Produces a Timeline animating all the Claim-falsification and BagModel 
+	 * contraction events that occured as a direct or indirect part of the 
+	 * specified <tt>event</tt>.</p>
+	 * @param event
+	 * @param modelHandler
+	 * @return
+	 */
 	public static Timeline solutionEventTimeline(FalsifiedTime event, Map<Claim,List<VoxelModel>> modelHandler){
 		Timeline result = new Timeline();
 		
@@ -568,26 +595,27 @@ public class PuzzleVizApp extends Application {
 		return time.children().stream().filter(IS_THREADEVENT).map(AS_THREADEVENT).collect(Collectors.toList());
 	}
 	
+	/**
+	 * <p>Adds to <tt>timeline</tt> the falsification animation (VoxleModel collapse and 
+	 * BagModel contraction) an {@link FalsifiedTime event} whose <tt>falsified</tt> Claims 
+	 * are specified.</p>
+	 * @param timeline
+	 * @param falsified
+	 * @param modelHandler
+	 */
 	public static void addFalsificationAnimation(final Timeline timeline, Set<Claim> falsified, Map<Claim,List<VoxelModel>> modelHandler){
+		double initLength = timeline.totalDurationProperty().get().toMillis();
 		for(Claim c : falsified){
 			for(VoxelModel vm : modelHandler.get(c)){
-				timeline.getKeyFrames().addAll(vm.disoccupy());
+				timeline.getKeyFrames().addAll(vm.disoccupy( initLength ));
 			}
 		}
-		//falsified.stream().forEach( (c) -> modelHandler.get(c).stream().forEach( (vm) -> timeline.getKeyFrames().addAll(vm.disoccupy()) ) );
+		//falsified.stream().forEach( (c) -> modelHandler.get(c).stream().forEach( (vm) -> timeline.getKeyFrames().addAll(vm.disoccupy(initLength)) ) );
 		
 		Set<BagModel> affectedBags = affectedBags(falsified, modelHandler);
+		double postDisoccupyLength = timeline.totalDurationProperty().get().toMillis();
 		for(BagModel bag : affectedBags){
-			bag.trimUnoccupiedExtremeVoxels(timeline);
-		}
-	}
-	
-	public static void addAutoResolveContent(Timeline timeline, List<FalsifiedTime> children, Map<Claim,List<VoxelModel>> modelHandler){
-		for(FalsifiedTime child : children){
-			addFalsificationAnimation(timeline, child.falsified(), modelHandler);
-			if(child.hasChildren()){
-				addAutoResolveContent(timeline, falsifiedTimeChildren(child), modelHandler);
-			}
+			bag.trimUnoccupiedExtremeVoxels(timeline, postDisoccupyLength);
 		}
 	}
 	
@@ -602,6 +630,15 @@ public class PuzzleVizApp extends Application {
 			affectedBags.add(vm.getOwnerBag());
 		}
 		return affectedBags;
+	}
+	
+	public static void addAutoResolveContent(Timeline timeline, List<FalsifiedTime> children, Map<Claim,List<VoxelModel>> modelHandler){
+		for(FalsifiedTime child : children){
+			addFalsificationAnimation(timeline, child.falsified(), modelHandler);
+			if(child.hasChildren()){
+				addAutoResolveContent(timeline, falsifiedTimeChildren(child), modelHandler);
+			}
+		}
 	}
 	
 	private static Map<Claim,List<VoxelModel>> genModelHandler(Puzzle puzzle, Group voxelModels){
