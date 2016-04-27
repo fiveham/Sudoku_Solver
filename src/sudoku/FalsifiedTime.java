@@ -6,23 +6,41 @@ import java.util.Set;
 import common.time.AbstractTime;
 import common.time.Time;
 
+/**
+ * <p>A Time in which some Claims are {@link Claim#setFalse(SolutionEvent) set false}.</p>
+ * 
+ * <p>This class is a base class for Times the denote events in the process of 
+ * solving a sudoku puzzle, including direct {@link SolutionEvents SolutionEvents} 
+ * in which a Technique changes the puzzle and indirect 
+ * {@link AutoResolve AutoResolve} events in which changes made to the puzzle 
+ * by some processing event allow a part of the puzzle to 
+ * {@link Rule#validateFinalState(SolutionEvent) automatically detect} a 
+ * solving action that it can take locally.</p>
+ * @author fiveham
+ *
+ */
 public class FalsifiedTime extends AbstractTime {
 	
 	private final Set<Claim> falsified;
 	
+	/**
+	 * <p>Constructs a FalsifiedTime having the specified <tt>parent</tt>.</p>
+	 * @param parent the event which caused this event
+	 */
 	public FalsifiedTime(Time parent) {
 		super(parent);
 		this.falsified = new HashSet<>();
 	}
 	
+	/**
+	 * <p>Constructs a FalsifiedTime having the specified <tt>parent</tt> and 
+	 * the specified <tt>falsified</tt> Claims.</p>
+	 * @param parent the event which caused this event
+	 * @param falsified the Claims set false in this event itself
+	 */
 	public FalsifiedTime(Time parent, Collection<Claim> falsified){
 		super(parent);
 		this.falsified = new HashSet<>(falsified);
-	}
-
-	public FalsifiedTime(Time parent, Time focus) {
-		super(parent, focus);
-		this.falsified = new HashSet<>();
 	}
 	
 	/**

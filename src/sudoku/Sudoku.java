@@ -31,9 +31,24 @@ public interface Sudoku extends Graph<NodeSet<?,?>>{
 	 */
 	public Stream<Fact> factStream();
 	
+	/**
+	 * <p>Returns a Stream of the Claims in this Sudoku's underlying Graph.</p>
+	 * @return
+	 */
 	public Stream<Claim> claimStream();
 	
+	/**
+	 * <p>Returns the underlying order of this Puzzle, the  square root of 
+	 * the side length.</p>
+	 * @return the underlying order of this Puzzle, the square root of the 
+	 * side length
+	 */
 	public int magnitude();
 	
+	/**
+	 * <p>Returns the length of a side of this Puzzle, which is also the number 
+	 * of rows, the number of columns, and the number of boxes.</p>
+	 * @return the length of a side of this target
+	 */
 	public int sideLength();
 }

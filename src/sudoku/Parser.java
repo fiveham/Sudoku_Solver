@@ -7,24 +7,50 @@ import java.util.Scanner;
 /**
  * <p>A utility class that tries to parse a target out of a text 
  * source via a specified Scanner that scans from that text.</p>
+ * 
+ * <p>Used by Puzzle to read a sudoku puzzle of unknown dimensions 
+ * from a text file and both extract the content of the puzzle and 
+ * also extract the {@link Sudoku#magnitude() order} of the puzzle 
+ * as a side-effect, without requiring further after-the-fact 
+ * analysis.</p>
  * @author fiveham
  *
  */
-public class Parser{
+class Parser{
 	
 	private int mag = 2;
 	private final List<Integer> values;
 	
-	public Parser(Scanner s){
+	/**
+	 * <p>Constructs a Parser that extracts and parses text via 
+	 * the specified Scanner.</p>
+	 * @param s the Scanner that sources the text that this 
+	 * Parser analyses
+	 */
+	Parser(Scanner s){
 		this.values = parse(s);
 		s.close();
 	}
 	
-	public int mag(){
+	/**
+	 * <p>Returns the order of the puzzle specified by the text 
+	 * behind the Scanner sent to the {@link #Parser(Scanner) constructor}, 
+	 * which is determined as a side-effect of the {@link #parse(Scanner) parsing} 
+	 * process.</p>
+	 * @return the order of the puzzle specified by the text 
+	 * behind the Scanner sent to the {@link #Parser(Scanner) constructor}
+	 */
+	int mag(){
 		return mag;
 	}
 	
-	public List<Integer> values(){
+	/**
+	 * <p>Returns a list of the integers present in the text of the 
+	 * puzzle as read from the text source specified by the Scanner 
+	 * sent to the {@link #Parser(Scanner) constructor}.</p>
+	 * @return
+	 */
+	List<Integer> values(){
 		return values;
 	}
 	

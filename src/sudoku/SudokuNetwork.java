@@ -69,23 +69,11 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 		return nodes.stream().filter(IS_CLAIM).map((ns)->(Claim)ns);
 	}
 	
-	/**
-	 * <p>Returns the underlying order of this Puzzle, the 
-	 * square root of the side length.</p>
-	 * @return the underlying order of this Puzzle, the 
-	 * square root of the side length
-	 */
 	@Override
 	public int magnitude(){
 		return magnitude;
 	}
 	
-	/**
-	 * <p>Returns the length of a side of this Puzzle, which is 
-	 * also the number of rows, the number of columns, and the 
-	 * number of boxes.</p>
-	 * @return the length of a side of this target
-	 */
 	@Override
 	public int sideLength(){
 		return sideLength;

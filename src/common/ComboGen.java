@@ -7,6 +7,14 @@ import java.util.NoSuchElementException;
 import java.util.ArrayList;
 import java.util.Collection;
 
+/**
+ * <p>Generates combinations of the elements in a given combination 
+ * supplied to the constructor.</p>
+ * @author fiveham
+ *
+ * @param <T> the type of the elements in the combinations that this 
+ * class produces
+ */
 public class ComboGen<T> implements Iterable<List<T>>{
 	
 	public static final int MIN_COMBO_SIZE = 0;
@@ -15,16 +23,37 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	private int minSize;
 	private int maxSize;
 	
-	public ComboGen(Collection<T> source, int minSize){
-		this(source, minSize, source.size()-1);
+	/**
+	 * <p>Constructs a ComboGen that produces combinations of elements from 
+	 * <tt>source</tt> that have a size at least <tt>minSide</tt> and at 
+	 * most <tt>source.size()</tt>.</p>
+	 * @param source a collection of elements combinations of which are 
+	 * produced by this ComboGen
+	 * @param minSize the minimum size of the combinations produced by this 
+	 * ComboGen
+	 */
+	public ComboGen(Collection<? extends T> source, int minSize){
+		this(source, minSize, source.size());
 	}
 	
-	public ComboGen(Collection<T> source, int minSize, int maxSize){
+	/**
+	 * <p>Constructs a ComboGen that produces combinations of elements from 
+	 * <tt>source</tt> that have a size at least <tt>minSide</tt> and at 
+	 * most <tt>maxSize</tt>.</p>
+	 * @param source a collection of elements combinations of which are 
+	 * produced by this ComboGen
+	 * @param minSize the minimum size of the combinations produced by this 
+	 * ComboGen
+	 * @param maxSize the maximum size of the combinations produced by this 
+	 * ComboGen
+	 */
+	public ComboGen(Collection<? extends T> source, int minSize, int maxSize){
 		this.list = new ArrayList<>(source);
 		this.minSize = minSize;
 		this.maxSize = maxSize;
 	}
 	
+	@Override
 	public Iterator<List<T>> iterator(){
 		return new ComboIterator();
 	}

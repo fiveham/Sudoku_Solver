@@ -10,12 +10,10 @@ public class Initializer extends Technique {
 	
 	@Override
 	protected SolutionEvent process() {
-		for(Fact f : target.factStream().collect(Collectors.toSet())){
-			if(f instanceof Init){
-				SolutionEvent result = new Initialization((Init) f);
-				f.validateFinalState(result);
-				return result;
-			}
+		for(Fact f : target.factStream().filter((f) -> f instanceof Init).collect(Collectors.toSet())){
+			SolutionEvent result = new Initialization((Init) f);
+			f.validateFinalState(result);
+			return result;
 		}
 		return null;
 	}

@@ -10,10 +10,10 @@ import java.util.function.Function;
 import java.util.function.BiPredicate;
 
 /**
- * Given a starting collection, this class produces every allowed combination 
+ * <p>Given a starting collection, this class produces every allowed combination 
  * of elements from that collection. Every combination is allowed by default 
  * unless one or more of its elements has been {@link #remove() removed} from 
- * the source collection.
+ * the source collection.</p>
  * @author fiveham
  *
  * @param <T>
@@ -25,41 +25,85 @@ public class ComboGenIso<T> implements Iterable<List<T>>{
 	private int maxSize;
 	private Direction direction;
 	
-	public ComboGenIso(Collection<T> source, int minSize){
-		this(source, minSize, source.size()-1, Direction.INCREASE);
+	/**
+	 * <p>Constructs a ComboGenIso that produces combinations of the 
+	 * elements in <tt>source</tt> with a minimum size of 
+	 * <tt>minSize</tt>, a maximum size of <tt>source.size()</tt>, 
+	 * and an increasing <tt>Direction</tt>.</p>
+	 * @param source the initial collection of elements combinations 
+	 * of which are produced by this ComboGenIso
+	 * @param minSize the minimum size of combinations produced by 
+	 * this ComboGenIso
+	 */
+	public ComboGenIso(Collection<? extends T> source, int minSize){
+		this(source, minSize, source.size(), Direction.INCREASE);
 	}
 	
-	public ComboGenIso(Collection<T> source, int minSize, int maxSize){
+	/**
+	 * <p>Constructs a ComboGenIso that produces combinations of the 
+	 * elements in <tt>source</tt> with a minimum size of 
+	 * <tt>minSize</tt>, a maximum size of <tt>maxSize</tt>, 
+	 * and an increasing <tt>Direction</tt>.</p>
+	 * @param source the initial collection of elements combinations 
+	 * of which are produced by this ComboGenIso
+	 * @param minSize the minimum size of the combinations produced 
+	 * by this ComboGenIso
+	 * @param maxSize the maximum size of the combinations produced 
+	 * by this ComboGenIso
+	 */
+	public ComboGenIso(Collection<? extends T> source, int minSize, int maxSize){
 		this(source, minSize, maxSize, Direction.INCREASE);
 	}
 	
-	public ComboGenIso(Collection<T> source, int minSize, int maxSize, Direction direction){
+	/**
+	 * <p>Constructs a ComboGenIso that produces combinations of the 
+	 * elements in <tt>source</tt> with a minimum size of 
+	 * <tt>minSize</tt>, a maximum size of <tt>maxSize</tt>, 
+	 * and the specified <tt>direction</tt>.</p>
+	 * @param source the initial collection of elements combinations 
+	 * of which are produced by this ComboGenIso
+	 * @param minSize the minimum size of the combinations produced 
+	 * by this ComboGenIso
+	 * @param maxSize the maximum size of the combinations produced 
+	 * by this ComboGenIso
+	 * @param direction the {@link ComboGenIso.Direction Direction} 
+	 * of motion that this ComboGenIso takes in combination-space
+	 */
+	public ComboGenIso(Collection<? extends T> source, int minSize, int maxSize, Direction direction){
 		this.list = new ArrayList<>(source);
 		this.minSize = minSize;
 		this.maxSize = maxSize;
 		this.direction = direction;
 	}
 	
+	/**
+	 * <p>Sets this ComboGenIso's direction to the specified <tt>direction</tt>.</p>
+	 * @param direction the new direction of motion that this ComboGenIso takes 
+	 * in combination-space
+	 */
 	public void setDirection(Direction direction){
 		this.direction = direction;
 	}
 	
+	/**
+	 * <p>Returns a {@link ComboGenIso.ComboIterator ComboIterator} that 
+	 * outputs combinations of elements from this ComboGenIso's underlying 
+	 * collection of elements.</p>
+	 * @return a ComboIterator that outputs combinations of elements from 
+	 * this ComboGenIso's underlying collection of elements
+	 */
 	@Override
-	public Iterator<List<T>> iterator(){
-		return new ComboIterator<>(this);
-	}
-	
-	public ComboIterator<T> comboIterator(){
+	public ComboIterator<T> iterator(){
 		return new ComboIterator<>(this);
 	}
 	
 	/**
-	 * A combination-navigating iterator for this ComboGen's underlying 
-	 * collection.
+	 * <p>A combination-navigating iterator for this ComboGen's underlying 
+	 * collection.</p>
 	 * 
-	 * Produces collections of varying sizes from the underlying 
-	 * collection, starting from a size of minMag and increasing to 
-	 * maxMag.
+	 * <p>Produces collections of varying sizes from the underlying 
+	 * collection, starting from a size of <tt>minSize</tt> and increasing 
+	 * to <tt>maxSize</tt>.</p>
 	 */
 	public static class ComboIterator<T> implements Iterator<List<T>>{
 		
@@ -98,10 +142,6 @@ public class ComboGenIso<T> implements Iterable<List<T>>{
 			return result;
 		}
 		
-		/**
-		 * Returns whether the iterator has a non-empty
-		 * next combination.
-		 */
 		@Override
 		public boolean hasNext(){
 			return genNext(prevResult, owner) != null;
@@ -174,26 +214,7 @@ public class ComboGenIso<T> implements Iterable<List<T>>{
 			}
 		}
 		
-		/**
-		 * Returns a T containing the last N elements from baseList.
-		 * 
-		 * Normally this would return an S with the first N elements, 
-		 * but the bit-manipulation used for iterating over combinations 
-		 * is more easily understood if the first combination has 
-		 * elements with the highest indices instead of with the lowest 
-		 * indices.
-		 * @return
-		 */
 		private BigInteger firstComboAtSize(){
-			/*StringBuilder sb = new StringBuilder(owner.list.size());
-			int i=0;
-			for(;i<comboSize; ++i ){
-				sb.append("1");
-			}
-			for(;i<owner.list.size(); ++i){
-				sb.append("0");
-			}
-			return new BigInteger(sb.toString(), 2);*/
 			BigInteger result = BigInteger.ZERO;
 			
 			for(int i = owner.list.size()-comboSize; i<owner.list.size(); ++i){
@@ -211,13 +232,15 @@ public class ComboGenIso<T> implements Iterable<List<T>>{
 		 */
 		@Override
 		public void remove(){
-			disallowed = disallowed.or(prevResult);
+			if(disallowed.equals(disallowed = disallowed.or(prevResult))){
+				throw new IllegalStateException("remove() has already been called since the last next() call.");
+			}
 		}
 		
 		/**
-		 * <p>Prevents <tt>t</tt> from appearing in any subsequent combos 
+		 * <p>Prevents <tt>t</tt> from appearing in any subsequent combinations  
 		 * returned by {@link #next() next()}.</p>
-		 * @param t
+		 * @param t an element of this ComboGenIso's backing collection
 		 */
 		public void remove(T t){
 			int i = owner.list.indexOf(t);
@@ -233,7 +256,7 @@ public class ComboGenIso<T> implements Iterable<List<T>>{
 		 * @return the lowest index for which a swap can be executed, 
 		 * or returns list.size() if no swap can be executed
 		 */
-		public static int getSwapIndex(BigInteger bi, int listSize){
+		private static int getSwapIndex(BigInteger bi, int listSize){
 			int i=0;
 			for(; i<listSize; ++i){
 				if(canSwap(i, bi)){
@@ -256,7 +279,7 @@ public class ComboGenIso<T> implements Iterable<List<T>>{
 		 * @param index
 		 * @return
 		 */
-		public static boolean canSwap(int index, BigInteger bi){
+		private static boolean canSwap(int index, BigInteger bi){
 			return index>0 && bi.testBit(index) && !bi.testBit(index-1);
 		}
 		
@@ -272,7 +295,7 @@ public class ComboGenIso<T> implements Iterable<List<T>>{
 		 * step to 0.
 		 * @param index
 		 */
-		public static BigInteger swap(int index, BigInteger bi){
+		private static BigInteger swap(int index, BigInteger bi){
 			bi = bi.flipBit(index).flipBit(index-1);
 			int ones = getLowerOnes(index-1, bi);
 			
@@ -303,8 +326,24 @@ public class ComboGenIso<T> implements Iterable<List<T>>{
 		}
 	}
 	
+	/**
+	 * <p>Represents the direction of motion of a ComboGenIso in linear 
+	 * combination-space in terms of the size of the combinations.</p>
+	 * @author fiveham
+	 *
+	 */
 	public static enum Direction{
+		
+		/**
+		 * <p>Refers to motion in combination-space such that the 
+		 * sizes of traversed combinations increase.</p>
+		 */
 		INCREASE( 1, (c)->c.minSize, (o,i)->i<=o.maxSize), 
+		
+		/**
+		 * <p>Refers to motion in combination-space such that the 
+		 * sizes of traversed combinations decrease.</p>
+		 */
 		DECREASE(-1, (c)->c.maxSize, (o,i)->o.minSize<=i);
 		
 		private final int increment;
@@ -316,11 +355,28 @@ public class ComboGenIso<T> implements Iterable<List<T>>{
 			this.ics = ics;
 			this.comboSizeChangeTest = comboSizeChangeTest;
 		}
+		
+		/**
+		 * <p>Returns the combination-space position-difference for 
+		 * this Direction.</p>
+		 * @return the combination-space position-difference for 
+		 * this Direction
+		 */
 		public int increment(){
 			return increment;
 		}
+		
+		/**
+		 * <p>Returns the initial size of the combinations for a ComboGenIso 
+		 * having this Direction.</p>
+		 * <p>For a typical, increasing ComboGenIso, the initial combo size 
+		 * is <tt>minSize</tt>, but for a ComboGenIso initialized with the 
+		 * DECREASE Direction, the initial combo size is <tt>maxSize</tt>.</p>
+		 * @param cgi
+		 * @return
+		 */
 		public int initComboSize(ComboGenIso<?> cgi){
-			return ics.apply(cgi) - increment;
+			return ics.apply(cgi) - increment; //TODO why is there a minus here?
 		}
 	}
 }

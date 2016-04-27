@@ -330,7 +330,10 @@ public class VoxelModel extends Box{
 	}
 	
 	/**
-	 * <p></p>
+	 * <p>A spatial dimension, x, y, or z, uniting the index of the 
+	 * {@link #vanishSigns() contract-sign} for that dimension, the box-thickness 
+	 * property for that dimension, and the spatial position component property 
+	 * for that dimension.</p>
 	 * @author fiveham
 	 *
 	 */

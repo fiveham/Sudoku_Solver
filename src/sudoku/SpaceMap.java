@@ -1,10 +1,12 @@
 package sudoku;
 
+import common.NCuboid;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 import sudoku.Puzzle.IndexValue;
 import sudoku.Puzzle.IndexInstance;
-import java.util.stream.Collectors;
 
 /**
  * <p>Wraps a three-dimensional array of Claims in order to 
@@ -14,9 +16,12 @@ import java.util.stream.Collectors;
  * <p>Using only {@link Puzzle#claimStream() claimStream()} to 
  * find the one Claim with specific coordinates is a O(n^6) technique, 
  * where n is the magnitude of the target. Accessing the desired 
- * Claim directly via its spatial coordinates can be acheived in 
- * O(1) time.</p>
- * 
+ * Claim directly via its spatial coordinates can be achieved in 
+ * O(1) time when storing them in an array or ordering them in 
+ * the Puzzle's underlying Graph's underlying list of vertices. 
+ * Providing a secondary means to access Claims in a spatial 
+ * manner is preferable to adding extra constraints onto the 
+ * backing collection of vertices for the puzzle's Graph.</p>
  * @author fiveham
  *
  */
@@ -111,42 +116,36 @@ public class SpaceMap implements Iterable<Claim>{
 	
 	/**
 	 * <p>An Iterator<Claim> that traverses the claim-space starting 
-	 * from 0,0,0 by incrementing z, then maybe y if z overflowed, 
-	 * then maybe x if y overflowed.</p>
+	 * from 0,0,0, ending at the opposite vertex, and passing through 
+	 * all the Claim coordinates.</p>
 	 * @author fiveham
 	 *
 	 */
 	private class ClaimIterator implements Iterator<Claim>{
-		private int x = 0;
-		private int y = 0;
-		private int z = 0;
+		private final Iterator<List<Integer>> cubeIterator;
+		
+		private ClaimIterator(){
+			List<Integer> ints = puzzle.getIndices().stream().map((iv)->iv.intValue()).collect(Collectors.toList());
+			List<List<Integer>> dims = new ArrayList<>();
+			for(int i=0; i<Puzzle.DIMENSION_COUNT; ++i){
+				dims.add(ints);
+			}
+			this.cubeIterator =  new NCuboid<Integer>(dims).iterator();
+			
+		}
 		
 		@Override
 		public boolean hasNext(){
-			return x<puzzle.sideLength() &&  y<puzzle.sideLength() && z<puzzle.sideLength();
+			return cubeIterator.hasNext();
 		}
 		
 		@Override
 		public Claim next(){
-			Claim result = get(x,y,z);
-			updateCoords();
-			return result;
-		}
-		
-		/**
-		 * <p>Increments z, but resets it to 0 and increments y if z is 
-		 * too large after incrementing (if z == target.sideLength()), 
-		 * but resets y to 0 and increments x if y is too large after 
-		 * incrementing.</p>
-		 */
-		private void updateCoords(){
-			if(++z==puzzle.sideLength()){
-				z=0;
-				if(++y==puzzle.sideLength()){
-					y=0;
-					++x;
-				}
-			}
+			List<Integer> coords = cubeIterator.next();
+			int x = coords.get(0);
+			int y = coords.get(1);
+			int z = coords.get(2);
+			return get(x,y,z);
 		}
 	}
 }

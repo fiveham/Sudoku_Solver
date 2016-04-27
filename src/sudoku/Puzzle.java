@@ -211,6 +211,14 @@ public class Puzzle extends SudokuNetwork{
 	}
 	
 	/**
+	 * <p>Returns this Puzzle's list of indices.</p>
+	 * @return this Puzzle's list of indices
+	 */
+	List<IndexValue> getIndices(){
+		return indices;
+	}
+	
+	/**
 	 * <p>Returns the minimum IndexValue in this Puzzle.</p>
 	 * @return the minimum IndexValue in this Puzzle.
 	 */
