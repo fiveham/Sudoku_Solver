@@ -1,6 +1,6 @@
 package sudoku;
 
-import common.ComboGenIso;
+import common.ComboGen;
 import common.NCuboid;
 import common.TestIterator;
 import common.graph.BasicGraph;
@@ -98,14 +98,14 @@ public class SledgeHammer2 extends Technique {
 		
 		//For each disjoint source combo
 		Set<Fact> rules = ruleSubgraph.nodeStream().map((n)->n.wrapped()).collect(Collectors.toSet());
-		ComboGenIso<Fact> reds = new ComboGenIso<>(rules, MIN_SRC_COMBO_SIZE, ruleSubgraph.size()/2);
+		ComboGen<Fact> reds = new ComboGen<>(rules, MIN_SRC_COMBO_SIZE, ruleSubgraph.size()/2);
 		for(UnionIterator redIterator = new UnionIterator(reds.iterator()); redIterator.hasNext(); ){
 			List<Fact> srcCombo = redIterator.next();
 			ToolSet<Claim> srcUnion = redIterator.getUnion();
 			
 			//For each conceivable recipient combo
 			Set<Fact> nearbyRules = rulesIntersecting(srcUnion, srcCombo);
-			for(List<Fact> recipientCombo : new ComboGenIso<>(nearbyRules, srcCombo.size(), srcCombo.size())){
+			for(List<Fact> recipientCombo : new ComboGen<>(nearbyRules, srcCombo.size(), srcCombo.size())){
 				
 				//If the source and recipient combos make a valid sledgehammer scenario
 				Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo, srcUnion); 

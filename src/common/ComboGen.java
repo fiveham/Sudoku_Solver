@@ -53,11 +53,6 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		this.maxSize = maxSize;
 	}
 	
-	@Override
-	public Iterator<List<T>> iterator(){
-		return new ComboIterator();
-	}
-	
 	/**
 	 * <p>Returns an IsoIterator wrapping this ComboGen's normal 
 	 * {@link #iterator() iterator}, allowing elements from the 
@@ -66,8 +61,9 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	 * @return an IsoIterator wrapping this ComboGen's normal 
 	 * {@link #iterator() iterator}
 	 */
-	public IsoIterator<T> isoIterator(){
-		return new IsoIterator<>(iterator());
+	@Override
+	public IsoIterator<T> iterator(){
+		return new IsoIterator<>(new ComboIterator());
 	}
 	
 	/**
