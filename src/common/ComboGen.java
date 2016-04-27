@@ -59,6 +59,18 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	}
 	
 	/**
+	 * <p>Returns an IsoIterator wrapping this ComboGen's normal 
+	 * {@link #iterator() iterator}, allowing elements from the 
+	 * underlying element pool to be excluded from comboes produced 
+	 * by subsequent calls to <tt>next()</tt>.</p>
+	 * @return an IsoIterator wrapping this ComboGen's normal 
+	 * {@link #iterator() iterator}
+	 */
+	public IsoIterator<T> isoIterator(){
+		return new IsoIterator<>(iterator());
+	}
+	
+	/**
 	 * A combination-navigating iterator for this ComboGen's underlying 
 	 * collection.
 	 * 

@@ -17,9 +17,9 @@ import java.util.function.Predicate;
  */
 public class TestIterator<T> implements Iterator<T>{
 	
-	private final List<Predicate<? super T>> tests;
-	private final Iterator<T> wrappedIterator;
-	private T last;
+	protected final List<Predicate<? super T>> tests;
+	protected final Iterator<T> wrappedIterator;
+	protected T last;
 	
 	/**
 	 * <p>Constructs a TestIterator backed internally by the specified Iterator 
