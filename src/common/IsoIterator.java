@@ -34,7 +34,7 @@ public class IsoIterator<T> extends TestIterator<List<T>> {
 	public IsoIterator(Iterator<List<T>> wrappedIterator, Predicate<? super List<? extends T>>... tests) {
 		super(wrappedIterator, tests);
 		this.exclude = new HashSet<>();
-		addTest((combo) -> Collections.disjoint(combo, exclude));
+		addTest(genExcludeTest(exclude));
 	}
 	
 	/**
@@ -48,7 +48,7 @@ public class IsoIterator<T> extends TestIterator<List<T>> {
 	public IsoIterator(Iterator<List<T>> wrappedIterator, Collection<? extends Predicate<? super List<? extends T>>> tests) {
 		super(wrappedIterator, tests);
 		this.exclude = new HashSet<>();
-		addTest((combo) -> Collections.disjoint(combo, exclude));
+		addTest(genExcludeTest(exclude));
 	}
 	
 	/**
@@ -60,7 +60,11 @@ public class IsoIterator<T> extends TestIterator<List<T>> {
 	public IsoIterator(Iterator<List<T>> wrappedIterator) {
 		super(wrappedIterator);
 		this.exclude = new HashSet<>();
-		addTest((combo) -> Collections.disjoint(combo, exclude));
+		addTest(genExcludeTest(exclude));
+	}
+	
+	public static <T> Predicate<List<T>> genExcludeTest(Set<T> exclude){
+		return (list) -> Collections.disjoint(list, exclude);
 	}
 	
 	/**

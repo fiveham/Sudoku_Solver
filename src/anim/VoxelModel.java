@@ -55,12 +55,6 @@ public class VoxelModel extends Box{
 	 * because end-cap VMs are not centered
 	 */
 	
-	/* 
-	 * TODO ensure consistent naming of VoxelModel shape-change methods: 
-	 * use "falsified" for the initial squish that moves a Claim outside of its VoxelModel
-	 * use "vanished" for the subsequent squish that flattens a VoxelModel so it has zero volume
-	 */
-	
 	/**
 	 * <p>Constructs a VoxelModel at the specified <tt>x</tt>,<tt>y</tt>,<tt>z</tt> coordinates in claim-space, with 
 	 * the specified face-offsets, and with coordinates in physical space determined largely by position in claim-space 

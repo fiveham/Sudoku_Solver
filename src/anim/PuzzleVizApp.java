@@ -12,7 +12,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -475,13 +474,9 @@ public class PuzzleVizApp extends Application {
 	 * @return
 	 */
 	public static Timeline genTimeline(Group voxelModels, Puzzle puzzle, ThreadEvent timeRoot){
-		return parallelTimeline(timeRoot, voxelModels, puzzle);
-		//return depthFirstLinearTimeline(puzzle.getTimeBuilder(), voxelModels, puzzle);
-		//return breadthFirstLinearTimeline(puzzle.getTimeBuilder(), voxelModels, puzzle);
-	}
-	
-	public static Timeline parallelTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle){
-		return parallelTimeline(event, voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
+		return parallelTimeline(timeRoot, genModelHandler(voxelModels));
+		//return depthFirstLinearTimeline(timeRoot, genModelHandler(voxelModels));
+		//return breadthFirstLinearTimeline(timeRoot, genModelHandler(voxelModels));
 	}
 	
 	/**
@@ -499,21 +494,17 @@ public class PuzzleVizApp extends Application {
 	 * @param modelHandler
 	 * @return
 	 */
-	private static Timeline parallelTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
+	public static Timeline parallelTimeline(ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
 		Timeline result = solutionEventTimeline(event.wrapped(), modelHandler);
 		
 		result.setOnFinished((ae) -> event.children().parallelStream()
 				.filter(IS_THREADEVENT)
-				.forEach((ct) -> parallelTimeline((ThreadEvent)ct, voxelModels, puzzle, modelHandler).play()));
+				.forEach((ct) -> parallelTimeline((ThreadEvent)ct, modelHandler).play()));
 		
 		return result;
 	}
 	
-	public static Timeline depthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle){
-		return depthFirstLinearTimeline(event, voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
-	}
-	
-	private static Timeline depthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
+	public static Timeline depthFirstLinearTimeline(ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
 		ArrayList<Timeline> timelineList = new ArrayList<>(treeSize(event));
 		timelineList.add(solutionEventTimeline(event.wrapped(), modelHandler));
 		
@@ -547,11 +538,7 @@ public class PuzzleVizApp extends Application {
 		return timelineList;
 	}
 	
-	public static Timeline breadthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle){
-		return breadthFirstLinearTimeline(event, voxelModels, puzzle, genModelHandler(puzzle, voxelModels));
-	}
-	
-	private static Timeline breadthFirstLinearTimeline(ThreadEvent event, Group voxelModels, Puzzle puzzle, Map<Claim,List<VoxelModel>> modelHandler){
+	public static Timeline breadthFirstLinearTimeline(ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
 		Iterator<ThreadEvent> layerIterator = breadthFirstLinearizeTime(event);
 		Timeline result = solutionEventTimeline(layerIterator.next().wrapped(), modelHandler);
 		
@@ -660,47 +647,13 @@ public class PuzzleVizApp extends Application {
 		}
 	}
 	
-	private static Map<Claim,List<VoxelModel>> genModelHandler(Puzzle puzzle, Group voxelModels){
-		Map<Claim,List<VoxelModel>> result = new HashMap<>( (int)Math.pow(puzzle.sideLength(), Puzzle.DIMENSION_COUNT) );
-		
-		List<Node> voxels = voxelModels.getChildren();
-		
-		for(Claim claim : puzzle.claims()){
-			result.put(claim, associates(claim,voxels));
-		}
-		
-		return result;
+	private static Map<Claim,List<VoxelModel>> genModelHandler(Group voxelModels){
+		return voxelModels.getChildren().stream()
+				.filter((c)->c instanceof VoxelModel).map((v)->(VoxelModel)v)
+				.collect(Collectors.groupingBy((v) -> v.getClaim()));
 	}
 	
 	public static final int MODELS_PER_CLAIM = 4;
-	
-	/**
-	 * Returns a list of the VoxelModels in <tt>voxels</tt> that pertain to 
-	 * the specified <tt>claim</tt> assuming that <tt>voxels</tt> was 
-	 * created with its elements in the order implicitly assumed by this 
-	 * method.
-	 * This method assumes that the VoxelModels in <tt>voxels</tt> are 
-	 * ordered such that <tt>claim.linearizeCoords()</tt> is the index in 
-	 * <tt>voxels</tt> of the first model pertaining to <tt>claim</tt> 
-	 * and that the subsequent three models are offset by the third power of 
-	 * target.sideLength. As such, all the VoxelModels in <tt>voxels</tt> 
-	 * pertaining to a certain {@link Puzzle.RegionSpecies pertainsTo} of Rule are 
-	 * grouped together within the list.
-	 * @param claim
-	 * @param voxels
-	 * @return
-	 */
-	private static List<VoxelModel> associates(Claim claim, List<Node> voxels){
-		List<VoxelModel> result = new ArrayList<>(MODELS_PER_CLAIM);
-		
-		int sidelength = claim.getPuzzle().sideLength();
-		int interval = (int)Math.pow(sidelength, Puzzle.DIMENSION_COUNT);
-		for(int i=claim.linearizeCoords(); i < voxels.size(); i += interval){
-			result.add((VoxelModel) voxels.get(i));
-		}
-		
-		return result;
-	}
 	
 	private static Timeline stitch(List<Timeline> timelines){
 		Iterator<Timeline> iter = timelines.iterator();
