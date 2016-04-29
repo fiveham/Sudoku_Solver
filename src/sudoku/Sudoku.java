@@ -10,6 +10,11 @@ import java.util.stream.Stream;
  */
 public interface Sudoku extends Graph<NodeSet<?,?>>{
 	
+	/**
+	 * <p>Returns true if this Sudoku is solved, false otherwise. A Sudoku is 
+	 * solved if all its Facts contain only one truth-claim.</p>
+	 * @return true if this Sudoku is solved, false otherwise
+	 */
 	public boolean isSolved();
 	
 	/**
