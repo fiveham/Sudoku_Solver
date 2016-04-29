@@ -10,7 +10,7 @@ import java.util.Collection;
  * 
  * <p>Known solution events include<ul>
  * <li>{@link Puzzle.Initialization Initialization}</li>
- * <li>{@link SledgeHammer2.TimeSledgeHammer2Found Sledgehammer}</li>
+ * <li>{@link Sledgehammer.TimeSledgeHammer2Found Sledgehammer}</li>
  * <li>{@link ColorChain.TimeColorChainInternalContradiction Xor-chain collapse by self-interaction}</li>
  * <li>{@link ColorChain.TimeColorChainCollapseBridges Xor-chain collapse by chain-interaction}</li>
  * <li>{@link ColorChain.TimeColorChainExternalContradiction Elimination of Claims outside a xor-chain}</li>

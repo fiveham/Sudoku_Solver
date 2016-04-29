@@ -194,7 +194,7 @@ public class ColorChain extends Technique {
 				.filter((ns)->(ns.size()==Rule.SIZE_WHEN_XOR && ns instanceof Rule))
 				.map((ns)->(Rule)ns)
 				.collect(Collectors.toSet());
-		Set<Claim> claimsInXors = SledgeHammer2.sideEffectUnion(xors, false);
+		Set<Claim> claimsInXors = Sledgehammer.sideEffectUnion(xors, false);
 		
 		Graph<ColorClaim> wg = new BasicGraph<ColorClaim>(link(claimsInXors, (c1,c2)->c1.intersects(c2)));
 		
@@ -325,8 +325,8 @@ public class ColorChain extends Technique {
 		Graph<ColorClaim> chain0 = chains.get(0);
 		Graph<ColorClaim> chain1 = chains.get(1);
 		
-		Set<Fact> chainUnion0 = SledgeHammer2.sideEffectUnion( chain0.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
-		Set<Fact> chainUnion1 = SledgeHammer2.sideEffectUnion( chain1.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
+		Set<Fact> chainUnion0 = Sledgehammer.sideEffectUnion( chain0.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
+		Set<Fact> chainUnion1 = Sledgehammer.sideEffectUnion( chain1.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
 		
 		Set<Fact> bridges = new HashSet<>(chainUnion0);
 		bridges.retainAll(chainUnion1);

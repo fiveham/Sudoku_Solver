@@ -70,22 +70,12 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		return puzzle;
 	}
 	
-	/**
-	 * <p>Sets this NodeSet's target to <tt>null</tt>, enabling 
-	 * O(1) verification of a NodeSet's removal from its target.</p>
-	 * @return true if this NodeSet's target was changed by this 
-	 * method call, false otherwise
-	 */
-	public boolean losePuzzle(){
-		return puzzle != (puzzle=null);
-	}
-	
 	@Override
 	@SuppressWarnings("unchecked")
-	public final boolean add(T t){
-		boolean result = super.add(t);
+	public boolean add(T e){
+		boolean result = super.add(e);
 		if(result){
-			t.add((S)this);
+			e.add((S)this);
 		}
 		return result;
 	}

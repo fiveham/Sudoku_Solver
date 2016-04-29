@@ -30,7 +30,7 @@ public class Solver implements Runnable{
 	
 	public static final List<Function<Sudoku,Technique>> DEFAULT_PROCESSOR_SOURCE = new ArrayList<>(2);
 	static {
-		DEFAULT_PROCESSOR_SOURCE.add( (sudoku) -> new SledgeHammer2(sudoku) );
+		DEFAULT_PROCESSOR_SOURCE.add( (sudoku) -> new Sledgehammer(sudoku) );
 		DEFAULT_PROCESSOR_SOURCE.add( (sudoku) -> new ColorChain(sudoku) );
 	}
 	

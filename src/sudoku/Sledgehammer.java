@@ -2,12 +2,13 @@ package sudoku;
 
 import common.ComboGen;
 import common.NCuboid;
+import common.Pair;
 import common.TestIterator;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.function.BiPredicate;
 
@@ -53,7 +54,7 @@ import java.util.function.BiPredicate;
  * @author fiveham
  *
  */
-public class SledgeHammer2 extends Technique {
+public class Sledgehammer extends Technique {
 	
 	/**
 	 * <p>The minimum number ({@value}) of Rules in a source combo relevant to Sledgehammer analysis. 
@@ -68,27 +69,31 @@ public class SledgeHammer2 extends Technique {
 	 * <p>Constructs a SledgeHammer2 that works to solve the specified Puzzle.</p>
 	 * @param target the Puzzle that this SledgeHammer2 tries to solve.
 	 */
-	public SledgeHammer2(Sudoku puzzle) {
+	public Sledgehammer(Sudoku puzzle) {
 		super(puzzle);
 	}
 	
 	/**
-	 * <p>Iterates over all the combinations of unique Rules in this 
-	 * Technique's <tt>target</tt> and all the possible same-sized 
-	 * combinations of other Rules near the Rules from the current 
-	 * first combo to find any and all possible sledgehammer solution 
-	 * scenarios.</p>
-	 * @return 
+	 * <p>Iterates over all the possible pairs of source-combination and 
+	 * recipient-combination, checks each pair for validity as a sledgehammer 
+	 * solution scenario, and, if the scenario is valide, resolves it and then 
+	 * returns a SolutionEvent detailing the event and any subsequent automatic 
+	 * resolution events.</p>
+	 * @return a SolutionEvent detailing the sledgehammer solution event that 
+	 * this method found and resolved and detailing any subsequent automatic 
+	 * resolution events as {@link common.time.Time#children() children} of 
+	 * the sledgehammer event, or null if this method made no changes to its 
+	 * <tt>target</tt>
 	 */
 	@Override
-	protected SolutionEvent process(){ //TODO iterate in terms of Pair<List<Rule>,ToolSet<Claim>> and extract both results from next()
+	protected SolutionEvent process(){
 		
 		//For each disjoint source combo
 		Set<Rule> rules = target.factStream().filter((ns)->ns instanceof Rule).map((ns)->(Rule)ns).collect(Collectors.toSet());
 		ComboGen<Rule> reds = new ComboGen<>(rules, MIN_SRC_COMBO_SIZE, rules.size()/2);
-		for(UnionIterator redIterator = new UnionIterator(reds.iterator()); redIterator.hasNext(); ){
-			List<Rule> srcCombo = redIterator.next();
-			ToolSet<Claim> srcUnion = redIterator.getUnion();
+		for(Pair<List<Rule>,ToolSet<Claim>> pair : new UnionIterable(reds)){
+			List<Rule> srcCombo = pair.getA();
+			ToolSet<Claim> srcUnion = pair.getB();
 			
 			//For each conceivable recipient combo
 			Set<Fact> nearbyRules = rulesIntersecting(srcUnion, srcCombo);
@@ -105,42 +110,53 @@ public class SledgeHammer2 extends Technique {
 		return null;
 	}
 	
-	/**
-	 * <p>A TestIterator that intrinsically incorporates a test to 
-	 * ensure that the Rules in the combinations it outputs are all 
-	 * mutually disjoint.</p>
-	 * @author fiveham
-	 *
-	 */
-	private class UnionIterator extends TestIterator<List<Rule>>{
+	private class UnionIterable implements Iterable<Pair<List<Rule>,ToolSet<Claim>>>{
 		
-		ToolSet<Claim> union;
+		Iterable<List<Rule>> wrappedIterable;
 		
-		/**
-		 * <p>Constructs a UnionIterator wrapping <tt>wrappedIterator</tt>.</p>
-		 * @param wrappedIterator an Iterator whose outputs are filtered by 
-		 * this UnionIterator
-		 */
-		UnionIterator(Iterator<List<Rule>> wrappedIterator){
-			super(wrappedIterator);
-			addTest((ruleList)->setUnion(sideEffectUnion(ruleList,true))!=null);
+		UnionIterable(Iterable<List<Rule>> iterable){
+			wrappedIterable = iterable;
 		}
 		
-		/**
-		 * <p>Sets this UnionIterator's <tt>union</tt></p>
-		 * @param union the new <tt>union</tt> of this UnionIterator
-		 * @return the parameter <tt>union</tt>
-		 */
-		ToolSet<Claim> setUnion(ToolSet<Claim> union){
-			return this.union = union;
-		}
-		
-		/**
-		 * <p>Returns this UnionIterator's <tt>union</tt>.</p>
-		 * @return this UnionIterator's <tt>union</tt>
-		 */
-		ToolSet<Claim> getUnion(){
-			return this.union;
+		@Override
+		public Iterator<Pair<List<Rule>,ToolSet<Claim>>> iterator(){
+			class UnionIterator implements Iterator<Pair<List<Rule>,ToolSet<Claim>>>{
+				
+				ToolSet<Claim> union;
+				Iterator<List<Rule>> wrappedIterator;
+				
+				/**
+				 * <p>Constructs a UnionIterator wrapping <tt>wrappedIterator</tt>.</p>
+				 * @param wrappedIterator an Iterator whose outputs are filtered by 
+				 * this UnionIterator
+				 */
+				UnionIterator(Iterable<List<Rule>> iterable){
+					TestIterator<List<Rule>> wrappedIterator = new TestIterator<>(iterable.iterator());
+					wrappedIterator.addTest((ruleList)->setUnion(sideEffectUnion(ruleList,true))!=null);
+					this.wrappedIterator = wrappedIterator;;
+					this.union = new ToolSet<>(0);
+				}
+				
+				@Override
+				public boolean hasNext(){
+					return wrappedIterator.hasNext();
+				}
+				
+				@Override
+				public Pair<List<Rule>,ToolSet<Claim>> next(){
+					return new Pair<>(wrappedIterator.next(),this.union);
+				}
+				
+				/**
+				 * <p>Sets this UnionIterator's <tt>union</tt></p>
+				 * @param union the new <tt>union</tt> of this UnionIterator
+				 * @return the parameter <tt>union</tt>
+				 */
+				ToolSet<Claim> setUnion(ToolSet<Claim> union){
+					return this.union = union;
+				}
+			}
+			return new UnionIterator(wrappedIterable);
 		}
 	}
 	
@@ -267,7 +283,7 @@ public class SledgeHammer2 extends Technique {
 	 * from possible to false, false otherwise.
 	 */
 	private SolutionEvent resolve(Collection<Claim> claimsToSetFalse){
-		SolutionEvent time = new SolveEventSledgeHammer2(claimsToSetFalse);
+		SolutionEvent time = new SolveEventSledgehammer(claimsToSetFalse);
 		claimsToSetFalse.stream().forEach((c)->c.setFalse(time));
 		return time;
 	}
@@ -278,8 +294,8 @@ public class SledgeHammer2 extends Technique {
 	 * @author fiveham
 	 *
 	 */
-	public class SolveEventSledgeHammer2 extends SolutionEvent{
-		private SolveEventSledgeHammer2(Collection<Claim> claimsToSetFalse){
+	public class SolveEventSledgehammer extends SolutionEvent{
+		private SolveEventSledgehammer(Collection<Claim> claimsToSetFalse){
 			falsified().addAll(claimsToSetFalse);
 		}
 	}
@@ -287,7 +303,7 @@ public class SledgeHammer2 extends Technique {
 	/**
 	 * <p>Returns a set of all the Rules that intersect any of the 
 	 * Rules in <tt>sources</tt>.</p>
-	 * @param union a pre-computed {@link SledgeHammer2#sideEffectUnion(Collection, boolean) mass-union} 
+	 * @param union a pre-computed {@link Sledgehammer#sideEffectUnion(Collection, boolean) mass-union} 
 	 * of the Claims in the Rules in <tt>sources</tt>
 	 * @param sources a collection of Rules to be used as an originating 
 	 * combination for a sledgehammer solution event

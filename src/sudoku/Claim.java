@@ -237,7 +237,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * this Claim
 	 */
 	public Set<Claim> visibleClaims(){
-		Set<Claim> neighborsOfNeighbors = SledgeHammer2.sideEffectUnion(this,false);
+		Set<Claim> neighborsOfNeighbors = Sledgehammer.sideEffectUnion(this,false);
 		neighborsOfNeighbors.remove(this);
 		return neighborsOfNeighbors;
 	}

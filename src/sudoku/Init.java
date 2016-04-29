@@ -31,6 +31,8 @@ public class Init extends Fact {
 	 */
 	private static final long serialVersionUID = 3700799253734450539L;
 	
+	private Claim claim;
+	
 	/**
 	 * <p>Constructs an Init belonging to the specified <tt>puzzle</tt>, 
 	 * with an initial capacity of {@value #CAPACITY}.</p>
@@ -38,5 +40,21 @@ public class Init extends Fact {
 	 */
 	public Init(Puzzle puzzle) {
 		super(puzzle, CAPACITY);
+	}
+	
+	@Override
+	public boolean add(Claim e){
+		return super.add(this.claim = e);
+	}
+	
+	/**
+	 * <p>Returns the last Claim {@link #add(Claim) added} to this 
+	 * Init. Under ordinary circumstances, the Claim returned is 
+	 * the sole element of this set.</p>
+	 * @return the last Claim {@link #add(Claim) added} to this 
+	 * Init
+	 */
+	public Claim claim(){
+		return this.claim;
 	}
 }
