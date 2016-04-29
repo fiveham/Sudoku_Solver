@@ -15,7 +15,7 @@ import java.util.Iterator;
  */
 public class Pair<T,S> {
 	
-	public static final int ITEM_COUNT_IN_PAIR = 2;
+	public static final int ITEM_COUNT = 2;
 	
 	private T a;
 	private S b;
@@ -39,7 +39,7 @@ public class Pair<T,S> {
 	 */
 	@SuppressWarnings("unchecked")
 	public Pair(Collection<?> c){
-		if(c.size()!=ITEM_COUNT_IN_PAIR){
+		if(c.size()!=ITEM_COUNT){
 			throw new IllegalArgumentException("Need exactly two elements in a collection. Given "+c.size()+"instead");
 		}
 		Iterator<?> iter = c.iterator();

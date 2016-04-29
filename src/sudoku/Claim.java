@@ -45,7 +45,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 		this.x = x;
 		this.y = y;
 		this.symbol = symbol;
-		this.hashCode = linearizeCoords();
+		this.hashCode = linearizeCoords(x.intValue() ,y.intValue() ,symbol.intValue() , puzzle.sideLength());
 	}
 	
 	/**
@@ -138,15 +138,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 */
 	public int getZ(){
 		return symbol.intValue();
-	}
-	
-	/**
-	 * <p>Returns an int that encodes the x, y, and z coordinates of this Claim.</p>
-	 * @see Claim#linearizeCoords(int, int, int, int)
-	 * @return an int that encodes the x, y, and z coordinates of this Claim
-	 */
-	public int linearizeCoords(){
-		return linearizeCoords(x.intValue(), y.intValue(), symbol.intValue(), puzzle.sideLength());
 	}
 	
 	/**

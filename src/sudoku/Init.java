@@ -20,13 +20,6 @@ package sudoku;
 public class Init extends Fact {
 	
 	/**
-	 * <p>The number ({@value}) of Claims that an Init needs to hold.</p>
-	 * <p>An Init simply attaches to one Claim to mark it as true; so, 
-	 * the capacity of an Init need never be more than 1.</p>
-	 */
-	public static final int CAPACITY = 1;
-	
-	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 3700799253734450539L;
@@ -39,7 +32,7 @@ public class Init extends Fact {
 	 * @param puzzle
 	 */
 	public Init(Puzzle puzzle) {
-		super(puzzle, CAPACITY);
+		super(puzzle, SIZE_WHEN_SOLVED);
 	}
 	
 	@Override

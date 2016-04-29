@@ -96,17 +96,17 @@ public class SpaceMap implements Iterable<Claim>{
 	/**
 	 * <p>Returns the Claim in this SpaceMap's target having the specified 
 	 * spatial coordinates.</p>
-	 * @param dim1 a spatial coordinate that specifies its own {@link Puzzle.DimensionType dimension}
-	 * @param dim2 a spatial coordinate that specifies its own {@link Puzzle.DimensionType dimension}
-	 * @param heldConstant a spatial coordinate that specifies its own {@link Puzzle.DimensionType dimension}
+	 * @param dimA a spatial coordinate that specifies its own {@link Puzzle.DimensionType dimension}
+	 * @param dimB a spatial coordinate that specifies its own {@link Puzzle.DimensionType dimension}
+	 * @param dimC a spatial coordinate that specifies its own {@link Puzzle.DimensionType dimension}
 	 * @return the Claim in this SpaceMap's target having the specified 
 	 * spatial coordinates
 	 */
-	public Claim get(IndexInstance dim1, IndexInstance dim2, IndexInstance heldConstant){
-		IndexValue x = puzzle.decodeX(dim1, dim2, heldConstant);
-		IndexValue y = puzzle.decodeY(dim1, dim2, heldConstant);
-		IndexValue s = puzzle.decodeSymbol(dim1, dim2, heldConstant);
-		return get(x, y, s);
+	public Claim get(IndexInstance dimA, IndexInstance dimB, IndexInstance dimC){
+		IndexValue x = puzzle.decodeX(dimA, dimB, dimC);
+		IndexValue y = puzzle.decodeY(dimA, dimB, dimC);
+		IndexValue z = puzzle.decodeSymbol(dimA, dimB, dimC);
+		return get(x, y, z);
 	}
 	
 	@Override

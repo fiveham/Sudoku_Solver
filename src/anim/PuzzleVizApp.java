@@ -182,10 +182,11 @@ public class PuzzleVizApp extends Application {
 	 * @param p the Puzzle whose solution process is being animated
 	 */
 	private static void genBagModels(List<? super VoxelModel> voxels, Puzzle p){
+		int claimCount = (int)Math.pow(p.sideLength(), Puzzle.DIMENSION_COUNT);
 		for(RegionSpecies reg : RegionSpecies.values()){
 			
 			Puzzle.RegionSpecies region = reg.pertainsTo;
-			int offset = reg.ordinal() * (int)Math.pow(p.sideLength(), Puzzle.DIMENSION_COUNT);
+			int offset = reg.ordinal() * claimCount;
 			
 			for(IndexInstance dimA : region.dimA(p)){
 				

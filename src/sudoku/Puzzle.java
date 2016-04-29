@@ -534,8 +534,6 @@ public class Puzzle extends SudokuNetwork{
 		 */
 		COLUMN	(DimensionType.SYMBOL, DimensionType.X,   DimensionType.Y,              (byte)8);
 		
-		public static final byte ALL_TYPES = (byte)15;
-		
 		private final DimensionType dimAType;
 		private final DimensionType dimBType;
 		private final DimensionType dimCType;

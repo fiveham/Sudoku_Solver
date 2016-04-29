@@ -21,7 +21,7 @@ public class Rule extends Fact{
 	 * because exactly one of them is true and the other is false. Given 
 	 * that we know that the Rule is satisfied (is <tt>true</tt>), the 
 	 * Claims, as inputs to the Rule, make such a Rule a <tt>xor</tt> 
-	 * operation.</p>
+	 * operation on its neighbors.</p>
 	 */
 	public static final int SIZE_WHEN_XOR = 2;
 	

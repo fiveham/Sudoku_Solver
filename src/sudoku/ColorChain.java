@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -174,12 +173,6 @@ public class ColorChain extends Technique {
 		
 		return null;
 	}
-	
-	/**
-	 * <p>Returns true if the specified Rule is equivalent to a <tt>xor</tt>, 
-	 * having exactly two neighboring Claims.</p>
-	 */
-	public static final Predicate<Rule> RULE_IS_XOR = (r) -> r.size() == Rule.SIZE_WHEN_XOR;
 	
 	/**
 	 * <p>Isolates those Rules in the target which have two Claims, makes 
@@ -389,6 +382,9 @@ public class ColorChain extends Technique {
 	 * <p>The number ({@value}) of colors that a xor-chain collapseable as the result 
 	 * of chain-chain interaction has on the bridge that mediates that chain-chain 
 	 * interaction.</p>
+	 * 
+	 * <p>A bridge between two chains is constituted by a pair of non-<tt>xor</tt> 
+	 * Rules each of which has a Claim (neighbor) in each of the two bridged chains.</p>
 	 */
 	public static final int COLORS_ON_BRIDGE_FOR_COLLAPSEABLE_CHAIN = 1;
 	

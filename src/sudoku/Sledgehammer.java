@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.function.BiPredicate;
 
 /**
  * <p>The sledgehammer technique for solving sudoku puzzles is defined 
@@ -159,12 +158,6 @@ public class Sledgehammer extends Technique {
 			return new UnionIterator(wrappedIterable);
 		}
 	}
-	
-	/**
-	 * <p>Outputs <tt>true<tt> when Facts share at least one Claim 
-	 * neighbor in common, <tt>false</tt> otherwise.</p>
-	 */
-	public static final BiPredicate<Fact,Fact> RULES_CONNECT = (f1,f2) -> f1.intersects(f2);
 	
 	/**
 	 * <p>If the specified lists of source and recipient Rules together constitute a valid 

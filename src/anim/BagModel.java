@@ -107,10 +107,10 @@ public class BagModel {
 		
 		for(double time = postDisoccupyLength; 
 				0 != removeEmptyVoxels(unoccupiedMarkedVoxels, timeline, time);
-				time += CONTRACT_TRANSITION_TIME);
+				time += VANISH_TRANSITION_TIME);
 	}
 	
-	public static final double CONTRACT_TRANSITION_TIME = VoxelModel.COMPRESS_TRANSITION_TIME;
+	public static final double VANISH_TRANSITION_TIME = VoxelModel.FALSIFY_TRANSITION_TIME;
 	
 	/**
 	 * <p>Removes from <tt>emptyVoxels</tt> all the Claims that are at an extreme position 

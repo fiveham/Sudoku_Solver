@@ -19,27 +19,18 @@ public class VoxelModel extends Box{
 	 * <p>The fraction of the edge-length of a true voxel which is the 
 	 * thickness of an unoccupied VoxelModel.</p>
 	 */
-	public static final double UNOCCUPIED_FRACTION = 0.3;
+	public static final double FALSIFIED_FRACTION = 0.3; //*/
 	
 	/**
 	 * <p>The width, height, and depth of a voxel model ({@value}).</p>
 	 */
-	public static final double VOXEL_EDGE = 1.0;
-	
-	/**
-	 * <p>Half of {@link #VOXEL_EDGE VOXEL_EDGE}, which is the distance 
-	 * that a voxel model has to move in a given dimension while collapsing 
-	 * along that dimension. Under that circumstance, a voxel model has to 
-	 * translate by half its thickness in order to keep the ostensibly non-
-	 * moving face fixed in space.</p>
-	 */
-	public static final double VOXEL_HALF = VOXEL_EDGE/2;
+	public static final double VOXEL_EDGE = 1.0; //*/
 	
 	/**
 	 * <p>Thickness of a voxel model in its squished dimension after it has 
 	 * been squished pursuant to its Claim being determined false.</p>
 	 */
-	public static final double COMPRESSED_THICKNESS = VOXEL_EDGE * UNOCCUPIED_FRACTION;
+	public static final double FALSIFIED_THICKNESS = VOXEL_EDGE * FALSIFIED_FRACTION;
 	
 	private final Puzzle puzzle;
 	private final int x;
@@ -51,7 +42,7 @@ public class VoxelModel extends Box{
 	private Status status;
 	
 	/* 
-	 * TODO check for and correct evacuation-translations that assume all VMs are centered on their true voxel 
+	 * TODO check for and correct vanish-translations that assume all VMs are centered on their true voxel 
 	 * because end-cap VMs are not centered
 	 */
 	
@@ -161,7 +152,7 @@ public class VoxelModel extends Box{
 		}
 	}
 	
-	public static final double COMPRESS_TRANSITION_TIME = 1000;
+	public static final double FALSIFY_TRANSITION_TIME = 1000;
 	
 	/**
 	 * <p>An empty array (varargs substitute) of KeyFrame, used to unambiguously 
@@ -183,7 +174,7 @@ public class VoxelModel extends Box{
 	 */
 	KeyFrame[] falsify(double initTime){
 		if( status != (status = Status.FALSIFIED) ){
-			return new KeyFrame[]{ new KeyFrame(durationFromTime(COMPRESS_TRANSITION_TIME+initTime), keyValuesFalsify()) };
+			return new KeyFrame[]{ new KeyFrame(durationFromTime(FALSIFY_TRANSITION_TIME+initTime), keyValuesFalsify()) };
 		} else{
 			return NO_KEYFRAMES;
 		}
@@ -198,7 +189,7 @@ public class VoxelModel extends Box{
 	 */
 	KeyFrame[] vanish(double initTime){
 		Duration periodStart = durationFromTime(initTime);
-		Duration periodEnd = durationFromTime(initTime+COMPRESS_TRANSITION_TIME);
+		Duration periodEnd = durationFromTime(initTime+FALSIFY_TRANSITION_TIME);
 		
 		KeyFrame[] result = new KeyFrame[]{
 				new KeyFrame(periodStart, keyValuesCurrentState()),
@@ -259,7 +250,7 @@ public class VoxelModel extends Box{
 		DoubleProperty shrinkThicknessProperty = type.shrinkThicknessProperty(this);
 		DoubleProperty shiftDimensionProperty = type.shiftProperty(this);
 		
-		KeyValue squish = new KeyValue(shrinkThicknessProperty, COMPRESSED_THICKNESS);
+		KeyValue squish = new KeyValue(shrinkThicknessProperty, FALSIFIED_THICKNESS);
 		KeyValue shift = new KeyValue(shiftDimensionProperty, shrinkThicknessProperty.get()/2);
 		
 		return new KeyValue[]{squish, shift};
@@ -281,7 +272,7 @@ public class VoxelModel extends Box{
 	 * @see #vanishSign(int,BagModel,Function)
 	 * @see #vanishSigns()
 	 */
-	private static final int CONTRACT_NEGATIVE = -1;
+	private static final int VANISH_NEGATIVE_DIR = -1;
 	
 	/**
 	 * <p>The sign of the collapse of a voxel model collapsing such that 
@@ -290,7 +281,7 @@ public class VoxelModel extends Box{
 	 * @see #vanishSign(int,BagModel,Function)
 	 * @see #vanishSigns()
 	 */
-	private static final int CONTRACT_POSITIVE = 1;
+	private static final int VANISH_POSITIVE_DIR = 1;
 	
 	/**
 	 * <p>The sign of the collapse of a voxel model that is not collapsing 
@@ -298,7 +289,7 @@ public class VoxelModel extends Box{
 	 * @see #vanishSign(int,BagModel,Function)
 	 * @see #vanishSigns()
 	 */
-	private static final int CONTRACT_NOT = 0;
+	private static final int VANISH_NOT = 0;
 	
 	/**
 	 * <p>Returns an array of KeyValues describing the state of this VoxelModel 
@@ -312,7 +303,7 @@ public class VoxelModel extends Box{
 		ArrayList<KeyValue> result = new ArrayList<>(6);
 		
 		for(Dimension dimension : Dimension.values()){
-			if( vanishSigns[dimension.dimNo] != CONTRACT_NOT ){
+			if( vanishSigns[dimension.dimNo] != VANISH_NOT ){
 				DoubleProperty thickness = dimension.thicknessProperty(this);
 				DoubleProperty translation = dimension.translateProperty(this);
 				result.add(new KeyValue(thickness, FLAT));
@@ -389,8 +380,8 @@ public class VoxelModel extends Box{
 	}
 	
 	/**
-	 * <p>Returns an int ({@link #CONTRACT_NEGATIVE -1}, {@link #CONTRACT_NOT 0}, 
-	 * or {@link #CONTRACT_POSITIVE 1} specifying the direction in which this 
+	 * <p>Returns an int ({@link #VANISH_NEGATIVE_DIR -1}, {@link #VANISH_NOT 0}, 
+	 * or {@link #VANISH_POSITIVE_DIR 1} specifying the direction in which this 
 	 * VoxelModel is collapsing.</p>
 	 * 
 	 * <p>If this model does not need to collapse when this method is called, 
@@ -401,8 +392,8 @@ public class VoxelModel extends Box{
 	 * 
 	 * @param dim a value 
 	 * @param claimSrc
-	 * @return an int ({@link #CONTRACT_NEGATIVE -1}, {@link #CONTRACT_NOT 0}, 
-	 * or {@link #CONTRACT_POSITIVE 1} specifying the direction in which this 
+	 * @return an int ({@link #VANISH_NEGATIVE_DIR -1}, {@link #VANISH_NOT 0}, 
+	 * or {@link #VANISH_POSITIVE_DIR 1} specifying the direction in which this 
 	 * VoxelModel is collapsing
 	 */
 	private static int vanishSign(int dim, BagModel ownerBag, Function<Integer,Claim> thing){
@@ -413,11 +404,11 @@ public class VoxelModel extends Box{
 		boolean hasPositiveDirectionNeighbor = ownerBag.map().containsKey(claimPos);
 		
 		if( !hasNegativeDirectionNeighbor && hasPositiveDirectionNeighbor ){
-			return CONTRACT_POSITIVE;
+			return VANISH_POSITIVE_DIR;
 		} else if( hasNegativeDirectionNeighbor && !hasPositiveDirectionNeighbor ){
-			return CONTRACT_NEGATIVE;
+			return VANISH_NEGATIVE_DIR;
 		} else{
-			return CONTRACT_NOT;
+			return VANISH_NOT;
 		}
 	}
 	
@@ -451,7 +442,7 @@ public class VoxelModel extends Box{
 	public boolean equals(Object o){
 		if(o instanceof VoxelModel){
 			VoxelModel vm = (VoxelModel)o;
-			return puzzle == vm.puzzle && x == vm.x && y == vm.y && z == vm.z && type == vm.type && ownerBag == vm.ownerBag;
+			return puzzle == vm.puzzle && ownerBag == vm.ownerBag && x == vm.x && y == vm.y && z == vm.z && type == vm.type;
 		}
 		return false;
 	}
