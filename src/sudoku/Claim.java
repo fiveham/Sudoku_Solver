@@ -81,7 +81,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * @return a space if this Claim is known false, the human readable 
 	 * text for this Claim's symbol otherwise
 	 */
-	public String possText(){
+	String possText(){
 		return isKnownFalse() ? " " : symbol.humanReadableSymbol();
 	}
 	

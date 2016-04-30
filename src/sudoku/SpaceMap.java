@@ -57,7 +57,7 @@ public class SpaceMap implements Iterable<Claim>{
 	 * @return a single-character string describing the value of the 
 	 * cell at x,y in the map's target
 	 */
-	public String getPrintingValue(IndexValue x, IndexValue y){
+	String getPrintingValue(IndexValue x, IndexValue y){
 		List<IndexValue> symbols = puzzle.indexValues().stream().filter((symbol)->!get(x,y,symbol).isKnownFalse()).collect(Collectors.toList());
 		
 		return symbols.size() == Rule.SIZE_WHEN_SOLVED 

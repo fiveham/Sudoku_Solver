@@ -50,4 +50,11 @@ public class Init extends Fact {
 	public Claim claim(){
 		return this.claim;
 	}
+	
+	@Override
+	protected void validateFinalState(SolutionEvent time){
+		if(!claim.isKnownTrue()){
+			claim.setTrue(time);
+		}
+	}
 }

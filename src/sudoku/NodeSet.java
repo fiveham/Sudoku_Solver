@@ -5,6 +5,7 @@ import common.time.Time;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -252,14 +253,15 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		}
 	}
 	
-	/* *
+	/**
 	 * <p>Checks if this NodeSet obeys its own rules after some modification 
 	 * operation has been performed on it, and enforces the consequences of 
-	 * consequence-bearing rules that are broken, including throwing an 
-	 * exception under certain circumstances.</p>
-	 * <p>An empty method provided here so that final-state-validating 
-	 * operations can call it while subclasses provide meaningful 
-	 * implementation.</p>
+	 * consequence-bearing states, including throwing an exception under 
+	 * certain circumstances.</p>
+	 * 
+	 * <p>An empty method is provided here so that methods defined in this 
+	 * class the need to validate the set's final state afterward can call 
+	 * this method while subclasses provide meaningful implementations.</p>
 	 */
 	protected void validateFinalState(SolutionEvent time){
 		//do nothing
@@ -291,6 +293,93 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		public boolean addChild(Time child){
 			return false;
 		}
-		//FIXME add in all the other dummy methods
+		@Override
+		public boolean defers() {
+			return false;
+		}
+		@Override
+		public Time focus() {
+			return this;
+		}
+		@Override
+		public boolean hasChildren() {
+			return false;
+		}
+		@Override
+		public Time parent() {
+			return null;
+		}
+		@Override
+		public boolean hasParent() {
+			return false;
+		}
+		@Override
+		public Time currentTime() {
+			return this;
+		}
+		@Override
+		public List<Time> currentTrail() {
+			return Collections.singletonList(this);
+		}
+		@Override
+		public Time nextTime() {
+			return this;
+		}
+		@Override
+		public boolean hasNextTime() {
+			return false;
+		}
+		@Override
+		public boolean hasPrevTime() {
+			return false;
+		}
+		@Override
+		public Time prevTime() {
+			return this;
+		}
+		@Override
+		public Time nextChild() {
+			return this;
+		}
+		@Override
+		public boolean hasNextChild() {
+			return false;
+		}
+		@Override
+		public boolean hasPrevChild() {
+			return false;
+		}
+		@Override
+		public Time prevChild() {
+			return this;
+		}
+		@Override
+		public Time successor() {
+			return this;
+		}
+		@Override
+		public boolean hasSuccessor() {
+			return false;
+		}
+		@Override
+		public boolean hasPredecessor() {
+			return false;
+		}
+		@Override
+		public Time predecessor() {
+			return this;
+		}
+		@Override
+		public void toStart() {
+			//do nothing
+		}
+		@Override
+		public void toEnd() {
+			//do nothing
+		}
+		@Override
+		public Iterator<Time> iterator() {
+			return currentTrail().iterator();
+		}
 	}
 }

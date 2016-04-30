@@ -2,6 +2,7 @@ package anim;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import javafx.beans.property.DoubleProperty;
@@ -19,12 +20,12 @@ public class VoxelModel extends Box{
 	 * <p>The fraction of the edge-length of a true voxel which is the 
 	 * thickness of an unoccupied VoxelModel.</p>
 	 */
-	public static final double FALSIFIED_FRACTION = 0.3; //*/
+	public static final double FALSIFIED_FRACTION = 0.3;
 	
 	/**
 	 * <p>The width, height, and depth of a voxel model ({@value}).</p>
 	 */
-	public static final double VOXEL_EDGE = 1.0; //*/
+	public static final double VOXEL_EDGE = 1.0;
 	
 	/**
 	 * <p>Thickness of a voxel model in its squished dimension after it has 
@@ -40,11 +41,6 @@ public class VoxelModel extends Box{
 	private BagModel ownerBag;
 	
 	private Status status;
-	
-	/* 
-	 * TODO check for and correct vanish-translations that assume all VMs are centered on their true voxel 
-	 * because end-cap VMs are not centered
-	 */
 	
 	/**
 	 * <p>Constructs a VoxelModel at the specified <tt>x</tt>,<tt>y</tt>,<tt>z</tt> coordinates in claim-space, with 
@@ -152,12 +148,22 @@ public class VoxelModel extends Box{
 		}
 	}
 	
+	/**
+	 * <p>Length in milliseconds of the "falsify" animation where a VoxelModel 
+	 * transforms from a near-cube to a square pancake.</p>
+	 */
 	public static final double FALSIFY_TRANSITION_TIME = 1000;
+	
+	/**
+	 * <p>Length in milliseconds of the "vanish" animation where a VoxelModel 
+	 * transforms from square pancake to a flat plane figure.</p>
+	 */
+	public static final double VANISH_TRANSITION_TIME = 1000;
 	
 	/**
 	 * <p>An empty array (varargs substitute) of KeyFrame, used to unambiguously 
 	 * indicate the case where no KeyFrames are produced by an operation.</p>
-	 * @see #disoccupy()
+	 * @see #falsify()
 	 */
 	public static final KeyFrame[] NO_KEYFRAMES = {};
 	
@@ -174,7 +180,9 @@ public class VoxelModel extends Box{
 	 */
 	KeyFrame[] falsify(double initTime){
 		if( status != (status = Status.FALSIFIED) ){
-			return new KeyFrame[]{ new KeyFrame(durationFromTime(FALSIFY_TRANSITION_TIME+initTime), keyValuesFalsify()) };
+			KeyFrame[] result = { new KeyFrame(durationFromTime(FALSIFY_TRANSITION_TIME+initTime), keyValuesFalsify()) };
+			java.util.stream.Stream.of(result);
+			return result;
 		} else{
 			return NO_KEYFRAMES;
 		}
@@ -189,11 +197,12 @@ public class VoxelModel extends Box{
 	 */
 	KeyFrame[] vanish(double initTime){
 		Duration periodStart = durationFromTime(initTime);
-		Duration periodEnd = durationFromTime(initTime+FALSIFY_TRANSITION_TIME);
+		Duration periodEnd = durationFromTime(initTime+VANISH_TRANSITION_TIME);
 		
+		int[] vanishSigns = vanishSigns();
 		KeyFrame[] result = new KeyFrame[]{
-				new KeyFrame(periodStart, keyValuesCurrentState()),
-				new KeyFrame(periodEnd, (ae)->setVisible(false), keyValuesVanish())
+				new KeyFrame(periodStart, keyValuesCurrentState(vanishSigns)),
+				new KeyFrame(periodEnd, (ae)->setVisible(false), keyValuesVanish(vanishSigns))
 		};
 		
 		status = Status.VANISHED;
@@ -210,16 +219,22 @@ public class VoxelModel extends Box{
 	 * @return an array of KeyValues specifying the geometry and position of this 
 	 * VoxelModel at the time when this method is called
 	 */
-	private KeyValue[] keyValuesCurrentState(){
-		return new KeyValue[]{
-				new KeyValue(widthProperty(), getWidth()),
-				new KeyValue(heightProperty(), getHeight()),
-				new KeyValue(depthProperty(), getDepth()),
-				new KeyValue(translateXProperty(), getTranslateX()),
-				new KeyValue(translateYProperty(), getTranslateY()),
-				new KeyValue(translateZProperty(), getTranslateZ())
-		};
+	private KeyValue[] keyValuesCurrentState(int[] vanishSigns){
+		
+		List<KeyValue> result = new ArrayList<>();
+		for(Dimension dimension : Dimension.values()){
+			if( vanishSigns[dimension.dimNo] != VANISH_NOT ){
+				DoubleProperty thickness = dimension.thicknessProperty(this);
+				DoubleProperty translation = dimension.translateProperty(this);
+				result.add(new KeyValue(thickness, thickness.get()));
+				result.add(new KeyValue(translation, translation.get()));
+			}
+		}
+		
+		return result.toArray(KEYVALUE_ARRAY_TYPE);
 	}
+	
+	private static final KeyValue[] KEYVALUE_ARRAY_TYPE = {};
 	
 	/**
 	 * <p>Returns a two-element array of KeyValues specifying the end-state 
@@ -242,6 +257,7 @@ public class VoxelModel extends Box{
 	 * leave a visible gap between the occupied models being bridged. In the 
 	 * case of cell BagModels, x and y faces are able to acceptably bridge 
 	 * occupied voxels, and the choice of an x-face is arbitrary.</p>
+	 * 
 	 * @return a two-element array of KeyValues specifying the end-state 
 	 * of the voxel model after it has squished in accordance with its 
 	 * Claim being set false
@@ -298,8 +314,7 @@ public class VoxelModel extends Box{
 	 * @return an array of KeyValues describing the state of this VoxelModel 
 	 * after it has collapsed due to its Claim having been set false
 	 */
-	private KeyValue[] keyValuesVanish(){
-		int[] vanishSigns = vanishSigns();
+	private KeyValue[] keyValuesVanish(int[] vanishSigns){
 		ArrayList<KeyValue> result = new ArrayList<>(6);
 		
 		for(Dimension dimension : Dimension.values()){

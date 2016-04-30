@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
  * @param <W>
  * @param <N>
  */
-public class Wrap<W> implements WrapVertex<W,Wrap<W>>{ //XXX identify what the ? in "extends Wrap<W,?>" should really be.
+public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	
 	private final W wrapped;
 	private final List<Wrap<W>> neighbors;
