@@ -8,6 +8,9 @@
 #Eclipse compiled files
 bin
 
+#blank sudoku puzzle file
+puzzles/puzzle.txt
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db

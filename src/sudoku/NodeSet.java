@@ -42,7 +42,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	 */
 	private static final long serialVersionUID = -5327679229184923974L;
 	
-	protected Puzzle puzzle; //nodes are created only once; so, genericizing to allow non-Puzzle Sudokus is not needed
+	protected Puzzle puzzle;
 
 	public NodeSet(Puzzle puzzle){
 		this.puzzle = puzzle;
