@@ -1,6 +1,5 @@
 package sudoku;
 
-import common.graph.Graph;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -50,7 +49,7 @@ public class Solver implements Runnable{
 	private final ThreadEvent eventParent;
 	private ThreadEvent event = null;
 	
-	private final Panopticon watcher;
+	private final Watcher watcher;
 	
 	/**
 	 * <p>Constructs a Solver that works to solve the target defined 
@@ -61,7 +60,7 @@ public class Solver implements Runnable{
 	 * found
 	 */
 	public Solver(String filename) throws FileNotFoundException{
-		this(new Puzzle(new File(filename)), new Panopticon());
+		this(new Puzzle(new File(filename)));
 	}
 	
 	/**
@@ -72,7 +71,7 @@ public class Solver implements Runnable{
 	 * be found
 	 */
 	public Solver(File f) throws FileNotFoundException{
-		this(new Puzzle(f), new Panopticon());
+		this(new Puzzle(f));
 	}
 	
 	/**
@@ -81,18 +80,14 @@ public class Solver implements Runnable{
 	 * @param target the Puzzle to be solved
 	 */
 	public Solver(Sudoku puzzle){
-		this(puzzle, new Panopticon());
+		this(puzzle, new Watcher(new ThreadGroup("sudoku")));
 	}
 
-	private Solver(Sudoku puzzle, Panopticon watcher){
+	private Solver(Sudoku puzzle, Watcher watcher){
 		this(puzzle, null, watcher, DEFAULT_INITIALIZER_SOURCE, DEFAULT_PROCESSOR_SOURCE);
 	}
 	
-	private Solver(Sudoku sudoku, ThreadEvent eventParent, List<Function<Sudoku,Technique>> initializers, List<Function<Sudoku,Technique>> processors){
-		this(sudoku, eventParent, new Panopticon(), initializers, processors);
-	}
-	
-	private Solver(Sudoku sudoku, ThreadEvent eventParent, Panopticon watcher, List<Function<Sudoku,Technique>> initializers, List<Function<Sudoku,Technique>> processors){
+	private Solver(Sudoku sudoku, ThreadEvent eventParent, Watcher watcher, List<Function<Sudoku,Technique>> initializers, List<Function<Sudoku,Technique>> processors){
 		this.target = sudoku;
 		
 		this.initializerSource = initializers;
@@ -103,10 +98,6 @@ public class Solver implements Runnable{
 		
 		this.eventParent = eventParent;
 		this.watcher = watcher;
-	}
-	
-	private Solver(Sudoku sudoku, ThreadEvent eventParent, List<Function<Sudoku,Technique>> processors){
-		this(sudoku, eventParent, new Panopticon(), NO_INITIALIZER_SOURCE, processors);
 	}
 	
 	public ThreadEvent getEvent(){
@@ -150,10 +141,10 @@ public class Solver implements Runnable{
 		return null;
 	}
 	
-	public static final BiFunction<Solver,Graph<NodeSet<?,?>>,Solver> HAS_NO_INITIALIZERS = 
-			(solver,component) -> new Solver(new SudokuNetwork(solver.target.magnitude(), component), solver.event, solver.processorSource);
-	public static final BiFunction<Solver,Graph<NodeSet<?,?>>,Solver> HAS_INITIALIZERS = 
-			(solver,component) -> new Solver(new SudokuNetwork(solver.target.magnitude(), component), solver.event, solver.initializerSource, solver.processorSource);
+	public static final BiFunction<Solver,SudokuNetwork,Solver> HAS_NO_INITIALIZERS = 
+			(solver,network) -> new Solver(network, solver.event, solver.watcher, DEFAULT_INITIALIZER_SOURCE, solver.processorSource);
+	public static final BiFunction<Solver,SudokuNetwork,Solver> HAS_INITIALIZERS = 
+			(solver,network) -> new Solver(network, solver.event, solver.watcher, solver.initializerSource, solver.processorSource);
 	
 	/**
 	 * <p>Creates a thread to {@link #run() run} this Solver and creates 
@@ -170,24 +161,54 @@ public class Solver implements Runnable{
 		Thread monitor = new Thread(watcher);
 		monitor.setDaemon(true);
 		
-		new Thread(watcher, this).start(); //calls run()
+		Thread operation = new Thread(watcher.watched, this);
+		
 		monitor.start();
+		operation.start(); //calls run()
 		
 		monitor.join();
 	}
 	
 	@Override
 	public void run(){
-		if((event=initialize()) != null){
-			target.connectedComponents().stream().forEach( (component) -> 
-					new Thread(watcher, HAS_INITIALIZERS.apply(this, component))
-					.start());
-		} else if((event=process()) != null){
-			target.connectedComponents().stream().forEach((component) -> 
-					new Thread(watcher, HAS_NO_INITIALIZERS.apply(this, component))
-					.start());
+		BiFunction<Solver, SudokuNetwork, Solver> runnableSource = getRunnableSource();
+		if(runnableSource != null){
+			target.connectedComponents().stream()
+					.map((component) -> new SudokuNetwork(target.magnitude(), component))
+					.filter((network) -> !network.isSolved())
+					.forEach( (network) -> new Thread(watcher.watched, runnableSource.apply(this, network)).start());
 		}
 		watcher.notify();
+	}
+	
+	/**
+	 * <p>Applies this Solver's initializer and processor Techniques, stores 
+	 * the produced SolutionEvent in <tt>event</tt>, and returns the appropriate 
+	 * BiFunction to generate this Solver's children.</p>
+	 * @see #HAS_INITIALIZERS
+	 * @see #HAS_NO_INITIALIZERS
+	 * @return
+	 */
+	private BiFunction<Solver, SudokuNetwork, Solver> getRunnableSource(){
+		for(TechniqueInheritance ti : TechniqueInheritance.values()){
+			if((event = ti.solutionStyle.apply(this)) != null){
+				return ti.initializerInheritance;
+			}
+		}
+		return null;
+	}
+	
+	private enum TechniqueInheritance{
+		WITH_INITIALIZERS((solver)->solver.initialize(), HAS_INITIALIZERS), 
+		WITHOUT_INITIALIZERS((solver)->solver.process(), HAS_NO_INITIALIZERS);
+		
+		private final Function<Solver,ThreadEvent> solutionStyle;
+		private final BiFunction<Solver,SudokuNetwork,Solver> initializerInheritance;
+		
+		private TechniqueInheritance(Function<Solver,ThreadEvent> solutionStyle, BiFunction<Solver,SudokuNetwork,Solver> initializerInheritance){
+			this.solutionStyle = solutionStyle;
+			this.initializerInheritance = initializerInheritance;
+		}
 	}
 	
 	/**
@@ -208,9 +229,18 @@ public class Solver implements Runnable{
 		System.out.println(s.target.toString());
 	}
 	
-	private static class Panopticon extends ThreadGroup implements Runnable{
-		public static final BiConsumer<Panopticon,Boolean> DO_NOTHING = (monitor,activeCountGT0) -> {};
-		public static final BiConsumer<Panopticon,Boolean> CHECK_START = (monitor,activeCountGT0) -> {
+	private static class Watcher implements Runnable{
+		
+		/*
+		 * XXX may need to have a member Runnable and wrap that object's synchronized run() 
+		 * in this object's unsynchronized run(), so as to ensure that new threads that are 
+		 * created belonging to that Panopitcon ThreadGroup can get the ThreadGroup to internally 
+		 * recognize their membership without having to wait half a second for the Panopticon 
+		 * to stop wait()ing.
+		 */
+		
+		public static final BiConsumer<Watcher,Boolean> DO_NOTHING = (monitor,activeCountGT0) -> {};
+		public static final BiConsumer<Watcher,Boolean> CHECK_START = (monitor,activeCountGT0) -> {
 			if(activeCountGT0){
 				monitor.started = true;
 				monitor.action = DO_NOTHING;
@@ -218,16 +248,17 @@ public class Solver implements Runnable{
 		};
 		
 		private boolean started = false;
-		private BiConsumer<Panopticon,Boolean> action = CHECK_START;
+		private BiConsumer<Watcher,Boolean> action = CHECK_START;
+		private final ThreadGroup watched;
 		
-		private Panopticon(){
-			super("sudoku");
+		private Watcher(ThreadGroup group){
+			this.watched = group;
 		}
 		
 		@Override
 		public synchronized void run(){
-			boolean activeCountGT0;
-			while( (activeCountGT0 = activeCount() > 0) || !started ){
+			boolean activeCountGT0 = watched.activeCount() > 0;
+			while(activeCountGT0 || !started ){
 				action.accept(this,activeCountGT0);
 				try{
 					wait(500);
