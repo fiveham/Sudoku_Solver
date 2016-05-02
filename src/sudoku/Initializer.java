@@ -35,12 +35,14 @@ public class Initializer extends Technique {
 	 */
 	@Override
 	protected SolutionEvent process(){
+		
 		Optional<NodeSet<?,?>> i = target.nodeStream().filter((e)-> e instanceof Init).findFirst();
 		if(i.isPresent()){
 			SolutionEvent result = new Initialization();
 			i.get().validateFinalState(result);
 			return result;
 		}
+		
 		return null;
 	}
 	

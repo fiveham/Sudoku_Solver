@@ -53,8 +53,17 @@ public class Init extends Fact {
 	
 	@Override
 	protected void validateFinalState(SolutionEvent time){
-		if(!claim.isKnownTrue()){
+		if(!claim.isKnownTrue(false)){
 			claim.setTrue(time);
 		}
+	}
+	
+	@Override
+	public String toString(){
+		StringBuilder sb = new StringBuilder("An Init verifying this Claim: ");
+		for(Claim c : this){
+			sb.append(c);
+		}
+		return sb.toString();
 	}
 }

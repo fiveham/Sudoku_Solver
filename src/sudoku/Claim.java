@@ -72,7 +72,17 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * @return true if this Claim is known to be true, false otherwise
 	 */
 	public boolean isKnownTrue(){
-		return stream().anyMatch((owner)->owner.size()==Fact.SIZE_WHEN_SOLVED);
+		return isKnownTrue(true);
+	}
+	
+	public boolean isKnownTrue(boolean shortCircuit){
+		if(shortCircuit){
+			return stream().anyMatch((owner) -> owner.size()==Fact.SIZE_WHEN_SOLVED);
+			//return !stream().allMatch((owner)->owner.size()!=Fact.SIZE_WHEN_SOLVED);
+		} else{
+			return stream().allMatch((owner) -> owner.size()==Fact.SIZE_WHEN_SOLVED);
+			//return !(shortCircuit ^ stream().anyMatch((owner) -> !shortCircuit ^ (owner.size()!=Fact.SIZE_WHEN_SOLVED)));
+		}
 	}
 	
 	/**

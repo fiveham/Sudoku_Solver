@@ -24,10 +24,12 @@ public abstract class SolutionEvent extends FalsifiedTime implements TimeBuilder
 	
 	public SolutionEvent(){
 		super(null);
+		top = this;
 	}
 	
 	public SolutionEvent(Collection<Claim> falsified){
 		super(null, falsified);
+		top = this;
 	}
 	
 	@Override

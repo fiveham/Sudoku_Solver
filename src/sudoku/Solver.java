@@ -162,25 +162,19 @@ public class Solver implements Runnable{
 	 */
 	public void solve() throws InterruptedException{
 		
-		Debug.log("called solve()"); //DEBUG
-		
 		Thread operation = new Thread(group, this);
 		
 		operation.start(); //calls run()
 		
 		while(group.activeCount() > 0){
 			synchronized(lock){
-				Debug.log("About to wait on lock"); //DEBUG
 				lock.wait();
-				Debug.log("stopped waiting on lock"); //DEBUG
 			}
 		}
 	}
 	
 	@Override
 	public void run(){
-		
-		Debug.log("RUN A THREAD"); //DEBUG
 		
 		PassSmuggler test = new PassSmuggler();
 		BiFunction<Solver, SudokuNetwork, Solver> runnableSource = getRunnableSource();
@@ -189,10 +183,8 @@ public class Solver implements Runnable{
 					.map((component) -> new SudokuNetwork(target.magnitude(), component))
 					.filter(test);
 			if(test.somethingPassed){
-				Debug.log("SPAWNING THREADS"); //DEBUG
-					stream.forEach((network) -> new Thread(group, runnableSource.apply(this, network)).start());
+				stream.forEach((network) -> new Thread(group, runnableSource.apply(this, network)).start());
 			} else synchronized(lock){
-				Debug.log("CHILDFREE, notify lock"); //DEBUG
 				lock.notify();
 			}
 		}
@@ -252,9 +244,6 @@ public class Solver implements Runnable{
 	 * argument could not be found
 	 */
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException{
-		
-		Debug.log("Started"); //DEBUG
-		
 		Solver s = new Solver(new File(args[0]));
 		s.solve();
 		System.out.println(s.target.toString());

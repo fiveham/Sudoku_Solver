@@ -37,7 +37,7 @@ class Debug {
 	 * @param s the string to be printed to the file specified by 
 	 * <tt>log</tt>
 	 */
-	static void log(String s){
+	static void log(Object s){
 		log.println(s);
 	}
 	
