@@ -1,8 +1,10 @@
 package sudoku;
 
+import common.graph.Graph;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -162,7 +164,7 @@ public class Solver implements Runnable{
 	 */
 	public void solve() throws InterruptedException{
 		
-		Thread operation = new Thread(group, this);
+		Thread operation = new Thread(group, this, "solver_0");
 		
 		operation.start(); //calls run()
 		
@@ -180,21 +182,40 @@ public class Solver implements Runnable{
 		BiFunction<Solver, SudokuNetwork, Solver> runnableSource = getRunnableSource();
 		if(runnableSource != null){
 			
-			List<SudokuNetwork> networks = target.connectedComponents().stream()
+			Collection<Graph<NodeSet<?,?>>> initialConnectedComponents = target.connectedComponents();
+			
+			Debug.log("Total concoms: " + initialConnectedComponents.size()); //DEBUG
+			
+			List<SudokuNetwork> networks = initialConnectedComponents.stream()
 					.map((component) -> new SudokuNetwork(target.magnitude(), component))
 					.filter((sn) -> !sn.isSolved())
 					.collect(Collectors.toList());
 			
+			//DEBUG
+			Debug.log("Non-solved concoms: " + networks.size());
+			SudokuNetwork sample = networks.get(0);
+			Debug.log("an unsolved concom: " + sample.size());
+			for(NodeSet<?,?> ns : sample.nodeStream().collect(Collectors.toList())){
+				Debug.log("\t" + ns.getClass() + " | " + ns.size() + " | " + ns.toString());
+			}
+			System.exit(0);
+			
 			if( !networks.isEmpty()){
 				Debug.log("Something passed, splitting thread"); //DEBUG
-				networks.stream().forEach((network) -> new Thread(group, runnableSource.apply(this, network)).start());
+				
+				String name = Thread.currentThread().getName();
+				for(int i=0; i<networks.size(); ++i){
+					SudokuNetwork network = networks.get(i);
+					new Thread(group, runnableSource.apply(this, network), name+Integer.toString(i,36)).start();
+				}
 			} else{
 				synchronized(lock){
 					Debug.log("Nothing passed, notifying lock"); //DEBUG
 					lock.notify();
 				}
 			}
-				
+			
+			//System.exit(0);//DEBUG
 		}
 	}
 	
@@ -209,7 +230,7 @@ public class Solver implements Runnable{
 	private BiFunction<Solver, SudokuNetwork, Solver> getRunnableSource(){
 		for(TechniqueInheritance ti : TechniqueInheritance.values()){
 			if((event = ti.solutionStyle.apply(this)) != null){
-				Debug.log("Made a change " + ti); //DEBUG
+				//Debug.log("Made a change " + ti); //DEBUG
 				return ti.initializerInheritance;
 			}
 		}

@@ -104,7 +104,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	private final Function<List<T>,T> STD_CONCOM_SEED_SRC = (unassigned)->unassigned.remove(unassigned.size()-1);
 	
 	@Override
-	public Collection<Graph<T>> connectedComponents(){
+	public Collection<Graph<T>> connectedComponents(){ //FIXME several single-Claim concoms instead have over 1000 elements
 		return connectedComponents(contractEventListeners(), STD_CONCOM_SEED_SRC);
 	}
 	

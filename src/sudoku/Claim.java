@@ -124,9 +124,9 @@ public class Claim extends NodeSet<Fact,Claim>{
 		
 		//DEBUG
 		Debug.log("Setting "+init+" Claims false:");
-		for(Claim claim : s){
+		/*for(Claim claim : s){
 			Debug.log("\t" + claim.toString());
-		}
+		}*/
 		
 		s.stream().forEach((c) -> c.setFalse(time));
 		

@@ -11,6 +11,9 @@ bin
 #blank sudoku puzzle file
 puzzles/puzzle.txt
 
+#console overflow dump file
+dump.txt
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
