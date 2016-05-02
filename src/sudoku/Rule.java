@@ -112,11 +112,11 @@ public class Rule extends Fact{
 	 */
 	@Override
 	protected void validateFinalState(SolutionEvent time){
-		Debug.log("enter Rule.validate...()"); //DEBUG
+		//Debug.log("enter Rule.validate...()"); //DEBUG
 		
 		if(size() == SIZE_WHEN_SOLVED){
 			Claim c = iterator().next();
-			if( c.stream().filter((f) -> f.size() != Fact.SIZE_WHEN_SOLVED).count() > 1 ){ //1 is this one
+			if( CLAIM_IS_TRUE_NOT_YET_SET_TRUE.apply(c) ){
 				//Debug.log("Rule thinks it is solved: " + toString(true)); //DEBUG
 				time.push(new TimeTotalLocalization(time.top(), c.visibleClaims()));
 				c.setTrue(time);
@@ -128,7 +128,7 @@ public class Rule extends Fact{
 			throw new IllegalStateException("A Rule is not allowed to be empty. this.toString(): "+toString());
 		}
 
-		Debug.log("exit Rule.validate...()"); //DEBUG
+		//Debug.log("exit Rule.validate...()"); //DEBUG
 	}
 	
 	/**

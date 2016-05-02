@@ -214,6 +214,7 @@ public class Solver implements Runnable{
 	private BiFunction<Solver, SudokuNetwork, Solver> getRunnableSource(){
 		for(TechniqueInheritance ti : TechniqueInheritance.values()){
 			if((event = ti.solutionStyle.apply(this)) != null){
+				Debug.log("Made a change " + ti); //DEBUG
 				return ti.initializerInheritance;
 			}
 		}

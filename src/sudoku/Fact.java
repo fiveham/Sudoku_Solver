@@ -1,13 +1,9 @@
 package sudoku;
 
 import java.util.Collection;
+import java.util.function.Function;
 
 public class Fact extends NodeSet<Claim,Fact>{
-	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 324978329635129743L;
 	
 	/**
 	 * <p>The number ({@value}) of elements (neighbors) of a Rule when 
@@ -15,6 +11,15 @@ public class Fact extends NodeSet<Claim,Fact>{
 	 * identified.</p>
 	 */
 	public static final int SIZE_WHEN_SOLVED = 1;
+	
+	public static final Function<Claim,Boolean> CLAIM_IS_TRUE_NOT_YET_SET_TRUE = 
+			(c) -> c.stream().filter((f) -> f.size() == SIZE_WHEN_SOLVED)
+			.count() == Claim.UNARY_RULE_COUNT_FOR_SET_TRUE;
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 324978329635129743L;
 	
 	public Fact(Puzzle puzzle){
 		super(puzzle);

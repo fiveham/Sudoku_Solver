@@ -15,6 +15,18 @@ import java.util.Set;
 public class Claim extends NodeSet<Fact,Claim>{
 	
 	/**
+	 * <p>The number of {@link Collection#size() size}-one (1) Facts a 
+	 * Claim has when it's necessarily true (being the only Claim belonging 
+	 * to that Fact) and evidently not presently being set true. After 
+	 * {@link #setTrue() setTrue()} is called, it is possible for separate 
+	 * neighboring Facts to independently become unary and to therefore 
+	 * begin a process of falsifying the remaining Claims that this Claim 
+	 * can see, which causes unecessary duplication of AutoResolve events in 
+	 * the time-tree, as well as being aesthetically unpleasant.</p>
+	 */
+	public static final int UNARY_RULE_COUNT_FOR_SET_TRUE = 1;
+	
+	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1575574810729080115L;
@@ -105,19 +117,20 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * this Claim, false otherwise
 	 */
 	boolean setTrue(SolutionEvent time){
-		Debug.log("Enter Claim.setTrue() " + toString()); //DEBUG
+		Debug.log("Set true " + toString()); //DEBUG
 		
 		Set<Claim> s = visibleClaims();
+		int init = s.size();
 		
 		//DEBUG
+		Debug.log("Setting "+init+" Claims false:");
 		for(Claim claim : s){
-			Debug.log(claim.toString());
+			Debug.log("\t" + claim.toString());
 		}
 		
-		int init = s.size();
 		s.stream().forEach((c) -> c.setFalse(time));
-
-		Debug.log("Exit Claim.setTrue() " + toString()); //DEBUG
+		
+		//Debug.log("Exit Claim.setTrue() " + toString()); //DEBUG
 		return init != visibleClaims().size();
 	}
 	
@@ -130,12 +143,12 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * this Claim, false otherwise
 	 */
 	public boolean setFalse(SolutionEvent time){
-		Debug.log("Enter Claim.setFalse() " + toString()); //DEBUG
+		//Debug.log("Enter Claim.setFalse() " + toString()); //DEBUG
 		
 		int initSize = size();
 		clear(time);
 		
-		Debug.log("Exit Claim.setFalse() " + toString()); //DEBUG
+		//Debug.log("Exit Claim.setFalse() " + toString()); //DEBUG
 		return size() != initSize;
 	}
 	
