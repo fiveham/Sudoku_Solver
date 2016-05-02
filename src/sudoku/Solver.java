@@ -179,27 +179,22 @@ public class Solver implements Runnable{
 		
 		BiFunction<Solver, SudokuNetwork, Solver> runnableSource = getRunnableSource();
 		if(runnableSource != null){
-			PassSmuggler test = new PassSmuggler();
-			Stream<SudokuNetwork> stream = target.connectedComponents().stream()
+			
+			List<SudokuNetwork> networks = target.connectedComponents().stream()
 					.map((component) -> new SudokuNetwork(target.magnitude(), component))
-					.filter(test);
-			if(test.somethingPassed){
+					.filter((sn) -> !sn.isSolved())
+					.collect(Collectors.toList());
+			
+			if( !networks.isEmpty()){
 				Debug.log("Something passed, splitting thread"); //DEBUG
-				stream.forEach((network) -> new Thread(group, runnableSource.apply(this, network)).start());
-			} else synchronized(lock){
-				Debug.log("Nothing passed, notifying lock"); //DEBUG
-				lock.notify();
+				networks.stream().forEach((network) -> new Thread(group, runnableSource.apply(this, network)).start());
+			} else{
+				synchronized(lock){
+					Debug.log("Nothing passed, notifying lock"); //DEBUG
+					lock.notify();
+				}
 			}
-		}
-	}
-	
-	private class PassSmuggler implements Predicate<SudokuNetwork>{
-		boolean somethingPassed = false;
-		@Override
-		public boolean test(SudokuNetwork sn){
-			boolean result = !sn.isSolved();
-			somethingPassed |= result;
-			return result;
+				
 		}
 	}
 	
@@ -247,6 +242,7 @@ public class Solver implements Runnable{
 	 * argument could not be found
 	 */
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException{
+		Debug.log("STARTING"); //DEBUG
 		Solver s = new Solver(new File(args[0]));
 		s.solve();
 		System.out.println(s.target.toString());

@@ -127,7 +127,7 @@ public class Rule extends Fact{
 		} else if( isEmpty() ){
 			throw new IllegalStateException("A Rule is not allowed to be empty. this.toString(): "+toString());
 		}
-
+		
 		//Debug.log("exit Rule.validate...()"); //DEBUG
 	}
 	
