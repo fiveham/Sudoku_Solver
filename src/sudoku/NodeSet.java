@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import common.graph.Partition;
 
 /**
  * <p>A set that's a node in {@link Puzzle a graph representation of a sudoku target}, 
@@ -43,6 +44,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	private static final long serialVersionUID = -5327679229184923974L;
 	
 	protected Puzzle puzzle;
+	protected Partition partition = Partition.UNASSIGNED;
 
 	public NodeSet(Puzzle puzzle){
 		this.puzzle = puzzle;
@@ -389,5 +391,15 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		public Iterator<Time> iterator() {
 			return currentTrail().iterator();
 		}
+	}
+	
+	@Override
+	public Partition getPartition(){
+		return partition;
+	}
+	
+	@Override
+	public void setPartition(Partition partition){
+		this.partition = partition;
 	}
 }

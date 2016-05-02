@@ -10,8 +10,8 @@ import java.util.Collection;
 public interface Vertex<N> {
 	
 	public Collection<? extends N> neighbors();
-	/*
-	public <N extends Vertex> boolean addNeighbor(N newNeighbor);
 	
-	public <N extends Vertex> boolean removeNeighbor(N oldNeighbor);*/
+	public Partition getPartition();
+	
+	public void setPartition(Partition partition);
 }

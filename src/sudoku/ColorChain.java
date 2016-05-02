@@ -3,6 +3,7 @@ package sudoku;
 import common.ComboGen;
 import common.Pair;
 import common.graph.Graph;
+import common.graph.Partition;
 import common.graph.BasicGraph;
 import common.graph.WrapVertex;
 import java.util.ArrayList;
@@ -489,6 +490,7 @@ public class ColorChain extends Technique {
 		private int color = 0;
 		private Claim wrapped;
 		private final List<ColorClaim> neighbors;
+		private Partition partition;
 		
 		ColorClaim(Claim wrapped){
 			this.wrapped = wrapped;
@@ -523,6 +525,16 @@ public class ColorChain extends Technique {
 			/*} else{
 				throw new IllegalStateException("Cannot change color to "+color+" because color has already been set to "+this.color);				
 			}*/
+		}
+		
+		@Override
+		public Partition getPartition(){
+			return partition;
+		}
+		
+		@Override
+		public void setPartition(Partition partition){
+			this.partition = partition;
 		}
 	}
 	
