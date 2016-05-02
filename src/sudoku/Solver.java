@@ -157,7 +157,7 @@ public class Solver implements Runnable{
 	 * @throws InterruptedException
 	 */
 	public void solve() throws InterruptedException{
-		Thread monitor = new Thread(watcher);
+		Thread monitor = new Thread(watcher, "watcher");
 		monitor.setDaemon(true);
 		
 		Thread operation = new Thread(watcher.watched, this);

@@ -20,11 +20,19 @@ class ConnectedComponent<T extends Vertex<T>> {
 		this.size = size;
 		this.contractEventListeners = new ArrayList<>(contractEvents.length);
 		Collections.addAll(contractEventListeners, contractEvents);
+		
+		this.core = new HashSet<>();
+		this.edge = new HashSet<>();
+		this.cuttingEdge = new HashSet<>();
 	}
 	
 	ConnectedComponent(int size, Collection<Consumer<Set<T>>> contractEvents) {
 		this.size = size;
 		this.contractEventListeners = new ArrayList<>(contractEvents);
+		
+		this.core = new HashSet<>();
+		this.edge = new HashSet<>();
+		this.cuttingEdge = new HashSet<>();
 	}
 	
 	Set<T> core(){
@@ -50,9 +58,6 @@ class ConnectedComponent<T extends Vertex<T>> {
 	}
 	
 	private void triggerContractEventListeners(){
-		/*for(Consumer<Set<T>> e : contractEventListeners){
-			e.accept(cuttingEdge);
-		}*/
 		contractEventListeners.parallelStream().forEach( (c)->c.accept(cuttingEdge) );
 	}
 	
