@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * <p>Coordinates and applies several techniques for solving a sudoku target.</p>
@@ -48,7 +50,8 @@ public class Solver implements Runnable{
 	private final ThreadEvent eventParent;
 	private ThreadEvent event = null;
 	
-	private final Watcher watcher;
+	private final ThreadGroup group;
+	private final Object lock;
 	
 	/**
 	 * <p>Constructs a Solver that works to solve the target defined 
@@ -79,14 +82,14 @@ public class Solver implements Runnable{
 	 * @param target the Puzzle to be solved
 	 */
 	public Solver(Sudoku puzzle){
-		this(puzzle, new Watcher(new ThreadGroup("sudoku")));
+		this(puzzle, new ThreadGroup("sudoku"), new Object());
 	}
 
-	private Solver(Sudoku puzzle, Watcher watcher){
-		this(puzzle, null, watcher, DEFAULT_INITIALIZER_SOURCE, DEFAULT_PROCESSOR_SOURCE);
+	private Solver(Sudoku puzzle, ThreadGroup group, Object waiter){
+		this(puzzle, null, group, waiter, DEFAULT_INITIALIZER_SOURCE, DEFAULT_PROCESSOR_SOURCE);
 	}
 	
-	private Solver(Sudoku sudoku, ThreadEvent eventParent, Watcher watcher, List<Function<Sudoku,Technique>> initializers, List<Function<Sudoku,Technique>> processors){
+	private Solver(Sudoku sudoku, ThreadEvent eventParent, ThreadGroup group, Object waiter, List<Function<Sudoku,Technique>> initializers, List<Function<Sudoku,Technique>> processors){
 		this.target = sudoku;
 		
 		this.initializerSource = initializers;
@@ -96,7 +99,8 @@ public class Solver implements Runnable{
 		this.processors = SOURCE_TO_TECHNIQUES.apply(sudoku, processors);
 		
 		this.eventParent = eventParent;
-		this.watcher = watcher;
+		this.group = group;
+		this.lock = waiter;
 	}
 	
 	public ThreadEvent getEvent(){
@@ -141,9 +145,9 @@ public class Solver implements Runnable{
 	}
 	
 	public static final BiFunction<Solver,SudokuNetwork,Solver> HAS_NO_INITIALIZERS = 
-			(solver,network) -> new Solver(network, solver.event, solver.watcher, DEFAULT_INITIALIZER_SOURCE, solver.processorSource);
+			(solver,network) -> new Solver(network, solver.event, solver.group, solver.lock, DEFAULT_INITIALIZER_SOURCE, solver.processorSource);
 	public static final BiFunction<Solver,SudokuNetwork,Solver> HAS_INITIALIZERS = 
-			(solver,network) -> new Solver(network, solver.event, solver.watcher, solver.initializerSource, solver.processorSource);
+			(solver,network) -> new Solver(network, solver.event, solver.group, solver.lock, solver.initializerSource, solver.processorSource);
 	
 	/**
 	 * <p>Creates a thread to {@link #run() run} this Solver and creates 
@@ -157,27 +161,42 @@ public class Solver implements Runnable{
 	 * @throws InterruptedException
 	 */
 	public void solve() throws InterruptedException{
-		Thread monitor = new Thread(watcher, "watcher");
-		monitor.setDaemon(true);
-		
-		Thread operation = new Thread(watcher.watched, this);
+		Thread operation = new Thread(group, this);
 		
 		operation.start(); //calls run()
-		monitor.start(); //must start after operation so that ThreadGroup.activeCount() > 0
 		
-		monitor.join();
+		while(group.activeCount() > 0){
+			synchronized(lock){
+				lock.wait();
+			}
+		}
 	}
 	
 	@Override
 	public void run(){
+		PassSmuggler test = new PassSmuggler();
 		BiFunction<Solver, SudokuNetwork, Solver> runnableSource = getRunnableSource();
 		if(runnableSource != null){
-			target.connectedComponents().stream()
+			Stream<SudokuNetwork> stream = target.connectedComponents().stream()
 					.map((component) -> new SudokuNetwork(target.magnitude(), component))
-					.filter((network) -> !network.isSolved())
-					.forEach( (network) -> new Thread(watcher.watched, runnableSource.apply(this, network)).start());
+					.filter(test);
+			if(test.somethingPassed){
+					stream.forEach((network) -> new Thread(group, runnableSource.apply(this, network)).start());
+			} else synchronized(lock){
+				lock.notify();
+			}
 		}
-		watcher.notify();
+		//watcher.notify();
+	}
+	
+	private class PassSmuggler implements Predicate<SudokuNetwork>{
+		boolean somethingPassed = false;
+		@Override
+		public boolean test(SudokuNetwork sn){
+			boolean result = !sn.isSolved();
+			somethingPassed |= result;
+			return result;
+		}
 	}
 	
 	/**
@@ -226,26 +245,5 @@ public class Solver implements Runnable{
 		Solver s = new Solver(new File(args[0]));
 		s.solve();
 		System.out.println(s.target.toString());
-	}
-	
-	private static class Watcher implements Runnable{
-		
-		private final ThreadGroup watched;
-		
-		private Watcher(ThreadGroup group){
-			this.watched = group;
-		}
-		
-		@Override
-		public synchronized void run(){
-			while(watched.activeCount() > 0 ){
-				try{
-					wait(500);
-				} catch(InterruptedException e){
-					System.out.println("INTERRUPTED EXCEPTION");
-					//do nothing
-				}
-			}
-		}
 	}
 }

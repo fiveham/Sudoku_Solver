@@ -373,7 +373,7 @@ public class Puzzle extends SudokuNetwork{
 			for(IndexValue x : indices){
 				result.append( claims.getPrintingValue(x,y) ).append(" ");
 			}
-			result.append(System.getProperty("line.separator"));
+			result.append(System.lineSeparator());
 		}
 		
 		return result.toString();
