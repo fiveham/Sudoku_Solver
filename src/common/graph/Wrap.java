@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -26,8 +27,8 @@ import java.util.stream.Collectors;
  */
 public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	
-	private final W wrapped;
-	private final List<Wrap<W>> neighbors;
+	protected final W wrapped;
+	protected final List<Wrap<W>> neighbors;
 	
 	/**
 	 * <p>Constructs a Wrap that wraps <tt>wrapped</tt> and has 
@@ -72,8 +73,17 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	 * @return a list of Wraps complete with populated neighbor lists
 	 */
 	public static <W> List<Wrap<W>> wrap(Collection<? extends W> c, BiPredicate<? super W, ? super W> edgeDetector){
-		List<Wrap<W>> result = c.stream().map((w)->new Wrap<W>(w)).collect(Collectors.toList());
-		for(List<Wrap<W>> pair : new ComboGen<>(result, 2,2)){
+		return wrap(c, edgeDetector, (w)->new Wrap<>(w));
+	}
+	
+	public static <T extends Wrap<W>, W> List<T> wrap(Collection<? extends W> c, BiPredicate<? super W, ? super W> edgeDetector, Function<? super W,T> mapper){
+		List<T> result = c.stream().map(mapper).collect(Collectors.toList());
+		connect(result, edgeDetector);
+		return result;
+	}
+	
+	public static <T extends Wrap<W>,W> void connect(Collection<T> result, BiPredicate<? super W, ? super W> edgeDetector){
+		for(List<T> pair : new ComboGen<>(result, 2,2)){
 			Wrap<W> wn1 = pair.get(0);
 			Wrap<W> wn2 = pair.get(1);
 			if(edgeDetector.test(wn1.wrapped, wn2.wrapped)){
@@ -81,6 +91,5 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 				wn2.neighbors.add(wn1);
 			}
 		}
-		return result;
 	}
 }

@@ -8,62 +8,65 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import java.util.*;
+
 class ConnectedComponent<T extends Vertex<T>> {
 	
-	private final int size;
-	private Set<T> core;
-	private Set<T> edge;
-	private Set<T> cuttingEdge;
+	private final Map<Partition,Set<T>> map;
 	
 	@SafeVarargs
 	ConnectedComponent(int size, Consumer<Set<T>>... contractEvents) {
-		this.size = size;
 		this.contractEventListeners = new ArrayList<>(contractEvents.length);
 		Collections.addAll(contractEventListeners, contractEvents);
 		
-		this.core = new HashSet<>();
-		this.edge = new HashSet<>();
-		this.cuttingEdge = new HashSet<>();
+		this.map = new HashMap<>(Partition.values().length);
+		map.put(Partition.CORE, new HashSet<>(size));
+		map.put(Partition.EDGE, new HashSet<>(size));
+		map.put(Partition.CUTTINGEDGE, new HashSet<>(size));
 	}
 	
 	ConnectedComponent(int size, Collection<Consumer<Set<T>>> contractEvents) {
-		this.size = size;
 		this.contractEventListeners = new ArrayList<>(contractEvents);
 		
-		this.core = new HashSet<>();
-		this.edge = new HashSet<>();
-		this.cuttingEdge = new HashSet<>();
+		this.map = new HashMap<>(Partition.values().length);
+		map.put(Partition.CORE, new HashSet<>(size));
+		map.put(Partition.EDGE, new HashSet<>(size));
+		map.put(Partition.CUTTINGEDGE, new HashSet<>(size));
 	}
 	
 	Set<T> core(){
-		return core;
+		return map.get(Partition.CORE);
 	}
 	
 	Set<T> edge(){
-		return edge;
+		return map.get(Partition.EDGE);
 	}
 	
 	Set<T> cuttingEdge(){
-		return cuttingEdge;
+		return map.get(Partition.CUTTINGEDGE);
 	}
 	
 	private final List<Consumer<Set<T>>> contractEventListeners;
 	
 	Set<T> contract(){
 		triggerContractEventListeners();
-		core.addAll(edge);
-		edge = cuttingEdge;
-		cuttingEdge = new HashSet<>(size-core.size()-edge.size());
-		return core;
+		
+		core().addAll(edge());
+		edge().clear();
+		
+		edge().addAll(cuttingEdge());
+		cuttingEdge().clear();
+		
+		return core();
 	}
 	
 	private void triggerContractEventListeners(){
-		contractEventListeners.parallelStream().forEach( (c)->c.accept(cuttingEdge) );
+		contractEventListeners.parallelStream().forEach( (c)->c.accept(cuttingEdge()) );
 	}
 	
 	void add(T vertex){
-		if( !core.contains(vertex) && !edge.contains(vertex) ){
-			cuttingEdge.add(vertex);
+		if( !core().contains(vertex) && !edge().contains(vertex) ){
+			cuttingEdge().add(vertex);
 		}
 	}
 	
@@ -71,5 +74,9 @@ class ConnectedComponent<T extends Vertex<T>> {
 		for(T vertex : vertices){
 			add(vertex);
 		}
+	}
+	
+	private enum Partition{
+		CORE, EDGE, CUTTINGEDGE, UNACCOUNTED;
 	}
 }
