@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * <p>Manages an arbitrary number of abstract dimensions, each of 
@@ -56,6 +57,11 @@ public class NCuboid<T> implements Iterable<List<T>> {
 		}
 	}
 	
+	@SafeVarargs
+	public NCuboid(Collection<? extends T>... srcs){
+		this(Arrays.asList(srcs).stream().map((collection) -> new ArrayList<>(collection)).collect(Collectors.toList()));
+	}
+	
 	@Override
 	public Iterator<List<T>> iterator(){
 		return new CubeIterator();
@@ -74,6 +80,7 @@ public class NCuboid<T> implements Iterable<List<T>> {
 		private CubeIterator(){
 			this.state = new int[key.length];
 			Arrays.fill(state, 0);
+			state[0]--;
 		}
 		
 		@Override
@@ -83,11 +90,11 @@ public class NCuboid<T> implements Iterable<List<T>> {
 		
 		@Override
 		public List<T> next(){
+			updateState();
 			List<T> result = new ArrayList<>(state.length);
 			for(int i=0; i<state.length; ++i){
 				result.add( src.get(i).get(state[i]) );
 			}
-			updateState();
 			return result;
 		}
 		

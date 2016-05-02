@@ -10,7 +10,7 @@ import java.io.PrintStream;
  * @author fiveham
  *
  */
-class Debug {
+public class Debug {
 	
 	private static final PrintStream log = /*System.out;*/initLog();
 	
@@ -37,14 +37,14 @@ class Debug {
 	 * @param s the string to be printed to the file specified by 
 	 * <tt>log</tt>
 	 */
-	static void log(Object s){
+	public static void log(Object s){
 		log.println(s);
 	}
 	
 	/**
 	 * <p>Prints a newline to the file specified by <tt>log</tt>.</p>
 	 */
-	static void log(){
+	public static void log(){
 		log.println();
 	}
 }

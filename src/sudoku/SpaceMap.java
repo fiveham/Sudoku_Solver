@@ -1,7 +1,6 @@
 package sudoku;
 
 import common.NCuboid;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -126,12 +125,7 @@ public class SpaceMap implements Iterable<Claim>{
 		
 		private ClaimIterator(){
 			List<Integer> ints = puzzle.getIndices().stream().map((iv)->iv.intValue()).collect(Collectors.toList());
-			List<List<Integer>> dims = new ArrayList<>();
-			for(int i=0; i<Puzzle.DIMENSION_COUNT; ++i){
-				dims.add(ints);
-			}
-			this.cubeIterator =  new NCuboid<Integer>(dims).iterator();
-			
+			this.cubeIterator =  new NCuboid<Integer>(ints, ints, ints).iterator();
 		}
 		
 		@Override

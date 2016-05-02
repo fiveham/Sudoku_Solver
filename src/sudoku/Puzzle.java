@@ -30,7 +30,7 @@ import java.util.stream.StreamSupport;
  * @author fiveham
  *
  */
-public class Puzzle extends SudokuNetwork{
+public class Puzzle extends SudokuNetwork{ //FIXME one Claim is absent from the Puzzle
 	
 	/**
 	 * <p>A three-dimensional array of this Puzzle's Claims.</p>

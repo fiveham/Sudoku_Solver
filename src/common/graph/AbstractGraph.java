@@ -114,6 +114,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		List<Graph<T>> result = new ArrayList<>();
 		
 		List<T> unassignedNodes = new ArrayList<>(nodes);
+		sudoku.Debug.log("nodes: " + nodes.size() + " | unassignedNodes: " + unassignedNodes.size()); //DEBUG
 		while( !unassignedNodes.isEmpty() ){
 			result.add(component(unassignedNodes, seedSrc, contractEventListenerSrc));
 		}

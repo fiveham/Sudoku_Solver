@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -182,9 +184,16 @@ public class Solver implements Runnable{
 		BiFunction<Solver, SudokuNetwork, Solver> runnableSource = getRunnableSource();
 		if(runnableSource != null){
 			
+			//DEBUG
+			Debug.log("Total nodes: " + target.nodeStream().count());
+			long init = target.nodeStream().filter((n) -> n instanceof Init).count();
+			long claim = target.nodeStream().filter((n) -> n instanceof Claim).count();
+			long rule = target.nodeStream().filter((n) -> n instanceof Rule).count();
+			Debug.log(init + " Inits, " + claim + " Claims, " + rule + " Rules");
+			
 			Collection<Graph<NodeSet<?,?>>> initialConnectedComponents = target.connectedComponents();
 			
-			Debug.log("Total concoms: " + initialConnectedComponents.size()); //DEBUG
+			Debug.log("Total concoms: " + initialConnectedComponents.size());//DEBUG
 			
 			List<SudokuNetwork> networks = initialConnectedComponents.stream()
 					.map((component) -> new SudokuNetwork(target.magnitude(), component))
