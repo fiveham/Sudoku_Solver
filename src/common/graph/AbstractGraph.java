@@ -123,15 +123,13 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	@Override
 	public Graph<T> componentForSeed(List<T> unassignedNodes, T seed, List<Consumer<Set<T>>> contractEventListeners){
-		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(nodes.size(), contractEventListeners);
+		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(nodes.size()+1, contractEventListeners); //+1 because <tt>seed<tt> is part of the component, too
 		newComponent.add(seed);
 		
-		while( !newComponent.cuttingEdge().isEmpty() ){
+		while( !newComponent.cuttingEdgeIsEmpty() ){
 			newComponent.contract();
-			for(T edgeNode : newComponent.edge()){
-				newComponent.addAll(edgeNode.neighbors());
-			}
-			unassignedNodes.removeAll(newComponent.cuttingEdge());
+			newComponent.grow();
+			newComponent.removeAll(unassignedNodes);
 		}
 		
 		return new BasicGraph<T>(newComponent.contract());

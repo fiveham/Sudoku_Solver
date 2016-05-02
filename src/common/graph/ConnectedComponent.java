@@ -1,49 +1,45 @@
 package common.graph;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import java.util.*;
-
 class ConnectedComponent<T extends Vertex<T>> {
 	
-	private final Map<Partition,Set<T>> map;
+	private final int size;
+	private final Set<T> core;
+	private Set<T> edge, cuttingEdge;
 	
 	@SafeVarargs
 	ConnectedComponent(int size, Consumer<Set<T>>... contractEvents) {
-		this.contractEventListeners = new ArrayList<>(contractEvents.length);
-		Collections.addAll(contractEventListeners, contractEvents);
-		
-		this.map = new HashMap<>(Partition.values().length);
-		map.put(Partition.CORE, new HashSet<>(size));
-		map.put(Partition.EDGE, new HashSet<>(size));
-		map.put(Partition.CUTTINGEDGE, new HashSet<>(size));
+		this(size, Arrays.asList(contractEvents));
 	}
 	
 	ConnectedComponent(int size, Collection<Consumer<Set<T>>> contractEvents) {
+		this.size = size;
 		this.contractEventListeners = new ArrayList<>(contractEvents);
 		
-		this.map = new HashMap<>(Partition.values().length);
-		map.put(Partition.CORE, new HashSet<>(size));
-		map.put(Partition.EDGE, new HashSet<>(size));
-		map.put(Partition.CUTTINGEDGE, new HashSet<>(size));
+		this.cuttingEdge = new HashSet<>(size);
+		this.edge = new HashSet<>(size);
+		this.core = new HashSet<>(size);
 	}
 	
-	Set<T> core(){
-		return map.get(Partition.CORE);
+	public boolean cuttingEdgeIsEmpty(){
+		return cuttingEdge.isEmpty();
 	}
 	
-	Set<T> edge(){
-		return map.get(Partition.EDGE);
+	public void grow(){
+		for(T edgeNode : edge){
+			addAll(edgeNode.neighbors());
+		}
 	}
 	
-	Set<T> cuttingEdge(){
-		return map.get(Partition.CUTTINGEDGE);
+	public void removeAll(Collection<T> unassignedNodes){
+		unassignedNodes.removeAll(cuttingEdge);
 	}
 	
 	private final List<Consumer<Set<T>>> contractEventListeners;
@@ -51,22 +47,20 @@ class ConnectedComponent<T extends Vertex<T>> {
 	Set<T> contract(){
 		triggerContractEventListeners();
 		
-		core().addAll(edge());
-		edge().clear();
+		core.addAll(edge);
+		edge = cuttingEdge;
+		cuttingEdge = new HashSet<>(size - core.size() - edge.size());
 		
-		edge().addAll(cuttingEdge());
-		cuttingEdge().clear();
-		
-		return core();
+		return core;
 	}
 	
 	private void triggerContractEventListeners(){
-		contractEventListeners.parallelStream().forEach( (c)->c.accept(cuttingEdge()) );
+		contractEventListeners.parallelStream().forEach( (c)->c.accept(cuttingEdge) );
 	}
 	
 	void add(T vertex){
-		if( !core().contains(vertex) && !edge().contains(vertex) ){
-			cuttingEdge().add(vertex);
+		if( !core.contains(vertex) && !edge.contains(vertex) ){
+			cuttingEdge.add(vertex);
 		}
 	}
 	
@@ -74,9 +68,5 @@ class ConnectedComponent<T extends Vertex<T>> {
 		for(T vertex : vertices){
 			add(vertex);
 		}
-	}
-	
-	private enum Partition{
-		CORE, EDGE, CUTTINGEDGE, UNACCOUNTED;
 	}
 }

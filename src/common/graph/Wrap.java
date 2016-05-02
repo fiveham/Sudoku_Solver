@@ -29,7 +29,6 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	
 	protected final W wrapped;
 	protected final List<Wrap<W>> neighbors;
-	protected Partition partition = Partition.UNASSIGNED;
 	
 	/**
 	 * <p>Constructs a Wrap that wraps <tt>wrapped</tt> and has 
@@ -92,15 +91,5 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 				wn2.neighbors.add(wn1);
 			}
 		}
-	}
-	
-	@Override
-	public Partition getPartition(){
-		return partition;
-	}
-	
-	@Override
-	public void setPartition(Partition partition){
-		this.partition = partition;
 	}
 }
