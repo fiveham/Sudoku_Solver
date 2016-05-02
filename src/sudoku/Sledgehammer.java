@@ -287,7 +287,7 @@ public class Sledgehammer extends Technique {
 	 * @author fiveham
 	 *
 	 */
-	public class SolveEventSledgehammer extends SolutionEvent{
+	public static class SolveEventSledgehammer extends SolutionEvent{
 		private SolveEventSledgehammer(Collection<Claim> claimsToSetFalse){
 			falsified().addAll(claimsToSetFalse);
 		}

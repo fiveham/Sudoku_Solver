@@ -255,13 +255,13 @@ public class ColorChain extends Technique {
 		return null;
 	}
 	
-	/* *
+	/**
 	 * <p>A time node encapsulating events that occur while checking 
 	 * a xor-chain for a collapse-initiating self-interaction.</p>
 	 * @author fiveham
 	 *
 	 */
-	public class SolveEventColorChainInternal extends SolutionEvent{
+	public static class SolveEventColorChainInternal extends SolutionEvent{
 		private SolveEventColorChainInternal(){
 		}
 	}
@@ -296,7 +296,7 @@ public class ColorChain extends Technique {
 	 * @author fiveham
 	 *
 	 */
-	public class SolveEventColorChainBridge extends SolutionEvent{
+	public static class SolveEventColorChainBridge extends SolutionEvent{
 		private SolveEventColorChainBridge(){
 		}
 	}
@@ -440,13 +440,13 @@ public class ColorChain extends Technique {
 		throw new IllegalArgumentException("Specified chain and bridge-lane do not intersect.");
 	}
 	
-	/* *
+	/**
 	 * <p>A time node encapsulating the events that occur in searching 
 	 * for and falsifying Claims that see both colors in a xor-chain.</p>
 	 * @author fiveham
 	 *
 	 */
-	public class SolveEventColorChainExternal extends SolutionEvent{
+	public static class SolveEventColorChainExternal extends SolutionEvent{
 		private SolveEventColorChainExternal(Collection<Claim> falseClaims){
 			falsified().addAll(falseClaims);
 		}
