@@ -14,14 +14,18 @@ class ConnectedComponent<T extends Vertex<T>> {
 	private final Set<T> core;
 	private Set<T> edge, cuttingEdge;
 	
+	private final List<T> unassignedNodes;
+	
 	@SafeVarargs
-	ConnectedComponent(int size, Consumer<Set<T>>... contractEvents) {
-		this(size, Arrays.asList(contractEvents));
+	ConnectedComponent(int size, List<T> unassignedNodes, Consumer<Set<T>>... contractEvents) {
+		this(size, unassignedNodes, Arrays.asList(contractEvents));
 	}
 	
-	ConnectedComponent(int size, Collection<Consumer<Set<T>>> contractEvents) {
+	ConnectedComponent(int size, List<T> unassignedNodes, Collection<Consumer<Set<T>>> contractEvents) {
 		this.size = size;
 		this.contractEventListeners = new ArrayList<>(contractEvents);
+		
+		this.unassignedNodes = unassignedNodes;
 		
 		this.cuttingEdge = new HashSet<>(size);
 		this.edge = new HashSet<>(size);
@@ -36,9 +40,6 @@ class ConnectedComponent<T extends Vertex<T>> {
 		for(T edgeNode : edge){
 			addAll(edgeNode.neighbors());
 		}
-	}
-	
-	public void removeAll(Collection<T> unassignedNodes){
 		unassignedNodes.removeAll(cuttingEdge);
 	}
 	

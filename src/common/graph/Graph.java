@@ -96,5 +96,5 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	 * output by <tt>seedSrc</tt> when <tt>unassignedNodes</tt> is given to it as 
 	 * input
 	 */
-	public Graph<T> componentForSeed(List<T> unassignedNodes, T seed, List<Consumer<Set<T>>> eventListeners);
+	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc, List<Consumer<Set<T>>> eventListeners);
 }

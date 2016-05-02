@@ -115,21 +115,22 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		
 		List<T> unassignedNodes = new ArrayList<>(nodes);
 		while( !unassignedNodes.isEmpty() ){
-			result.add(componentForSeed(unassignedNodes, seedSrc.apply(unassignedNodes), contractEventListenerSrc));
+			result.add(component(unassignedNodes, seedSrc, contractEventListenerSrc));
 		}
 		
 		return result;
 	}
 	
 	@Override
-	public Graph<T> componentForSeed(List<T> unassignedNodes, T seed, List<Consumer<Set<T>>> contractEventListeners){
-		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(nodes.size()+1, contractEventListeners); //+1 because <tt>seed<tt> is part of the component, too
-		newComponent.add(seed);
+	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc, List<Consumer<Set<T>>> contractEventListeners){
+		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(nodes.size(), unassignedNodes, contractEventListeners);
+		T seed = seedSrc.apply(unassignedNodes);
+		unassignedNodes.remove(seed); //required side-effect for the sake of future uses of this object
+		newComponent.add(seed); //seed now in cuttingEdge
 		
 		while( !newComponent.cuttingEdgeIsEmpty() ){
-			newComponent.contract();
-			newComponent.grow();
-			newComponent.removeAll(unassignedNodes);
+			newComponent.contract();	//move cuttingEdge into edge and old edge into core
+			newComponent.grow();		//add unincorporated nodes to cuttingEdge
 		}
 		
 		return new BasicGraph<T>(newComponent.contract());
@@ -273,9 +274,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		};
 		DistFinder distFinder = new DistFinder();
 		
-		List<T> newNodes = new ArrayList<>(nodes);
-		newNodes.remove(t1);
-		componentForSeed(newNodes, /*(list)->*/t1, Collections.singletonList(distFinder));
+		component(new ArrayList<>(nodes), (list)->t1, Collections.singletonList(distFinder));
 		
 		return distFinder.dist;
 	}
