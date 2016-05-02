@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -163,8 +162,8 @@ public class Solver implements Runnable{
 		
 		Thread operation = new Thread(watcher.watched, this);
 		
-		monitor.start();
 		operation.start(); //calls run()
+		monitor.start(); //must start after operation so that ThreadGroup.activeCount() > 0
 		
 		monitor.join();
 	}
@@ -231,24 +230,6 @@ public class Solver implements Runnable{
 	
 	private static class Watcher implements Runnable{
 		
-		/*
-		 * XXX may need to have a member Runnable and wrap that object's synchronized run() 
-		 * in this object's unsynchronized run(), so as to ensure that new threads that are 
-		 * created belonging to that Panopitcon ThreadGroup can get the ThreadGroup to internally 
-		 * recognize their membership without having to wait half a second for the Panopticon 
-		 * to stop wait()ing.
-		 */
-		
-		public static final BiConsumer<Watcher,Boolean> DO_NOTHING = (monitor,activeCountGT0) -> {};
-		public static final BiConsumer<Watcher,Boolean> CHECK_START = (monitor,activeCountGT0) -> {
-			if(activeCountGT0){
-				monitor.started = true;
-				monitor.action = DO_NOTHING;
-			}
-		};
-		
-		private boolean started = false;
-		private BiConsumer<Watcher,Boolean> action = CHECK_START;
 		private final ThreadGroup watched;
 		
 		private Watcher(ThreadGroup group){
@@ -257,9 +238,7 @@ public class Solver implements Runnable{
 		
 		@Override
 		public synchronized void run(){
-			boolean activeCountGT0 = watched.activeCount() > 0;
-			while(activeCountGT0 || !started ){
-				action.accept(this,activeCountGT0);
+			while(watched.activeCount() > 0 ){
 				try{
 					wait(500);
 				} catch(InterruptedException e){
