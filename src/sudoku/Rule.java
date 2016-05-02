@@ -85,24 +85,20 @@ public class Rule extends Fact{
 	
 	@Override
 	public String toString(){
+		return toString(true);
+	}
+
+	public String toString(boolean recursive){
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append("Rule: types:").append(typeString());
-		for(Claim c : this){
-			sb.append(System.getProperty("line.separator")).append("\t").append(c.toString());
+		sb.append("Rule: type:").append(type);
+		if(recursive){
+			for(Claim c : this){
+				sb.append(System.getProperty("line.separator")).append("\t").append(c.toString());
+			}
 		}
 		
 		return sb.toString();
-	}
-	
-	/**
-	 * <p>Returns a String representation of the {@link Puzzle.RegionSpecies types} of 
-	 * this Rule.</p>
-	 * @return a String representation of the {@link Puzzle.RegionSpecies types} of 
-	 * this Rule
-	 */
-	String typeString(){
-		return type.toString();
 	}
 	
 	/**
@@ -116,8 +112,12 @@ public class Rule extends Fact{
 	 */
 	@Override
 	protected void validateFinalState(SolutionEvent time){
+		Debug.log("enter Rule.validate...()"); //DEBUG
+		
 		if(size() == SIZE_WHEN_SOLVED){
-			for(Claim c : this){
+			Claim c = iterator().next();
+			if( c.stream().filter((f) -> f.size() != Fact.SIZE_WHEN_SOLVED).count() > 1 ){ //1 is this one
+				//Debug.log("Rule thinks it is solved: " + toString(true)); //DEBUG
 				time.push(new TimeTotalLocalization(time.top(), c.visibleClaims()));
 				c.setTrue(time);
 				time.pop();
@@ -127,6 +127,8 @@ public class Rule extends Fact{
 		} else if( isEmpty() ){
 			throw new IllegalStateException("A Rule is not allowed to be empty. this.toString(): "+toString());
 		}
+
+		Debug.log("exit Rule.validate...()"); //DEBUG
 	}
 	
 	/**

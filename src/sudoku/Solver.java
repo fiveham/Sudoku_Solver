@@ -175,20 +175,22 @@ public class Solver implements Runnable{
 	
 	@Override
 	public void run(){
+		Debug.log("Running a thread."); //DEBUG
 		
-		PassSmuggler test = new PassSmuggler();
 		BiFunction<Solver, SudokuNetwork, Solver> runnableSource = getRunnableSource();
 		if(runnableSource != null){
+			PassSmuggler test = new PassSmuggler();
 			Stream<SudokuNetwork> stream = target.connectedComponents().stream()
 					.map((component) -> new SudokuNetwork(target.magnitude(), component))
 					.filter(test);
 			if(test.somethingPassed){
+				Debug.log("Something passed, splitting thread"); //DEBUG
 				stream.forEach((network) -> new Thread(group, runnableSource.apply(this, network)).start());
 			} else synchronized(lock){
+				Debug.log("Nothing passed, notifying lock"); //DEBUG
 				lock.notify();
 			}
 		}
-		//watcher.notify();
 	}
 	
 	private class PassSmuggler implements Predicate<SudokuNetwork>{

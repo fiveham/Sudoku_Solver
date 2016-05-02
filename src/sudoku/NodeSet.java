@@ -102,12 +102,14 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	}
 	
 	public boolean remove(SolutionEvent time, Object o){
+		Debug.log("enter NodeSet.remove(time,o)"); //DEBUG
 		boolean result = remove_internal(time, o);
 		
 		if(result){
 			validateFinalState(time);
 		}
-		
+
+		Debug.log("exit NodeSet.remove(time,o)"); //DEBUG
 		return result;
 	}
 	
@@ -209,11 +211,13 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	}
 	
 	public final void clear(SolutionEvent time){
+		Debug.log("Enter clear(time): " + toString(false)); //DEBUG
 		SafeRemovingIterator iter = new SafeRemovingIterator();
 		while(iter.hasNext()){
 			iter.next();
 			iter.remove(time);
 		}
+		Debug.log("Exit clear(time): " + toString(false)); //DEBUG
 	}
 	
 	@Override
@@ -248,8 +252,10 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 			lastResult.remove(NodeSet.this);
 		}
 		public void remove(SolutionEvent time){
+			Debug.log("enter saferemovingiterator.remove(time)"); //DEBUG
 			wrappee.remove();
 			lastResult.remove(time, NodeSet.this);
+			Debug.log("exit saferemovingiterator.remove(time)"); //DEBUG
 		}
 		@Override
 		public T next(){
@@ -278,6 +284,10 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	@Override
 	public Collection<T> neighbors(){
 		return this;
+	}
+	
+	public String toString(boolean bool){
+		return toString();
 	}
 	
 	private class DummyTime extends SolutionEvent{
