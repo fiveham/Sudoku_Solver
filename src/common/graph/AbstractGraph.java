@@ -164,8 +164,8 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		Debug.log("seed: " + seed); //DEBUG
 		Debug.log("unassignedCount after seed extraction: " + unassignedNodes.size()); //DEBUG
 		
-		if(unassignedNodes.size() - initUnassignedCount != 1){
-			unassignedNodes.remove(seed); //required side-effect for the sake of future uses of this object
+		if(unassignedNodes.size() == initUnassignedCount){
+			unassignedNodes.remove(seed);
 		}
 		
 		Debug.log("unassignedCount after seed removal: " + unassignedNodes.size()); //DEBUG
@@ -178,30 +178,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		}
 		
 		List<T> core = new ArrayList<>(newComponent.contract());
-		
-		//DEBUG
-		/*Debug.log("concom size: "+core.size());
-		for(int i=0; i<core.size(); ++i){
-			Debug.log("outer loop "+i);
-			for(int j=0; j<i; ++j){
-				T t1 = core.get(i);
-				T t2 = core.get(j);
-				int d = distance(t1, t2);
-				if(d < 0){
-					Debug.log("Shit's not connected, yo: " + d + " | " + t1 + " | " + t2);
-				}
-			}
-		}*/
-		
-		/*for(List<T> pair : new common.ComboGen<>(core, 2,2)){
-			sudoku.Debug.log("pair size: "+pair.size());
-			T t1 = pair.get(0);
-			T t2 = pair.get(1);
-			int d = distance(t1, t2);
-			if(d < 0){
-				sudoku.Debug.log("Shit's not connected, yo: " + d + " | " + t1 + " | " + t2);
-			}
-		}*/
 		
 		//DEBUG
 		init = unassignedNodes.stream().filter((n) -> n instanceof Init).count();

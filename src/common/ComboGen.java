@@ -25,7 +25,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	
 	/**
 	 * <p>Constructs a ComboGen that produces combinations of elements from 
-	 * <tt>source</tt> that have a size at least <tt>minSide</tt> and at 
+	 * <tt>source</tt> that have a size at least <tt>minSize</tt> and at 
 	 * most <tt>source.size()</tt>.</p>
 	 * @param source a collection of elements combinations of which are 
 	 * produced by this ComboGen
@@ -38,7 +38,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	
 	/**
 	 * <p>Constructs a ComboGen that produces combinations of elements from 
-	 * <tt>source</tt> that have a size at least <tt>minSide</tt> and at 
+	 * <tt>source</tt> that have a size at least <tt>minSize</tt> and at 
 	 * most <tt>maxSize</tt>.</p>
 	 * @param source a collection of elements combinations of which are 
 	 * produced by this ComboGen
@@ -68,12 +68,12 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	}
 	
 	/**
-	 * A combination-navigating iterator for this ComboGen's underlying 
-	 * collection.
+	 * <p>A combination-navigating iterator for this ComboGen's underlying 
+	 * collection.</p>
 	 * 
-	 * Produces collections of varying sizes from the underlying 
+	 * <p>Produces collections of varying sizes from the underlying 
 	 * collection, starting from a size of minMag and increasing to 
-	 * maxMag.
+	 * maxMag.</p>
 	 */
 	private class ComboIterator implements Iterator<List<T>>{
 		
@@ -145,7 +145,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 				retVal.add( list.get(i) );
 			}
 			
-			if(retVal.isEmpty() & comboSize!=0){
+			if(retVal.isEmpty() && comboSize!=0){
 				retVal = NO_MORE_COMBOS_AVAILABLE();
 			}
 			

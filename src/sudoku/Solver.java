@@ -178,18 +178,28 @@ public class Solver implements Runnable{
 	}
 	
 	@Override
-	public void run(){
+	public void run(){ //FIXME connected components are nonsensical because connections are not being broken symmetrically?
 		Debug.log("Running a thread."); //DEBUG
 		
 		BiFunction<Solver, SudokuNetwork, Solver> runnableSource = getRunnableSource();
 		if(runnableSource != null){
 			
 			//DEBUG
-			Debug.log("Total nodes: " + target.nodeStream().count());
+			/*Debug.log("Total nodes: " + target.nodeStream().count());
 			long init = target.nodeStream().filter((n) -> n instanceof Init).count();
 			long claim = target.nodeStream().filter((n) -> n instanceof Claim).count();
 			long rule = target.nodeStream().filter((n) -> n instanceof Rule).count();
-			Debug.log(init + " Inits, " + claim + " Claims, " + rule + " Rules");
+			Debug.log(init + " Inits, " + claim + " Claims, " + rule + " Rules");*/
+			
+			//DEBUG
+			Debug.log("ABOUT TO GET CONCOMS");
+			for(NodeSet<?,?> node : target.nodeStream().collect(Collectors.toList())){
+				for(NodeSet<?,?> neighbor : node){
+					if( !neighbor.contains(node) ){
+						Debug.log("Non-mutual ownership: " + node + " | " + neighbor);
+					}
+				}
+			}
 			
 			Collection<Graph<NodeSet<?,?>>> initialConnectedComponents = target.connectedComponents();
 			
@@ -201,13 +211,13 @@ public class Solver implements Runnable{
 					.collect(Collectors.toList());
 			
 			//DEBUG
-			Debug.log("Non-solved concoms: " + networks.size());
+			/*Debug.log("Non-solved concoms: " + networks.size());
 			SudokuNetwork sample = networks.get(0);
 			Debug.log("an unsolved concom: " + sample.size());
 			for(NodeSet<?,?> ns : sample.nodeStream().collect(Collectors.toList())){
 				Debug.log("\t" + ns.getClass() + " | " + ns.size() + " | " + ns.toString());
-			}
-			System.exit(0);
+			}*/
+			System.exit(0);//DEBUG
 			
 			if( !networks.isEmpty()){
 				Debug.log("Something passed, splitting thread"); //DEBUG

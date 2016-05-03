@@ -37,6 +37,7 @@ public class Rule extends Fact{
 	public Rule(Puzzle puzzle, RegionSpecies type, IndexInstance dimA, IndexInstance dimB){
 		super(puzzle);
 		this.type = type;
+		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
 	}
 	
 	/**
@@ -52,6 +53,7 @@ public class Rule extends Fact{
 	public Rule(Puzzle puzzle, RegionSpecies type, Collection<Claim> c, IndexInstance dimA, IndexInstance dimB) {
 		super(puzzle, c);
 		this.type = type;
+		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
 	}
 	
 	/**
@@ -66,6 +68,7 @@ public class Rule extends Fact{
 	public Rule(Puzzle puzzle, RegionSpecies type, int initialCapacity, IndexInstance dimA, IndexInstance dimB) {
 		super(puzzle, initialCapacity);
 		this.type = type;
+		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
 	}
 	
 	/**
@@ -81,6 +84,7 @@ public class Rule extends Fact{
 	public Rule(Puzzle puzzle, RegionSpecies type, int initialCapacity, float loadFactor, IndexInstance dimA, IndexInstance dimB) {
 		super(puzzle, initialCapacity, loadFactor);
 		this.type = type;
+		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
 	}
 	
 	/*@Override
@@ -91,6 +95,20 @@ public class Rule extends Fact{
 		}
 		return false;
 	}*/
+	
+	@Override
+	public int hashCode(){
+		return hashCode;
+	}
+	
+	private final int hashCode;
+	
+	private static int genHashCode(Puzzle puzzle, RegionSpecies type, IndexInstance dimA, IndexInstance dimB){
+		Puzzle.IndexValue[] a = puzzle.decodeXYZ(dimA, dimB);
+		return Claim.linearizeCoords(a[0].intValue(), a[1].intValue(), a[2].intValue(), puzzle.sideLength()) 
+				+ (int)Math.pow(puzzle.sideLength(), Puzzle.DIMENSION_COUNT) 
+				* type.ordinal() ;
+	}
 	
 	@Override
 	public String toString(){
