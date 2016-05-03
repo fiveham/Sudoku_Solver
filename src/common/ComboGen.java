@@ -17,50 +17,48 @@ import java.util.Collection;
  */
 public class ComboGen<T> implements Iterable<List<T>>{
 	
+	/**
+	 * <p>The minimum possible size ({@value}) of a combination.</p>
+	 */
 	public static final int MIN_COMBO_SIZE = 0;
 	
-	private List<T> list;
-	private int minSize;
-	private int maxSize;
+	/**
+	 * <p>The internal list from which elements are chosen for the 
+	 * combinations this class produces.</p>
+	 */
+	private final List<T> source;
+	private final int minSize;
+	private final int maxSize;
 	
 	/**
 	 * <p>Constructs a ComboGen that produces combinations of elements from 
-	 * <tt>source</tt> that have a size at least <tt>minSize</tt> and at 
+	 * <tt>source</tt> that have a size at least {@value #MIN_COMBO_SIZE} and at 
 	 * most <tt>source.size()</tt>.</p>
 	 * @param source a collection of elements combinations of which are 
 	 * produced by this ComboGen
-	 * @param minSize the minimum size of the combinations produced by this 
-	 * ComboGen
-	 */
-	public ComboGen(Collection<? extends T> source, int minSize){
-		this(source, minSize, source.size());
-	}
-	
-	/**
-	 * <p>Constructs a ComboGen that produces combinations of elements from 
-	 * <tt>source</tt> that have a size at least <tt>minSize</tt> and at 
-	 * most <tt>maxSize</tt>.</p>
-	 * @param source a collection of elements combinations of which are 
-	 * produced by this ComboGen
-	 * @param minSize the minimum size of the combinations produced by this 
-	 * ComboGen
-	 * @param maxSize the maximum size of the combinations produced by this 
-	 * ComboGen
 	 */
 	public ComboGen(Collection<? extends T> source, int minSize, int maxSize){
-		this.list = new ArrayList<>(source);
+		this.source = new ArrayList<>(source);
 		this.minSize = minSize;
 		this.maxSize = maxSize;
 	}
 	
+	public ComboGen(Collection<? extends T> source, int minSize){
+		this(source, minSize, source.size());
+	}
+	
+	public ComboGen(Collection<? extends T> source){
+		this(source, MIN_COMBO_SIZE, source.size());
+	}
+	
 	/**
 	 * <p>Returns an IsoIterator wrapping this ComboGen's normal 
-	 * {@link #iterator() iterator}, allowing elements from the 
-	 * underlying element pool to be excluded from comboes produced 
-	 * by subsequent calls to <tt>next()</tt>.</p>
+	 * iterator, allowing elements from the underlying element 
+	 * pool to be excluded from combos produced  by subsequent 
+	 * calls to <tt>next()</tt>.</p>
 	 * 
 	 * @return an IsoIterator wrapping this ComboGen's normal 
-	 * {@link #iterator() iterator}
+	 * iterator
 	 */
 	@Override
 	public IsoIterator<T> iterator(){
@@ -71,217 +69,176 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	 * <p>A combination-navigating iterator for this ComboGen's underlying 
 	 * collection.</p>
 	 * 
-	 * <p>Produces collections of varying sizes from the underlying 
+	 * <p>Produces collections of varying sizes from this ComboGen's underlying 
 	 * collection, starting from a size of minMag and increasing to 
 	 * maxMag.</p>
 	 */
 	private class ComboIterator implements Iterator<List<T>>{
 		
-		private List<T>	nextCombo;
-		private int 	comboSize;
+		private int size;
+		private BigInteger combo;
 		
-		/**
-		 * <p>Constructs a ComboIterator.</p>
-		 */
-		public ComboIterator() {
-			comboSize = minSize;
-			nextCombo = new ArrayList<T>();
-			nextCombo = firstComboAtSize();
-		}
-		
-		private List<T> NO_MORE_COMBOS_AVAILABLE(){
-			return null;
-		}
-		
-		@Override
-		public List<T> next(){
-			if(nextCombo == NO_MORE_COMBOS_AVAILABLE()){
-				throw new NoSuchElementException();
-			}
-			
-			List<T> retVal = new ArrayList<T>(nextCombo);
-			
-			nextCombo = generateNextCombo();
-			
-			return retVal;
-		}
-		
-		private List<T> generateNextCombo(){
-			BinRep br = new BinRep();
-			
-			int index = br.getSwapIndex();
-			
-			if(index < list.size()){
-				br.swap(index);
-				
-				List<T> retList = new ArrayList<T>();
-				for(int i = 0; i<list.size(); ++i){
-					if(br.testBit(i)){
-						nextCombo.add(list.get(i));
-					}
-				}
-				return retList;
-			} else if(comboSize < maxSize){
-				++comboSize;
-				return firstComboAtSize();
-			} else{
-				return NO_MORE_COMBOS_AVAILABLE();
-			}
-		}
-		
-		/**
-		 * <p>Returns a list containing the last N elements from <tt>list</tt>.</p>
-		 * 
-		 * <p>Normally this would return a List<T> with the first N elements, 
-		 * but the bit-manipulation used for iterating over combinations 
-		 * is more easily described if the first combination for each combo-size has 
-		 * elements with the highest indices instead of with the lowest indices.</p>
-		 * 
-		 * @return a list containing the last N elements from baseList
-		 */
-		private List<T> firstComboAtSize(){
-			List<T> retVal = new ArrayList<>();
-			
-			for(int i = list.size()-comboSize; i<list.size(); ++i){
-				retVal.add( list.get(i) );
-			}
-			
-			if(retVal.isEmpty() && comboSize!=0){
-				retVal = NO_MORE_COMBOS_AVAILABLE();
-			}
-			
-			return retVal;
+		private ComboIterator(){
+			this.size = minSize;
+			this.combo = firstCombo(size);
 		}
 		
 		@Override
 		public boolean hasNext(){
-			return nextCombo != NO_MORE_COMBOS_AVAILABLE();
+			return minSize <= size && size <= maxSize;
+		}
+		
+		@Override
+		public List<T> next(){
+			if(!hasNext()){
+				throw new NoSuchElementException();
+			}
+			List<T> result = genComboList(combo);
+			updatePosition();
+			return result;
+		}
+		
+		private List<T> genComboList(BigInteger combo){
+			List<T> result = new ArrayList<>(size);
+			for(int i=0; i<source.size(); ++i){
+				if(combo.testBit(i)){
+					result.add(source.get(i));
+				}
+			}
+			return result;
+		}
+		
+		private void updatePosition(){
+			if(combo.equals(finalCombo(size))){
+				size++;
+				combo = firstCombo(size);
+			} else{
+				combo = comboAfter(combo);
+			}
 		}
 		
 		/**
-		 * <p>Stores a binary representation of the relationship between 
-		 * the base <tt>list</tt> and the {@link #next() next combo}.<p>
+		 * <p>Returns a BigInteger {@link #genComboList(BigInteger) pointing} to 
+		 * the first <tt>size</tt> elements from <tt>list</tt>.</p>
 		 * 
-		 * <p>For any index pertaining to <tt>list</tt>, if the next combo contains 
-		 * list.get(index) then the bit at that index in the binary representation 
-		 * is 1, otherwise that bit is 0.</p>
+		 * @param size the size of the combo whose backing bitstring is returned
+		 * @return a BigInteger {@link #genComboList(BigInteger) pointing} to 
+		 * the first <tt>size</tt> elements from <tt>list</tt>
 		 */
-		private class BinRep{
+		private BigInteger finalCombo(int size){
+			return leastCombo(size);
+		}
+		
+		private BigInteger leastCombo(int size){
+			BigInteger result = BigInteger.ZERO;
+			for(int i=0; i < size; ++i){
+				result = result.setBit(i);
+			}
+			return result;
+		}
+
+		/**
+		 * <p>Returns a BigInteger {@link #genComboList(BigInteger) pointing} to 
+		 * the last <tt>size</tt> elements from <tt>list</tt>.</p>
+		 * 
+		 * @param size the size of the combo whose backing bitstring is returned
+		 * @return a BigInteger {@link #genComboList(BigInteger) pointing} to 
+		 * the last <tt>size</tt> elements from <tt>list</tt>
+		 */
+		private BigInteger firstCombo(int size){
+			return greatestCombo(size);
+		}
+		
+		/**
+		 * </p>Returns a BigInteger having the greatest numerical value of any 
+		 * BigInteger {@link #genComboList(BigInteger) pointing} to a 
+		 * combination of the current size. The value returned is equal to 
+		 * <tt>(2^(size+1) - 1) * 2^(source.size() - size)</tt>, which equals 
+		 * <tt>2^(source.size()+1) - 2^(source.size() - size)</tt>.</p>
+		 * 
+		 * @param size the number of set bits in the BigIteger returned
+		 * @return a BigInteger having the greatest numerical value of any 
+		 * BigInteger {@link #genComboList(BigInteger) pointing} to a 
+		 * combination of the current size
+		 */
+		private BigInteger greatestCombo(int size){ //TODO cache greatest and least combo results
+			BigInteger result = BigInteger.ZERO;
+			for(int i=source.size(); i > source.size()-size; --i){
+				result = result.setBit(i);
+			}
+			return result;
+		}
+		
+		/* 
+		 * This implementation, pulling 1s down to lower indices, is 
+		 * tied to the fact that the first combo is the greatest value 
+		 * and the final combo is the least value. If that relationship 
+		 * between combo precedence and the numerical size of the combo 
+		 * ever changes, this method needs to be adapted to the new 
+		 * relationship.
+		 */
+		private BigInteger comboAfter(BigInteger combo){
+			int swapIndex = lowerableOne(combo);
+			int onesBelow = onesBelow(swapIndex, combo);
 			
-			private BigInteger bitstring;
+			//swap the 1 with the 0 below it
+			BigInteger result = combo.clearBit(swapIndex--).setBit(swapIndex--);
 			
-			/**
-			 * <p>Constructs a binary representation of the relationship between 
-			 * baseList and nextCombo.</p>
-			 */
-			public BinRep(){
-				bitstring = BigInteger.ZERO;
-				for(int i=0; i<list.size(); i++){
-					bitstring = nextCombo.contains(list.get(i))
-							? bitstring.setBit(i)
-							: bitstring.clearBit(i);
+			//move all the 1s from below the swapped 0 to a position 
+			//immediately below the swapped 0's initial position
+			for(int onesSet = 0; onesSet < onesBelow; ++onesSet){
+				result = result.setBit(swapIndex--);
+			}
+			
+			//fill the space between the lowest moved 1 and the bottom of 
+			//the BigInteger with 0s
+			while(swapIndex>=0){
+				result = result.clearBit(swapIndex--);
+			}
+			
+			return result;
+		}
+		
+		/**
+		 * <p>Returns the lowest index in <tt>combo</tt> of a 
+		 * {@link BigInteger#testBit(int) 1} such that the bit at the 
+		 * next lower index is 0. If no such bit exists in <tt>combo</tt>, 
+		 * then <tt>source.size()</tt> is returned.</p>
+		 * 
+		 * @param combo the combo whose lowest-index 1 with a 0 
+		 * immediately below it (in terms of index) is returned
+		 * @return the lowest index in <tt>combo</tt> of a 
+		 * {@link BigInteger#testBit(int) 1} such that the bit at the 
+		 * next lower index is 0, or <tt>source.size()</tt> if no such 
+		 * bit exists in <tt>combo</tt>
+		 */
+		private int lowerableOne(BigInteger combo){
+			int i=0;
+			while(i<source.size()-1){
+				if(!combo.testBit(i) && combo.testBit(++i)){
+					break;
 				}
 			}
-			
-			/**
-			 * <p>Returns true if a swap can be executed at the specified 
-			 * index, false otherwise.</p>
-			 * 
-			 * <p>Determines whether a swap can be executed by determining 
-			 * whether the bit in bitstring at the specified <tt>index</tt> and 
-			 * the bit at <tt>index-1</tt> are 1 and 0 respectively.</p>
-			 * 
-			 * <p>In the case of <tt>index == 0</tt>, where there is no bit in 
-			 * bitstring for <tt>index-1</tt>, <tt>false</tt> is returned.</p>
-			 * 
-			 * @param index the index in bitstring at which a swap-test is 
-			 * being performed
-			 * 
-			 * @return true if the bit in bitstring at the specified 
-			 * <tt>index</tt> and the bit at <tt>index-1</tt> are 1 
-			 * and 0 respectively, false otherwise
-			 */
-			public boolean canSwap(int index){
-				return index>0 && bitstring.testBit(index) && !bitstring.testBit(index-1);
-			}
-			
-			/**
-			 * <p>Returns the lowest index for which a swap can be executed, 
-			 * or returns <tt>list.size()</tt> if no swap can be executed.</p>
-			 * 
-			 * @return the lowest index for which a swap can be executed, 
-			 * or <tt>list.size()</tt> if no swap can be executed
-			 */
-			public int getSwapIndex(){
-				int i=0;
-				while(i<list.size()){
-					if(canSwap(i++)){
-						break;
-					}
-				}
-				return i;
-			}
-			
-			/**
-			 * <p>Flips <tt>bitstring</tt>'s bit at the specified index as well as the bit 
-			 * at <tt>index-1</tt>. In the preferred use, these two bits will be complementary
-			 * <tt>(bit(index) ^ bit(index-1) == true)</tt>.</p>
-			 * 
-			 * <p>Then, determines the number of {@link BigInteger#setBit(int) set bits} in 
-			 * bitstring at indices lower than <t>index-1</tt>, and sets that many bits, 
-			 * starting at <tt>index-2</tt>.
-			 * 
-			 * <tt>Then, {@link BigInteger#clearBit(int) clears} all bits at indices lower 
-			 * than the last one from the previous step.</tt>
-			 * @param index the index in bitstring of the higher of two adjacent bits both 
-			 * of which are flipped
-			 */
-			public void swap(int index){
-				
-				bitstring = bitstring.flipBit(index).flipBit(index-1);
-				
-				int ones = getLowerOnes(index-1);
-				
-				for( int i = index-2; i>index-ones-2; i--){
-					bitstring = bitstring.setBit(i);
-				}
-				
-				for( int i = index-ones-2; i>=0; i--){
-					bitstring = bitstring.clearBit(i);	
+			return i;
+		}
+		
+		/**
+		 * <p>Returns the number of 1s in <tt>combo</tt> at indices less 
+		 * than <tt>swapIndex</tt>.</p>
+		 * @param swapIndex the index in <tt>combo</tt> below which 1s 
+		 * are counted
+		 * @param combo the BigInteger from which 1s are counted
+		 * @return the number of 1s in <tt>combo</tt> at indices less 
+		 * than <tt>swapIndex
+		 */
+		private int onesBelow(int swapIndex, BigInteger combo){
+			int result = 0;
+			for(int i=swapIndex-1; i>=0; --i){
+				if(combo.testBit(i)){
+					++result;
 				}
 			}
-			
-			/**
-			 * <p>Returns true if the bit in bitstring at the specified index
-			 * is {@link BigInteger#setBit(int) set}, false otherwise.</p>
-			 * 
-			 * @param index the index in <tt>bitstring</tt> whose bit is tested
-			 * @return true if the bit in bitstring at the specified index
-			 * is {@link BigInteger#setBit(int) set}, false otherwise
-			 */
-			public boolean testBit(int index){
-				return bitstring.testBit(index);
-			}
-			
-			/**
-			 * <p>Returns the number of {@link BigInteger#setBit(int) set bits} in 
-			 * <tt>bitstring</tt> at indices lower than <tt>index</tt>.
-			 * 
-			 * @param index the position in <tt>bitstring</tt> below which 
-			 * {@link BigInteger#setBit(int) set bits} are counted
-			 * @return the number of {@link BigInteger#setBit(int) set bits} in 
-			 * <tt>bitstring</tt> at indices lower than <tt>index</tt>
-			 */
-			private int getLowerOnes(int index){
-				int retVal = 0;
-				for(int i=index-1; i>=0; i--){
-					if(bitstring.testBit(i)){
-						retVal++;
-					}
-				}
-				return retVal;
-			}
-			
+			return result;
 		}
 	}
 }

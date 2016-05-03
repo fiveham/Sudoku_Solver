@@ -4,7 +4,6 @@ import common.time.Time;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import sudoku.Puzzle.RegionSpecies;
 import sudoku.Puzzle.IndexInstance;
@@ -176,7 +175,7 @@ public class Rule extends Fact{
 	 * if found. These are scenarios where one Rule is a subset 
 	 * of another.</p>
 	 */
-	private void findAndAddressValueClaim(SolutionEvent time){ //FIXME method tries to falsify a Claim that is in the middle of being set false, causing concurrent modification exception
+	private void findAndAddressValueClaim(SolutionEvent time){
 		Set<Fact> possibleSupersets = new HashSet<>();
 		stream().forEach((c) -> possibleSupersets.addAll(c));
 		possibleSupersets.remove(this);
