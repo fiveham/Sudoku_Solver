@@ -87,6 +87,8 @@ public class Sledgehammer extends Technique {
 	@Override
 	protected SolutionEvent process(){
 		
+		Debug.log("Entered Sledgehammer.process()"); //DEBUG
+		
 		//For each disjoint source combo
 		Set<Rule> rules = target.factStream().filter((ns)->ns instanceof Rule).map((ns)->(Rule)ns).collect(Collectors.toSet());
 		ComboGen<Rule> reds = new ComboGen<>(rules, MIN_SRC_COMBO_SIZE, rules.size()/2);
@@ -96,17 +98,43 @@ public class Sledgehammer extends Technique {
 			
 			//For each conceivable recipient combo
 			Set<Fact> nearbyRules = rulesIntersecting(srcUnion, srcCombo);
+			
+			Debug.log("srcCombo.size(): "+srcCombo.size()); //DEBUG
+			
 			for(List<Fact> recipientCombo : new ComboGen<>(nearbyRules, srcCombo.size(), srcCombo.size())){
+				
+				Debug.log("recipientCombo.size(): "+recipientCombo.size()); //DEBUG
 				
 				//If the source and recipient combos make a valid sledgehammer scenario
 				Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo, srcUnion); 
 				if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
+					
+					Debug.log("Found a Sledgehammer result!"); //DEBUG
+					
 					return resolve(claimsToSetFalse);
 				}
 			}
 		}
 		
+		Debug.log("Leaving Sledgehammer with no result."); //DEBUG
 		return null;
+	}
+	
+	/**
+	 * <p>Returns a set of all the Rules that intersect any of the 
+	 * Rules in <tt>sources</tt>.</p>
+	 * @param union a pre-computed {@link Sledgehammer#sideEffectUnion(Collection, boolean) mass-union} 
+	 * of the Claims in the Rules in <tt>sources</tt>
+	 * @param sources a collection of Rules to be used as an originating 
+	 * combination for a sledgehammer solution event
+	 * @return a set of all the Rules that intersect any of the Rules 
+	 * in <tt>sources</tt>, excluding the Rules in <tt>sources</tt>.
+	 */
+	private Set<Fact> rulesIntersecting(Set<Claim> union, List<Rule> sources){
+		Set<Fact> result = new HashSet<>();
+		union.stream().forEach( (c)->result.addAll(c) );
+		result.removeAll(sources);
+		return result;
 	}
 	
 	private class UnionIterable implements Iterable<Pair<List<Rule>,ToolSet<Claim>>>{
@@ -155,6 +183,7 @@ public class Sledgehammer extends Technique {
 					return this.union = union;
 				}
 			}
+			
 			return new UnionIterator(wrappedIterable);
 		}
 	}
@@ -291,22 +320,5 @@ public class Sledgehammer extends Technique {
 		private SolveEventSledgehammer(Collection<Claim> claimsToSetFalse){
 			falsified().addAll(claimsToSetFalse);
 		}
-	}
-	
-	/**
-	 * <p>Returns a set of all the Rules that intersect any of the 
-	 * Rules in <tt>sources</tt>.</p>
-	 * @param union a pre-computed {@link Sledgehammer#sideEffectUnion(Collection, boolean) mass-union} 
-	 * of the Claims in the Rules in <tt>sources</tt>
-	 * @param sources a collection of Rules to be used as an originating 
-	 * combination for a sledgehammer solution event
-	 * @return a set of all the Rules that intersect any of the Rules 
-	 * in <tt>sources</tt>, excluding the Rules in <tt>sources</tt>.
-	 */
-	private Set<Fact> rulesIntersecting(Set<Claim> union, List<Rule> sources){
-		Set<Fact> result = new HashSet<>();
-		union.stream().forEach( (c)->result.addAll(c) );
-		result.removeAll(sources);
-		return result;
 	}
 }

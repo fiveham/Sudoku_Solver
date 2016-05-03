@@ -166,7 +166,9 @@ public class Solver implements Runnable{
 		
 		while(group.activeCount() > 0){
 			synchronized(lock){
-				lock.wait();
+				//if(group.activeCount() > 0){
+					lock.wait();
+				//}
 			}
 		}
 	}

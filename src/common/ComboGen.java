@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import sudoku.Debug;
 
 /**
  * <p>Generates combinations of the elements in a given combination 
@@ -41,8 +43,22 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	 */
 	public ComboGen(Collection<? extends T> source, int minSize, int maxSize){
 		this.source = new ArrayList<>(source);
+		
+		if(minSize < MIN_COMBO_SIZE){
+			throw new IllegalArgumentException("minSize "+minSize);
+		}
 		this.minSize = minSize;
+		
+		if(maxSize > source.size()){
+			throw new IllegalArgumentException("maxSize "+maxSize);
+		}
 		this.maxSize = maxSize;
+		
+		if(maxSize<minSize){
+			throw new IllegalArgumentException("max size must be greater than min size: " + maxSize + " < " + minSize);
+		}
+		
+		//Debug.log("ComboGen min size "+minSize + ", max size "+maxSize); //DEBUG
 	}
 	
 	public ComboGen(Collection<? extends T> source, int minSize){
@@ -51,6 +67,41 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	
 	public ComboGen(Collection<? extends T> source){
 		this(source, MIN_COMBO_SIZE, source.size());
+	}
+	
+	private void test(){
+		ComboIterator ci = new ComboIterator();
+		
+		/*System.out.println("Testing firstCombo and finalCombo");
+		for(int size = 0; size <= source.size(); size++){ //note: starts at 0 and test including equality with source size
+			BigInteger first = ci.firstCombo(size);
+			BigInteger finla = ci.finalCombo(size);
+			
+			System.out.println("size "+size);
+			System.out.println("first: "+first.toString(2));
+			System.out.println("final: "+finla.toString(2));
+		}*/
+		
+		System.out.println("Testing comboAfter");
+		BigInteger bi;
+		int lo, ob;
+		
+
+		bi = BigInteger.ZERO;
+		lo = ci.lowerableOne(bi);
+		ob = ci.onesBelow(lo, bi);
+		System.out.println(bi.toString(2));
+		System.out.println(lo + " " + ob);
+		System.out.println();
+		
+		for(int i=0; i<25; i++){
+			bi = ci.comboAfter(bi);
+			lo = ci.lowerableOne(bi);
+			ob = ci.onesBelow(lo, bi);
+			System.out.println(bi.toString(2));
+			System.out.println(lo + " " + ob);
+			System.out.println();
+		}
 	}
 	
 	/**
@@ -96,6 +147,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 				throw new NoSuchElementException();
 			}
 			List<T> result = genComboList(combo);
+
 			updatePosition();
 			return result;
 		}
@@ -112,8 +164,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		
 		private void updatePosition(){
 			if(combo.equals(finalCombo(size))){
-				size++;
-				combo = firstCombo(size);
+				combo = firstCombo(++size);
 			} else{
 				combo = comboAfter(combo);
 			}
@@ -156,7 +207,11 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		 * the last <tt>size</tt> elements from <tt>list</tt>
 		 */
 		private BigInteger firstCombo(int size){
-			return greatestCombo(size);
+			BigInteger result = greatestCombo(size);
+			
+			//Debug.log("first combo at size "+size+": "+result.toString(2)); //DEBUG
+			
+			return result;
 		}
 		
 		/**
@@ -177,7 +232,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			}
 			
 			BigInteger result = BigInteger.ZERO;
-			for(int i=source.size(); i > source.size()-size; --i){
+			for(int i=source.size()-size; i < source.size(); ++i){
 				result = result.setBit(i);
 			}
 			
@@ -200,18 +255,23 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			int onesBelow = onesBelow(swapIndex, combo);
 			
 			//swap the 1 with the 0 below it
-			BigInteger result = combo.clearBit(swapIndex--).setBit(swapIndex--);
+			BigInteger result = combo.clearBit(swapIndex);
+			swapIndex--;
+			result = result.setBit(swapIndex);
+			swapIndex--;
 			
 			//move all the 1s from below the swapped 0 to a position 
 			//immediately below the swapped 0's initial position
 			for(int onesSet = 0; onesSet < onesBelow; ++onesSet){
-				result = result.setBit(swapIndex--);
+				result = result.setBit(swapIndex);
+				swapIndex--;
 			}
 			
 			//fill the space between the lowest moved 1 and the bottom of 
 			//the BigInteger with 0s
 			while(swapIndex>=0){
-				result = result.clearBit(swapIndex--);
+				result = result.clearBit(swapIndex);
+				swapIndex--;
 			}
 			
 			return result;
@@ -232,12 +292,12 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		 */
 		private int lowerableOne(BigInteger combo){
 			int i=0;
-			while(i<source.size()-1){
-				if(!combo.testBit(i) && combo.testBit(++i)){
+			for(;i<source.size()-1; ++i){
+				if(!combo.testBit(i) && combo.testBit(i+1)){
 					break;
 				}
 			}
-			return i;
+			return i+1;
 		}
 		
 		/**
@@ -258,5 +318,18 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			}
 			return result;
 		}
+	}
+	
+	/**
+	 * <p>For testing</p>
+	 * @param args
+	 */
+	public static void main(String[] args){
+		Integer[] array = new Integer[20];
+		Arrays.fill(array, 5);
+		List<Integer> src = Arrays.asList(array);
+		
+		ComboGen<Integer> cg = new ComboGen<>(src);
+		cg.test();
 	}
 }
