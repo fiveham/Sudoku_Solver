@@ -97,8 +97,6 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		if(result){
 			validateFinalState(new DummyTime());
 		}
-
-		symmetryCheck("remove(Object)"); //DEBUG
 		return result;
 	}
 	
@@ -108,8 +106,6 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		if(result){
 			validateFinalState(time);
 		}
-		
-		symmetryCheck("remove(SolutionEvent,Object)"); //DEBUG
 		return result;
 	}
 	
@@ -136,20 +132,15 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		if(result){
 			((T)o).remove(this);
 		}
-		symmetryCheck("remove_internal(Object)"); //DEBUG
 		return result;
 	}
 
 	@SuppressWarnings("unchecked")
 	private boolean remove_internal(SolutionEvent time, Object o){
-		boolean initContain = super.contains(o);
 		boolean result = super.remove(o);
-		boolean postContain = super.contains(o);
-		Boolean ifContain = null;
 		if(result){
-			ifContain = ((T)o).remove(time, this);
+			((T)o).remove(time, this);
 		}
-		symmetryCheck("remove_internal(SolutionEvent,Object) ["+initContain+","+postContain+","+ifContain+"]"); //DEBUG
 		return result;
 	}
 	
@@ -163,8 +154,6 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		if(result){
 			validateFinalState(new DummyTime());
 		}
-
-		symmetryCheck("removeAll(Collection)"); //DEBUG
 		return result;
 	}
 	
@@ -177,8 +166,6 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		if(result){
 			validateFinalState(time);
 		}
-
-		symmetryCheck("removeAll(SolutionEvent,Collection)"); //DEBUG
 		return result;
 	}
 	
@@ -196,8 +183,6 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		if(result){
 			validateFinalState(new DummyTime());
 		}
-
-		symmetryCheck("retainAll(Collection)"); //DEBUG
 		return result;
 	}
 	
@@ -214,8 +199,6 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		if(result){
 			validateFinalState(time);
 		}
-
-		symmetryCheck("retainAll(SolutionEvent,Collection)"); //DEBUG
 		return result;
 	}
 	
@@ -225,7 +208,6 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 			iter.next();
 			iter.remove(time);
 		}
-		symmetryCheck("clear(SolutionEvent)"); //DEBUG
 	}
 	
 	@Override
@@ -235,21 +217,11 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 			iter.next();
 			iter.remove();
 		}
-		symmetryCheck("clear()"); //DEBUG
 	}
 	
 	@Override
 	public final Iterator<T> iterator(){
 		return new SafeRemovingIterator();
-	}
-	
-	//DEBUG
-	private void symmetryCheck(String methodName){
-		for(NodeSet<?,?> neighbor : this){
-			if( !neighbor.contains(this) ){
-				Debug.log("ASYMMETRY in "+methodName+": " + toString() + " | " + neighbor.toString());
-			}
-		}
 	}
 	
 	/**
@@ -268,12 +240,10 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		public void remove(){
 			wrappee.remove();
 			lastResult.remove(NodeSet.this);
-			symmetryCheck("SafeRemovingIterator.remove()"); //DEBUG
 		}
 		public void remove(SolutionEvent time){
 			wrappee.remove();
 			lastResult.remove(time, NodeSet.this);
-			symmetryCheck("SafeRemovingIterator.remove(SolutionEvent)"); //DEBUG
 		}
 		@Override
 		public T next(){

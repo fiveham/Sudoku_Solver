@@ -4,6 +4,7 @@ import common.time.Time;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import sudoku.Puzzle.RegionSpecies;
 import sudoku.Puzzle.IndexInstance;
@@ -139,12 +140,12 @@ public class Rule extends Fact{
 	 */
 	@Override
 	protected void validateFinalState(SolutionEvent time){
-		//Debug.log("enter Rule.validate...()"); //DEBUG
-		
 		if(size() == SIZE_WHEN_SOLVED){
 			Claim c = iterator().next();
 			if( CLAIM_IS_TRUE_NOT_YET_SET_TRUE.apply(c) ){
-				//Debug.log("Rule thinks it is solved: " + toString(true)); //DEBUG
+				
+				//Debug.log("Rule total-localizing: "+this); //DEBUG
+				
 				time.push(new TimeTotalLocalization(time.top(), c.visibleClaims()));
 				c.setTrue(time);
 				time.pop();
@@ -154,8 +155,6 @@ public class Rule extends Fact{
 		} else if( isEmpty() ){
 			throw new IllegalStateException("A Rule is not allowed to be empty. this.toString(): "+toString());
 		}
-		
-		//Debug.log("exit Rule.validate...()"); //DEBUG
 	}
 	
 	/**
@@ -177,7 +176,7 @@ public class Rule extends Fact{
 	 * if found. These are scenarios where one Rule is a subset 
 	 * of another.</p>
 	 */
-	private void findAndAddressValueClaim(SolutionEvent time){
+	private void findAndAddressValueClaim(SolutionEvent time){ //FIXME method tries to falsify a Claim that is in the middle of being set false, causing concurrent modification exception
 		Set<Fact> possibleSupersets = new HashSet<>();
 		stream().forEach((c) -> possibleSupersets.addAll(c));
 		possibleSupersets.remove(this);
@@ -190,7 +189,14 @@ public class Rule extends Fact{
 						.collect(Collectors.toSet());
 				time.push(new TimeValueClaim(time.top(), falsified));
 				
-				falsified.stream().forEach((claim) -> claim.setFalse(time));
+				/*//DEBUG
+				Debug.log("Rule value-claiming: "+this);
+				Debug.log("Claims to falsify: ");
+				for(Claim c : falsified){
+					Debug.log("\t" + c);
+				}*/
+				
+				falsified.stream().filter(Claim.CLAIM_IS_BEING_SET_FALSE.negate()).forEach((claim) -> claim.setFalse(time));
 				
 				time.pop();
 				return;

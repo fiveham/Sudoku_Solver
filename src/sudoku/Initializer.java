@@ -35,8 +35,6 @@ public class Initializer extends Technique {
 	 */
 	@Override
 	protected SolutionEvent process(){
-		//Debug.log("Trying to solve using " + getClass()); //DEBUG
-		
 		Optional<NodeSet<?,?>> i = target.nodeStream().filter((e)-> e instanceof Init).findFirst();
 		if(i.isPresent()){
 			SolutionEvent result = new Initialization();

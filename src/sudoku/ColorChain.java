@@ -167,7 +167,7 @@ public class ColorChain extends Technique {
 		List<Claim> claimsToSetFalse = target.claimStream().filter((claim)->claimContradictsChain(claim,concom)).collect(Collectors.toList());
 		if(!claimsToSetFalse.isEmpty()){
 			SolutionEvent result = new SolveEventColorChainExternal(claimsToSetFalse);
-			claimsToSetFalse.stream().forEach((c)->c.setFalse(result));
+			claimsToSetFalse.stream().filter(Claim.CLAIM_IS_BEING_SET_FALSE.negate()).forEach((c)->c.setFalse(result));
 			return result;
 		}
 		
@@ -282,9 +282,7 @@ public class ColorChain extends Technique {
 				.collect(Collectors.toList());
 		time.falsified().addAll(setFalse);
 		
-		for(Claim c : setFalse){
-			c.setFalse(time);
-		}
+		setFalse.stream().filter(Claim.CLAIM_IS_BEING_SET_FALSE.negate()).forEach((c)->c.setFalse(time));
 		
 		return time;
 	}

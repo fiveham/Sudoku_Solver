@@ -2,6 +2,7 @@ package sudoku;
 
 import sudoku.Puzzle.IndexValue;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * <p>Represents a claim that "Cell x,y has value z."</p>
@@ -25,6 +26,37 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * the time-tree, as well as being aesthetically unpleasant.</p>
 	 */
 	public static final int UNARY_RULE_COUNT_FOR_SET_TRUE = 1;
+	
+	/**
+	 * <p>Indicates whether the specified Claim is in the process of being 
+	 * {@link Claim#setFalse(SolutionEvent) set false}. Outputs true if 
+	 * and only if the specified Claim has a number of neighbors between 
+	 * the typical initial {@value Claim#INIT_OWNER_COUNT} and 0, which 
+	 * only occurs after the Claim has had some but not all of its Rule 
+	 * neighbors removed while being set false.</p>
+	 * 
+	 * <p>It is possible for a Claim being set false to trigger one of its 
+	 * (formerly) neighboring Rules to initiate a 
+	 * {@link #TimeValueClaim value-claim} that targets the very same Claim 
+	 * that's still in the process of being set false as one of the Claims 
+	 * to be set false. Calling <tt>setFalse</tt> on such a Claim will create 
+	 * a second Iterator, which will remove the remaining Rules from that 
+	 * Claim, modifying the underlying collection. When that method call 
+	 * and all others subordinate to the initial <tt>setFalse</tt> call on 
+	 * the twice-falsified Claim return and control passes back to that 
+	 * initial <tt>setFalse</tt>, the Iterator therein for that Claim will 
+	 * still {@link Iterator#hasNext() have a next element} available, 
+	 * even though the actual collection may be empty, resulting in a 
+	 * ConcurrentModificationException the next time {@link Iterator#next() next()} 
+	 * is called.</p>
+	 * 
+	 * <p>However, by filtering the Claims to be falsified in a value-claim 
+	 * situation against this Predicate, only falsifying those that this 
+	 * test says are not in the middle of being set false, multiple-
+	 * falsification and the ConcurrentModificationException that comes with 
+	 * it can be avoided.</p>
+	 */
+	public static final Predicate<Claim> CLAIM_IS_BEING_SET_FALSE = (claim) -> !claim.isEmpty() && claim.size() < Claim.INIT_OWNER_COUNT;
 	
 	/**
 	 * 
@@ -84,17 +116,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * @return true if this Claim is known to be true, false otherwise
 	 */
 	public boolean isKnownTrue(){
-		return isKnownTrue(true);
-	}
-	
-	public boolean isKnownTrue(boolean shortCircuit){
-		if(shortCircuit){
-			return stream().anyMatch((owner) -> owner.size()==Fact.SIZE_WHEN_SOLVED);
-			//return !stream().allMatch((owner)->owner.size()!=Fact.SIZE_WHEN_SOLVED);
-		} else{
-			return stream().allMatch((owner) -> owner.size()==Fact.SIZE_WHEN_SOLVED);
-			//return !(shortCircuit ^ stream().anyMatch((owner) -> !shortCircuit ^ (owner.size()!=Fact.SIZE_WHEN_SOLVED)));
-		}
+		return stream().anyMatch((owner) -> owner.size()==Fact.SIZE_WHEN_SOLVED);
 	}
 	
 	/**
@@ -113,22 +135,18 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * Rule neighbors of this Claim into one another, removing 
 	 * three of those Rules from the target as objects. Adds a 
 	 * TimeSetTrue onto the target's time stack.</p>
+	 * 
 	 * @return true if calling this method changed the state of 
 	 * this Claim, false otherwise
 	 */
 	boolean setTrue(SolutionEvent time){
-		Debug.log("Set true " + toString()); //DEBUG
+		
+		//Debug.log("Setting Claim true: "+this); //DEBUG
 		
 		Set<Claim> s = visibleClaims();
 		int init = s.size();
 		
-		//DEBUG
-		//Debug.log("Setting "+init+" Claims false:");
-		/*for(Claim claim : s){
-			Debug.log("\t" + claim.toString());
-		}*/
-		
-		s.stream().forEach((c) -> c.setFalse(time));
+		s.stream().filter(CLAIM_IS_BEING_SET_FALSE.negate()).forEach((c) -> c.setFalse(time));
 		
 		return init != visibleClaims().size();
 	}
@@ -142,12 +160,11 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * this Claim, false otherwise
 	 */
 	public boolean setFalse(SolutionEvent time){
-		//Debug.log("Enter Claim.setFalse() " + toString()); //DEBUG
+		
+		//Debug.log("Setting Claim false: "+this); //DEBUG
 		
 		int initSize = size();
 		clear(time);
-		
-		//Debug.log("Exit Claim.setFalse() " + toString()); //DEBUG
 		return size() != initSize;
 	}
 	

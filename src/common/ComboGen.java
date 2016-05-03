@@ -49,7 +49,6 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	 */
 	public ComboGen(Collection<? extends T> source, int minSize, int maxSize){
 		this.list = new ArrayList<>(source);
-		sudoku.Debug.log("ComboGen list size: " + list.size());//DEBUG
 		this.minSize = minSize;
 		this.maxSize = maxSize;
 	}
@@ -59,6 +58,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	 * {@link #iterator() iterator}, allowing elements from the 
 	 * underlying element pool to be excluded from comboes produced 
 	 * by subsequent calls to <tt>next()</tt>.</p>
+	 * 
 	 * @return an IsoIterator wrapping this ComboGen's normal 
 	 * {@link #iterator() iterator}
 	 */
@@ -136,6 +136,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		 * but the bit-manipulation used for iterating over combinations 
 		 * is more easily described if the first combination for each combo-size has 
 		 * elements with the highest indices instead of with the lowest indices.</p>
+		 * 
 		 * @return a list containing the last N elements from baseList
 		 */
 		private List<T> firstComboAtSize(){
@@ -207,6 +208,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			/**
 			 * <p>Returns the lowest index for which a swap can be executed, 
 			 * or returns <tt>list.size()</tt> if no swap can be executed.</p>
+			 * 
 			 * @return the lowest index for which a swap can be executed, 
 			 * or <tt>list.size()</tt> if no swap can be executed
 			 */
@@ -231,7 +233,8 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			 * 
 			 * <tt>Then, {@link BigInteger#clearBit(int) clears} all bits at indices lower 
 			 * than the last one from the previous step.</tt>
-			 * @param index
+			 * @param index the index in bitstring of the higher of two adjacent bits both 
+			 * of which are flipped
 			 */
 			public void swap(int index){
 				
@@ -251,6 +254,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			/**
 			 * <p>Returns true if the bit in bitstring at the specified index
 			 * is {@link BigInteger#setBit(int) set}, false otherwise.</p>
+			 * 
 			 * @param index the index in <tt>bitstring</tt> whose bit is tested
 			 * @return true if the bit in bitstring at the specified index
 			 * is {@link BigInteger#setBit(int) set}, false otherwise
@@ -262,6 +266,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			/**
 			 * <p>Returns the number of {@link BigInteger#setBit(int) set bits} in 
 			 * <tt>bitstring</tt> at indices lower than <tt>index</tt>.
+			 * 
 			 * @param index the position in <tt>bitstring</tt> below which 
 			 * {@link BigInteger#setBit(int) set bits} are counted
 			 * @return the number of {@link BigInteger#setBit(int) set bits} in 

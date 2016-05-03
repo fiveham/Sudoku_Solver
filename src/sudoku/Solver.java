@@ -1,18 +1,12 @@
 package sudoku;
 
-import common.graph.Graph;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * <p>Coordinates and applies several techniques for solving a sudoku target.</p>
@@ -178,49 +172,20 @@ public class Solver implements Runnable{
 	}
 	
 	@Override
-	public void run(){ //FIXME connected components are nonsensical because connections are not being broken symmetrically?
-		Debug.log("Running a thread."); //DEBUG
+	public void run(){
+		Debug.log("Running a thread: " + Thread.currentThread().getName()); //DEBUG
 		
 		BiFunction<Solver, SudokuNetwork, Solver> runnableSource = getRunnableSource();
 		if(runnableSource != null){
-			
-			//DEBUG
-			/*Debug.log("Total nodes: " + target.nodeStream().count());
-			long init = target.nodeStream().filter((n) -> n instanceof Init).count();
-			long claim = target.nodeStream().filter((n) -> n instanceof Claim).count();
-			long rule = target.nodeStream().filter((n) -> n instanceof Rule).count();
-			Debug.log(init + " Inits, " + claim + " Claims, " + rule + " Rules");*/
-			
-			//DEBUG
-			Debug.log("ABOUT TO GET CONCOMS");
-			for(NodeSet<?,?> node : target.nodeStream().collect(Collectors.toList())){
-				for(NodeSet<?,?> neighbor : node){
-					if( !neighbor.contains(node) ){
-						Debug.log("Non-mutual ownership: " + node + " | " + neighbor);
-					}
-				}
-			}
-			
-			Collection<Graph<NodeSet<?,?>>> initialConnectedComponents = target.connectedComponents();
-			
-			Debug.log("Total concoms: " + initialConnectedComponents.size());//DEBUG
-			
-			List<SudokuNetwork> networks = initialConnectedComponents.stream()
+			List<SudokuNetwork> networks = target.connectedComponents().stream()
 					.map((component) -> new SudokuNetwork(target.magnitude(), component))
 					.filter((sn) -> !sn.isSolved())
 					.collect(Collectors.toList());
 			
-			//DEBUG
-			/*Debug.log("Non-solved concoms: " + networks.size());
-			SudokuNetwork sample = networks.get(0);
-			Debug.log("an unsolved concom: " + sample.size());
-			for(NodeSet<?,?> ns : sample.nodeStream().collect(Collectors.toList())){
-				Debug.log("\t" + ns.getClass() + " | " + ns.size() + " | " + ns.toString());
-			}*/
-			System.exit(0);//DEBUG
+			//System.exit(0);//DEBUG
 			
 			if( !networks.isEmpty()){
-				Debug.log("Something passed, splitting thread"); //DEBUG
+				Debug.log("Something passed, splitting thread: " + networks.size() + " children"); //DEBUG
 				
 				String name = Thread.currentThread().getName();
 				for(int i=0; i<networks.size(); ++i){
@@ -233,8 +198,6 @@ public class Solver implements Runnable{
 					lock.notify();
 				}
 			}
-			
-			//System.exit(0);//DEBUG
 		}
 	}
 	
@@ -249,7 +212,7 @@ public class Solver implements Runnable{
 	private BiFunction<Solver, SudokuNetwork, Solver> getRunnableSource(){
 		for(TechniqueInheritance ti : TechniqueInheritance.values()){
 			if((event = ti.solutionStyle.apply(this)) != null){
-				//Debug.log("Made a change " + ti); //DEBUG
+				//Debug.log("Will use inheritance type " + ti); //DEBUG
 				return ti.initializerInheritance;
 			}
 		}
