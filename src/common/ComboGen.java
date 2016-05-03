@@ -1,8 +1,10 @@
 package common;
 
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -130,13 +132,21 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		}
 		
 		private BigInteger leastCombo(int size){
+			if(leastComboCache.containsKey(size)){
+				return leastComboCache.get(size);
+			}
+			
 			BigInteger result = BigInteger.ZERO;
 			for(int i=0; i < size; ++i){
 				result = result.setBit(i);
 			}
+			
+			leastComboCache.put(size, result);
 			return result;
 		}
-
+		
+		private final Map<Integer,BigInteger> leastComboCache = new HashMap<>();
+		
 		/**
 		 * <p>Returns a BigInteger {@link #genComboList(BigInteger) pointing} to 
 		 * the last <tt>size</tt> elements from <tt>list</tt>.</p>
@@ -161,13 +171,21 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		 * BigInteger {@link #genComboList(BigInteger) pointing} to a 
 		 * combination of the current size
 		 */
-		private BigInteger greatestCombo(int size){ //TODO cache greatest and least combo results
+		private BigInteger greatestCombo(int size){
+			if(greatestComboCache.containsKey(size)){
+				return greatestComboCache.get(size);
+			}
+			
 			BigInteger result = BigInteger.ZERO;
 			for(int i=source.size(); i > source.size()-size; --i){
 				result = result.setBit(i);
 			}
+			
+			greatestComboCache.put(size, result);
 			return result;
 		}
+		
+		private final Map<Integer,BigInteger> greatestComboCache = new HashMap<>();
 		
 		/* 
 		 * This implementation, pulling 1s down to lower indices, is 
