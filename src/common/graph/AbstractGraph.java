@@ -12,6 +12,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import sudoku.Claim;
+import sudoku.Debug;
+import sudoku.Init;
+import sudoku.Rule;
+
 /**
  * <p>A base class for implementations of the Graph interface.</p>
  * @author fiveham
@@ -111,12 +116,33 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	@Override
 	public Collection<Graph<T>> connectedComponents(List<Consumer<Set<T>>> contractEventListenerSrc, 
 			Function<List<T>,T> seedSrc){
+		
 		List<Graph<T>> result = new ArrayList<>();
 		
 		List<T> unassignedNodes = new ArrayList<>(nodes);
-		sudoku.Debug.log("nodes: " + nodes.size() + " | unassignedNodes: " + unassignedNodes.size()); //DEBUG
+		
+		//DEBUG
+		Debug.log("Popping those concoms soooooon");
+		sudoku.Debug.log("nodes: " + nodes.size() + " | unassignedNodes: " + unassignedNodes.size());
+		
 		while( !unassignedNodes.isEmpty() ){
-			result.add(component(unassignedNodes, seedSrc, contractEventListenerSrc));
+			
+			//DEBUG
+			long init = unassignedNodes.stream().filter((n) -> n instanceof Init).count();
+			long claim = unassignedNodes.stream().filter((n) -> n instanceof Claim).count();
+			long rule = unassignedNodes.stream().filter((n) -> n instanceof Rule).count();
+			sudoku.Debug.log("Generating a new component. unassigned count: " + unassignedNodes.size() + " | " + init + " Inits, " + claim + " Claims, " + rule + " Rules");
+			
+			Graph<T> component = component(unassignedNodes, seedSrc, contractEventListenerSrc);
+
+			//DEBUG
+			init = component.nodeStream().filter((n) -> n instanceof Init).count();
+			claim = component.nodeStream().filter((n) -> n instanceof Claim).count();
+			rule = component.nodeStream().filter((n) -> n instanceof Rule).count();
+			sudoku.Debug.log("New component built. assigned count: " + component.size() + " | " + init + " Inits, " + claim + " Claims, " + rule + " Rules");
+			sudoku.Debug.log();
+			
+			result.add(component);
 		}
 		
 		return result;
@@ -124,9 +150,26 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	@Override
 	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc, List<Consumer<Set<T>>> contractEventListeners){
+		
+		//DEBUG
+		long init = unassignedNodes.stream().filter((n) -> n instanceof Init).count();
+		long claim = unassignedNodes.stream().filter((n) -> n instanceof Claim).count();
+		long rule = unassignedNodes.stream().filter((n) -> n instanceof Rule).count();
+		Debug.log("component() start. unassigned count: " + unassignedNodes.size() + " | " + init + " Inits, " + claim + " Claims, " + rule + " Rules");
+		
 		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(nodes.size(), unassignedNodes, contractEventListeners);
+		int initUnassignedCount = unassignedNodes.size();
 		T seed = seedSrc.apply(unassignedNodes);
-		unassignedNodes.remove(seed); //required side-effect for the sake of future uses of this object
+		
+		Debug.log("seed: " + seed); //DEBUG
+		Debug.log("unassignedCount after seed extraction: " + unassignedNodes.size()); //DEBUG
+		
+		if(unassignedNodes.size() - initUnassignedCount != 1){
+			unassignedNodes.remove(seed); //required side-effect for the sake of future uses of this object
+		}
+		
+		Debug.log("unassignedCount after seed removal: " + unassignedNodes.size()); //DEBUG
+		
 		newComponent.add(seed); //seed now in cuttingEdge
 		
 		while( !newComponent.cuttingEdgeIsEmpty() ){
@@ -134,7 +177,39 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 			newComponent.grow();		//add unincorporated nodes to cuttingEdge
 		}
 		
-		return new BasicGraph<T>(newComponent.contract());
+		List<T> core = new ArrayList<>(newComponent.contract());
+		
+		//DEBUG
+		/*Debug.log("concom size: "+core.size());
+		for(int i=0; i<core.size(); ++i){
+			Debug.log("outer loop "+i);
+			for(int j=0; j<i; ++j){
+				T t1 = core.get(i);
+				T t2 = core.get(j);
+				int d = distance(t1, t2);
+				if(d < 0){
+					Debug.log("Shit's not connected, yo: " + d + " | " + t1 + " | " + t2);
+				}
+			}
+		}*/
+		
+		/*for(List<T> pair : new common.ComboGen<>(core, 2,2)){
+			sudoku.Debug.log("pair size: "+pair.size());
+			T t1 = pair.get(0);
+			T t2 = pair.get(1);
+			int d = distance(t1, t2);
+			if(d < 0){
+				sudoku.Debug.log("Shit's not connected, yo: " + d + " | " + t1 + " | " + t2);
+			}
+		}*/
+		
+		//DEBUG
+		init = unassignedNodes.stream().filter((n) -> n instanceof Init).count();
+		claim = unassignedNodes.stream().filter((n) -> n instanceof Claim).count();
+		rule = unassignedNodes.stream().filter((n) -> n instanceof Rule).count();
+		sudoku.Debug.log("component() end. unassigned count: " + unassignedNodes.size() + " | " + init + " Inits, " + claim + " Claims, " + rule + " Rules");
+		
+		return new BasicGraph<T>(core);
 	}
 	
 	/**

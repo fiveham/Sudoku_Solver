@@ -49,6 +49,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	 */
 	public ComboGen(Collection<? extends T> source, int minSize, int maxSize){
 		this.list = new ArrayList<>(source);
+		sudoku.Debug.log("ComboGen list size: " + list.size());//DEBUG
 		this.minSize = minSize;
 		this.maxSize = maxSize;
 	}

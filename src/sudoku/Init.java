@@ -53,12 +53,21 @@ public class Init extends Fact {
 	
 	@Override
 	protected void validateFinalState(SolutionEvent time){
-		Debug.log("validate...() in Init"); //DEBUG
+		//Debug.log("validate...() in Init"); //DEBUG
 		if( CLAIM_IS_TRUE_NOT_YET_SET_TRUE.apply(claim) ){
-			Debug.log("Claim known true by all its Facts? No."); //DEBUG
+			//Debug.log("Claim known true by all its Facts? No."); //DEBUG
 			claim.setTrue(time);
 		}
 	}
+	
+	/*@Override
+	public boolean equals(Object o){
+		if(o instanceof Init){
+			Init i = (Init) o;
+			return (claim == null ? i.claim == null : claim.equals(i.claim)) && super.equals(o);
+		}
+		return false;
+	}*/
 	
 	@Override
 	public String toString(){

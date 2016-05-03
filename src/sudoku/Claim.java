@@ -123,14 +123,13 @@ public class Claim extends NodeSet<Fact,Claim>{
 		int init = s.size();
 		
 		//DEBUG
-		Debug.log("Setting "+init+" Claims false:");
+		//Debug.log("Setting "+init+" Claims false:");
 		/*for(Claim claim : s){
 			Debug.log("\t" + claim.toString());
 		}*/
 		
 		s.stream().forEach((c) -> c.setFalse(time));
 		
-		//Debug.log("Exit Claim.setTrue() " + toString()); //DEBUG
 		return init != visibleClaims().size();
 	}
 	

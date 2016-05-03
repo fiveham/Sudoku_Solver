@@ -83,6 +83,15 @@ public class Rule extends Fact{
 		this.type = type;
 	}
 	
+	/*@Override
+	public boolean equals(Object o){
+		if(o instanceof Rule){
+			//Rule r = (Rule) o;
+			return super.equals(o);
+		}
+		return false;
+	}*/
+	
 	@Override
 	public String toString(){
 		return toString(true);
