@@ -7,9 +7,11 @@ import common.TestIterator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
@@ -101,13 +103,17 @@ public class Sledgehammer extends Technique {
 		
 		//For each disjoint source combo
 		Collection<Rule> distinctRules = distinctRules();
+		Map<Integer,List<Rule>> map = distinctRules.stream().collect(
+				Collectors.toMap(
+						(Rule rule)->rule.size(), 
+						(Rule rule)->Collections.singletonList(rule), 
+						(list1,list2) -> {list1.addAll(list2); return list1;}));
 		
-		
+		Collection<Rule> distinctRulesSize = new ArrayList<>();
 		for(int size = MIN_SRC_COMBO_SIZE; size<=distinctRules.size()/2; ++size){
-			Collection<Rule> distinctRulesSize;
-			{
-				final int currentSize = size;
-				distinctRulesSize = distinctRules.stream().filter((rule) -> rule.size() <= currentSize).collect(Collectors.toList());
+			
+			if(map.containsKey(size)){
+				distinctRulesSize.addAll(map.get(size));
 			}
 			
 			int debugSize = 0; //DEBUG
