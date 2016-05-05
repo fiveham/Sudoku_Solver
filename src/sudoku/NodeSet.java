@@ -269,13 +269,17 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		//do nothing
 	}
 	
+	public final int superHashCode(){
+		return super.hashCode();
+	}
+	
+	public final boolean superEquals(Object o){
+		return super.equals(o);
+	}
+	
 	@Override
 	public Collection<T> neighbors(){
 		return this;
-	}
-	
-	public String toString(boolean bool){
-		return toString();
 	}
 	
 	private class DummyTime extends SolutionEvent{

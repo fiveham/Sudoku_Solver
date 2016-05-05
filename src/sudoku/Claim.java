@@ -279,8 +279,8 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * @return a set of the Claims that share at least one Claim with 
 	 * this Claim
 	 */
-	public Set<Claim> visibleClaims(){
-		Set<Claim> neighborsOfNeighbors = Sledgehammer.sideEffectUnion(this,false);
+	public ToolSet<Claim> visibleClaims(){
+		ToolSet<Claim> neighborsOfNeighbors = Sledgehammer.sideEffectUnion(this,false);
 		neighborsOfNeighbors.remove(this);
 		return neighborsOfNeighbors;
 	}

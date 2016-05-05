@@ -63,7 +63,7 @@ public class ToolSet<T> extends HashSet<T> {
 	 * @return  true if this set intersects the <tt>otherSet</tt>, 
 	 * false otherwise
 	 */
-	public boolean intersects(Set<T> otherSet){
+	public boolean intersects(Collection<? extends T> otherSet){
 		return !Collections.disjoint(this, otherSet);
 	}
 	

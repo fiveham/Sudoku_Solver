@@ -106,4 +106,19 @@ public class TestIterator<T> implements Iterator<T>{
 		}
 		last = null;
 	}
+	
+	/**
+	 * <p>Returns an Iterable whose {@link Iterable#iterator() iterator()} 
+	 * method returns <tt>this<tt>.</p>
+	 * @return an Iterable whose {@link Iterable#iterator() iterator()} 
+	 * method returns <tt>this<tt>
+	 */
+	public Iterable<T> iterable(){
+		return new Iterable<T>(){
+			@Override
+			public Iterator<T> iterator(){
+				return TestIterator.this;
+			}
+		};
+	}
 }

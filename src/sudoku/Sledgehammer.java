@@ -4,11 +4,15 @@ import common.ComboGen;
 import common.NCuboid;
 import common.Pair;
 import common.TestIterator;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -87,30 +91,36 @@ public class Sledgehammer extends Technique {
 	@Override
 	protected SolutionEvent process(){
 		
+		/* 
+		 * TODO prioritize smaller rules for earlier use in src combos
+		 * 
+		 * TODO preemptively eliminate certain src-recip pairs based on the sizes of their respective component rules
+		 */
+		
 		Debug.log("Entered Sledgehammer.process()"); //DEBUG
+		int size = 0; //DEBUG
 		
 		//For each disjoint source combo
-		Set<Rule> rules = target.factStream().filter((ns)->ns instanceof Rule).map((ns)->(Rule)ns).collect(Collectors.toSet());
-		ComboGen<Rule> reds = new ComboGen<>(rules, MIN_SRC_COMBO_SIZE, rules.size()/2);
-		for(Pair<List<Rule>,ToolSet<Claim>> pair : new UnionIterable(reds)){
-			List<Rule> srcCombo = pair.getA();
-			ToolSet<Claim> srcUnion = pair.getB();
+		Collection<Rule> distinctRules = distinctRules();
+		ComboGen<Rule> reds = new ComboGen<>(distinctRules, MIN_SRC_COMBO_SIZE, distinctRules.size()/2);
+		for(Pair<List<Rule>,ToolSet<Claim>> comboAndUnion : new UnionIterable(reds)){
+			List<Rule> srcCombo = comboAndUnion.getA();
+			ToolSet<Claim> srcUnion = comboAndUnion.getB();
 			
-			//For each conceivable recipient combo
-			Set<Fact> nearbyRules = rulesIntersecting(srcUnion, srcCombo);
+			//DEBUG
+			if(size != (size=srcCombo.size())){
+				Debug.log("In outer loop " + MIN_SRC_COMBO_SIZE + " " + size + " " + distinctRules.size()/2 + " " + new java.util.Date());
+			}
 			
-			Debug.log("srcCombo.size(): "+srcCombo.size()); //DEBUG
-			
+			//For each recipient combo derivable from that source combo
+			Set<Fact> nearbyRules = rulesIntersecting(srcCombo, srcUnion, distinctRules);
 			for(List<Fact> recipientCombo : new ComboGen<>(nearbyRules, srcCombo.size(), srcCombo.size())){
 				
-				Debug.log("recipientCombo.size(): "+recipientCombo.size()); //DEBUG
+				//Debug.log("In inner loop"); //DEBUG
 				
 				//If the source and recipient combos make a valid sledgehammer scenario
 				Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo, srcUnion); 
 				if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
-					
-					Debug.log("Found a Sledgehammer result!"); //DEBUG
-					
 					return resolve(claimsToSetFalse);
 				}
 			}
@@ -118,6 +128,31 @@ public class Sledgehammer extends Technique {
 		
 		Debug.log("Leaving Sledgehammer with no result."); //DEBUG
 		return null;
+	}
+	
+	private Collection<Rule> distinctRules(){ //TODO distinctify these 
+		class RuleWrap{
+			private final Rule wrapped;
+			RuleWrap(Rule rule){
+				this.wrapped = rule;
+			}
+			
+			@Override
+			public int hashCode(){
+				return wrapped.superHashCode();
+			}
+			
+			@Override
+			public boolean equals(Object o){
+				return wrapped.superEquals(o);
+			}
+		}
+		return target.factStream()
+				.map((f) -> (Rule)f)
+				.map(RuleWrap::new)
+				.collect(Collectors.toSet()).stream()
+				.map((rw)->rw.wrapped)
+				.collect(Collectors.toList());
 	}
 	
 	/**
@@ -130,10 +165,11 @@ public class Sledgehammer extends Technique {
 	 * @return a set of all the Rules that intersect any of the Rules 
 	 * in <tt>sources</tt>, excluding the Rules in <tt>sources</tt>.
 	 */
-	private Set<Fact> rulesIntersecting(Set<Claim> union, List<Rule> sources){
+	private Set<Fact> rulesIntersecting(List<Rule> sources, Set<Claim> srcUnion, Collection<Rule> distinctRules){
 		Set<Fact> result = new HashSet<>();
-		union.stream().forEach( (c)->result.addAll(c) );
+		srcUnion.stream().forEach( (c)->result.addAll(c) );
 		result.removeAll(sources);
+		result.retainAll(distinctRules);
 		return result;
 	}
 	
@@ -205,16 +241,16 @@ public class Sledgehammer extends Technique {
 	 * Rules share at least one Claim.</li>
 	 * </ul></p>
 	 * 
-	 * @param reds source Rules, for which every {@link #isPossibleSolution(List) possible} 
+	 * @param srcRules source Rules, for which every {@link #isPossibleSolution(List) possible} 
 	 * solution must falsify all the non-<tt>reds</tt> Claims in <tt>greens</tt> in 
 	 * order for the specified Sledgehammer solution scenario constituted by those two parameter 
 	 * to be valid
 	 * 
-	 * @param greens recipient Rules. Every Claim among these that is not also accounted for 
+	 * @param recipRules recipient Rules. Every Claim among these that is not also accounted for 
 	 * among <tt>reds</tt> must be guaranteed false in every {@link #isPossibleSolution(List) possible}
 	 * solution-state of the <tt>reds</tt>
 	 * 
-	 * @param srcUnion the union of all the elements of <tt>reds</tt>, specified as a 
+	 * @param srcClaims the union of all the elements of <tt>reds</tt>, specified as a 
 	 * parameter for convenience since it is needed here, was previously generated in 
 	 * the {@link #process() calling context}, and remains unchanged since then
 	 * 
@@ -222,25 +258,53 @@ public class Sledgehammer extends Technique {
 	 * <tt>greens</tt> is not valid, a set of the Claims to be set false if the specified 
 	 * solution scenario is valid
 	 */
-	private static Set<Claim> sledgehammerValidityCheck(List<? extends Fact> reds, List<? extends Fact> greens, ToolSet<Claim> srcUnion){
+	private static Set<Claim> sledgehammerValidityCheck(List<? extends Fact> srcRules, List<? extends Fact> recipRules, ToolSet<Claim> srcClaims){
 		
-		Set<Claim> greenClaims = sideEffectUnion(greens,false).stream()
-				.filter((e)->!srcUnion.contains(e))
-				.collect(Collectors.toSet());
-		if(greenClaims.isEmpty()){
+		/*//DEBUG
+		Debug.log("Checking sledgehammer validity. "+reds.size()+" reds, "+greens.size()+" greens, ");
+		Debug.log("reds:");
+		for(Fact f : reds){
+			Debug.log(f);
+		}
+		Debug.log("greens:");
+		for(Fact f : greens){
+			Debug.log(f);
+		}*/
+		
+		//Set<Claim> greenClaims = sideEffectUnion(greens,false);
+		
+		/*//DEBUG
+		Debug.log("Green claims collective set: " + greenClaims.size() + " elements");
+		for(Claim c : greenClaims){
+			Debug.log(c);
+		}*/
+		
+		// make sure that recip rules collectively subsume src rules
+		ToolSet<Claim> recipClaims = sideEffectUnion(recipRules,false);
+		if( !recipClaims.hasProperSubset(srcClaims) ){
 			return null;
 		}
 		
-		for(List<Claim> solutionState : new NCuboid<Claim>(reds)){
-			if(isPossibleSolution(solutionState)){
-				for(Claim c : greenClaims){
-					if( isPossibleClaim(c,solutionState) ){
-						return null;
-					}
+		recipClaims.removeAll(srcClaims); //TODO accumulate the union then removeAll of the source union in a separate step, depending on which set is larger
+		
+		return allRecipFalsifiedByAnySolution(recipClaims, srcRules) ? recipClaims : null;
+	}
+	
+	private static boolean allRecipFalsifiedByAnySolution(Set<Claim> recipClaims, List<? extends Fact> srcRules){
+		/*Set<Claim> visibleToRecipClaims = recipClaims.stream().collect(Collector.of(
+				HashSet::new, 
+				(HashSet<Claim> a, Claim t) -> a.addAll(t.visibleClaims()), 
+				(HashSet<Claim> a1, HashSet<Claim> a2) -> {a1.addAll(a2); return a1;}, 
+				Collector.Characteristics.UNORDERED, Collector.Characteristics.IDENTITY_FINISH));*/
+		
+		for(List<Claim> solution : new TestIterator<List<Claim>>(new NCuboid<Claim>(srcRules).iterator(),POSSIBLE_SOLUTION).iterable()){ //FIXME what if there are 0 zolution states?
+			for(Claim recipClaim : recipClaims){
+				if( !solution.stream().anyMatch((solClaim) -> solClaim.intersects(recipClaim)) ){
+					return false;
 				}
 			}
 		}
-		return greenClaims;
+		return true;
 	}
 	
 	/**
@@ -250,9 +314,7 @@ public class Sledgehammer extends Technique {
 	 * @return false if the specified solution-state is impossible, true 
 	 * otherwise
 	 */
-	private static boolean isPossibleSolution(List<Claim> solutionState){
-		return sideEffectUnion(solutionState,true) != null;
-	}
+	public static final Predicate<List<Claim>> POSSIBLE_SOLUTION = (solutionState) -> sideEffectUnion(solutionState,true) != null;
 	
 	/**
 	 * <p>Returns true if <tt>c</tt> can still be true given that all the 
@@ -265,12 +327,13 @@ public class Sledgehammer extends Technique {
 	 * that all the claims in <tt>givens</tt> are true, false otherwise.
 	 */
 	private static boolean isPossibleClaim(Claim c, List<Claim> givens){
-		for(Claim given : givens){
+		/*for(Claim given : givens){
 			if(c.intersects(given)){
 				return false;
 			}
 		}
-		return true;
+		return true;*/
+		return !c.visibleClaims().intersects(givens);
 	}
 	
 	/**
