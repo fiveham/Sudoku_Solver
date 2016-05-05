@@ -163,9 +163,12 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		}
 		
 		private void updatePosition(){
-			if(combo.equals(finalCombo(size))){
-				combo = firstCombo(++size);
-			} else{
+			if(combo.equals(finalCombo(size))){ //maximum lateral position at this height
+				size++; //move to next height
+				if(size <= maxSize){ //this height is legal
+					combo = firstCombo(size);
+				}
+			} else{ //nonmaximum lateral position. proceed to next lateral position
 				combo = comboAfter(combo);
 			}
 		}
@@ -233,7 +236,17 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			
 			BigInteger result = BigInteger.ZERO;
 			for(int i=source.size()-size; i < source.size(); ++i){
-				result = result.setBit(i);
+				
+				try{ //DEBUG
+					
+					result = result.setBit(i);
+					
+				//DEBUG
+				} catch(ArithmeticException e){
+					Debug.log("source.size(): "+source.size() + ", size: "+size+", i: "+i+", minSize: "+minSize+", maxSize: "+maxSize);
+					throw e;
+				}
+				
 			}
 			
 			greatestComboCache.put(size, result);

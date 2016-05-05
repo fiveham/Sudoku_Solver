@@ -106,7 +106,7 @@ public class Sledgehammer extends Technique {
 		Map<Integer,List<Rule>> map = distinctRules.stream().collect(
 				Collectors.toMap(
 						(Rule rule)->rule.size(), 
-						(Rule rule)->Collections.singletonList(rule), 
+						(Rule rule)->{List<Rule> result = new ArrayList<>(1); result.add(rule); return result;}, 
 						(list1,list2) -> {list1.addAll(list2); return list1;}));
 		
 		Collection<Rule> distinctRulesSize = new ArrayList<>();
