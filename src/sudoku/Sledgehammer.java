@@ -98,30 +98,40 @@ public class Sledgehammer extends Technique {
 		 */
 		
 		Debug.log("Entered Sledgehammer.process()"); //DEBUG
-		int size = 0; //DEBUG
 		
 		//For each disjoint source combo
 		Collection<Rule> distinctRules = distinctRules();
-		ComboGen<Rule> reds = new ComboGen<>(distinctRules, MIN_SRC_COMBO_SIZE, distinctRules.size()/2);
-		for(Pair<List<Rule>,ToolSet<Claim>> comboAndUnion : new UnionIterable(reds)){
-			List<Rule> srcCombo = comboAndUnion.getA();
-			ToolSet<Claim> srcUnion = comboAndUnion.getB();
-			
-			//DEBUG
-			if(size != (size=srcCombo.size())){
-				Debug.log("In outer loop " + MIN_SRC_COMBO_SIZE + " " + size + " " + distinctRules.size()/2 + " " + new java.util.Date());
+		
+		
+		for(int size = MIN_SRC_COMBO_SIZE; size<=distinctRules.size()/2; ++size){
+			Collection<Rule> distinctRulesSize;
+			{
+				final int currentSize = size;
+				distinctRulesSize = distinctRules.stream().filter((rule) -> rule.size() <= currentSize).collect(Collectors.toList());
 			}
 			
-			//For each recipient combo derivable from that source combo
-			Set<Fact> nearbyRules = rulesIntersecting(srcCombo, srcUnion, distinctRules);
-			for(List<Fact> recipientCombo : new ComboGen<>(nearbyRules, srcCombo.size(), srcCombo.size())){
+			int debugSize = 0; //DEBUG
+			ComboGen<Rule> reds = new ComboGen<>(distinctRulesSize, size, size);
+			for(Pair<List<Rule>,ToolSet<Claim>> comboAndUnion : new UnionIterable(reds)){
+				List<Rule> srcCombo = comboAndUnion.getA();
+				ToolSet<Claim> srcUnion = comboAndUnion.getB();
 				
-				//Debug.log("In inner loop"); //DEBUG
+				//DEBUG
+				if(debugSize != (debugSize=srcCombo.size())){
+					Debug.log("In outer loop " + size + " " + new java.util.Date());
+				}
 				
-				//If the source and recipient combos make a valid sledgehammer scenario
-				Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo, srcUnion); 
-				if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
-					return resolve(claimsToSetFalse);
+				//For each recipient combo derivable from that source combo
+				Set<Fact> nearbyRules = rulesIntersecting(srcCombo, srcUnion, distinctRulesSize);
+				for(List<Fact> recipientCombo : new ComboGen<>(nearbyRules, srcCombo.size(), srcCombo.size())){
+					
+					//Debug.log("In inner loop"); //DEBUG
+					
+					//If the source and recipient combos make a valid sledgehammer scenario
+					Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo, srcUnion); 
+					if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
+						return resolve(claimsToSetFalse);
+					}
 				}
 			}
 		}
