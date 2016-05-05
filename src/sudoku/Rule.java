@@ -112,17 +112,11 @@ public class Rule extends Fact{
 	
 	@Override
 	public String toString(){
-		return toString(true);
-	}
-
-	public String toString(boolean recursive){
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append("Rule: type:").append(type);
-		if(recursive){
-			for(Claim c : this){
-				sb.append(System.getProperty("line.separator")).append("\t").append(c.toString());
-			}
+		sb.append("Rule: type:").append(type).append(System.lineSeparator());
+		for(Claim c : this){
+			sb.append("\t").append(c).append(System.lineSeparator());
 		}
 		
 		return sb.toString();

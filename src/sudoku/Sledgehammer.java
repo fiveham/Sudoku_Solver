@@ -78,6 +78,33 @@ public class Sledgehammer extends Technique {
 		super(puzzle);
 	}
 	
+	/*protected SolutionEvent process(){
+		
+		Debug.log("Entered Sledgehammer.process()"); //DEBUG
+		
+		Collection<Rule> distinctRules = distinctRules();
+		Map<Integer,List<Rule>> map = distinctRules.stream().collect(
+				Collectors.toMap(
+						(Rule rule)->rule.size(), 
+						(Rule rule)->{List<Rule> result = new ArrayList<>(1); result.add(rule); return result;}, 
+						(list1,list2) -> {list1.addAll(list2); return list1;}));
+		for(int i=0; i<4; i++) Debug.log();
+		Claim test = distinctRules.iterator().next().getPuzzle().claims().get(4,2,2);
+		Debug.log("THE MYSTERIOUS CLAIM 422");
+		Debug.log(test);
+		Debug.log(new HashSet<>(test));
+		for(int i=0; i<4; i++) Debug.log();
+		Debug.log("DISTINCT RULES");
+		Debug.log(distinctRules);
+		for(int i=0; i<4; i++) Debug.log();
+		Debug.log("DUMP MAP");
+		Debug.log(map);
+		
+		
+		System.exit(0);
+		return null;
+	}*/
+	
 	/**
 	 * <p>Iterates over all the possible pairs of source-combination and 
 	 * recipient-combination, checks each pair for validity as a sledgehammer 
@@ -160,13 +187,18 @@ public class Sledgehammer extends Technique {
 			
 			@Override
 			public boolean equals(Object o){
-				return wrapped.superEquals(o);
+				if(o instanceof RuleWrap){
+					RuleWrap rw = (RuleWrap) o;
+					return wrapped.superEquals(rw.wrapped);
+				}
+				return false;
 			}
 		}
 		return target.factStream()
 				.map((f) -> (Rule)f)
 				.map(RuleWrap::new)
-				.collect(Collectors.toSet()).stream()
+				//.collect(Collectors.toSet()).stream()
+				.distinct()
 				.map((rw)->rw.wrapped)
 				.collect(Collectors.toList());
 	}
@@ -223,7 +255,14 @@ public class Sledgehammer extends Technique {
 				
 				@Override
 				public Pair<List<Rule>,ToolSet<Claim>> next(){
-					return new Pair<>(wrappedIterator.next(),this.union);
+					
+					//DEBUG
+					Debug.log("Getting a next() Pair from UnionIterator");
+					List<Rule> wrappedIteratorNext = wrappedIterator.next();
+					Debug.log("next() result: size "+wrappedIteratorNext.size());
+					Debug.log(wrappedIteratorNext.toString());
+					
+					return new Pair<>(wrappedIteratorNext,this.union);
 				}
 				
 				/**
@@ -232,6 +271,15 @@ public class Sledgehammer extends Technique {
 				 * @return the parameter <tt>union</tt>
 				 */
 				ToolSet<Claim> setUnion(ToolSet<Claim> union){
+					
+					//DEBUG
+					if(union==null){
+						Debug.log("Setting a NULL union.");
+					} else{
+
+						Debug.log("setting a non-null union.");
+					}
+					
 					return this.union = union;
 				}
 			}
