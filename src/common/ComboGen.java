@@ -44,21 +44,19 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	public ComboGen(Collection<? extends T> source, int minSize, int maxSize){
 		this.source = new ArrayList<>(source);
 		
-		if(minSize < MIN_COMBO_SIZE){
-			throw new IllegalArgumentException("minSize "+minSize);
-		}
-		this.minSize = minSize;
-		
-		if(maxSize > source.size()){
-			throw new IllegalArgumentException("maxSize "+maxSize);
-		}
-		this.maxSize = maxSize;
-		
-		if(maxSize<minSize){
-			throw new IllegalArgumentException("max size must be greater than min size: " + maxSize + " < " + minSize);
+		if(minSize < 0){
+			throw new IllegalArgumentException("minSize "+minSize + " < 0");
+		} else if(maxSize < 0){
+			throw new IllegalArgumentException("maxSize "+maxSize + " < 0");
 		}
 		
-		//Debug.log("ComboGen min size "+minSize + ", max size "+maxSize); //DEBUG
+		this.minSize = minSize < MIN_COMBO_SIZE 
+				? MIN_COMBO_SIZE 
+				: minSize;
+		
+		this.maxSize = maxSize > this.source.size() 
+				? this.source.size() 
+				: maxSize;
 	}
 	
 	public ComboGen(Collection<? extends T> source, int minSize){
@@ -133,17 +131,23 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		
 		private ComboIterator(){
 			this.size = minSize;
-			this.combo = firstCombo(size);
+			if(sizeInRange()){
+				this.combo = firstCombo(size);
+			}
 		}
 		
 		@Override
 		public boolean hasNext(){
+			return sizeInRange();
+		}
+		
+		private boolean sizeInRange(){
 			return minSize <= size && size <= maxSize;
 		}
 		
 		@Override
 		public List<T> next(){
-			if(!hasNext()){
+			if(!sizeInRange()){
 				throw new NoSuchElementException();
 			}
 			List<T> result = genComboList(combo);
@@ -163,7 +167,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		}
 		
 		private void updatePosition(){
-			if(combo.equals(finalCombo(size))){ //maximum lateral position at this height
+			if(finalCombo(size).equals(combo)){ //maximum lateral position at this height
 				size++; //move to next height
 				if(size <= maxSize){ //this height is legal
 					combo = firstCombo(size);
