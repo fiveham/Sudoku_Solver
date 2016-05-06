@@ -140,14 +140,9 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * this Claim, false otherwise
 	 */
 	boolean setTrue(SolutionEvent time){
-		
-		//Debug.log("Setting Claim true: "+this); //DEBUG
-		
 		Set<Claim> s = visibleClaims();
 		int init = s.size();
-		
 		s.stream().filter(CLAIM_IS_BEING_SET_FALSE.negate()).forEach((c) -> c.setFalse(time));
-		
 		return init != visibleClaims().size();
 	}
 	
@@ -160,9 +155,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * this Claim, false otherwise
 	 */
 	public boolean setFalse(SolutionEvent time){
-		
-		//Debug.log("Setting Claim false: "+this); //DEBUG
-		
 		int initSize = size();
 		clear(time);
 		return size() != initSize;

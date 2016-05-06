@@ -12,7 +12,7 @@ import java.io.PrintStream;
  */
 public class Debug {
 	
-	private static final PrintStream log = /*System.out;*/initLog();
+	private static final PrintStream log = System.out;//initLog();
 	
 	/**
 	 * <p>Returns the PrintStream referred to by <tt>log</tt>, 

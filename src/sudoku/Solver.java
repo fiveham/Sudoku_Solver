@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  * @author fiveham
  *
  */
-public class Solver implements Runnable{
+public class Solver implements Runnable{ //TODO switch order of Sledgehammer and ColorChain techniques to debug/test ColorChain
 	
 	public static final List<Function<Sudoku,Technique>> DEFAULT_INITIALIZER_SOURCE = new ArrayList<>(1);
 	static {

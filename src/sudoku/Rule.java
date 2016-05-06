@@ -136,10 +136,9 @@ public class Rule extends Fact{
 		if(size() == SIZE_WHEN_SOLVED){
 			Claim c = iterator().next();
 			if( CLAIM_IS_TRUE_NOT_YET_SET_TRUE.apply(c) ){
-				
-				//Debug.log("Rule total-localizing: "+this); //DEBUG
-				
 				time.push(new TimeTotalLocalization(time.top(), c.visibleClaims()));
+				//TODO rework methods that accept a SolutionEvent so they directly accept the 
+				//FalsifiedTime onto which they should append new Time nodes
 				c.setTrue(time);
 				time.pop();
 			}
@@ -181,13 +180,6 @@ public class Rule extends Fact{
 						.filter((e)->!contains(e))
 						.collect(Collectors.toSet());
 				time.push(new TimeValueClaim(time.top(), falsified));
-				
-				/*//DEBUG
-				Debug.log("Rule value-claiming: "+this);
-				Debug.log("Claims to falsify: ");
-				for(Claim c : falsified){
-					Debug.log("\t" + c);
-				}*/
 				
 				falsified.stream().filter(Claim.CLAIM_IS_BEING_SET_FALSE.negate()).forEach((claim) -> claim.setFalse(time));
 				

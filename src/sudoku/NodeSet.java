@@ -282,6 +282,56 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		return this;
 	}
 	
+	/**
+	 * <p>Returns a collection of the nodes visible to this node at a 
+	 * position <tt>n</tt> edges away.</p>
+	 * @param n
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public Collection<NodeSet<?,?>> visible(int n){
+		if(n<0){
+			throw new IllegalArgumentException("negative distance: "+n);
+		} else if(n==1){
+			return (Collection<NodeSet<?,?>>) neighbors();
+		} else{
+			Set<NodeSet<?,?>> cuttingEdge = new HashSet<>();
+			cuttingEdge.add(this);
+			if(n==0){
+				return cuttingEdge;
+			} else{
+				Set<NodeSet<?,?>> edge = new HashSet<>(), 
+				core = new HashSet<>();
+				
+				for(int i=1; i<=n; i++){
+					
+					//contract
+					core.addAll(edge);
+					edge = cuttingEdge;
+					cuttingEdge = new HashSet<>();
+					
+					//grow
+					for(NodeSet<?,?> edgeNode : edge){
+						Collection<NodeSet<?,?>> neighbs = (Collection<NodeSet<?,?>>)edgeNode.neighbors();
+						
+						for(NodeSet<?,?> neighb : neighbs){
+							if(!core.contains(neighb) && !edge.contains(neighb)){
+								cuttingEdge.add(neighb);
+							}
+						}
+					}
+				}
+				return cuttingEdge;
+			}
+		}
+	}
+	
+	/**
+	 * <p>A dummy Time class to be sent to this class's Time-using versions of the 
+	 * Collection methods.</p>
+	 * @author fiveham
+	 *
+	 */
 	private class DummyTime extends SolutionEvent{
 		private DummyTime(){
 		}

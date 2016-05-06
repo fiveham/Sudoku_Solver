@@ -399,7 +399,7 @@ public class Puzzle extends SudokuNetwork{
 				}
 				result.append("|");
 			}
-			result.append(System.getProperty("line.separator"));
+			result.append(System.lineSeparator());
 		}
 		
 		return result.toString();

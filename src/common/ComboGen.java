@@ -9,7 +9,6 @@ import java.util.NoSuchElementException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import sudoku.Debug;
 
 /**
  * <p>Generates combinations of the elements in a given combination 
@@ -214,11 +213,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		 * the last <tt>size</tt> elements from <tt>list</tt>
 		 */
 		private BigInteger firstCombo(int size){
-			BigInteger result = greatestCombo(size);
-			
-			//Debug.log("first combo at size "+size+": "+result.toString(2)); //DEBUG
-			
-			return result;
+			return greatestCombo(size);
 		}
 		
 		/**
@@ -240,17 +235,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			
 			BigInteger result = BigInteger.ZERO;
 			for(int i=source.size()-size; i < source.size(); ++i){
-				
-				try{ //DEBUG
-					
-					result = result.setBit(i);
-					
-				//DEBUG
-				} catch(ArithmeticException e){
-					Debug.log("source.size(): "+source.size() + ", size: "+size+", i: "+i+", minSize: "+minSize+", maxSize: "+maxSize);
-					throw e;
-				}
-				
+				result = result.setBit(i);
 			}
 			
 			greatestComboCache.put(size, result);

@@ -6,8 +6,6 @@ import common.Pair;
 import common.TestIterator;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Iterator;
@@ -78,33 +76,6 @@ public class Sledgehammer extends Technique {
 		super(puzzle);
 	}
 	
-	/*protected SolutionEvent process(){
-		
-		Debug.log("Entered Sledgehammer.process()"); //DEBUG
-		
-		Collection<Rule> distinctRules = distinctRules();
-		Map<Integer,List<Rule>> map = distinctRules.stream().collect(
-				Collectors.toMap(
-						(Rule rule)->rule.size(), 
-						(Rule rule)->{List<Rule> result = new ArrayList<>(1); result.add(rule); return result;}, 
-						(list1,list2) -> {list1.addAll(list2); return list1;}));
-		for(int i=0; i<4; i++) Debug.log();
-		Claim test = distinctRules.iterator().next().getPuzzle().claims().get(4,2,2);
-		Debug.log("THE MYSTERIOUS CLAIM 422");
-		Debug.log(test);
-		Debug.log(new HashSet<>(test));
-		for(int i=0; i<4; i++) Debug.log();
-		Debug.log("DISTINCT RULES");
-		Debug.log(distinctRules);
-		for(int i=0; i<4; i++) Debug.log();
-		Debug.log("DUMP MAP");
-		Debug.log(map);
-		
-		
-		System.exit(0);
-		return null;
-	}*/
-	
 	/**
 	 * <p>Iterates over all the possible pairs of source-combination and 
 	 * recipient-combination, checks each pair for validity as a sledgehammer 
@@ -120,15 +91,6 @@ public class Sledgehammer extends Technique {
 	@Override
 	protected SolutionEvent process(){
 		
-		/* 
-		 * TODO prioritize smaller rules for earlier use in src combos
-		 * 
-		 * TODO preemptively eliminate certain src-recip pairs based on the sizes of their respective component rules
-		 */
-		
-		Debug.log("Entered Sledgehammer.process()"); //DEBUG
-		
-		//For each disjoint source combo
 		Collection<Rule> distinctRules = distinctRules();
 		Map<Integer,List<Rule>> map = distinctRules.stream().collect(
 				Collectors.toMap(
@@ -138,27 +100,19 @@ public class Sledgehammer extends Technique {
 		
 		Collection<Rule> distinctRulesSize = new ArrayList<>();
 		for(int size = MIN_SRC_COMBO_SIZE; size<=distinctRules.size()/2; ++size){
-			
 			if(map.containsKey(size)){
 				distinctRulesSize.addAll(map.get(size));
 			}
 			
-			int debugSize = 0; //DEBUG
+			//For each disjoint source combo
 			ComboGen<Rule> reds = new ComboGen<>(distinctRulesSize, size, size);
-			for(Pair<List<Rule>,ToolSet<Claim>> comboAndUnion : new UnionIterable(reds)){
+			for(Pair<List<Rule>,ToolSet<Claim>> comboAndUnion : new UnionIterable(reds)){ //TODO 
 				List<Rule> srcCombo = comboAndUnion.getA();
 				ToolSet<Claim> srcUnion = comboAndUnion.getB();
-				
-				//DEBUG
-				if(debugSize != (debugSize=srcCombo.size())){
-					Debug.log("In outer loop " + size + " " + new java.util.Date());
-				}
 				
 				//For each recipient combo derivable from that source combo
 				Set<Fact> nearbyRules = rulesIntersecting(srcCombo, srcUnion, distinctRulesSize);
 				for(List<Fact> recipientCombo : new ComboGen<>(nearbyRules, srcCombo.size(), srcCombo.size())){
-					
-					//Debug.log("In inner loop"); //DEBUG
 					
 					//If the source and recipient combos make a valid sledgehammer scenario
 					Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo, srcUnion); 
@@ -169,11 +123,30 @@ public class Sledgehammer extends Technique {
 			}
 		}
 		
-		Debug.log("Leaving Sledgehammer with no result."); //DEBUG
 		return null;
 	}
 	
-	private Collection<Rule> distinctRules(){ //TODO distinctify these 
+	/*
+	 * TODO rebuild sledgehammer-search so it starts from a seed Rule and grows out from there.
+	 */
+	protected SolutionEvent process2(){
+		return null;
+	}
+	
+	/*
+	 * TODO rebuild sledgehammer-search so it only (or primarily) seeks out inter-RegionSpecies pairings.
+	 * that way, all srcs are of %srcSpecies% and all recips are of %recipSpecies%, which 
+	 * is a way of simultaneously generalizing LineHatch (X-Wing, Swordfish, Jellyfish), GroupLocalization 
+	 * (Naked Pairs, Hidden Pairs, Naked Triples, Hidden Triples, etc.), and that weird row/column-box 
+	 * interaction whose name I don't know because it's degenerate in 9x9 into Sledgehammer while 
+	 * hopefully maintaining the speed of solution found in earlier working solvers from before I knew 
+	 * about Sledgehammer.
+	 */
+	protected SolutionEvent process3(){
+		return null;
+	}
+	
+	private Collection<Rule> distinctRules(){
 		class RuleWrap{
 			private final Rule wrapped;
 			RuleWrap(Rule rule){
@@ -197,7 +170,6 @@ public class Sledgehammer extends Technique {
 		return target.factStream()
 				.map((f) -> (Rule)f)
 				.map(RuleWrap::new)
-				//.collect(Collectors.toSet()).stream()
 				.distinct()
 				.map((rw)->rw.wrapped)
 				.collect(Collectors.toList());
@@ -213,11 +185,14 @@ public class Sledgehammer extends Technique {
 	 * @return a set of all the Rules that intersect any of the Rules 
 	 * in <tt>sources</tt>, excluding the Rules in <tt>sources</tt>.
 	 */
-	private Set<Fact> rulesIntersecting(List<Rule> sources, Set<Claim> srcUnion, Collection<Rule> distinctRules){
-		Set<Fact> result = new HashSet<>();
-		srcUnion.stream().forEach( (c)->result.addAll(c) );
+	private Set<Fact> rulesIntersecting(List<Rule> sources, Set<Claim> srcUnion, Collection<Rule> distinctRulesSize){
+		Set<Fact> result = srcUnion.stream().collect(Collector.of(
+				ArrayList::new, 
+				(List<Fact> a, Claim t) -> a.addAll(t), 
+				(List<Fact> a1, List<Fact> a2) -> {a1.addAll(a2); return a1;}, 
+				(List<Fact> a) -> new HashSet<>(a)));
 		result.removeAll(sources);
-		result.retainAll(distinctRules);
+		result.retainAll(distinctRulesSize);
 		return result;
 	}
 	
@@ -256,13 +231,7 @@ public class Sledgehammer extends Technique {
 				@Override
 				public Pair<List<Rule>,ToolSet<Claim>> next(){
 					
-					//DEBUG
-					Debug.log("Getting a next() Pair from UnionIterator");
-					List<Rule> wrappedIteratorNext = wrappedIterator.next();
-					Debug.log("next() result: size "+wrappedIteratorNext.size());
-					Debug.log(wrappedIteratorNext.toString());
-					
-					return new Pair<>(wrappedIteratorNext,this.union);
+					return new Pair<>(wrappedIterator.next(),this.union);
 				}
 				
 				/**
@@ -271,14 +240,6 @@ public class Sledgehammer extends Technique {
 				 * @return the parameter <tt>union</tt>
 				 */
 				ToolSet<Claim> setUnion(ToolSet<Claim> union){
-					
-					//DEBUG
-					if(union==null){
-						Debug.log("Setting a NULL union.");
-					} else{
-
-						Debug.log("setting a non-null union.");
-					}
 					
 					return this.union = union;
 				}
@@ -324,25 +285,6 @@ public class Sledgehammer extends Technique {
 	 */
 	private static Set<Claim> sledgehammerValidityCheck(List<? extends Fact> srcRules, List<? extends Fact> recipRules, ToolSet<Claim> srcClaims){
 		
-		/*//DEBUG
-		Debug.log("Checking sledgehammer validity. "+reds.size()+" reds, "+greens.size()+" greens, ");
-		Debug.log("reds:");
-		for(Fact f : reds){
-			Debug.log(f);
-		}
-		Debug.log("greens:");
-		for(Fact f : greens){
-			Debug.log(f);
-		}*/
-		
-		//Set<Claim> greenClaims = sideEffectUnion(greens,false);
-		
-		/*//DEBUG
-		Debug.log("Green claims collective set: " + greenClaims.size() + " elements");
-		for(Claim c : greenClaims){
-			Debug.log(c);
-		}*/
-		
 		// make sure that recip rules collectively subsume src rules
 		ToolSet<Claim> recipClaims = sideEffectUnion(recipRules,false);
 		if( !recipClaims.hasProperSubset(srcClaims) ){
@@ -360,23 +302,22 @@ public class Sledgehammer extends Technique {
 				(HashSet<Claim> a, Claim t) -> a.addAll(t.visibleClaims()), 
 				(HashSet<Claim> a1, HashSet<Claim> a2) -> {a1.addAll(a2); return a1;}, 
 				Collector.Characteristics.UNORDERED, Collector.Characteristics.IDENTITY_FINISH));*/
-		
-		for(List<Claim> solution : new TestIterator<List<Claim>>(new NCuboid<Claim>(srcRules).iterator(),POSSIBLE_SOLUTION).iterable()){ //FIXME what if there are 0 zolution states?
+		boolean hasSolutionState = false;
+		for(List<Claim> solution : new TestIterator<List<Claim>>(new NCuboid<Claim>(srcRules).iterator(),POSSIBLE_SOLUTION).iterable()){
+			hasSolutionState = true;
 			for(Claim recipClaim : recipClaims){
 				if( !solution.stream().anyMatch((solClaim) -> solClaim.intersects(recipClaim)) ){
 					return false;
 				}
 			}
 		}
-		return true;
+		return hasSolutionState;
 	}
 	
 	/**
 	 * <p>Returns false if the specified solution-state is impossible, true 
 	 * otherwise. A solution-state is impossible if any two specified Claims 
 	 * share at least one Rule in common.</p>
-	 * @return false if the specified solution-state is impossible, true 
-	 * otherwise
 	 */
 	public static final Predicate<List<Claim>> POSSIBLE_SOLUTION = (solutionState) -> sideEffectUnion(solutionState,true) != null;
 	
@@ -391,12 +332,6 @@ public class Sledgehammer extends Technique {
 	 * that all the claims in <tt>givens</tt> are true, false otherwise.
 	 */
 	private static boolean isPossibleClaim(Claim c, List<Claim> givens){
-		/*for(Claim given : givens){
-			if(c.intersects(given)){
-				return false;
-			}
-		}
-		return true;*/
 		return !c.visibleClaims().intersects(givens);
 	}
 	
