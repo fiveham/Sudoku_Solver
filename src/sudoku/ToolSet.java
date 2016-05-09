@@ -33,7 +33,7 @@ public class ToolSet<T> extends HashSet<T> {
 	 * <p>Constructs a ToolSet containing all the elements of <tt>c</tt>.</p>
 	 * @param c the collection whose elements will be contained by this ToolSet
 	 */
-	public ToolSet(Collection<T> c) {
+	public ToolSet(Collection<? extends T> c) {
 		super(c);
 	}
 	
@@ -65,6 +65,12 @@ public class ToolSet<T> extends HashSet<T> {
 	 */
 	public boolean intersects(Collection<? extends T> otherSet){
 		return !Collections.disjoint(this, otherSet);
+	}
+	
+	public ToolSet<T> intersection(Collection<? extends T> otherSet){
+		ToolSet<T> result = new ToolSet<>(this);
+		result.retainAll(otherSet);
+		return result;
 	}
 	
 	/**

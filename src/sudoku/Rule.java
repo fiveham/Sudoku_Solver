@@ -4,11 +4,14 @@ import common.time.Time;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import sudoku.Puzzle.RegionSpecies;
 import sudoku.Puzzle.IndexInstance;
 
 public class Rule extends Fact{
+	
+	public static final Function<NodeSet<?,?>,Rule> AS_RULE = (n) -> (Rule)n;
 	
 	/**
 	 * 
@@ -120,6 +123,10 @@ public class Rule extends Fact{
 		}
 		
 		return sb.toString();
+	}
+	
+	public RegionSpecies getType(){
+		return type;
 	}
 	
 	/**

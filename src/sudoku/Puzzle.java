@@ -4,11 +4,14 @@ import common.time.TimeBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * <p>Represents a sudoku target as a bipartite graph of 
@@ -176,6 +179,10 @@ public class Puzzle extends SudokuNetwork{
 	 */
 	public List<IndexValue> indexValues(){
 		return new ArrayList<>(indices);
+	}
+	
+	public List<IndexInstance> getIndices(DimensionType dim){
+		return dimensions.get(dim.ordinal());
 	}
 	
 	/**
@@ -511,48 +518,37 @@ public class Puzzle extends SudokuNetwork{
 		 * second dimension is {@link Puzzle.DimensionType#X x}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#SYMBOL z}.</p>
 		 */
-		CELL	(DimensionType.Y, 	   DimensionType.X,   DimensionType.SYMBOL,         (byte)1), 
+		CELL	(DimensionType.Y, 	   DimensionType.X,   DimensionType.SYMBOL), 
 		
 		/**
 		 * <p>For a box, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the 
 		 * second dimension is {@link Puzzle.DimensionType#BOX box-index}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#CELL_ID_IN_BOX cell-index}.</p>
 		 */
-		BOX		(DimensionType.SYMBOL, DimensionType.BOX, DimensionType.CELL_ID_IN_BOX, (byte)2), 
+		BOX		(DimensionType.SYMBOL, DimensionType.BOX, DimensionType.CELL_ID_IN_BOX), 
 		
 		/**
 		 * <p>For a row, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the 
 		 * second dimension is {@link Puzzle.DimensionType#Y y}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#X x}.</p>
 		 */
-		ROW		(DimensionType.SYMBOL, DimensionType.Y,   DimensionType.X,              (byte)4),
+		ROW		(DimensionType.SYMBOL, DimensionType.Y,   DimensionType.X),
 		
 		/**
 		 * <p>For a box, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the 
 		 * second dimension is {@link Puzzle.DimensionType#X x}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#Y y}.</p>
 		 */
-		COLUMN	(DimensionType.SYMBOL, DimensionType.X,   DimensionType.Y,              (byte)8);
+		COLUMN	(DimensionType.SYMBOL, DimensionType.X,   DimensionType.Y);
 		
 		private final DimensionType dimAType;
 		private final DimensionType dimBType;
 		private final DimensionType dimCType;
-		private final byte mask;
 		
-		private RegionSpecies(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType, byte mask){
+		private RegionSpecies(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType){
 			this.dimAType = dimAType;
 			this.dimBType = dimBType;
 			this.dimCType = dimCType;
-			this.mask = mask;
-		}
-		
-		/**
-		 * <p>The bitmask for this region type.</p>
-		 * 
-		 * <p>Cell is 1, Box is 2, Row is 4, and Column is 8.</p>
-		 */
-		public byte mask(){
-			return mask;
 		}
 		
 		/**
@@ -595,6 +591,12 @@ public class Puzzle extends SudokuNetwork{
 		 */
 		public List<IndexInstance> dimInsideRule(Puzzle p){
 			return p.dimensions.get(dimCType.ordinal());
+		}
+		
+		public Set<DimensionType> dimsOutsideRule(Puzzle p){
+			Set<DimensionType> result = new HashSet<>(2);
+			Collections.addAll(result, dimAType, dimBType);
+			return result;
 		}
 	}
 	

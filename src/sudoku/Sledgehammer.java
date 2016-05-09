@@ -11,9 +11,15 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.StreamSupport;
+import sudoku.Puzzle.RegionSpecies;
+import sudoku.Puzzle.DimensionType;
 
 /**
  * <p>The sledgehammer technique for solving sudoku puzzles is defined 
@@ -67,6 +73,8 @@ public class Sledgehammer extends Technique {
 	 * the smallest source combinations.</p>
 	 */
 	private static final int MIN_SRC_COMBO_SIZE = 2;
+	
+	private static final int MIN_SLEDGEHAMMER_SIZE = 2;
 	
 	/**
 	 * <p>Constructs a SledgeHammer2 that works to solve the specified Puzzle.</p>
@@ -142,8 +150,178 @@ public class Sledgehammer extends Technique {
 	 * hopefully maintaining the speed of solution found in earlier working solvers from before I knew 
 	 * about Sledgehammer.
 	 */
-	protected SolutionEvent process3(){
+	protected SolutionEvent regionSpeciesPairProcessing(){
+		
+		Collection<Rule> distinctRules = distinctRules();
+		
+		/*Map<Integer,List<Rule>> sizeToRules = distinctRules.stream().collect(
+				Collectors.toMap(
+						(Rule rule)->rule.size(), 
+						(Rule rule)->{List<Rule> result = new ArrayList<>(1); result.add(rule); return result;}, 
+						(list1,list2) -> {list1.addAll(list2); return list1;}));*/
+		
+		/*Puzzle p = target.nodeStream().findFirst().get().getPuzzle(); //XXX a real solution, please
+		for(List<RegionSpecies> types : new ComboGen<RegionSpecies>(Arrays.asList(RegionSpecies.values()), 2,2)){
+			for(IndexInstance dim : p.getIndices(dimensionType(types,p))){
+				for(int size = 2; size<target.sideLength(); size++){
+					
+					List<Rule> srcRecip = distinctRules.stream().filter((rule)->types.contains(rule.getType())).collect(Collectors.toList());
+					
+				}
+			}
+		}*/
+		
+		for(TypePair types : TypePair.values()){
+			for(Pair<Collection<Rule>,Collection<Rule>> pack : types.packs(target)){
+				Collection<Rule> a = pack.getA();
+				Collection<Rule> b = pack.getB();
+				
+				for(int size = MIN_SLEDGEHAMMER_SIZE; size<Math.min(a.size(), b.size()); size++){
+					for(List<Rule> comboA : new ComboGen<>(a, size,size)){
+						for(List<Rule> comboB : new ComboGen<>(b, size,size)){
+							Set<Claim> falsify = falsifiedClaims(comboA, comboB);
+							
+							if(falsify != null){
+								return resolve(falsify);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		
+		
 		return null;
+	}
+	
+	private static Set<Claim> falsifiedClaims(List<Rule> comboA, List<Rule> comboB){
+		ToolSet<Claim> unionA = sideEffectUnion(comboA, false);
+		Set<Claim> unionB = sideEffectUnion(comboB, false);
+		Set<Claim> inters = unionA.intersection(unionB);
+		
+		unionA.removeAll(inters);
+		unionB.removeAll(inters);
+		
+		if(unionA.isEmpty() != unionB.isEmpty()){
+			return unionA.isEmpty() ? unionB : unionA;
+		} else{
+			return null;
+		}
+	}
+	
+	public static int boxIndex(Rule r){
+		int mag = r.stream().findFirst().get().getPuzzle().magnitude();
+		return boxY(r)*mag + boxX(r);
+	}
+	
+	public static int boxY(Rule r){
+		Claim c = r.stream().findFirst().get();
+		int y = c.getY();
+		return y/c.getPuzzle().magnitude();
+	}
+	
+	public static int boxX(Rule r){
+		Claim c = r.stream().findFirst().get();
+		int x = c.getX();
+		return x/c.getPuzzle().magnitude();
+	}
+	
+	public static final Function<Sudoku,List<Integer>> dimSource = (s) -> IntStream.range(0,s.sideLength()).mapToObj((i)->(Integer)i).collect(Collectors.toList());
+	
+	public static final Predicate<Rule> IS_CELL = (r) -> r.getType() == RegionSpecies.CELL;
+	public static final Predicate<Rule> IS_BOX = (r) -> r.getType() == RegionSpecies.BOX;
+	public static final Predicate<Rule> IS_COLUMN = (r) -> r.getType() == RegionSpecies.COLUMN;
+	public static final Predicate<Rule> IS_ROW = (r) -> r.getType() == RegionSpecies.ROW;
+	
+	private static enum TypePair{
+		CELL_COL((p)->new NCuboid<>(dimSource.apply(p)), 
+				IS_CELL, IS_COLUMN,
+				(r,l) -> r.stream().findFirst().get().getX()==l.get(0)), 
+		CELL_ROW((p)->new NCuboid<>(dimSource.apply(p)), 
+				IS_CELL, IS_ROW, 
+				(r,l) -> r.stream().findFirst().get().getY()==l.get(0)), 
+		CELL_BOX((p)->new NCuboid<>(dimSource.apply(p)), 
+				IS_CELL, IS_BOX, 
+				(r,l) -> l.get(0).equals(boxIndex(r))), 
+		BOX_ROW ((p)->new NCuboid<>(dimSource.apply(p), IntStream.range(0,p.magnitude()).mapToObj((i)->(Integer)i).collect(Collectors.toList())), 
+				IS_BOX, IS_ROW, 
+				(r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxY(r)), 
+		BOX_COL ((p)->new NCuboid<>(dimSource.apply(p), IntStream.range(0,p.magnitude()).mapToObj((i)->(Integer)i).collect(Collectors.toList())), 
+				IS_BOX, IS_COLUMN,
+				(r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxX(r)), 
+		ROW_COL ((p)->new NCuboid<>(dimSource.apply(p)), 
+				IS_ROW, IS_COLUMN, 
+				(r,l) -> l.get(0) == r.stream().findFirst().get().getZ());
+		
+		private Function<Sudoku,NCuboid<Integer>> nCuboidSource;
+		private Predicate<Rule> isTypeA;
+		private Predicate<Rule> isTypeB;
+		private BiPredicate<Rule,List<Integer>> ruleIsDim;
+		
+		private TypePair(Function<Sudoku,NCuboid<Integer>> nCuboidSource, Predicate<Rule> isTypeA, Predicate<Rule> isTypeB, BiPredicate<Rule,List<Integer>> ruleIsDim){
+			this.nCuboidSource = nCuboidSource;
+			this.isTypeA = isTypeA;
+			this.isTypeB = isTypeB;
+			this.ruleIsDim = ruleIsDim;
+		}
+		
+		/**
+		 * <p>Returns an Iterable whose Iterator returns Pairs of Collections such that each 
+		 * Collection in a Pair contains all the Rules of a certain RegionSpecies pertaining 
+		 * to a specific pack. A pack is a geometrically bound subset of the Rules in a Sudoku, 
+		 * each of which groups together Rules that can be recipients or sources in a short-
+		 * form Sledgehammer.</p>
+		 * 
+		 * <p>There exists a pack for each flat layer of the spatial cube of the claims of a 
+		 * Puzzle, one for each box of a printed puzzle, and six more for each unvertical slice 
+		 * of the puzzle cube: three one each layer for each of the two unvertical orientations. 
+		 * Each pack as such pertains 
+		 * to all possible intersections of Rules of two specified RegionSpecies such that all 
+		 * those Rules of either RegionSpecies in that pack share a certain 
+		 * {@link Puzzle#IndexInstance dimensional value} in common.</p>
+		 * @param s
+		 * @return
+		 */
+		public Iterable<Pair<Collection<Rule>,Collection<Rule>>> packs(Sudoku s){
+			/*NCuboid<Integer> ncube = nCuboidSource.apply(s);
+			
+			List<List<Rule>> a = new ArrayList<>(s.sideLength());
+			List<List<Rule>> b = new ArrayList<>(s.sideLength());*/
+			
+			return StreamSupport.stream(nCuboidSource.apply(s).spliterator(),false)
+					.map(
+							(list) -> new Pair<Collection<Rule>,Collection<Rule>>(
+									s.factStream().map((f)->(Rule)f).filter(isTypeA.and((r) -> ruleIsDim.test(r,list))).collect(Collectors.toList()), 
+									s.factStream().map((f)->(Rule)f).filter(isTypeB.and((r) -> ruleIsDim.test(r,list))).collect(Collectors.toList())))
+					.collect(Collectors.toList());
+			
+			/*for(List<Integer> l : ncube){
+				a.add( s.factStream().map((f)->(Rule)f).filter(isTypeA.and((r) -> ruleIsDim.test(r,l))).collect(Collectors.toList()) );
+				b.add( s.factStream().map((f)->(Rule)f).filter(isTypeB.and((r) -> ruleIsDim.test(r,l))).collect(Collectors.toList()) );
+			}
+			
+			List<Pair<Collection<Rule>,Collection<Rule>>> result = new ArrayList<>(s.sideLength());
+			
+			for(int i=0; i<a.size(); i++){
+				result.add(new Pair<Collection<Rule>,Collection<Rule>>(a.get(i), b.get(i)));
+			}
+			
+			return result;*/
+		}
+	}
+	
+	private DimensionType dimensionType(List<RegionSpecies> pair, Puzzle p){
+		Set<DimensionType> dims0 = pair.get(0).dimsOutsideRule(p);
+		Set<DimensionType> dims1 = pair.get(1).dimsOutsideRule(p);
+		
+		dims1.retainAll(dims0);
+		
+		if(dims1.size() != 1){
+			throw new IllegalStateException("1 != "+dims1.size());
+		} else{
+			return dims1.iterator().next();
+		}
 	}
 	
 	private Collection<Rule> distinctRules(){
@@ -249,6 +427,16 @@ public class Sledgehammer extends Technique {
 		}
 	}
 	
+	/* *
+	 * <p>The size ({@value}) that at least one of the recipient Rules must have 
+	 * in order for this Sledgehammer solution to have at least one Claim available 
+	 * for removal.</p>
+	 * 
+	 * <p>More generally, at least one recip rules must have at least one Claim that is 
+	 * not one of the srcClaims.</p>
+	 */
+	/*public static final int ESSENTIAL_RECIPIENT_SIZE = 3;*/
+	
 	/**
 	 * <p>If the specified lists of source and recipient Rules together constitute a valid 
 	 * Sledgehammer solution scenario, then a set of the Claims (from the recipients) 
@@ -283,7 +471,17 @@ public class Sledgehammer extends Technique {
 	 * <tt>greens</tt> is not valid, a set of the Claims to be set false if the specified 
 	 * solution scenario is valid
 	 */
-	private static Set<Claim> sledgehammerValidityCheck(List<? extends Fact> srcRules, List<? extends Fact> recipRules, ToolSet<Claim> srcClaims){
+	private static Set<Claim> sledgehammerValidityCheck(List<? extends Fact> srcRules, List<? extends Fact> recipRules, final ToolSet<Claim> srcClaims){
+		
+		/*//make sure at least one recip has a size at least 3
+		Predicate<Fact> trimmableRule = (rule) -> {
+			Set<Claim> dump = new HashSet<>(rule);
+			dump.removeAll(srcClaims);
+			return !dump.isEmpty();
+		};
+		if(!recipRules.stream().anyMatch(trimmableRule)){
+			return null;
+		}*/
 		
 		// make sure that recip rules collectively subsume src rules
 		ToolSet<Claim> recipClaims = sideEffectUnion(recipRules,false);
