@@ -107,6 +107,8 @@ public class Sledgehammer extends Technique {
 		Collection<Rule> distinctRules = distinctRules(target);
 		Map<Integer,List<Rule>> map = distinctRules.stream().collect(MAP_RULES_BY_SIZE);
 		
+		VisibleCache visibleCache = new VisibleCache();
+		
 		Collection<Rule> distinctRulesAtSize = new ArrayList<>();
 		for(int size = MIN_SRC_COMBO_SIZE; size<=distinctRules.size()/2; ++size){
 			if(map.containsKey(size)){
@@ -115,10 +117,10 @@ public class Sledgehammer extends Technique {
 			
 			//For each disjoint, closely connected source combo
 			for(List<Rule> srcCombo : new ComboGen<>(distinctRulesAtSize, size, size)){
-				if(sourceComboMostlyValid(srcCombo)){
+				if(sourceComboMostlyValid(srcCombo, visibleCache)){
 					
 					//For each recipient combo derivable from that source combo
-					for(List<Fact> recipientCombo : recipientCombinations(srcCombo, distinctRulesAtSize)){
+					for(List<Fact> recipientCombo : recipientCombinations(srcCombo, distinctRulesAtSize, visibleCache)){
 						
 						//If the source and recipient combos make a valid sledgehammer scenario
 						Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo); 
@@ -162,6 +164,26 @@ public class Sledgehammer extends Technique {
 				.collect(Collectors.toList());
 	}
 	
+	private class VisibleCache extends HashMap<Rule,Set<Rule>>{
+		@Override
+		public Set<Rule> get(Object o){
+			if(containsKey(o)){
+				return super.get(o);
+			} else{
+				if(o instanceof Rule){
+					Rule r = (Rule) o;
+					
+					Set<Rule> result = r.visibleRules();
+					super.put(r, result);
+					
+					return result;
+				} else{
+					throw new IllegalArgumentException("specified key must be a Rule");
+				}
+			}
+		}
+	}
+	
 	/**
 	 * <p>Returns true if none of the Rules in <tt>ruleList</tt> intersect any 
 	 * of the other Rules in the list and every Rule in <tt>ruleList</tt> shares at least 
@@ -190,11 +212,11 @@ public class Sledgehammer extends Technique {
 	 * one {@link Rule#visibleRules() visible Rule} in common with at least one 
 	 * other Rule in the <tt>ruleList</tt>, false otherwise
 	 */
-	public static boolean sourceComboMostlyValid(List<Rule> ruleList){
+	private static boolean sourceComboMostlyValid(List<Rule> ruleList, VisibleCache visibleCache){ //TODO make this method return the collection of recipient Rules for this src combo
 		List<Rule> internalList = new ArrayList<>(ruleList);
 		
 		int oldSize = internalList.size();
-		Set<Rule> allVisibleRules = internalList.remove(internalList.size()-1).visibleRules();
+		Set<Rule> allVisibleRules = visibleCache.get(internalList.remove(internalList.size()-1));
 		
 		while(internalList.size() != oldSize){
 			oldSize = internalList.size();
@@ -202,7 +224,7 @@ public class Sledgehammer extends Technique {
 			for(Iterator<Rule> iter = internalList.iterator(); iter.hasNext();){
 				Rule r = iter.next();
 				
-				Set<Rule> visibleToCurrentRule = r.visibleRules();
+				Set<Rule> visibleToCurrentRule = visibleCache.get(r);
 				
 				if(!Collections.disjoint(visibleToCurrentRule, allVisibleRules)){
 					allVisibleRules.addAll(visibleToCurrentRule);
@@ -223,10 +245,10 @@ public class Sledgehammer extends Technique {
 	 * @return a set of all the Rules that intersect any of the Rules 
 	 * in <tt>sources</tt>, excluding the Rules in <tt>sources</tt>.
 	 */
-	private static ComboGen<Fact> recipientCombinations(List<Rule> sources, Collection<Rule> distinctRulesAtSize){
+	private static ComboGen<Fact> recipientCombinations(List<Rule> sources, Collection<Rule> distinctRulesAtSize, VisibleCache visibleCache){
 		List<Set<Rule>> visibleRules = sources.stream().collect(Collector.of(
 				ArrayList::new, 
-				(List<Set<Rule>> a, Rule source) -> a.add(source.visibleRules()), 
+				(List<Set<Rule>> a, Rule source) -> a.add(visibleCache.get(source)), 
 				(left,right) -> {left.addAll(right); return left;}));
 		
 		Map<Rule,Integer> countSet = countingUnion(visibleRules);
@@ -272,17 +294,7 @@ public class Sledgehammer extends Technique {
 	 */
 	private static Set<Claim> sledgehammerValidityCheck(List<? extends Fact> srcRules, List<? extends Fact> recipRules){
 		
-		/*//make sure at least one recip has a size at least 3
-		Predicate<Fact> trimmableRule = (rule) -> {
-			Set<Claim> dump = new HashSet<>(rule);
-			dump.removeAll(srcClaims);
-			return !dump.isEmpty();
-		};
-		if(!recipRules.stream().anyMatch(trimmableRule)){
-			return null;
-		}*/
-		
-		final ToolSet<Claim> srcClaims = sideEffectUnion(srcRules,true);
+		ToolSet<Claim> srcClaims = sideEffectUnion(srcRules,true);
 		
 		// make sure that recip rules collectively subsume src rules
 		ToolSet<Claim> recipClaims = sideEffectUnion(recipRules,false);
@@ -294,6 +306,32 @@ public class Sledgehammer extends Technique {
 		
 		return allRecipFalsifiedByAnySolution(recipClaims, srcRules) ? recipClaims : null;
 	}
+	
+	private static boolean allRecipFalsifiedByAnySolution(Set<Claim> recipClaims, List<? extends Fact> srcRules){
+		/*Set<Claim> visibleToRecipClaims = recipClaims.stream().collect(Collector.of(
+				HashSet::new, 
+				(HashSet<Claim> a, Claim t) -> a.addAll(t.visibleClaims()), 
+				(HashSet<Claim> a1, HashSet<Claim> a2) -> {a1.addAll(a2); return a1;}, 
+				Collector.Characteristics.UNORDERED, Collector.Characteristics.IDENTITY_FINISH));*/
+		boolean hasSolutionState = false;
+		for(List<Claim> solution : new TestIterator<List<Claim>>(new NCuboid<Claim>(srcRules).iterator(),POSSIBLE_SOLUTION).iterable()){
+			hasSolutionState = true;
+			for(Claim recipClaim : recipClaims){
+				if( !solution.stream().anyMatch((solClaim) -> solClaim.intersects(recipClaim)) ){
+					return false;
+				}
+			}
+		}
+		return hasSolutionState;
+	}
+	
+	/**
+	 * <p>Returns false if the specified solution-state is impossible, true 
+	 * otherwise. A solution-state is impossible if any two specified Claims 
+	 * share at least one Rule in common.</p>
+	 */
+	public static final Predicate<List<Claim>> POSSIBLE_SOLUTION = (solutionState) -> sideEffectUnion(solutionState,true) != null;
+	
 	
 	/**
 	 * <p>Sets all the Claims in <tt>claimsToSetFalse</tt> false.</p>
@@ -498,32 +536,6 @@ public class Sledgehammer extends Technique {
 			return result;*/
 		}
 	}
-	
-	private static boolean allRecipFalsifiedByAnySolution(Set<Claim> recipClaims, List<? extends Fact> srcRules){
-		/*Set<Claim> visibleToRecipClaims = recipClaims.stream().collect(Collector.of(
-				HashSet::new, 
-				(HashSet<Claim> a, Claim t) -> a.addAll(t.visibleClaims()), 
-				(HashSet<Claim> a1, HashSet<Claim> a2) -> {a1.addAll(a2); return a1;}, 
-				Collector.Characteristics.UNORDERED, Collector.Characteristics.IDENTITY_FINISH));*/
-		boolean hasSolutionState = false;
-		for(List<Claim> solution : new TestIterator<List<Claim>>(new NCuboid<Claim>(srcRules).iterator(),POSSIBLE_SOLUTION).iterable()){
-			hasSolutionState = true;
-			for(Claim recipClaim : recipClaims){
-				if( !solution.stream().anyMatch((solClaim) -> solClaim.intersects(recipClaim)) ){
-					return false;
-				}
-			}
-		}
-		return hasSolutionState;
-	}
-	
-	/**
-	 * <p>Returns false if the specified solution-state is impossible, true 
-	 * otherwise. A solution-state is impossible if any two specified Claims 
-	 * share at least one Rule in common.</p>
-	 */
-	public static final Predicate<List<Claim>> POSSIBLE_SOLUTION = (solutionState) -> sideEffectUnion(solutionState,true) != null;
-	
 	/**
 	 * <p>Unions all the collections in <tt>srcCombo</tt> into one set and returns 
 	 * that set, unless some elements are shared among the collections in 
