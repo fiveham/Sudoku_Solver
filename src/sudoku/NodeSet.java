@@ -269,11 +269,11 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		//do nothing
 	}
 	
-	public final int superHashCode(){
+	final int superHashCode(){
 		return super.hashCode();
 	}
 	
-	public final boolean superEquals(Object o){
+	final boolean superEquals(Object o){
 		return super.equals(o);
 	}
 	
