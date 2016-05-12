@@ -3,6 +3,8 @@ package common.time;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public abstract class AbstractTime implements Time{
 	
@@ -64,12 +66,21 @@ public abstract class AbstractTime implements Time{
 	
 	@Override
 	public List<Time> currentTrail(){
+		return trailGen((t) -> t.focus(), (t)->t.hasChildren());
+	}
+	
+	@Override
+	public List<Time> upTrail(){
+		return trailGen((t) -> t.parent(), (t)->t.hasParent());
+	}
+	
+	private List<Time> trailGen(Function<Time,Time> upDown, Predicate<Time> test){
 		List<Time> result = new ArrayList<>();
 		
 		Time pointer = this;
-		while(pointer.defers()){
+		while(test.test(pointer)){
 			result.add(pointer);
-			pointer = pointer.focus();
+			pointer = upDown.apply(pointer);
 		}
 		result.add(pointer);
 		

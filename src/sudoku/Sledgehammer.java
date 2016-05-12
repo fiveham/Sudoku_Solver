@@ -6,9 +6,9 @@ import common.Pair;
 import common.TestIterator;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 import sudoku.Puzzle.RegionSpecies;
-import sudoku.Puzzle.DimensionType;
 
 /**
  * <p>The sledgehammer technique for solving sudoku puzzles is defined 
@@ -113,19 +112,18 @@ public class Sledgehammer extends Technique {
 			}
 			
 			//For each disjoint source combo
-			ComboGen<Rule> reds = new ComboGen<>(distinctRulesSize, size, size);
-			for(Pair<List<Rule>,ToolSet<Claim>> comboAndUnion : new UnionIterable(reds)){ //TODO 
-				List<Rule> srcCombo = comboAndUnion.getA();
-				ToolSet<Claim> srcUnion = comboAndUnion.getB();
-				
-				//For each recipient combo derivable from that source combo
-				Set<Fact> nearbyRules = rulesIntersecting(srcCombo, srcUnion, distinctRulesSize);
-				for(List<Fact> recipientCombo : new ComboGen<>(nearbyRules, srcCombo.size(), srcCombo.size())){
+			for(List<Rule> srcCombo : new ComboGen<>(distinctRulesSize, size, size)){
+				if(sourceComboMostlyValid(srcCombo)){
 					
-					//If the source and recipient combos make a valid sledgehammer scenario
-					Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo, srcUnion); 
-					if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
-						return resolve(claimsToSetFalse);
+					//For each recipient combo derivable from that source combo
+					Set<Fact> nearbyRules = possibleRecipients(srcCombo, distinctRulesSize);
+					for(List<Fact> recipientCombo : new ComboGen<>(nearbyRules, srcCombo.size(), srcCombo.size())){
+						
+						//If the source and recipient combos make a valid sledgehammer scenario
+						Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo); 
+						if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
+							return resolve(claimsToSetFalse);
+						}
 					}
 				}
 			}
@@ -137,9 +135,222 @@ public class Sledgehammer extends Technique {
 	/*
 	 * TODO rebuild sledgehammer-search so it starts from a seed Rule and grows out from there.
 	 */
-	protected SolutionEvent process2(){
+	protected SolutionEvent componentGrowthProcessing(){
+		
+		/*Collection<Rule> distinctRules = distinctRules();
+		
+		for(int size = MIN_SLEDGEHAMMER_SIZE; size <= target.size()/2; size++){
+			final int currentSize = size;
+			for(Rule seed : distinctRules.stream().filter((r)->r.size() <= currentSize).collect(Collectors.toList())){
+				
+				///for each sledgehammer arrangement grown from this seed
+				for(Pair<Collection<Rule>,Collection<Rule>> sledgehammer : sledgeIterable(size, seed)){
+					
+					//if this arrangement is actionable, take action
+					Set<Claim> falsify = falsifiedClaims(sledgehammer.getA(), sledgehammer.getB());
+					if(falsify != null){
+						return resolve(falsify);
+					}
+				}
+			}
+		}
+		
+		return null;*/
+		
+		Collection<Rule> distinctRules = distinctRules();
+		
+		for(int size = MIN_SLEDGEHAMMER_SIZE; size <= target.size()/2; size++){
+			for(Rule seed : distinctRules){
+				Pair<Collection<Rule>,Collection<Rule>> sledgehammer = seekSledgehammer(seed, size);
+				if(sledgehammer != null){
+					Set<Claim> falsified = sideEffectUnion(sledgehammer.getB(),false);
+					falsified.removeAll(sideEffectUnion(sledgehammer.getA(),false));
+					if(!falsified.isEmpty()){
+						return resolve(falsified);
+					}
+				}
+			}
+		}
+		
 		return null;
 	}
+	
+	private Pair<Collection<Rule>,Collection<Rule>> seekSledgehammer(Rule seed, int size){
+		return null; //TODO stub
+	}
+	
+	
+	
+	
+	
+	/* *
+	 * <p>Returns an object that provides an Iterator that provides source-combo <tt>Pair</tt>s 
+	 * for sledgehammer solution scenarios.</p>
+	 * @param seed
+	 * @return
+	 */
+	/*private Iterable<Pair<Collection<Rule>,Collection<Rule>>> sledgeIterable(int size, Rule seed){
+		Sledge result = new Sledge(null, SledgeType.SOURCE, seed);
+		
+		List<Sledge> layer = new ArrayList<>();
+		layer.add(result);
+		while(!layer.isEmpty()){
+			List<Sledge> nextLayer = new ArrayList<>();
+			for(Sledge s : layer){
+				nextLayer.addAll(s.grow());
+			}
+			layer = nextLayer;
+		}
+		
+		class SledgeIterable implements Iterable<Pair<Collection<Rule>,Collection<Rule>>>{
+			private Time root;
+			SledgeIterable(Time root){
+				this.root = root;
+			}
+			@Override
+			public Iterator<Pair<Collection<Rule>,Collection<Rule>>> iterator(){
+				class SledgeIterator implements Iterator<Pair<Collection<Rule>,Collection<Rule>>>{
+					private final Iterator<Time> iter;
+					SledgeIterator(Iterator<Time> iter){
+						this.iter = iter;
+					}
+					@Override
+					public boolean hasNext(){
+						return iter.hasNext();
+					}
+					@Override
+					public Pair<Collection<Rule>,Collection<Rule>> next(){
+						Time leaf = iter.next();
+						List<Time> trail = leaf.upTrail();
+						Map<SledgeType,List<Rule>> map = trail.stream()
+								.map((t)->(Sledge)t)
+								.collect(Collectors.toMap(
+										(Sledge s)->s.type, 
+										(Sledge s)->s.rules, 
+										(left,right) -> {left.addAll(right); return left;}));
+						return new Pair<>(map.get(SledgeType.SOURCE), map.get(SledgeType.RECIP));
+					}
+				}
+				
+				return new SledgeIterator(root.iterator());
+			}
+		}
+		
+		return new SledgeIterable(result);
+	}*/
+	
+	/*private static class Sledge extends AbstractTime{
+		
+		private final SledgeType type;
+		private final Map<SledgeType,List<Rule>> map;
+		
+		Sledge(Sledge parent, SledgeType type, Rule... rules){
+			super(parent);
+			this.type = type;
+			this.map = new HashMap<>();
+			for(SledgeType st : SledgeType.values()){
+				List<Rule> value = st == type 
+						? new ArrayList<>(Arrays.asList(rules)) 
+						: (st == type.complement() 
+								? Collections.emptyList() 
+								: new ArrayList<>());
+				map.put(st, value);
+			}
+		}
+		
+		@Override
+		public Sledge parent(){
+			return (Sledge) super.parent();
+		}
+		
+		Collection<Rule> sources(){
+			return map.get(SledgeType.SOURCE);
+		}
+		
+		Collection<Rule> ignored(){
+			return map.get(SledgeType.IGNORE);
+		}
+		
+		Collection<Rule> recipients(){
+			return map.get(SledgeType.RECIP);
+		}
+		
+		Collection<Rule> allSources(){
+			return allOfType(SledgeType.SOURCE, upTrail());
+		}
+		
+		Collection<Rule> allIgnored(){
+			return allOfType(SledgeType.IGNORE, upTrail());
+		}
+		
+		Collection<Rule> allRecipients(){
+			return allOfType(SledgeType.RECIP, upTrail());
+		}
+		
+		private static Collection<Rule> allOfType(SledgeType sledgeType, Collection<Time> upTrail){
+			return upTrail.stream()
+					.map((t)->(Sledge)t)
+					.collect(Collector.of(
+							ArrayList::new, 
+							(List<Rule> a, Sledge t) -> a.addAll(t.map.get(sledgeType)), 
+							(List<Rule> left, List<Rule> right) -> {
+								left.addAll(right); 
+								return left;
+							}));
+		}
+		
+		private boolean hasGrown = false;
+		
+		*//* *
+		 * <p>Adds children to this Sledge for each possible further refinement 
+		 * of the sledgehammer solution scenario to which this Sledge pertains.</p>
+		 * @return this Sledge's children after this method call
+		 *//*
+		List<Sledge> grow(){
+			if(!hasGrown){
+				
+				Collection<Rule> sources, ignored, recipients;
+				{
+					List<Time> upTrail = upTrail();
+					sources = allOfType(SledgeType.SOURCE, upTrail);
+					ignored = allOfType(SledgeType.IGNORE, upTrail);
+					recipients = allOfType(SledgeType.RECIP, upTrail);
+				}
+				
+				
+				
+				
+				
+				
+				
+				hasGrown = true;
+			}
+			return children().stream().map((t)->(Sledge)t).collect(Collectors.toList());
+		}
+	}*/
+	
+	/*private enum SledgeType{
+		SOURCE, 
+		IGNORE, 
+		RECIP;
+		
+		SledgeType complement(){
+			return values()[values().length - 1 - ordinal()];
+		}
+	}*/
+	
+	/*private static Collection<Collection<Rule>> visibleRules(Rule r, Collection<Rule> distinctRules){
+		return r.stream()
+				.map((c) -> {
+					Set<Rule> temp = c.stream()
+							.map((f)->(Rule)f)
+							.collect(Collectors.toSet()); 
+					temp.remove(r);
+					temp.retainAll(distinctRules);
+					return temp;
+				})
+				.collect(Collectors.toSet());
+	}*/
 	
 	/*
 	 * TODO rebuild sledgehammer-search so it only (or primarily) seeks out inter-RegionSpecies pairings.
@@ -151,25 +362,6 @@ public class Sledgehammer extends Technique {
 	 * about Sledgehammer.
 	 */
 	protected SolutionEvent regionSpeciesPairProcessing(){
-		
-		Collection<Rule> distinctRules = distinctRules();
-		
-		/*Map<Integer,List<Rule>> sizeToRules = distinctRules.stream().collect(
-				Collectors.toMap(
-						(Rule rule)->rule.size(), 
-						(Rule rule)->{List<Rule> result = new ArrayList<>(1); result.add(rule); return result;}, 
-						(list1,list2) -> {list1.addAll(list2); return list1;}));*/
-		
-		/*Puzzle p = target.nodeStream().findFirst().get().getPuzzle(); //XXX a real solution, please
-		for(List<RegionSpecies> types : new ComboGen<RegionSpecies>(Arrays.asList(RegionSpecies.values()), 2,2)){
-			for(IndexInstance dim : p.getIndices(dimensionType(types,p))){
-				for(int size = 2; size<target.sideLength(); size++){
-					
-					List<Rule> srcRecip = distinctRules.stream().filter((rule)->types.contains(rule.getType())).collect(Collectors.toList());
-					
-				}
-			}
-		}*/
 		
 		for(TypePair types : TypePair.values()){
 			for(Pair<Collection<Rule>,Collection<Rule>> pack : types.packs(target)){
@@ -190,12 +382,10 @@ public class Sledgehammer extends Technique {
 			}
 		}
 		
-		
-		
 		return null;
 	}
 	
-	private static Set<Claim> falsifiedClaims(List<Rule> comboA, List<Rule> comboB){
+	private static Set<Claim> falsifiedClaims(Collection<Rule> comboA, Collection<Rule> comboB){
 		ToolSet<Claim> unionA = sideEffectUnion(comboA, false);
 		Set<Claim> unionB = sideEffectUnion(comboB, false);
 		Set<Claim> inters = unionA.intersection(unionB);
@@ -311,19 +501,6 @@ public class Sledgehammer extends Technique {
 		}
 	}
 	
-	private DimensionType dimensionType(List<RegionSpecies> pair, Puzzle p){
-		Set<DimensionType> dims0 = pair.get(0).dimsOutsideRule(p);
-		Set<DimensionType> dims1 = pair.get(1).dimsOutsideRule(p);
-		
-		dims1.retainAll(dims0);
-		
-		if(dims1.size() != 1){
-			throw new IllegalStateException("1 != "+dims1.size());
-		} else{
-			return dims1.iterator().next();
-		}
-	}
-	
 	private Collection<Rule> distinctRules(){
 		class RuleWrap{
 			private final Rule wrapped;
@@ -354,27 +531,72 @@ public class Sledgehammer extends Technique {
 	}
 	
 	/**
-	 * <p>Returns a set of all the Rules that intersect any of the 
-	 * Rules in <tt>sources</tt>.</p>
-	 * @param union a pre-computed {@link Sledgehammer#sideEffectUnion(Collection, boolean) mass-union} 
-	 * of the Claims in the Rules in <tt>sources</tt>
+	 * <p>Returns a set of all the Rules that intersect at least two of 
+	 * the Rules in <tt>sources</tt>.</p> 
 	 * @param sources a collection of Rules to be used as an originating 
 	 * combination for a sledgehammer solution event
+	 * @param distinctRulesAtSize a collection of Rules that are 
 	 * @return a set of all the Rules that intersect any of the Rules 
 	 * in <tt>sources</tt>, excluding the Rules in <tt>sources</tt>.
 	 */
-	private Set<Fact> rulesIntersecting(List<Rule> sources, Set<Claim> srcUnion, Collection<Rule> distinctRulesSize){
-		Set<Fact> result = srcUnion.stream().collect(Collector.of(
+	private Set<Fact> possibleRecipients(List<Rule> sources, Collection<Rule> distinctRulesAtSize){
+		List<Set<Rule>> visibleRules = sources.stream().collect(Collector.of(
 				ArrayList::new, 
-				(List<Fact> a, Claim t) -> a.addAll(t), 
-				(List<Fact> a1, List<Fact> a2) -> {a1.addAll(a2); return a1;}, 
-				(List<Fact> a) -> new HashSet<>(a)));
-		result.removeAll(sources);
-		result.retainAll(distinctRulesSize);
+				(List<Set<Rule>> a, Rule source) -> a.add(source.visibleRules()), 
+				(left,right) -> {left.addAll(right); return left;}));
+		
+		Map<Rule,Integer> countSet = countingUnion(visibleRules);
+		
+		Set<Fact> result = countSet.keySet().stream().filter((r) -> countSet.get(r) > 1).collect(Collectors.toSet());
+		result.retainAll(distinctRulesAtSize);
 		return result;
 	}
 	
-	private class UnionIterable implements Iterable<Pair<List<Rule>,ToolSet<Claim>>>{
+	/**
+	 * <p>Returns true if none of the Rules in <tt>ruleList</tt> intersect any 
+	 * of the other Rules in the list and every Rule in <tt>ruleList</tt> shares at least 
+	 * one {@link Rule#visibleRules() visible Rule} in common with at least one 
+	 * other Rule in the <tt>ruleList</tt>.</p>
+	 * 
+	 * <p>This method partially checks the validity of a combination of Rules that 
+	 * might be a source combination for a sledgehammer solution scenario. The Rules 
+	 * of a sledgehammer source combo must be disjoint from one another; as such, 
+	 * no Rule from a valid source combo will be visible from any other Rule in the 
+	 * same valid source combo, because a Rule's visible Rules are the Rules that that 
+	 * Rule intersects. All the Rules of a valid source combo must also form a single 
+	 * connected component, under the stipulation that Rules share an edge if they 
+	 * share a visible Rule in common.</p>
+	 * 
+	 * <p>One aspect of the validity of a sledgehammer source combo that is left out 
+	 * of this method's analysis is that there must exist space (positions) for a valid 
+	 * recipient combo among the Rules visible to the Rules of a valid source combo. 
+	 * That analysis is outsourced to {@link possibleRecipients()} and the stipulation 
+	 * that a recipient combo must have as many elements as its source combo.</p>
+	 * 
+	 * @param ruleList a candidate source combo for a sledgehammer solution scenario 
+	 * being tested for validity
+	 * @return true if none of the Rules in <tt>ruleList</tt> intersect any 
+	 * of the other Rules in the list and every Rule in <tt>ruleList</tt> shares at least 
+	 * one {@link Rule#visibleRules() visible Rule} in common with at least one 
+	 * other Rule in the <tt>ruleList</tt>, false otherwise
+	 */
+	public static boolean sourceComboMostlyValid(List<Rule> ruleList){
+		Set<Rule> allVisibleRules = ruleList.get(0).visibleRules();
+		
+		for(int i = 1; i<ruleList.size(); ++i){
+			Set<Rule> visibleToCurrentRule = ruleList.get(i).visibleRules();
+			
+			if(Collections.disjoint(visibleToCurrentRule, allVisibleRules)){
+				return false;
+			} else{
+				allVisibleRules.addAll(visibleToCurrentRule);
+			}
+		}
+		
+		return Collections.disjoint(allVisibleRules, ruleList);
+	};
+	
+	/*private class UnionIterable implements Iterable<List<Rule>>{
 		
 		Iterable<List<Rule>> wrappedIterable;
 		
@@ -383,22 +605,20 @@ public class Sledgehammer extends Technique {
 		}
 		
 		@Override
-		public Iterator<Pair<List<Rule>,ToolSet<Claim>>> iterator(){
-			class UnionIterator implements Iterator<Pair<List<Rule>,ToolSet<Claim>>>{
+		public Iterator<List<Rule>> iterator(){
+			class UnionIterator implements Iterator<List<Rule>>{
 				
-				ToolSet<Claim> union;
 				Iterator<List<Rule>> wrappedIterator;
 				
-				/**
+				*//* *
 				 * <p>Constructs a UnionIterator wrapping <tt>wrappedIterator</tt>.</p>
 				 * @param wrappedIterator an Iterator whose outputs are filtered by 
 				 * this UnionIterator
-				 */
+				 *//*
 				UnionIterator(Iterable<List<Rule>> iterable){
 					TestIterator<List<Rule>> wrappedIterator = new TestIterator<>(iterable.iterator());
-					wrappedIterator.addTest((ruleList)->setUnion(sideEffectUnion(ruleList,true))!=null);
+					wrappedIterator.addTest(RULES_CONNECTED_BY_INTERMEDIATE_RULES_ARE_CONNECTED_COMPONENT);
 					this.wrappedIterator = wrappedIterator;;
-					this.union = new ToolSet<>(0);
 				}
 				
 				@Override
@@ -407,25 +627,15 @@ public class Sledgehammer extends Technique {
 				}
 				
 				@Override
-				public Pair<List<Rule>,ToolSet<Claim>> next(){
+				public List<Rule> next(){
 					
-					return new Pair<>(wrappedIterator.next(),this.union);
-				}
-				
-				/**
-				 * <p>Sets this UnionIterator's <tt>union</tt></p>
-				 * @param union the new <tt>union</tt> of this UnionIterator
-				 * @return the parameter <tt>union</tt>
-				 */
-				ToolSet<Claim> setUnion(ToolSet<Claim> union){
-					
-					return this.union = union;
+					return wrappedIterator.next();
 				}
 			}
 			
 			return new UnionIterator(wrappedIterable);
 		}
-	}
+	}*/
 	
 	/* *
 	 * <p>The size ({@value}) that at least one of the recipient Rules must have 
@@ -471,7 +681,7 @@ public class Sledgehammer extends Technique {
 	 * <tt>greens</tt> is not valid, a set of the Claims to be set false if the specified 
 	 * solution scenario is valid
 	 */
-	private static Set<Claim> sledgehammerValidityCheck(List<? extends Fact> srcRules, List<? extends Fact> recipRules, final ToolSet<Claim> srcClaims){
+	private static Set<Claim> sledgehammerValidityCheck(List<? extends Fact> srcRules, List<? extends Fact> recipRules){
 		
 		/*//make sure at least one recip has a size at least 3
 		Predicate<Fact> trimmableRule = (rule) -> {
@@ -482,6 +692,8 @@ public class Sledgehammer extends Technique {
 		if(!recipRules.stream().anyMatch(trimmableRule)){
 			return null;
 		}*/
+		
+		final ToolSet<Claim> srcClaims = sideEffectUnion(srcRules,true);
 		
 		// make sure that recip rules collectively subsume src rules
 		ToolSet<Claim> recipClaims = sideEffectUnion(recipRules,false);
@@ -520,25 +732,11 @@ public class Sledgehammer extends Technique {
 	public static final Predicate<List<Claim>> POSSIBLE_SOLUTION = (solutionState) -> sideEffectUnion(solutionState,true) != null;
 	
 	/**
-	 * <p>Returns true if <tt>c</tt> can still be true given that all the 
-	 * Claims in <tt>givens</tt> are known true, false otherwise.</p>
-	 * 
-	 * @param c the Claim whose truth is being assessed
-	 * @param givens the Claims whose truth is assumed while assessing 
-	 * the truth of <tt>c</tt>.
-	 * @return true if <tt>c</tt> is not guaranteed to be false given 
-	 * that all the claims in <tt>givens</tt> are true, false otherwise.
-	 */
-	private static boolean isPossibleClaim(Claim c, List<Claim> givens){
-		return !c.visibleClaims().intersects(givens);
-	}
-	
-	/**
 	 * <p>Unions all the collections in <tt>srcCombo</tt> into one set and returns 
 	 * that set, unless some elements are shared among the collections in 
 	 * srcCombo, in which case, if <tt>nullIfNotDisjoint</tt> is true, null is 
 	 * returned instead.</p>
-	 * @param colcol a collection of collections whose elements are combined 
+	 * @param collections a collection of collections whose elements are combined 
 	 * into one set and returned.
 	 * @param nullIfNotDisjoint controls whether an intersection among the elements 
 	 * of <tt>srcCombo</tt> results in <tt>null</tt> being returned.
@@ -546,16 +744,30 @@ public class Sledgehammer extends Technique {
 	 * some of the elements of <tt>srcCombo</tt> intersect each other, or otherwise 
 	 * the mass-union of all the elements of <tt>srcCombo</tt>.
 	 */
-	static <T> ToolSet<T> sideEffectUnion(Collection<? extends Collection<T>> colcol, boolean nullIfNotDisjoint){
+	static <T> ToolSet<T> sideEffectUnion(Collection<? extends Collection<T>> collections, boolean nullIfNotDisjoint){
 		ToolSet<T> result = new ToolSet<>();
 		
 		int cumulativeSize = 0;
-		for(Collection<T> redBag : colcol){
+		for(Collection<T> redBag : collections){
 			result.addAll(redBag);
 			cumulativeSize += redBag.size();
 		}
 		
 		return !nullIfNotDisjoint || cumulativeSize==result.size() ? result : null;
+	}
+	
+	static <T> Map<T,Integer> countingUnion(Collection<? extends Collection<T>> collections){
+		Map<T,Integer> result = new HashMap<>();
+		
+		for(Collection<T> col : collections){
+			for(T t : col){
+				result.put(t, result.containsKey(t) 
+						? result.get(t)+1 
+						: 1);
+			}
+		}
+		
+		return result;
 	}
 	
 	/**

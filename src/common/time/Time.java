@@ -60,6 +60,14 @@ public interface Time extends Iterable<Time>{
 	public List<Time> currentTrail();
 	
 	/**
+	 * <p>Returns a List of Times starting with this Time and ending with 
+	 * the ultimate parent of this time tree.</p>
+	 * @return a List of Times starting with this Time and ending with 
+	 * the ultimate parent of this time tree
+	 */
+	public List<Time> upTrail();
+	
+	/**
 	 * <p>Adds a child Time to this Time's list of {@link #children() children} and 
 	 * returns true if that list was changed by the operation, and returns false 
 	 * otherwise.</p>

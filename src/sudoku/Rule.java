@@ -90,6 +90,14 @@ public class Rule extends Fact{
 		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
 	}
 	
+	public Set<Rule> visibleRules(){
+		Set<Rule> result = Sledgehammer.sideEffectUnion(this, false).stream()
+				.map((f)->(Rule)f)
+				.collect(Collectors.toSet());
+		result.remove(this);
+		return result;
+	}
+	
 	/*@Override
 	public boolean equals(Object o){
 		if(o instanceof Rule){
