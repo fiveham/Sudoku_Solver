@@ -81,6 +81,8 @@ public class Sledgehammer extends Technique {
 	
 	private static final int MIN_SLEDGEHAMMER_SIZE = 2;
 	
+	private final VisibleCache visibleCache = new VisibleCache();
+	
 	/**
 	 * <p>Constructs a SledgeHammer2 that works to solve the specified Puzzle.</p>
 	 * @param target the Puzzle that this SledgeHammer2 tries to solve.
@@ -107,8 +109,6 @@ public class Sledgehammer extends Technique {
 		Collection<Rule> distinctRules = distinctRules(target);
 		Map<Integer,List<Rule>> map = distinctRules.stream().collect(MAP_RULES_BY_SIZE);
 		
-		VisibleCache visibleCache = new VisibleCache();
-		
 		Collection<Rule> distinctRulesAtSize = new ArrayList<>();
 		for(int size = MIN_SRC_COMBO_SIZE; size<=distinctRules.size()/2; ++size){
 			if(map.containsKey(size)){
@@ -117,13 +117,13 @@ public class Sledgehammer extends Technique {
 			
 			//For each disjoint, closely connected source combo
 			for(List<Rule> srcCombo : new ComboGen<>(distinctRulesAtSize, size, size)){
-				if(sourceComboMostlyValid(srcCombo, visibleCache)){
+				if(sourceComboMostlyValid(srcCombo)){
 					
 					//For each recipient combo derivable from that source combo
-					for(List<Fact> recipientCombo : recipientCombinations(srcCombo, distinctRulesAtSize, visibleCache)){
+					for(List<Fact> recipientCombo : recipientCombinations(srcCombo, distinctRulesAtSize)){
 						
 						//If the source and recipient combos make a valid sledgehammer scenario
-						Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo); 
+						Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo);
 						if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
 							return resolve(claimsToSetFalse);
 						}
@@ -164,7 +164,7 @@ public class Sledgehammer extends Technique {
 				.collect(Collectors.toList());
 	}
 	
-	private class VisibleCache extends HashMap<Rule,Set<Rule>>{
+	private static class VisibleCache extends HashMap<Rule,Set<Rule>>{
 		@Override
 		public Set<Rule> get(Object o){
 			if(containsKey(o)){
@@ -212,7 +212,7 @@ public class Sledgehammer extends Technique {
 	 * one {@link Rule#visibleRules() visible Rule} in common with at least one 
 	 * other Rule in the <tt>ruleList</tt>, false otherwise
 	 */
-	private static boolean sourceComboMostlyValid(List<Rule> ruleList, VisibleCache visibleCache){ //TODO make this method return the collection of recipient Rules for this src combo
+	private boolean sourceComboMostlyValid(List<Rule> ruleList){ //TODO make this method return the collection of recipient Rules for this src combo
 		List<Rule> internalList = new ArrayList<>(ruleList);
 		
 		int oldSize = internalList.size();
@@ -245,7 +245,7 @@ public class Sledgehammer extends Technique {
 	 * @return a set of all the Rules that intersect any of the Rules 
 	 * in <tt>sources</tt>, excluding the Rules in <tt>sources</tt>.
 	 */
-	private static ComboGen<Fact> recipientCombinations(List<Rule> sources, Collection<Rule> distinctRulesAtSize, VisibleCache visibleCache){
+	private ComboGen<Fact> recipientCombinations(List<Rule> sources, Collection<Rule> distinctRulesAtSize){
 		List<Set<Rule>> visibleRules = sources.stream().collect(Collector.of(
 				ArrayList::new, 
 				(List<Set<Rule>> a, Rule source) -> a.add(visibleCache.get(source)), 
