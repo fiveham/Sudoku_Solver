@@ -155,16 +155,14 @@ public class Sledgehammer extends Technique {
 			
 			//For each disjoint, closely connected source combo
 			for(List<Rule> srcCombo : new ComboGen<>(distinctRulesAtSize, size, size)){
-				if(sourceComboMostlyValid(srcCombo)){
+				
+				//For each recipient combo derivable from that source combo
+				for(List<Fact> recipientCombo : recipientCombinations(srcCombo, distinctRulesAtSize)){
 					
-					//For each recipient combo derivable from that source combo
-					for(List<Fact> recipientCombo : recipientCombinations(srcCombo, distinctRulesAtSize)){
-						
-						//If the source and recipient combos make a valid sledgehammer scenario
-						Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo);
-						if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
-							return resolve(claimsToSetFalse);
-						}
+					//If the source and recipient combos make a valid sledgehammer scenario
+					Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo);
+					if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
+						return resolve(claimsToSetFalse);
 					}
 				}
 			}
@@ -223,7 +221,7 @@ public class Sledgehammer extends Technique {
 		}
 	}
 	
-	/**
+	/* *
 	 * <p>Returns true if none of the Rules in <tt>ruleList</tt> intersect any 
 	 * of the other Rules in the list and every Rule in <tt>ruleList</tt> shares at least 
 	 * one {@link Rule#visibleRules() visible Rule} in common with at least one 
@@ -251,29 +249,6 @@ public class Sledgehammer extends Technique {
 	 * one {@link Rule#visibleRules() visible Rule} in common with at least one 
 	 * other Rule in the <tt>ruleList</tt>, false otherwise
 	 */
-	private boolean sourceComboMostlyValid(List<Rule> ruleList){ //TODO make this method return the collection of recipient Rules for this src combo
-		List<Rule> internalList = new ArrayList<>(ruleList);
-		
-		int oldSize = internalList.size();
-		Set<Rule> allVisibleRules = visibleCache.get(internalList.remove(internalList.size()-1));
-		
-		while(internalList.size() != oldSize){
-			oldSize = internalList.size();
-			
-			for(Iterator<Rule> iter = internalList.iterator(); iter.hasNext();){
-				Rule r = iter.next();
-				
-				Set<Rule> visibleToCurrentRule = visibleCache.get(r);
-				
-				if(!Collections.disjoint(visibleToCurrentRule, allVisibleRules)){
-					allVisibleRules.addAll(visibleToCurrentRule);
-					iter.remove();
-				}
-			}
-		}
-		
-		return oldSize == 0 && Collections.disjoint(allVisibleRules, ruleList);
-	}
 	
 	/**
 	 * <p>Returns a set of all the Rules that intersect at least two of 
@@ -285,16 +260,49 @@ public class Sledgehammer extends Technique {
 	 * in <tt>sources</tt>, excluding the Rules in <tt>sources</tt>.
 	 */
 	private ComboGen<Fact> recipientCombinations(List<Rule> sources, Collection<Rule> distinctRulesAtSize){
-		List<Set<Rule>> visibleRules = sources.stream().collect(Collector.of(
-				ArrayList::new, 
-				(List<Set<Rule>> a, Rule source) -> a.add(visibleCache.get(source)), 
-				(left,right) -> {left.addAll(right); return left;}));
 		
-		Map<Rule,Integer> countSet = countingUnion(visibleRules);
+		List<Rule> unconnectedSources = new ArrayList<>(sources);
 		
-		Set<Fact> result = countSet.keySet().stream().filter((r) -> countSet.get(r) > 1).collect(Collectors.toSet());
-		result.retainAll(distinctRulesAtSize);
-		return new ComboGen<>(result, sources.size(), sources.size());
+		int prevUnconSrcCount = unconnectedSources.size();
+		
+		Map<Rule,Integer> rulesVisibleToConnectedRules = new HashMap<>();
+		addAll(rulesVisibleToConnectedRules, visibleCache.get(unconnectedSources.remove(unconnectedSources.size()-1)));
+		
+		while(unconnectedSources.size() != prevUnconSrcCount){
+			prevUnconSrcCount = unconnectedSources.size();
+			
+			for(Iterator<Rule> iter = unconnectedSources.iterator(); iter.hasNext();){
+				Rule currentRule = iter.next();
+				
+				Set<Rule> visibleToCurrentRule = visibleCache.get(currentRule);
+				
+				if(!Collections.disjoint(visibleToCurrentRule, rulesVisibleToConnectedRules.keySet())){
+					addAll(rulesVisibleToConnectedRules, visibleToCurrentRule);
+					iter.remove();
+				}
+			}
+		}
+		
+		boolean sourceComboMostlyValid = (prevUnconSrcCount == 0 && Collections.disjoint(rulesVisibleToConnectedRules.keySet(), sources));
+		
+		if(sourceComboMostlyValid){
+			Set<Fact> result = rulesVisibleToConnectedRules.keySet().stream()
+					.filter((r) -> rulesVisibleToConnectedRules.get(r) > 1) //MAGIC
+					.collect(Collectors.toSet());
+			result.retainAll(distinctRulesAtSize);
+			return new ComboGen<>(result, sources.size(), sources.size());
+		} else{
+			return new ComboGen<>(Collections.emptyList(), 0, 0);
+		}
+	}
+	
+	private static <T> void addAll(Map<T,Integer> map, Collection<? extends T> collection){
+		for(T t : collection){
+			map.put(t, 
+					map.containsKey(t) 
+							? 1+map.get(t) 
+							: 1 );
+		}
 	}
 	
 	/**
