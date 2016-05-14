@@ -66,7 +66,7 @@ import sudoku.Puzzle.RegionSpecies;
 public class Sledgehammer extends Technique {
 	
 	public static final Collector<Rule,?,Map<Integer,List<Rule>>> MAP_RULES_BY_SIZE = Collectors.toMap(
-			(Rule rule)->rule.size(), 
+			Sledgehammer::appropriateSledgehammerSize, 
 			(Rule rule)->{List<Rule> result = new ArrayList<>(1); result.add(rule); return result;}, 
 			(list1,list2) -> {list1.addAll(list2); return list1;});
 	
@@ -81,7 +81,9 @@ public class Sledgehammer extends Technique {
 	
 	private static final int MIN_SLEDGEHAMMER_SIZE = 2;
 	
-	private final VisibleCache visibleCache = new VisibleCache();
+	private final VisibleCache visibleCache;
+	private final Collection<Rule> distinctRules;
+	private final Map<Integer,List<Rule>> distinctRulesBySledgehammerSize;
 	
 	/**
 	 * <p>Constructs a SledgeHammer2 that works to solve the specified Puzzle.</p>
@@ -89,6 +91,40 @@ public class Sledgehammer extends Technique {
 	 */
 	public Sledgehammer(Sudoku puzzle) {
 		super(puzzle);
+		
+		this.visibleCache = new VisibleCache();
+		this.distinctRules = distinctRules(target);
+		this.distinctRulesBySledgehammerSize = distinctRules.stream().collect(MAP_RULES_BY_SIZE);
+	}
+	
+	private static int appropriateSledgehammerSize(Rule r){
+		
+		//Number of Claims on this Rule.
+		//Maximum number of recipient rules attachable to this Rule r: 
+		//Inclusive upper bound on the minimum size of Sledgehammer for 
+		//which r can be a source.
+		int upperBound = r.size();
+		
+		//number of Rules visible to r if none of r's Claims share any 
+		//Rule other than r.
+		int rulesOtherThanR = Claim.INIT_OWNER_COUNT - 1;
+		int noLoopVisibleRuleCount = r.size() * rulesOtherThanR;
+		
+		Set<Rule> visible = r.visibleRules();
+		int actualVisibleCount = visible.size();
+		
+		if(noLoopVisibleRuleCount == actualVisibleCount){
+			return upperBound;
+		} else if(noLoopVisibleRuleCount > actualVisibleCount){
+			for(List<Rule> visibleCombo : new ComboGen<>(visible, 2, r.size())){ //MAGIC
+				if(sideEffectUnion(visibleCombo, false).containsAll(r)){
+					return visibleCombo.size();
+				}
+			}
+			throw new IllegalStateException("Could not determine true min Sledgehammer size for "+r);
+		} else{
+			throw new IllegalStateException("noLoopVisibleRuleCount ("+noLoopVisibleRuleCount+") < actualVisibleCount ("+actualVisibleCount+")");
+		}
 	}
 	
 	/**
@@ -106,13 +142,15 @@ public class Sledgehammer extends Technique {
 	@Override
 	protected SolutionEvent process(){
 		
-		Collection<Rule> distinctRules = distinctRules(target);
-		Map<Integer,List<Rule>> map = distinctRules.stream().collect(MAP_RULES_BY_SIZE);
-		
 		Collection<Rule> distinctRulesAtSize = new ArrayList<>();
+		for(int i=0; i<MIN_SRC_COMBO_SIZE; ++i){
+			if(distinctRulesBySledgehammerSize.containsKey(i)){
+				distinctRulesAtSize.addAll(distinctRulesBySledgehammerSize.get(i));
+			}
+		}
 		for(int size = MIN_SRC_COMBO_SIZE; size<=distinctRules.size()/2; ++size){
-			if(map.containsKey(size)){
-				distinctRulesAtSize.addAll(map.get(size));
+			if(distinctRulesBySledgehammerSize.containsKey(size)){
+				distinctRulesAtSize.addAll(distinctRulesBySledgehammerSize.get(size));
 			}
 			
 			//For each disjoint, closely connected source combo
@@ -164,7 +202,7 @@ public class Sledgehammer extends Technique {
 				.collect(Collectors.toList());
 	}
 	
-	private static class VisibleCache extends HashMap<Rule,Set<Rule>>{
+	private class VisibleCache extends HashMap<Rule,Set<Rule>>{
 		@Override
 		public Set<Rule> get(Object o){
 			if(containsKey(o)){
@@ -174,6 +212,7 @@ public class Sledgehammer extends Technique {
 					Rule r = (Rule) o;
 					
 					Set<Rule> result = r.visibleRules();
+					result.retainAll(distinctRules);
 					super.put(r, result);
 					
 					return result;
@@ -350,10 +389,27 @@ public class Sledgehammer extends Technique {
 	 */
 	protected SolutionEvent componentGrowthProcessing(){
 		
-		Collection<Rule> distinctRules = distinctRules(target);
-		
-		for(int size = MIN_SLEDGEHAMMER_SIZE; size <= target.size()/2; size++){
-			for(Rule seed : distinctRules){
+		for(int size = 2; size <= 2; ++size){//for(int size = MIN_SLEDGEHAMMER_SIZE; size <= target.size()/2; size++){
+			
+			//for each possible seed src Rule, 
+			//get its visibles' visibles
+			//If the size is 2, then just iterate over all of those vis-visibles, 
+			//and for each one construct a pair containing it and the seed Rule 
+			//and then check normally to see if there's a recipient combination for 
+			//that source combo pair. If there's not, move on to the next source combo 
+			//pair for the current seed Rule. If you've exhausted all the vis-visibles 
+			//for the current seed, move on to the next seed, and its vis-visibles.
+			//Make sure to add the old seed to a collection of Rules that are banned 
+			//from use as sources for the current size.
+			//If the size is 3, then iterate over the pairs described in the previous 
+			//paragraph, and for each one of them, get a set of Rules that's the 
+			//intersection of the visibleRules of the first Rule of the pair and 
+			//the visibleRules of the second Rule of the pair, then iterate over the 
+			//Rule elements of that collection so as to constitute every possible 
+			//triplet.
+			
+			
+			/*for(Rule seed : distinctRules){
 				Pair<Collection<Rule>,Collection<Rule>> sledgehammer = seekSledgehammer(seed, size);
 				if(sledgehammer != null){
 					Set<Claim> falsified = sideEffectUnion(sledgehammer.getB(),false);
@@ -362,7 +418,7 @@ public class Sledgehammer extends Technique {
 						return resolve(falsified);
 					}
 				}
-			}
+			}*/
 		}
 		
 		return null;
