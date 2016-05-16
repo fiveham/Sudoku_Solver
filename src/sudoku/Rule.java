@@ -116,7 +116,7 @@ public class Rule extends Fact{
 	
 	private static int genHashCode(Puzzle puzzle, RegionSpecies type, IndexInstance dimA, IndexInstance dimB){
 		Puzzle.IndexValue[] a = puzzle.decodeXYZ(dimA, dimB);
-		return Claim.linearizeCoords(a[0].intValue(), a[1].intValue(), a[2].intValue(), puzzle.sideLength()) 
+		return Claim.linearizeCoords(a[Puzzle.X_DIM].intValue(), a[Puzzle.Y_DIM].intValue(), a[Puzzle.Z_DIM].intValue(), puzzle.sideLength()) 
 				+ (int)Math.pow(puzzle.sideLength(), Puzzle.DIMENSION_COUNT) 
 				* type.ordinal() ;
 	}

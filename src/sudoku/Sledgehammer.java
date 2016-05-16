@@ -3,7 +3,6 @@ package sudoku;
 import common.ComboGen;
 import common.NCuboid;
 import common.Pair;
-import common.TestIterator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiPredicate;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collector;
@@ -65,10 +65,26 @@ import sudoku.Puzzle.RegionSpecies;
  */
 public class Sledgehammer extends Technique {
 	
+	private static final Function<Rule,List<Rule>> VALUE_MAPPER = (Rule rule) -> {
+		List<Rule> result = new ArrayList<>(1); 
+		result.add(rule); 
+		return result;
+	};
+	
+	private static final BinaryOperator<List<Rule>> MERGE_FUNCTION = (list1,list2) -> {
+		list1.addAll(list2); 
+		return list1;
+	};
+	
+	public static final Collector<Rule,?,Map<Integer,List<Rule>>> MAP_SOURCES_BY_SIZE = Collectors.toMap(
+			Sledgehammer::sledgehammerSizeIfSource, 
+			VALUE_MAPPER, 
+			MERGE_FUNCTION);
+	
 	public static final Collector<Rule,?,Map<Integer,List<Rule>>> MAP_RULES_BY_SIZE = Collectors.toMap(
-			Sledgehammer::appropriateSledgehammerSize, 
-			(Rule rule)->{List<Rule> result = new ArrayList<>(1); result.add(rule); return result;}, 
-			(list1,list2) -> {list1.addAll(list2); return list1;});
+			Rule::size, 
+			VALUE_MAPPER, 
+			MERGE_FUNCTION);
 	
 	/**
 	 * <p>The minimum number ({@value}) of Rules in a source combo relevant to Sledgehammer analysis. 
@@ -79,15 +95,19 @@ public class Sledgehammer extends Technique {
 	 */
 	private static final int MIN_SRC_COMBO_SIZE = 2;
 	
+	public static final int MIN_RECIPIENT_COUNT_PER_SOURCE = 2;
+	public static final int MIN_SOURCE_COUNT_PER_RECIPIENT = 2;
+	
 	private static final int MIN_SLEDGEHAMMER_SIZE = 2;
 	
 	private final VisibleCache visibleCache;
 	private final Collection<Rule> distinctRules;
 	private final Map<Integer,List<Rule>> distinctRulesBySledgehammerSize;
+	private final Map<Integer,List<Rule>> distinctSourcesBySledgehammerSize;
 	
 	/**
-	 * <p>Constructs a SledgeHammer2 that works to solve the specified Puzzle.</p>
-	 * @param target the Puzzle that this SledgeHammer2 tries to solve.
+	 * <p>Constructs a SledgeHammer that works to solve the specified Puzzle.</p>
+	 * @param target the Puzzle that this SledgeHammer tries to solve.
 	 */
 	public Sledgehammer(Sudoku puzzle) {
 		super(puzzle);
@@ -95,14 +115,31 @@ public class Sledgehammer extends Technique {
 		this.visibleCache = new VisibleCache();
 		this.distinctRules = distinctRules(target);
 		this.distinctRulesBySledgehammerSize = distinctRules.stream().collect(MAP_RULES_BY_SIZE);
+		this.distinctSourcesBySledgehammerSize = distinctRules.stream().collect(MAP_SOURCES_BY_SIZE);
 	}
 	
-	private static int appropriateSledgehammerSize(Rule r){
+	/**
+	 * <p>Returns the minimum size of a sledgehammer solution scenario for which 
+	 * {@code r} could be a source. The size is usually {@code r.size()}, but in 
+	 * some cases is less, if {@code r} can have two or more of its Claims accounted 
+	 * for by a single other Rule. In that case, combinations of {@code r}'s 
+	 * {@link Rule#visibleRules() visible Rules} are explored, starting at the 
+	 * smallest possible size and working up until a combination of visible Rules 
+	 * around {@code r} is found that accounts for all of {@code r}'s Claims.</p>
+	 * @param r the Rule whose minimum acceptable Sledgehammer size in which 
+	 * {@code r} can act as a source is determined
+	 * @throws IllegalStateException if {@code r} has more {@link Rule#visibleRules() visible Rules} 
+	 * than it would have if none of its Claims shared any Rules in common, which 
+	 * is impossible, or if no combination of Rules visible to {@code r} with 
+	 * combination-size not greater than {@code r.size()} accounts for all 
+	 * {@code r}'s Claims
+	 * @return the minimum size of a sledgehammer solution scenario for which 
+	 * {@code r} could be a source
+	 */
+	private static int sledgehammerSizeIfSource(Rule r){
 		
-		//Number of Claims on this Rule.
 		//Maximum number of recipient rules attachable to this Rule r: 
-		//Inclusive upper bound on the minimum size of Sledgehammer for 
-		//which r can be a source.
+		//Inclusive upper bound on the minimum size of Sledgehammer where r is a source.
 		int upperBound = r.size();
 		
 		//number of Rules visible to r if none of r's Claims share any 
@@ -116,7 +153,7 @@ public class Sledgehammer extends Technique {
 		if(noLoopVisibleRuleCount == actualVisibleCount){
 			return upperBound;
 		} else if(noLoopVisibleRuleCount > actualVisibleCount){
-			for(List<Rule> visibleCombo : new ComboGen<>(visible, 2, r.size())){ //MAGIC
+			for(List<Rule> visibleCombo : new ComboGen<>(visible, MIN_RECIPIENT_COUNT_PER_SOURCE, r.size())){
 				if(sideEffectUnion(visibleCombo, false).containsAll(r)){
 					return visibleCombo.size();
 				}
@@ -141,26 +178,57 @@ public class Sledgehammer extends Technique {
 	 */
 	@Override
 	protected SolutionEvent process(){
+		return processBySeed();
+	}
+	
+	/**
+	 * <p>Processes this Sledgehammer's target by iterating over all the viable 
+	 * sizes of sledgehammer solutions, and for each one picking a seed Rule among 
+	 * the distinct rules that can be sledgehammer sources at that size and iterating 
+	 * over all the combinations of other Rules (except those visible to the seed) 
+	 * where the combinations have a size 1 less than the sledgehammer's size. A total 
+	 * source combination is obtained by adding the seed to the {@code size-1} combo 
+	 * of Rules invisible to the seed. The total source combo and a collection of 
+	 * distinct</p>
+	 * @return
+	 */
+	private SolutionEvent processBySeed(){
 		
-		Collection<Rule> distinctRulesAtSize = new ArrayList<>();
+		List<Rule> distinctRulesAtSize = new ArrayList<>();
+		List<Rule> distinctSourcesAtSize = new ArrayList<>();
 		for(int i=0; i<MIN_SRC_COMBO_SIZE; ++i){
-			if(distinctRulesBySledgehammerSize.containsKey(i)){
-				distinctRulesAtSize.addAll(distinctRulesBySledgehammerSize.get(i));
-			}
+			distinctRulesAtSize(distinctRulesAtSize, i);
+			distinctSourcesAtSize(distinctSourcesAtSize, i);
 		}
 		for(int size = MIN_SRC_COMBO_SIZE; size<=distinctRules.size()/2; ++size){
-			if(distinctRulesBySledgehammerSize.containsKey(size)){
-				distinctRulesAtSize.addAll(distinctRulesBySledgehammerSize.get(size));
-			}
+			distinctRulesAtSize(distinctRulesAtSize, size);
+			distinctSourcesAtSize(distinctSourcesAtSize, size);
 			
-			//For each disjoint, closely connected source combo
-			for(List<Rule> srcCombo : new ComboGen<>(distinctRulesAtSize, size, size)){
+			SolutionEvent event = processBySeedAtSize(size, distinctRulesAtSize, distinctSourcesAtSize);
+			if(event != null){
+				return event;
+			}
+		}
+		
+		return null;
+	}
+	
+	private SolutionEvent processBySeedAtSize(int size, List<Rule> distinctRulesAtSize, List<Rule> distinctSourcesAtSize){
+		
+		//For each source combo
+		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
+			Rule seed = distinctSourcesAtSize.get(i);
+			List<Rule> nonSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size());
+			for(List<Rule> srcCombo : new ComboGen<>(nonSeed, size-1, size-1)){
+				srcCombo.add(seed);
 				
-				//For each recipient combo derivable from that source combo
-				for(List<Fact> recipientCombo : recipientCombinations(srcCombo, distinctRulesAtSize)){
+				//For each recipient combo derivable from that disjoint, closely connected source combo
+				List<Rule> distinctRulesAtSizeNotVisibleToSeed = new ArrayList<>(distinctRulesAtSize);
+				distinctRulesAtSizeNotVisibleToSeed.removeAll(seed.visibleRules());
+				for(List<Rule> recipientCombo : recipientCombinations(srcCombo, distinctRulesAtSizeNotVisibleToSeed)){
 					
 					//If the source and recipient combos make a valid sledgehammer scenario
-					Set<Claim> claimsToSetFalse = sledgehammerValidityCheck(srcCombo, recipientCombo);
+					Set<Claim> claimsToSetFalse = areSledgehammerScenario(srcCombo, recipientCombo);
 					if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
 						return resolve(claimsToSetFalse);
 					}
@@ -169,6 +237,20 @@ public class Sledgehammer extends Technique {
 		}
 		
 		return null;
+	}
+	
+	private void distinctRulesAtSize(Collection<Rule> distinctAtSize, int size){
+		distinctAtSize(distinctAtSize, size, distinctRulesBySledgehammerSize);
+	}
+	
+	private void distinctSourcesAtSize(Collection<Rule> distinctAtSize, int size){
+		distinctAtSize(distinctAtSize, size, distinctSourcesBySledgehammerSize);
+	}
+	
+	private void distinctAtSize(Collection<Rule> distinctAtPrevSize, int size, Map<Integer,List<Rule>> map){
+		if(map.containsKey(size)){
+			distinctAtPrevSize.addAll(map.get(size));
+		}
 	}
 	
 	private static Collection<Rule> distinctRules(Sudoku target){
@@ -201,6 +283,11 @@ public class Sledgehammer extends Technique {
 	}
 	
 	private class VisibleCache extends HashMap<Rule,Set<Rule>>{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -4493964015606661803L;
+
 		@Override
 		public Set<Rule> get(Object o){
 			if(containsKey(o)){
@@ -255,130 +342,105 @@ public class Sledgehammer extends Technique {
 	 * the Rules in <tt>sources</tt>.</p> 
 	 * @param sources a collection of Rules to be used as an originating 
 	 * combination for a sledgehammer solution event
-	 * @param distinctRulesAtSize a collection of Rules that are 
+	 * @param allowableRules a collection of Rules that are allowed to be 
+	 * used in the returned ComboGen
 	 * @return a set of all the Rules that intersect any of the Rules 
 	 * in <tt>sources</tt>, excluding the Rules in <tt>sources</tt>.
 	 */
-	private ComboGen<Fact> recipientCombinations(List<Rule> sources, Collection<Rule> distinctRulesAtSize){
+	private ComboGen<Rule> recipientCombinations(List<Rule> sources, Collection<Rule> allowableRules){
+		//FIXME distinctRulesBySize accounts explicitly for viable SOURCE rules at size. 
+		//Replace map with two maps, one for distinct-at-size and one just as-is, for distinct-source-at-size
 		
 		List<Rule> unconnectedSources = new ArrayList<>(sources);
-		
 		int prevUnconSrcCount = unconnectedSources.size();
 		
-		Map<Rule,Integer> rulesVisibleToConnectedRules = new HashMap<>();
-		addAll(rulesVisibleToConnectedRules, visibleCache.get(unconnectedSources.remove(unconnectedSources.size()-1)));
+		//seed the "connected" area with a source Rule
+		Map<Rule,Integer> rulesVisibleToConnectedSources = new HashMap<>();
+		addAll(rulesVisibleToConnectedSources, visibleCache.get(unconnectedSources.remove(unconnectedSources.size()-1)));
 		
+		//connect as many of the sources together as possible
 		while(unconnectedSources.size() != prevUnconSrcCount){
 			prevUnconSrcCount = unconnectedSources.size();
 			
+			//try to connect each currently unconnected source to the "connected" area
 			for(Iterator<Rule> iter = unconnectedSources.iterator(); iter.hasNext();){
-				Rule currentRule = iter.next();
+				Rule currentUnconnectedSource = iter.next();
 				
-				Set<Rule> visibleToCurrentRule = visibleCache.get(currentRule);
+				//No source Rule can be directly visible to another source Rule
+				if(rulesVisibleToConnectedSources.containsKey(currentUnconnectedSource)){
+					return NO_COMBOS;
+				}
 				
-				if(!Collections.disjoint(visibleToCurrentRule, rulesVisibleToConnectedRules.keySet())){
-					addAll(rulesVisibleToConnectedRules, visibleToCurrentRule);
+				//If the current Rule is 4 steps away from at least one other source Rule, 
+				Set<Rule> visibleToCurrentRule = visibleCache.get(currentUnconnectedSource);
+				if(!Collections.disjoint(visibleToCurrentRule, rulesVisibleToConnectedSources.keySet())){
+					addAll(rulesVisibleToConnectedSources, visibleToCurrentRule);
 					iter.remove();
 				}
 			}
 		}
 		
-		boolean sourceComboMostlyValid = (prevUnconSrcCount == 0 && Collections.disjoint(rulesVisibleToConnectedRules.keySet(), sources));
-		
-		if(sourceComboMostlyValid){
-			Set<Fact> result = rulesVisibleToConnectedRules.keySet().stream()
-					.filter((r) -> rulesVisibleToConnectedRules.get(r) > 1) //MAGIC
+		if(unconnectedSources.size() == 0){
+			Set<Rule> recipientsVisibleToMultipleSources = rulesVisibleToConnectedSources.keySet().stream()
+					.filter((r) -> rulesVisibleToConnectedSources.get(r) > 1) //MAGIC
 					.collect(Collectors.toSet());
-			result.retainAll(distinctRulesAtSize);
-			return new ComboGen<>(result, sources.size(), sources.size());
+			recipientsVisibleToMultipleSources.retainAll(allowableRules);
+			return new ComboGen<>(recipientsVisibleToMultipleSources, sources.size(), sources.size());
 		} else{
-			return new ComboGen<>(Collections.emptyList(), 0, 0);
+			return NO_COMBOS;
 		}
 	}
+	
+	private static final ComboGen<Rule> NO_COMBOS = new ComboGen<>(Collections.emptyList(), 0, 0);
 	
 	private static <T> void addAll(Map<T,Integer> map, Collection<? extends T> collection){
 		for(T t : collection){
-			map.put(t, 
-					map.containsKey(t) 
-							? 1+map.get(t) 
-							: 1 );
+			map.put(t, map.containsKey(t) 
+					? 1+map.get(t) 
+					: 1 );
 		}
 	}
 	
-	/**
-	 * <p>If the specified lists of source and recipient Rules together constitute a valid 
-	 * Sledgehammer solution scenario, then a set of the Claims (from the recipients) 
-	 * to be set false is returned, otherwise <tt>null</tt> is returned.</p>
-	 * 
-	 * <p><tt>reds</tt> and <tt>greens</tt> are a valid Sledgehammer solution scenario if <ul>
-	 * <li>The union of all the recipient Rules contains as a proper subset the union of all 
-	 * the source Rules.</li>
-	 * <li>None of the source Rules shares any Claims with any other source Rule (accounted 
-	 * for by a call to {@link #sideEffectUnion(Collection,boolean) sideEffectUnion(reds,true)} 
-	 * in <tt>process()</tt> before this method is called)</li>
-	 * <li>The number of recipient Rules equals the number of source Rules</li>
-	 * <li>The source and recipient Rules constitute a connected subgraph of the target, 
-	 * such that a Rule is a vertex and such that two such vertices are connected if their 
-	 * Rules share at least one Claim.</li>
-	 * </ul></p>
-	 * 
-	 * @param srcRules source Rules, for which every {@link #isPossibleSolution(List) possible} 
-	 * solution must falsify all the non-<tt>reds</tt> Claims in <tt>greens</tt> in 
-	 * order for the specified Sledgehammer solution scenario constituted by those two parameter 
-	 * to be valid
-	 * 
-	 * @param recipRules recipient Rules. Every Claim among these that is not also accounted for 
-	 * among <tt>reds</tt> must be guaranteed false in every {@link #isPossibleSolution(List) possible}
-	 * solution-state of the <tt>reds</tt>
-	 * 
-	 * @param srcClaims the union of all the elements of <tt>reds</tt>, specified as a 
-	 * parameter for convenience since it is needed here, was previously generated in 
-	 * the {@link #process() calling context}, and remains unchanged since then
-	 * 
-	 * @return null if the Sledgehammer solution scenario defined by <tt>reds</tt> and 
-	 * <tt>greens</tt> is not valid, a set of the Claims to be set false if the specified 
-	 * solution scenario is valid
-	 */
-	private static Set<Claim> sledgehammerValidityCheck(List<? extends Fact> srcRules, List<? extends Fact> recipRules){
+	private Set<Claim> areSledgehammerScenario(Collection<Rule> sources, Collection<Rule> recipients){
+		ToolSet<Claim> sourceClaims = sideEffectUnion(sources,false);
+		ToolSet<Claim> recipClaims = sideEffectUnion(recipients,false);
 		
-		ToolSet<Claim> srcClaims = sideEffectUnion(srcRules,true);
-		
-		// make sure that recip rules collectively subsume src rules
-		ToolSet<Claim> recipClaims = sideEffectUnion(recipRules,false);
-		if( !recipClaims.hasProperSubset(srcClaims) ){
+		if(recipClaims.hasProperSubset(sourceClaims) 
+				&& eachXSees2FromY(recipients, sources) 
+				&& eachXSees2FromY(sources, recipients)){
+			recipClaims.removeAll(sourceClaims);
+			return recipClaims;
+		} else{
 			return null;
 		}
-		
-		recipClaims.removeAll(srcClaims); //TODO accumulate the union then removeAll of the source union in a separate step, depending on which set is larger
-		
-		return allRecipFalsifiedByAnySolution(recipClaims, srcRules) ? recipClaims : null;
-	}
-	
-	private static boolean allRecipFalsifiedByAnySolution(Set<Claim> recipClaims, List<? extends Fact> srcRules){
-		/*Set<Claim> visibleToRecipClaims = recipClaims.stream().collect(Collector.of(
-				HashSet::new, 
-				(HashSet<Claim> a, Claim t) -> a.addAll(t.visibleClaims()), 
-				(HashSet<Claim> a1, HashSet<Claim> a2) -> {a1.addAll(a2); return a1;}, 
-				Collector.Characteristics.UNORDERED, Collector.Characteristics.IDENTITY_FINISH));*/
-		boolean hasSolutionState = false;
-		for(List<Claim> solution : new TestIterator<List<Claim>>(new NCuboid<Claim>(srcRules).iterator(),POSSIBLE_SOLUTION).iterable()){
-			hasSolutionState = true;
-			for(Claim recipClaim : recipClaims){
-				if( !solution.stream().anyMatch((solClaim) -> solClaim.intersects(recipClaim)) ){
-					return false;
-				}
-			}
-		}
-		return hasSolutionState;
 	}
 	
 	/**
-	 * <p>Returns false if the specified solution-state is impossible, true 
-	 * otherwise. A solution-state is impossible if any two specified Claims 
-	 * share at least one Rule in common.</p>
+	 * <p>Returns true if and only if each element of {@code xs} can 
+	 * {@link Rule#visibleRules() see} at least two elements of {@code ys}.</p>
+	 * @param xs a collection of source or recipient Rules whose visibility 
+	 * with elements of {@code ys} is tested
+	 * @param ys a collection of recipient or source Rules whose visibility 
+	 * with elements of {@code xs} is tested
+	 * @return true if and only if each element of {@code xs} can 
+	 * {@link Rule#visibleRules() see} at least two elements of {@code ys}, 
+	 * false otherwise
 	 */
-	public static final Predicate<List<Claim>> POSSIBLE_SOLUTION = (solutionState) -> sideEffectUnion(solutionState,true) != null;
-	
+	private boolean eachXSees2FromY(Collection<Rule> xs, Collection<Rule> ys){
+		for(Rule x : xs){
+			Set<Rule> visible = visibleCache.get(x);
+			int visibleSources = 0;
+			for(Iterator<Rule> iter = ys.iterator(); iter.hasNext() && visibleSources < 2;){ //MAGIC
+				if(visible.contains(iter.next())){
+					++visibleSources;
+				}
+			}
+			if(visibleSources < 2){
+				return false;
+			}
+		}
+		return true;
+	}
 	
 	/**
 	 * <p>Sets all the Claims in <tt>claimsToSetFalse</tt> false.</p>
@@ -390,61 +452,6 @@ public class Sledgehammer extends Technique {
 		SolutionEvent time = new SolveEventSledgehammer(claimsToSetFalse);
 		claimsToSetFalse.stream().filter(Claim.CLAIM_IS_BEING_SET_FALSE.negate()).forEach((c)->c.setFalse(time));
 		return time;
-	}
-	
-	/*
-	 * TODO rebuild sledgehammer-search so it starts from a seed Rule and grows out from there.
-	 */
-	protected SolutionEvent componentGrowthProcessing(){
-		
-		for(int size = 2; size <= 2; ++size){//for(int size = MIN_SLEDGEHAMMER_SIZE; size <= target.size()/2; size++){
-			
-			//for each possible seed src Rule, 
-			//get its visibles' visibles
-			//If the size is 2, then just iterate over all of those vis-visibles, 
-			//and for each one construct a pair containing it and the seed Rule 
-			//and then check normally to see if there's a recipient combination for 
-			//that source combo pair. If there's not, move on to the next source combo 
-			//pair for the current seed Rule. If you've exhausted all the vis-visibles 
-			//for the current seed, move on to the next seed, and its vis-visibles.
-			//Make sure to add the old seed to a collection of Rules that are banned 
-			//from use as sources for the current size.
-			//If the size is 3, then iterate over the pairs described in the previous 
-			//paragraph, and for each one of them, get a set of Rules that's the 
-			//intersection of the visibleRules of the first Rule of the pair and 
-			//the visibleRules of the second Rule of the pair, then iterate over the 
-			//Rule elements of that collection so as to constitute every possible 
-			//triplet.
-			
-			
-			/*for(Rule seed : distinctRules){
-				Pair<Collection<Rule>,Collection<Rule>> sledgehammer = seekSledgehammer(seed, size);
-				if(sledgehammer != null){
-					Set<Claim> falsified = sideEffectUnion(sledgehammer.getB(),false);
-					falsified.removeAll(sideEffectUnion(sledgehammer.getA(),false));
-					if(!falsified.isEmpty()){
-						return resolve(falsified);
-					}
-				}
-			}*/
-		}
-		
-		return null;
-	}
-	
-	/**
-	 * <p>Grows a sledgehammer solution scenario around <tt>seed</tt>, assuming 
-	 * <tt>seed</tt> is a source Rule. If no such scenario can be built, returns 
-	 * null. If a scenario is found, returns a Pair whose first element names 
-	 * all the source Rules of the sledgehammer solution scenario and whose 
-	 * second element names all the recipient Rules of the sledgehammer solution 
-	 * scenario.</p>
-	 * @param seed
-	 * @param size
-	 * @return
-	 */
-	private Pair<Collection<Rule>,Collection<Rule>> seekSledgehammer(Rule seed, int size){
-		return null; //TODO stub
 	}
 	
 	/**
@@ -461,7 +468,7 @@ public class Sledgehammer extends Technique {
 	 * to be included in the Solver's techniques following ColorChain.</p>
 	 * @return
 	 */
-	protected SolutionEvent regionSpeciesPairProcessing(){
+	private SolutionEvent regionSpeciesPairProcessing(){
 		
 		for(TypePair types : TypePair.values()){
 			for(Pair<Collection<Rule>,Collection<Rule>> pack : types.packs(target)){
@@ -628,12 +635,8 @@ public class Sledgehammer extends Technique {
 	static <T> Map<T,Integer> countingUnion(Collection<? extends Collection<T>> collections){
 		Map<T,Integer> result = new HashMap<>();
 		
-		for(Collection<T> col : collections){
-			for(T t : col){
-				result.put(t, result.containsKey(t) 
-						? result.get(t)+1 
-						: 1);
-			}
+		for(Collection<T> collection : collections){
+			addAll(result, collection);
 		}
 		
 		return result;

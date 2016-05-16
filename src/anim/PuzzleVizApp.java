@@ -196,9 +196,9 @@ public class PuzzleVizApp extends Application {
 					for(IndexInstance dimC : region.dimInsideRule(p)){
 						Puzzle.IndexValue[] i = p.decodeXYZ(dimA, dimB, dimC);
 						
-						int x = i[0].intValue();
-						int y = i[1].intValue();
-						int z = i[2].intValue();
+						int x = i[Puzzle.X_DIM].intValue();
+						int y = i[Puzzle.Y_DIM].intValue();
+						int z = i[Puzzle.Z_DIM].intValue();
 						int index = Claim.linearizeCoords(x, y, z, p.sideLength()) + offset;
 						vmList.add( (VoxelModel) voxels.get(index) );
 					}

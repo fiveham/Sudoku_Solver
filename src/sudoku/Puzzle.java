@@ -36,6 +36,21 @@ import java.util.HashSet;
 public class Puzzle extends SudokuNetwork{
 	
 	/**
+	 * <p>The index for the x-dimension.</p>
+	 */
+	public static final int X_DIM = 0;
+	
+	/**
+	 * <p>The index for the y-dimension.</p>
+	 */
+	public static final int Y_DIM = 1;
+	
+	/**
+	 * <p>The index for the z-dimension.</p>
+	 */
+	public static final int Z_DIM = 2;
+	
+	/**
 	 * <p>A three-dimensional array of this Puzzle's Claims.</p>
 	 */
 	private SpaceMap claims;
@@ -594,7 +609,7 @@ public class Puzzle extends SudokuNetwork{
 		}
 		
 		public Set<DimensionType> dimsOutsideRule(Puzzle p){
-			Set<DimensionType> result = new HashSet<>(2);
+			Set<DimensionType> result = new HashSet<>(2); //MAGIC
 			Collections.addAll(result, dimAType, dimBType);
 			return result;
 		}

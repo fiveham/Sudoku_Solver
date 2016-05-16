@@ -203,7 +203,7 @@ public class ColorChain extends Technique {
 	public static List<ColorClaim> link(Collection<Claim> claims, BiPredicate<Claim,Claim> edgeDetector){
 		List<ColorClaim> result = claims.stream().map(ColorClaim::new).collect(Collectors.toList());
 		
-		for(List<ColorClaim> pair : new ComboGen<>(result,2,2)){
+		for(List<ColorClaim> pair : new ComboGen<>(result,2,2)){ //MAGIC
 			ColorClaim cc0 = pair.get(0);
 			ColorClaim cc1 = pair.get(1);
 			if(edgeDetector.test(cc0.wrapped(), cc1.wrapped())){
@@ -322,7 +322,7 @@ public class ColorChain extends Technique {
 		Set<Fact> bridges = new HashSet<>(chainUnion0);
 		bridges.retainAll(chainUnion1);
 		
-		for(List<Fact> bridge : new ComboGen<>(bridges, 2, 2)){
+		for(List<Fact> bridge : new ComboGen<>(bridges, 2, 2)){ //MAGIC
 			Fact lane0 = bridge.get(0);
 			Fact lane1 = bridge.get(1);
 			

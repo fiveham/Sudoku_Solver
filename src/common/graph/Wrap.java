@@ -83,7 +83,7 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	}
 	
 	public static <T extends Wrap<W>,W> void connect(Collection<T> result, BiPredicate<? super W, ? super W> edgeDetector){
-		for(List<T> pair : new ComboGen<>(result, 2,2)){
+		for(List<T> pair : new ComboGen<>(result, 2,2)){ //MAGIC
 			Wrap<W> wn1 = pair.get(0);
 			Wrap<W> wn2 = pair.get(1);
 			if(edgeDetector.test(wn1.wrapped, wn2.wrapped)){

@@ -339,9 +339,9 @@ public class VoxelModel extends Box{
 	 */
 	private enum Dimension{
 		
-		X(X_DIM, (vm) -> vm.widthProperty(),  (vm) -> vm.translateXProperty()), 
-		Y(Y_DIM, (vm) -> vm.heightProperty(), (vm) -> vm.translateYProperty()), 
-		Z(Z_DIM, (vm) -> vm.depthProperty(),  (vm) -> vm.translateZProperty());
+		X(Puzzle.X_DIM, (vm) -> vm.widthProperty(),  (vm) -> vm.translateXProperty()), 
+		Y(Puzzle.Y_DIM, (vm) -> vm.heightProperty(), (vm) -> vm.translateYProperty()), 
+		Z(Puzzle.Z_DIM, (vm) -> vm.depthProperty(),  (vm) -> vm.translateZProperty());
 		
 		private final int dimNo;
 		private final Function<VoxelModel,DoubleProperty> thicknessProperty;
@@ -361,21 +361,6 @@ public class VoxelModel extends Box{
 			return translateProperty.apply(vm);
 		}
 	}
-	
-	/**
-	 * <p>The index of the {@link #vanishSigns() collapse-sign} for the x-dimension.</p>
-	 */
-	private static final int X_DIM = 0;
-	
-	/**
-	 * <p>The index of the {@link #vanishSigns() collapse-sign} for the y-dimension.</p>
-	 */
-	private static final int Y_DIM = 1;
-	
-	/**
-	 * <p>The index of the {@link #vanishSigns() collapse-sign} for the z-dimension.</p>
-	 */
-	private static final int Z_DIM = 2;
 	
 	/**
 	 * <p>Returns a three-element array each element of which is either 

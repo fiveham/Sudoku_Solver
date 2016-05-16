@@ -249,9 +249,9 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 */
 	public int[] vectorTo(Claim cn) {
 		int[] result = new int[Puzzle.DIMENSION_COUNT];
-		result[0] = cn.x.intValue() - x.intValue();
-		result[1] = cn.y.intValue() - y.intValue();
-		result[2] = cn.symbol.intValue() - symbol.intValue();
+		result[Puzzle.X_DIM] = cn.x.intValue() - x.intValue();
+		result[Puzzle.Y_DIM] = cn.y.intValue() - y.intValue();
+		result[Puzzle.Z_DIM] = cn.symbol.intValue() - symbol.intValue();
 		return result;
 	}
 	
