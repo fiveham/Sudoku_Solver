@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -215,27 +216,130 @@ public class Sledgehammer extends Technique {
 	
 	private SolutionEvent processBySeedAtSize(int size, List<Rule> distinctRulesAtSize, List<Rule> distinctSourcesAtSize){
 		
+		switch(size){
+		case 2 : return processBySeedAtSize2(distinctRulesAtSize, distinctSourcesAtSize);
+		case 3 : return processBySeedAtSize3(distinctRulesAtSize, distinctSourcesAtSize);
+		default : return processBySeedAtSizeGT3(size, distinctRulesAtSize, distinctSourcesAtSize);
+		}
+	}
+	
+	/**
+	 * <p>A modified clone of the original processBySeedAtSize method. Size is known to be 
+	 * 2; so, all the generated combinations of non-seed Rules for the source combo are 
+	 * singleton lists; as such, iteration over the individual other Rules is used in this 
+	 * case where the sledgehammer size is known to be 2. Furthermore, the population of 
+	 * potential source Rules to be iterated over can be reduced significanty by </p>
+	 * which iterates not over combinations of 
+	 * unaccounted-for potential sources but instead over a collection of Rules at a distance 
+	 * of 4 from the seed Rule (having one Rule between each Rule in the iterated-over 
+	 * collection and the seed Rule). That reduction in the iterative search space is 
+	 * included because if there is an acceptable partner source Rule for the seed Rule, 
+	 * then such an other source Rule must be among those Rules at a distance of 4 from 
+	 * the seed Rule.
+	 * @param distinctRulesAtSize
+	 * @param distinctSourcesAtSize
+	 * @return
+	 */
+	private SolutionEvent processBySeedAtSize2(List<Rule> distinctRulesAtSize, List<Rule> distinctSourcesAtSize){
+		
 		//For each source combo
 		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
 			Rule seed = distinctSourcesAtSize.get(i);
-			List<Rule> nonSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size());
-			for(List<Rule> srcCombo : new ComboGen<>(nonSeed, size-1, size-1)){
-				srcCombo.add(seed);
+			List<Rule> potentialOtherSrc = new ArrayList<>(distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size()));
+			potentialOtherSrc.retainAll(visVisible(seed)); //TODO switch back to visVisible().retainAll(potentialOtherSrc)
+			for(Rule nonSeedRule : potentialOtherSrc){
+				List<Rule> srcCombo = new ArrayList<>(2); //MAGIC
+				Collections.addAll(srcCombo, seed, nonSeedRule);
 				
-				//For each recipient combo derivable from that disjoint, closely connected source combo
-				List<Rule> distinctRulesAtSizeNotVisibleToSeed = new ArrayList<>(distinctRulesAtSize);
-				distinctRulesAtSizeNotVisibleToSeed.removeAll(seed.visibleRules());
-				for(List<Rule> recipientCombo : recipientCombinations(srcCombo, distinctRulesAtSizeNotVisibleToSeed)){
-					
-					//If the source and recipient combos make a valid sledgehammer scenario
-					Set<Claim> claimsToSetFalse = areSledgehammerScenario(srcCombo, recipientCombo);
-					if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
-						return resolve(claimsToSetFalse);
-					}
+				SolutionEvent event = forEachRecipientCombo(seed, srcCombo, distinctRulesAtSize);
+				if(event != null){
+					return event;
 				}
 			}
 		}
 		
+		return null;
+	}
+	
+	/**
+	 * <p>Returns a collection of the Rules that are separated from {@code r} by 
+	 * exactly one other Rule.</p>
+	 * @param r
+	 * @return
+	 */
+	private Collection<Rule> visVisible(Rule r){
+		Set<Rule> visible = visibleCache.get(r);
+		Set<Rule> visVisible = visible.stream().collect(Collector.of(
+				HashSet::new, 
+				(Set<Rule> s, Rule rule) -> s.addAll(visibleCache.get(rule)), 
+				(Set<Rule> left, Set<Rule> right) -> {left.addAll(right); return left;}));
+		
+		visVisible.remove(r);
+		visVisible.removeAll(visible);
+		
+		return visVisible;
+	}
+	
+	/**
+	 * <p>A clone of the original processBySeedAtSize method, to be modified to bridge the 
+	 * general process-by-seed technique (processBySeedAtSizeGT3) with the marginally more 
+	 * efficient processBySeedAtSize2 technique which at present is intended to be a 
+	 * base-case for a recursive search for an acceptable collection of source Rules.</p>
+	 * @param distinctRulesAtSize
+	 * @param distinctSourcesAtSize
+	 * @return
+	 */
+	private SolutionEvent processBySeedAtSize3(List<Rule> distinctRulesAtSize, List<Rule> distinctSourcesAtSize){
+		
+		//For each source combo
+		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
+			Rule seed = distinctSourcesAtSize.get(i);
+			List<Rule> potentialOtherSrc = new ArrayList<>(distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size()));
+			potentialOtherSrc.retainAll(visVisible(seed)); //TODO switch back to visVisible().retainAll(potentialOtherSrc)
+			for(List<Rule> srcCombo : new ComboGen<>(potentialOtherSrc, 2,2)){ //MAGIC
+				srcCombo.add(seed);
+				
+				SolutionEvent event = forEachRecipientCombo(seed, srcCombo, distinctRulesAtSize);
+				if(event != null){
+					return event;
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	private SolutionEvent processBySeedAtSizeGT3(int size, List<Rule> distinctRulesAtSize, List<Rule> distinctSourcesAtSize){
+		
+		//For each source combo
+		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
+			Rule seed = distinctSourcesAtSize.get(i);
+			List<Rule> nonSeed = new ArrayList<>(distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size()));
+			for(List<Rule> srcCombo : new ComboGen<>(nonSeed, size-1, size-1)){
+				srcCombo.add(seed);
+				
+				SolutionEvent event = forEachRecipientCombo(seed, srcCombo, distinctRulesAtSize);
+				if(event != null){
+					return event;
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	private SolutionEvent forEachRecipientCombo(Rule seed, List<Rule> srcCombo, List<Rule> distinctRulesAtSize){
+		//For each recipient combo derivable from that disjoint, closely connected source combo
+		List<Rule> distinctRulesAtSizeNotVisibleToSeed = new ArrayList<>(distinctRulesAtSize);
+		distinctRulesAtSizeNotVisibleToSeed.removeAll(visibleCache.get(seed));
+		for(List<Rule> recipientCombo : recipientCombinations(srcCombo, distinctRulesAtSizeNotVisibleToSeed)){
+			
+			//If the source and recipient combos make a valid sledgehammer scenario
+			Set<Claim> claimsToSetFalse = areSledgehammerScenario(srcCombo, recipientCombo);
+			if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
+				return resolve(claimsToSetFalse);
+			}
+		}
 		return null;
 	}
 	
@@ -316,38 +420,19 @@ public class Sledgehammer extends Technique {
 		}
 	}
 	
-	/* *
-	 * <p>Returns true if none of the Rules in {@code ruleList} intersect any 
-	 * of the other Rules in the list and every Rule in {@code ruleList} shares at least 
-	 * one {@link Rule#visibleRules() visible Rule} in common with at least one 
-	 * other Rule in the {@code ruleList}.</p>
-	 * 
-	 * <p>This method partially checks the validity of a combination of Rules that 
-	 * might be a source combination for a sledgehammer solution scenario. The Rules 
-	 * of a sledgehammer source combo must be disjoint from one another; as such, 
-	 * no Rule from a valid source combo will be visible from any other Rule in the 
-	 * same valid source combo, because a Rule's visible Rules are the Rules that that 
-	 * Rule intersects. All the Rules of a valid source combo must also form a single 
-	 * connected component, under the stipulation that Rules share an edge if they 
-	 * share a visible Rule in common.</p>
-	 * 
-	 * <p>One aspect of the validity of a sledgehammer source combo that is left out 
-	 * of this method's analysis is that there must exist space (positions) for a valid 
-	 * recipient combo among the Rules visible to the Rules of a valid source combo. 
-	 * That analysis is outsourced to {@link possibleRecipients()} and the stipulation 
-	 * that a recipient combo must have as many elements as its source combo.</p>
-	 * 
-	 * @param ruleList a candidate source combo for a sledgehammer solution scenario 
-	 * being tested for validity
-	 * @return true if none of the Rules in {@code ruleList} intersect any 
-	 * of the other Rules in the list and every Rule in {@code ruleList} shares at least 
-	 * one {@link Rule#visibleRules() visible Rule} in common with at least one 
-	 * other Rule in the {@code ruleList}, false otherwise
-	 */
-	
 	/**
 	 * <p>Returns a set of all the Rules that intersect at least two of 
-	 * the Rules in {@code sources}.</p> 
+	 * the Rules in {@code sources}.</p>
+	 * 
+	 * <p>The requirement that no source Rule should be considered for 
+	 * use as a recipient Rule is accounted for implicitly by the disjointness 
+	 * testing this method performs on the {@code sources}, accumulating 
+	 * a cloud of Rules visible to the {@code sources} and making sure that 
+	 * none of the {@code sources} is in that cloud. That cloud is later 
+	 * used as the basis of the collection of Rules sent to the constructor 
+	 * of the ComboGen that is returned, except in cases where 
+	 * {@link #NO_COMBOS no recipient-combinations} should be iterated over 
+	 * at all.</p>
 	 * @param sources a collection of Rules to be used as an originating 
 	 * combination for a sledgehammer solution event
 	 * @param allowableRules a collection of Rules that are allowed to be 
@@ -356,8 +441,6 @@ public class Sledgehammer extends Technique {
 	 * in {@code sources}, excluding the Rules in {@code sources}.
 	 */
 	private ComboGen<Rule> recipientCombinations(List<Rule> sources, Collection<Rule> allowableRules){
-		//FIXME distinctRulesBySize accounts explicitly for viable SOURCE rules at size. 
-		//Replace map with two maps, one for distinct-at-size and one just as-is, for distinct-source-at-size
 		
 		List<Rule> unconnectedSources = new ArrayList<>(sources);
 		int prevUnconSrcCount = unconnectedSources.size();
@@ -414,8 +497,11 @@ public class Sledgehammer extends Technique {
 		ToolSet<Claim> recipClaims = sideEffectUnion(recipients,false);
 		
 		if(recipClaims.hasProperSubset(sourceClaims) 
-				&& eachXSees2FromY(recipients, sources) 
-				&& eachXSees2FromY(sources, recipients)){
+				
+				//every recipient must be visible from two or more srcs just to 
+				//be included in the ComboGen list output by possibleRecipients()
+				//&& eachXSees2FromY(recipients, sources) 
+				&& eachXSees2FromY(sources, recipients)){ //TODO incorporate the "each source sees 2 (remaining) recipients" test into possibleRecipients()
 			recipClaims.removeAll(sourceClaims);
 			return recipClaims;
 		} else{
