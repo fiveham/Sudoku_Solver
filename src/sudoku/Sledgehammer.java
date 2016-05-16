@@ -245,9 +245,10 @@ public class Sledgehammer extends Technique {
 		//For each source combo
 		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
 			Rule seed = distinctSourcesAtSize.get(i);
-			List<Rule> potentialOtherSrc = new ArrayList<>(distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size()));
-			potentialOtherSrc.retainAll(visVisible(seed)); //TODO switch back to visVisible().retainAll(potentialOtherSrc)
-			for(Rule nonSeedRule : potentialOtherSrc){
+			Collection<Rule> visVisible = visVisible(seed);
+			List<Rule> distinctRulesAtSizeNotYetUsedAsSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size());
+			visVisible.retainAll(distinctRulesAtSizeNotYetUsedAsSeed);
+			for(Rule nonSeedRule : visVisible){
 				List<Rule> srcCombo = new ArrayList<>(2); //MAGIC
 				Collections.addAll(srcCombo, seed, nonSeedRule);
 				
@@ -294,9 +295,10 @@ public class Sledgehammer extends Technique {
 		//For each source combo
 		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
 			Rule seed = distinctSourcesAtSize.get(i);
-			List<Rule> potentialOtherSrc = new ArrayList<>(distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size()));
-			potentialOtherSrc.retainAll(visVisible(seed)); //TODO switch back to visVisible().retainAll(potentialOtherSrc)
-			for(List<Rule> srcCombo : new ComboGen<>(potentialOtherSrc, 2,2)){ //MAGIC
+			Collection<Rule> visVisible = visVisible(seed);
+			List<Rule> distinctRulesAtSizeNotYetUsedAsSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size());
+			visVisible.retainAll(distinctRulesAtSizeNotYetUsedAsSeed);
+			for(List<Rule> srcCombo : new ComboGen<>(visVisible, 2,2)){ //MAGIC
 				srcCombo.add(seed);
 				
 				SolutionEvent event = forEachRecipientCombo(seed, srcCombo, distinctRulesAtSize);
@@ -314,7 +316,7 @@ public class Sledgehammer extends Technique {
 		//For each source combo
 		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
 			Rule seed = distinctSourcesAtSize.get(i);
-			List<Rule> nonSeed = new ArrayList<>(distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size()));
+			List<Rule> nonSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size());
 			for(List<Rule> srcCombo : new ComboGen<>(nonSeed, size-1, size-1)){
 				srcCombo.add(seed);
 				
