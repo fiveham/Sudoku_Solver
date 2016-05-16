@@ -246,8 +246,8 @@ public class Sledgehammer extends Technique {
 		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
 			Rule seed = distinctSourcesAtSize.get(i);
 			Collection<Rule> visVisible = visVisible(seed);
-			List<Rule> distinctRulesAtSizeNotYetUsedAsSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size());
-			visVisible.retainAll(distinctRulesAtSizeNotYetUsedAsSeed);
+			List<Rule> distinctSourcesAtSizeNotYetUsedAsSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size());
+			visVisible.retainAll(distinctSourcesAtSizeNotYetUsedAsSeed);
 			for(Rule nonSeedRule : visVisible){
 				List<Rule> srcCombo = new ArrayList<>(2); //MAGIC
 				Collections.addAll(srcCombo, seed, nonSeedRule);
@@ -296,8 +296,8 @@ public class Sledgehammer extends Technique {
 		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
 			Rule seed = distinctSourcesAtSize.get(i);
 			Collection<Rule> visVisible = visVisible(seed);
-			List<Rule> distinctRulesAtSizeNotYetUsedAsSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size());
-			visVisible.retainAll(distinctRulesAtSizeNotYetUsedAsSeed);
+			List<Rule> distinctSourcesAtSizeNotYetUsedAsSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size()); //TODO rename as "distinctSourcesAt..."
+			visVisible.retainAll(distinctSourcesAtSizeNotYetUsedAsSeed);
 			for(List<Rule> srcCombo : new ComboGen<>(visVisible, 2,2)){ //MAGIC
 				srcCombo.add(seed);
 				
@@ -478,7 +478,13 @@ public class Sledgehammer extends Technique {
 					.filter((r) -> rulesVisibleToConnectedSources.get(r) > 1) //MAGIC
 					.collect(Collectors.toSet());
 			recipientsVisibleToMultipleSources.retainAll(allowableRules);
-			return new ComboGen<>(recipientsVisibleToMultipleSources, sources.size(), sources.size());
+			
+			if(recipientsVisibleToMultipleSources.size() < sources.size() 
+					|| eachXSees2FromY(sources, recipientsVisibleToMultipleSources)){
+				return NO_COMBOS;
+			} else{
+				return new ComboGen<>(recipientsVisibleToMultipleSources, sources.size(), sources.size());
+			}
 		} else{
 			return NO_COMBOS;
 		}
@@ -501,9 +507,10 @@ public class Sledgehammer extends Technique {
 		if(recipClaims.hasProperSubset(sourceClaims) 
 				
 				//every recipient must be visible from two or more srcs just to 
-				//be included in the ComboGen list output by possibleRecipients()
+				//be included in the ComboGen list output by recipientCombinations()
 				//&& eachXSees2FromY(recipients, sources) 
-				&& eachXSees2FromY(sources, recipients)){ //TODO incorporate the "each source sees 2 (remaining) recipients" test into possibleRecipients()
+				//&& eachXSees2FromY(sources, recipients) //TODO incorporate the "each source sees 2 (remaining) recipients" test into recipientCombinations()
+				){
 			recipClaims.removeAll(sourceClaims);
 			return recipClaims;
 		} else{
