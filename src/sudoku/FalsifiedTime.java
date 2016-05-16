@@ -24,7 +24,7 @@ public class FalsifiedTime extends AbstractTime {
 	private final Set<Claim> falsified;
 	
 	/**
-	 * <p>Constructs a FalsifiedTime having the specified <tt>parent</tt>.</p>
+	 * <p>Constructs a FalsifiedTime having the specified {@code parent}.</p>
 	 * @param parent the event which caused this event
 	 */
 	public FalsifiedTime(Time parent) {
@@ -33,8 +33,8 @@ public class FalsifiedTime extends AbstractTime {
 	}
 	
 	/**
-	 * <p>Constructs a FalsifiedTime having the specified <tt>parent</tt> and 
-	 * the specified <tt>falsified</tt> Claims.</p>
+	 * <p>Constructs a FalsifiedTime having the specified {@code parent} and 
+	 * the specified {@code falsified} Claims.</p>
 	 * @param parent the event which caused this event
 	 * @param falsified the Claims set false in this event itself
 	 */

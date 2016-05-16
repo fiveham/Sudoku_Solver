@@ -23,11 +23,11 @@ public class TestIterator<T> implements Iterator<T>{
 	
 	/**
 	 * <p>Constructs a TestIterator backed internally by the specified Iterator 
-	 * and having the specified <tt>tests</tt>.</p>
+	 * and having the specified {@code tests}.</p>
 	 * @param wrappedIterator the Iterator that internally produces the contingent 
 	 * results for this TestIterator which are only released if they pass all the 
-	 * <tt>test</tt>
-	 * @param tests the tests that a result produced by <tt>wrappedIterator</tt> 
+	 * {@code test}
+	 * @param tests the tests that a result produced by {@code wrappedIterator} 
 	 * must pass in order to be produced as a valid result by this TestIterator
 	 */
 	@SafeVarargs
@@ -39,11 +39,11 @@ public class TestIterator<T> implements Iterator<T>{
 	
 	/**
 	 * <p>Constructs a TestIterator backed internally by the specified Iterator 
-	 * and having the specified <tt>tests</tt>.</p>
+	 * and having the specified {@code tests}.</p>
 	 * @param wrappedIterator the Iterator that internally produces the contingent 
 	 * results for this TestIterator which are only released if they pass all the 
-	 * <tt>test</tt>
-	 * @param tests the tests that a result produced by <tt>wrappedIterator</tt> 
+	 * {@code test}
+	 * @param tests the tests that a result produced by {@code wrappedIterator} 
 	 * must pass in order to be produced as a valid result by this TestIterator
 	 */
 	public TestIterator(Iterator<T> wrappedIterator, Collection<? extends Predicate<? super T>> tests){
@@ -57,7 +57,7 @@ public class TestIterator<T> implements Iterator<T>{
 	 * and having no tests.</p>
 	 * @param wrappedIterator the Iterator that internally produces the contingent 
 	 * results for this TestIterator which are only released if they pass all the 
-	 * <tt>test</tt>
+	 * {@code test}
 	 */
 	public TestIterator(Iterator<T> wrappedIterator){
 		this.wrappedIterator = wrappedIterator;
@@ -66,7 +66,7 @@ public class TestIterator<T> implements Iterator<T>{
 	}
 	
 	/**
-	 * <p>Adds the specified <tt>test</tt> to this TestIterator's collection 
+	 * <p>Adds the specified {@code test} to this TestIterator's collection 
 	 * of tests.</p>
 	 * @param test a test to be added to this TestIterator's internal collection 
 	 * of tests
@@ -90,11 +90,11 @@ public class TestIterator<T> implements Iterator<T>{
 	}
 	
 	/**
-	 * <p>Extracts and tests results from the <tt>wrappedIterator</tt>, 
-	 * storing each as the <tt>last</tt> result until it finds one that 
-	 * passes all the <tt>tests</tt>.</p>
-	 * <p>If none of the values produced by the <tt>wrappedIterator</tt> 
-	 * pass all the <tt>tests</tt>, <tt>last<tt> is set to <tt>null</tt>.</p>
+	 * <p>Extracts and tests results from the {@code wrappedIterator}, 
+	 * storing each as the {@code last} result until it finds one that 
+	 * passes all the {@code tests}.</p>
+	 * <p>If none of the values produced by the {@code wrappedIterator} 
+	 * pass all the {@code tests}, {@code last{@code  is set to {@code null}.</p>
 	 */
 	private void setLast(){
 		while(wrappedIterator.hasNext()){
@@ -109,9 +109,9 @@ public class TestIterator<T> implements Iterator<T>{
 	
 	/**
 	 * <p>Returns an Iterable whose {@link Iterable#iterator() iterator()} 
-	 * method returns <tt>this<tt>.</p>
+	 * method returns {@code this{@code .</p>
 	 * @return an Iterable whose {@link Iterable#iterator() iterator()} 
-	 * method returns <tt>this<tt>
+	 * method returns {@code this{@code 
 	 */
 	public Iterable<T> iterable(){
 		return new Iterable<T>(){

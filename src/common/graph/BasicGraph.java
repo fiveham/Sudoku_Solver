@@ -24,7 +24,7 @@ public class BasicGraph<T extends Vertex<T>> extends AbstractGraph<T>{
 	
 	/**
 	 * <p>Constructs a BasicGraph having the vertices contained 
-	 * in <tt>coll</tt>.</p>
+	 * in {@code coll}.</p>
 	 * @param coll vertices for the graph being constructed
 	 */
 	public BasicGraph(Collection<? extends T> coll){

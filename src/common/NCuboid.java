@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
  * <p>With two dimensions, the NCuboid is a rectangle, and with three 
  * a rectangular prism (cuboid).</p>
  * 
- * <p>Accounting for two options can be done with two nested <tt>for</tt> 
+ * <p>Accounting for two options can be done with two nested {@code for} 
  * loops, and accounting for three can be done with three nested 
- * <tt>for</tt> loops, but to account for an arbitrary number of 
+ * {@code for} loops, but to account for an arbitrary number of 
  * independent dimensions, something more adaptable than hard-coded loops 
  * is required.</p>
  * 
@@ -37,10 +37,10 @@ public class NCuboid<T> implements Iterable<List<T>> {
 	
 	/**
 	 * <p>Constructs an NCuboid whose dimensions are the elements of 
-	 * <tt>src</tt>.</p>
+	 * {@code src}.</p>
 	 * @param src
 	 * @throws IllegalArgumentException if any of the dimensions specified 
-	 * as elements of <tt>src</tt> is empty
+	 * as elements of {@code src} is empty
 	 */
 	public NCuboid(Collection<? extends Collection<? extends T>> src) {
 		
@@ -69,7 +69,7 @@ public class NCuboid<T> implements Iterable<List<T>> {
 	
 	/**
 	 * <p>An Iterator which keeps track of its position in an N-dimensional 
-	 * cuboid defined by the dimensions specified as elements of <tt>src</tt>.</p>
+	 * cuboid defined by the dimensions specified as elements of {@code src}.</p>
 	 * @author fiveham
 	 *
 	 */

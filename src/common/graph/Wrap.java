@@ -31,7 +31,7 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	protected final List<Wrap<W>> neighbors;
 	
 	/**
-	 * <p>Constructs a Wrap that wraps <tt>wrapped</tt> and has 
+	 * <p>Constructs a Wrap that wraps {@code wrapped} and has 
 	 * no neighbors.</p>
 	 * @param wrapped the object being wrapped
 	 */
@@ -41,8 +41,8 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	}
 	
 	/**
-	 * <p>Constructs a Wrap that wraps <tt>wrapped</tt> and has 
-	 * the neighbors specified as elements of <tt>c</tt>.</p>
+	 * <p>Constructs a Wrap that wraps {@code wrapped} and has 
+	 * the neighbors specified as elements of {@code c}.</p>
 	 * @param wrapped the object being wrapped
 	 * @param c a collection of this Wrap's neighbors
 	 */
@@ -62,13 +62,13 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	}
 	
 	/**
-	 * <p>A utility method that wraps each element of <tt>c</tt> in a Wrap and 
+	 * <p>A utility method that wraps each element of {@code c} in a Wrap and 
 	 * gives each resulting Wrap neighbors from among the resulting Wraps. 
-	 * Two resulting Wraps are neighbors if <tt>edgeDetector</tt> 
+	 * Two resulting Wraps are neighbors if {@code edgeDetector} 
 	 * {@link BiPredicate#test(Object,Object) says so}.</p>
 	 * @param c the collection of non-{@link common.graph.Vertex Vertex} nodes 
 	 * to be wrapped
-	 * @param edgeDetector outputs true if two elements of <tt>c</tt> are linked 
+	 * @param edgeDetector outputs true if two elements of {@code c} are linked 
 	 * by an edge, false otherwise
 	 * @return a list of Wraps complete with populated neighbor lists
 	 */

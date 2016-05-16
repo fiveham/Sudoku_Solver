@@ -24,10 +24,10 @@ public class IsoIterator<T> extends TestIterator<List<T>> {
 	
 	/**
 	 * <p>Constructs an IsoIterator wrapping the specified Iterator and 
-	 * having the specified <tt>tests</tt>.</p>
+	 * having the specified {@code tests}.</p>
 	 * @param wrappedIterator the Iterator that supplies this IsoIterator 
 	 * with elements to test and contingently reduce
-	 * @param tests tests that results from <tt>wrappedIterator</tt> must 
+	 * @param tests tests that results from {@code wrappedIterator} must 
 	 * pass in order to be returned by next() in this class
 	 */
 	@SafeVarargs
@@ -39,10 +39,10 @@ public class IsoIterator<T> extends TestIterator<List<T>> {
 	
 	/**
 	 * <p>Constructs an IsoIterator wrapping the specified Iterator and 
-	 * having the specified <tt>tests</tt>.</p>
+	 * having the specified {@code tests}.</p>
 	 * @param wrappedIterator the Iterator that supplies this IsoIterator 
 	 * with elements to test and contingently reduce
-	 * @param tests tests that results from <tt>wrappedIterator</tt> must 
+	 * @param tests tests that results from {@code wrappedIterator} must 
 	 * pass in order to be returned by next() in this class
 	 */
 	public IsoIterator(Iterator<List<T>> wrappedIterator, Collection<? extends Predicate<? super List<? extends T>>> tests) {
@@ -68,7 +68,7 @@ public class IsoIterator<T> extends TestIterator<List<T>> {
 	}
 	
 	/**
-	 * <p>Prevents <tt>item</tt> from appearing in any combinations produced 
+	 * <p>Prevents {@code item} from appearing in any combinations produced 
 	 * by subsequent calls to next().</p>
 	 * @param item an element of the backing collection from which elements 
 	 * are drawn to construct combinations

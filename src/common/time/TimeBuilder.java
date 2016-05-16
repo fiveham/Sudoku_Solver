@@ -35,7 +35,7 @@ public interface TimeBuilder extends Time{
 	public void pop();
 	
 	/**
-	 * Adds <tt>time</tt> as a {@link Time#addChild(Time) child} to the 
+	 * Adds {@code time} as a {@link Time#addChild(Time) child} to the 
 	 * Time returned by top().
 	 * @param time
 	 */

@@ -183,7 +183,7 @@ public abstract class AbstractTime implements Time{
 	
 	/**
 	 * <p>An iterator that traverses the time tree of which this time 
-	 * node is the root. Leaf nodes are output by <tt>next()</tt>.</p>
+	 * node is the root. Leaf nodes are output by {@code next()}.</p>
 	 * @author fiveham
 	 *
 	 */

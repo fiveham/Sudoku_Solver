@@ -43,7 +43,7 @@ public class VoxelModel extends Box{
 	private Status status;
 	
 	/**
-	 * <p>Constructs a VoxelModel at the specified <tt>x</tt>,<tt>y</tt>,<tt>z</tt> coordinates in claim-space, with 
+	 * <p>Constructs a VoxelModel at the specified {@code x},{@code y},{@code z} coordinates in claim-space, with 
 	 * the specified face-offsets, and with coordinates in physical space determined largely by position in claim-space 
 	 * but modified slightly by the face-offsets.</p>
 	 * 
@@ -59,12 +59,12 @@ public class VoxelModel extends Box{
 	 * @param x the x-coordinate of the center of the 1x1x1 cubic region in which this this model is positioned.
 	 * @param y the y-coordinate of the center of the 1x1x1 cubic region in which this this model is positioned.
 	 * @param z the z-coordinate of the center of the 1x1x1 cubic region in which this this model is positioned.
-	 * @param xNeg the part of the width of this Box that is on the lower-valued side of the plane specified by <tt>x</tt>.
-	 * @param xPos the part of the width of this Box that is on the higher-valued side of the plane specified by <tt>x</tt>.
-	 * @param yNeg the part of the width of this Box that is on the lower-valued side of the plane specified by <tt>y</tt>.
-	 * @param yPos the part of the width of this Box that is on the higher-valued side of the plane specified by <tt>y</tt>.
-	 * @param zNeg the part of the width of this Box that is on the lower-valued side of the plane specified by <tt>z</tt>.
-	 * @param zPos the part of the width of this Box that is on the higher-valued side of the plane specified by <tt>z</tt>.
+	 * @param xNeg the part of the width of this Box that is on the lower-valued side of the plane specified by {@code x}.
+	 * @param xPos the part of the width of this Box that is on the higher-valued side of the plane specified by {@code x}.
+	 * @param yNeg the part of the width of this Box that is on the lower-valued side of the plane specified by {@code y}.
+	 * @param yPos the part of the width of this Box that is on the higher-valued side of the plane specified by {@code y}.
+	 * @param zNeg the part of the width of this Box that is on the lower-valued side of the plane specified by {@code z}.
+	 * @param zPos the part of the width of this Box that is on the higher-valued side of the plane specified by {@code z}.
 	 */
 	public VoxelModel(Puzzle p, int x, int y, int z, PuzzleVizApp.RegionSpecies type, double xNeg, double xPos, double yNeg, double yPos, double zNeg, double zPos) {
 		super(xNeg+xPos, yNeg+yPos, zNeg+zPos);
@@ -134,11 +134,11 @@ public class VoxelModel extends Box{
 	}
 	
 	/**
-	 * <p>Sets the <tt>ownerBag</tt> for this VoxelModel if it is not 
-	 * already set <tt>ownerBag == null</tt>. Throws an exception if 
-	 * called while <tt>ownerBag</tt> is already set.</p>
+	 * <p>Sets the {@code ownerBag} for this VoxelModel if it is not 
+	 * already set {@code ownerBag == null}. Throws an exception if 
+	 * called while {@code ownerBag} is already set.</p>
 	 * @param bm the BagModel to be the new owner
-	 * @throws IllegalStateException if <tt>ownerBag</tt> is already set
+	 * @throws IllegalStateException if {@code ownerBag} is already set
 	 */
 	void setOwnerBag(BagModel bm){
 		if(ownerBag == null ){
@@ -386,9 +386,9 @@ public class VoxelModel extends Box{
 	 * 
 	 * <p>If this model does not need to collapse when this method is called, 
 	 * 0 is returned. If this model needs to collapse in the positive direction 
-	 * on the dimension internally referenced by <tt>claimSrc</tt>, 1 is 
+	 * on the dimension internally referenced by {@code claimSrc}, 1 is 
 	 * returned. Otherwise, the model needs to collapse in the negative direction 
-	 * on the dimension internally referenced by <tt>claimSrc.</tt>.</p>
+	 * on the dimension internally referenced by {@code claimSrc.}.</p>
 	 * 
 	 * @param dim a value 
 	 * @param claimSrc
@@ -413,7 +413,7 @@ public class VoxelModel extends Box{
 	}
 	
 	/**
-	 * <p>Returns a Duration constructed using the specified <tt>time</tt> 
+	 * <p>Returns a Duration constructed using the specified {@code time} 
 	 * value.</p>
 	 * 
 	 * <p>Returned values are extracted from a HashMap cache and are added 
@@ -421,7 +421,7 @@ public class VoxelModel extends Box{
 	 * 
 	 * @param time the time for which a {@link Duration#toMillis() corresponding} 
 	 * Duration is returned
-	 * @return a Duration constructed using the specified <tt>time</tt> 
+	 * @return a Duration constructed using the specified {@code time} 
 	 * value
 	 */
 	private static Duration durationFromTime(double time){

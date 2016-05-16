@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 
 /**
  * <p>The color-chain technique exploits the fact that a Rule with 
- * only two connected Claims is a <tt>xor</tt> gate. A collection of 
+ * only two connected Claims is a {@code xor} gate. A collection of 
  * interconnected two-Claim Rules, regardless of the size and shape 
  * of a connected network of these Rules, has only two possible 
  * solution-states.</p>
@@ -46,7 +46,7 @@ public class ColorChain extends Technique {
 	
 	/**
 	 * <p>Constructs a ColorChain that works to solve the 
-	 * specified <tt>target</tt>.</p>
+	 * specified {@code target}.</p>
 	 * @param target the Puzzle that this Technique works 
 	 * to solve.
 	 */
@@ -85,7 +85,7 @@ public class ColorChain extends Technique {
 	}
 	
 	/*
-	 * <p>Checks the {@link #generateChains() chains} in the <tt>target</tt> for 
+	 * <p>Checks the {@link #generateChains() chains} in the {@code target} for 
 	 * internal contradictions and resolves each chain in which internal contradictions 
 	 * are encountered.</p>
 	 * 
@@ -98,7 +98,7 @@ public class ColorChain extends Technique {
 	 * self-interaction as a contradiction than to describe a framework of chain 
 	 * interactions and to describe the self-interaction in terms of that framework.</p>
 	 * 
-	 * @return true if any changes to the <tt>target</tt> were made by this call 
+	 * @return true if any changes to the {@code target} were made by this call 
 	 * to this method
 	 */
 	private SolutionEvent internal(){
@@ -123,7 +123,7 @@ public class ColorChain extends Technique {
 	 * the chain with the even distance can be collapsed, with the Claims having 
 	 * the color of its Claims on the bridge all being false.</p>
 	 * 
-	 * @return true if calling this method made changes to <tt>target</tt>, 
+	 * @return true if calling this method made changes to {@code target}, 
 	 * false otherwise
 	 */
 	private SolutionEvent bridge(){
@@ -144,7 +144,7 @@ public class ColorChain extends Technique {
 	 * <p>Any claims in the target that {@link ToolSet#intersects(Set<T>) can see} 
 	 * Claims with opposite colors from the same chain must be false, no matter 
 	 * which color from that chain is true and which is false.</p>
-	 * @return true if calling this method made changes to <tt>target</tt>, 
+	 * @return true if calling this method made changes to {@code target}, 
 	 * false otherwise
 	 */
 	private SolutionEvent external(){
@@ -159,7 +159,7 @@ public class ColorChain extends Technique {
 	
 	/* *
 	 * <p>Detects and {@link Claim#setFalse() sets false} Claims that 
-	 * can see Claims from <tt>concom</tt> with opposite colors.</p>
+	 * can see Claims from {@code concom} with opposite colors.</p>
 	 * @param concom a xor-chain
 	 * @return true if changes were made to the target, false otherwise
 	 */
@@ -216,12 +216,12 @@ public class ColorChain extends Technique {
 	}
 	
 	/**
-	 * <p>Calls <tt>colorSource.nextColor()</tt> and returns <tt>list</tt>.</p>
+	 * <p>Calls {@code colorSource.nextColor()} and returns {@code list}.</p>
 	 * 
 	 * <p>This method allows the automatic updating from one color to the next 
 	 * needed for proper chain-coloring.</p>
 	 * @param list the list that is passed through unaltered
-	 * @return <tt>list</tt>
+	 * @return {@code list}
 	 */
 	private Consumer<Set<ColorClaim>> nextColorReturnList(Consumer<Set<ColorClaim>> list){
 		colorSource.nextColor();
@@ -231,7 +231,7 @@ public class ColorChain extends Technique {
 	/**
 	 * <p>Checks for chain-contradictions, wherein a xor-chain interacts with itself 
 	 * and collapses because two Claims with the same color share a Rule, and collapses 
-	 * <tt>chain</tt> if it is found to have such a self-interaction. When two 
+	 * {@code chain} if it is found to have such a self-interaction. When two 
 	 * Claims share a Rule, at most, one of them can be true, but they also both be 
 	 * false, and any Claims with the same color have to have the same truth-state; 
 	 * so, only one solution-state is available: both are false, in which case all 
@@ -268,7 +268,7 @@ public class ColorChain extends Technique {
 	
 	/* *
 	 * <p>Sets all the Claims in this chain false if they are decorated with the 
-	 * specified <tt>color</tt>.</p>
+	 * specified {@code color}.</p>
 	 * @param time the contextual time node which needs to store a collection of 
 	 * the Claims to be set false by this method call 
 	 * @param chain a xor-chain of connected two-Claim Rules 
@@ -301,7 +301,7 @@ public class ColorChain extends Technique {
 	
 	/**
 	 * <p>Returns a Pair containing a chain to be collapsed and the color of the claims in that 
-	 * chain to be set false, or <tt>null</tt> if no even bridged chain is found.</p>
+	 * chain to be set false, or {@code null} if no even bridged chain is found.</p>
 	 * 
 	 * <p>This method tries to find two single-Rule bridges between the two specified chains and 
 	 * determines the step length between the two bridge Rules in either chain. If one 
@@ -310,7 +310,7 @@ public class ColorChain extends Technique {
 	 * can be completely collapsed, with the claims from the even-side chain with the color of 
 	 * those even-side chain claims that were on the bridges all being set false.</p>
 	 * @return a Pair containing a chain to be collapsed and the color of the Claims in that 
-	 * chain to be set False, or <tt>null</tt> if no even bridged chain is found
+	 * chain to be set False, or {@code null} if no even bridged chain is found
 	 */
 	private Pair<Graph<ColorClaim>,Integer> evenSideAndFalseColor(List<Graph<ColorClaim>> chains){
 		Graph<ColorClaim> chain0 = chains.get(0);
@@ -343,17 +343,17 @@ public class ColorChain extends Technique {
 	public static final Function<ColorClaim,Claim> UNWRAP_TO_CLAIM = (n)->n.wrapped();
 	
 	/**
-	 * <p>Returns the int color of the Claims belonging to <tt>chain</tt> 
-	 * that are on the bridge made of <tt>lane0</tt> and <tt>lane1</tt>.</p>
+	 * <p>Returns the int color of the Claims belonging to {@code chain} 
+	 * that are on the bridge made of {@code lane0} and {@code lane1}.</p>
 	 * @param chain the xor-chain the color of whose Claims on the bridge 
-	 * made of <tt>lane0</tt> and <tt>lane1</tt> is returned
+	 * made of {@code lane0} and {@code lane1} is returned
 	 * @param lane0 one of the lanes of the bridge
 	 * @param lane1 one of the lanes of the bridge
-	 * @throws IllegalStateException if <tt>chain</tt> has more than one color 
-	 * on the bridge, which means <tt>chain</tt> has an odd step-length between 
-	 * <tt>lane0</tt> and <tt>lane1</tt>
-	 * @return the int color of the Claims belonging to <tt>chain</tt> 
-	 * that are on the bridge made of <tt>lane0</tt> and <tt>lane1</tt>
+	 * @throws IllegalStateException if {@code chain} has more than one color 
+	 * on the bridge, which means {@code chain} has an odd step-length between 
+	 * {@code lane0} and {@code lane1}
+	 * @return the int color of the Claims belonging to {@code chain} 
+	 * that are on the bridge made of {@code lane0} and {@code lane1}
 	 */
 	private int bridgeColor(Graph<ColorClaim> chain, Fact lane0, Fact lane1){
 		Map<Claim,ColorClaim> map = claimToColorMap(chain);
@@ -381,17 +381,17 @@ public class ColorChain extends Technique {
 	 * of chain-chain interaction has on the bridge that mediates that chain-chain 
 	 * interaction.</p>
 	 * 
-	 * <p>A bridge between two chains is constituted by a pair of non-<tt>xor</tt> 
+	 * <p>A bridge between two chains is constituted by a pair of non-{@code xor} 
 	 * Rules each of which has a Claim (neighbor) in each of the two bridged chains.</p>
 	 */
 	public static final int COLORS_ON_BRIDGE_FOR_COLLAPSEABLE_CHAIN = 1;
 	
 	/**
-	 * <p>Returns a {@link Map Map} from the Claims in <tt>chain</tt> to those 
+	 * <p>Returns a {@link Map Map} from the Claims in {@code chain} to those 
 	 * Claims' colors.</p>
 	 * @param chain a xor-chain whose Claims and whose Claims' colors are to 
 	 * be mapped
-	 * @return a {@link Map Map} from the Claims in <tt>chain</tt> to those 
+	 * @return a {@link Map Map} from the Claims in {@code chain} to those 
 	 * Claims' colors
 	 */
 	private Map<Claim,ColorClaim> claimToColorMap(Graph<ColorClaim> chain){
@@ -405,14 +405,14 @@ public class ColorChain extends Technique {
 	}
 	
 	/**
-	 * <p>Returns the number of steps between <tt>lane0</tt> and <tt>lane1</tt> 
-	 * in <tt>chain</tt>.</p>
-	 * @param lane0 a bridge-lane that intersects <tt>chain</tt>
-	 * @param lane1 a bridge-lane that intersects <tt>chain</tt>
-	 * @param chain a xor-chain intersecting <tt>lane0</tt> and <tt>lane1</tt>
-	 * @throws IllegalArgumentException if any of the lanes does not intersect <tt>chain</tt>
-	 * @return the number of steps between <tt>lane0</tt> and <tt>lane1</tt> 
-	 * in <tt>chain</tt>
+	 * <p>Returns the number of steps between {@code lane0} and {@code lane1} 
+	 * in {@code chain}.</p>
+	 * @param lane0 a bridge-lane that intersects {@code chain}
+	 * @param lane1 a bridge-lane that intersects {@code chain}
+	 * @param chain a xor-chain intersecting {@code lane0} and {@code lane1}
+	 * @throws IllegalArgumentException if any of the lanes does not intersect {@code chain}
+	 * @return the number of steps between {@code lane0} and {@code lane1} 
+	 * in {@code chain}
 	 */
 	private int dist(Fact lane0, Fact lane1, Graph<ColorClaim> chain){
 		ColorClaim lane0Intersection = getBridgeIntersection(lane0, chain);
@@ -422,11 +422,11 @@ public class ColorChain extends Technique {
 	}
 	
 	/**
-	 * <p>Identifies the Claim where <tt>lane</tt> and <tt>chain</tt> intersect.</p>
-	 * @param lane a non-xor Rule that intersects <tt>chain</tt>
+	 * <p>Identifies the Claim where {@code lane} and {@code chain} intersect.</p>
+	 * @param lane a non-xor Rule that intersects {@code chain}
 	 * @param chain a xor-chain
-	 * @throws IllegalArgumentException if <tt>lane</tt> does not interest <tt>chain</tt>
-	 * @return the vertex from <tt>chain</tt> where <tt>lane</tt> and <tt>chain</tt> 
+	 * @throws IllegalArgumentException if {@code lane} does not interest {@code chain}
+	 * @return the vertex from {@code chain} where {@code lane} and {@code chain} 
 	 * intersect
 	 */
 	private ColorClaim getBridgeIntersection(Fact lane, Graph<ColorClaim> chain){
@@ -451,12 +451,12 @@ public class ColorChain extends Technique {
 	}
 	
 	/**
-	 * <p>Determines whether <tt>claim</tt> should be set false on account of 
-	 * <tt>concom</tt>.</p>
+	 * <p>Determines whether {@code claim} should be set false on account of 
+	 * {@code concom}.</p>
 	 * @param claim
 	 * @param concom
-	 * @return true if <tt>claim</tt> sees a positive-colored Claim in <tt>concom</tt> 
-	 * and a negative-colored Claim in <tt>concom</tt>, false otherwise
+	 * @return true if {@code claim} sees a positive-colored Claim in {@code concom} 
+	 * and a negative-colored Claim in {@code concom}, false otherwise
 	 */
 	private boolean claimContradictsChain(Claim claim, Graph<ColorClaim> concom){
 		boolean hasPosColorNeighbor = false;
@@ -512,7 +512,7 @@ public class ColorChain extends Technique {
 		}
 		
 		/**
-		 * <p>Sets the color to <tt>color<tt>.</p>
+		 * <p>Sets the color to {@code color{@code .</p>
 		 * @param color the new color
 		 */
 		void setColor(int color){
@@ -528,10 +528,10 @@ public class ColorChain extends Technique {
 	 * <p>A generator and manager of ints to be used as colors for Claims 
 	 * in xor-chains.</p>
 	 * 
-	 * <p>Use <tt>get()</tt> to get the current color with the current sign, 
-	 * use <tt>nextColor()</tt> when beginning to color a new xor-chain, and 
-	 * use <tt>invertColor()</tt> to change the sign of the colors returned 
-	 * by subsequent calls to <tt>get()</tt>.</p>
+	 * <p>Use {@code get()} to get the current color with the current sign, 
+	 * use {@code nextColor()} when beginning to color a new xor-chain, and 
+	 * use {@code invertColor()} to change the sign of the colors returned 
+	 * by subsequent calls to {@code get()}.</p>
 	 * @author fiveham
 	 *
 	 */
@@ -545,9 +545,9 @@ public class ColorChain extends Technique {
 		
 		/**
 		 * <p>Changes this ColorSource's color sign so that 
-		 * subsequent calls to <tt>get()</tt> return a color 
+		 * subsequent calls to {@code get()} return a color 
 		 * with the sign opposite of the sign returned by 
-		 * previous calls to <tt>get()</tt>.</p>
+		 * previous calls to {@code get()}.</p>
 		 */
 		void invertColor(){
 			positive = !positive;

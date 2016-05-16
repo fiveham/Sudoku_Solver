@@ -18,8 +18,8 @@ public interface Sudoku extends Graph<NodeSet<?,?>>{
 	public boolean isSolved();
 	
 	/**
-	 * <p>Returns a <tt>Stream&lt;Fact&gt;</tt> providing access to all 
-	 * the <tt>Fact<tt>s in this <tt>Sudoku</tt>'s underlying 
+	 * <p>Returns a {@code Stream&lt;Fact&gt;} providing access to all 
+	 * the {@code Fact{@code s in this {@code Sudoku}'s underlying 
 	 * {@link common.graph.Graph Graph}.</p>
 	 * 
 	 * <p>Note: Because Facts in a Sudoku must become equal to other Facts 
@@ -31,8 +31,8 @@ public interface Sudoku extends Graph<NodeSet<?,?>>{
 	 * factStream() should be {@link Stream#collect(java.util.stream.Collector) collected} 
 	 * as {@link java.util.stream.Collectors#toSet() a Set}.</p>
 	 * 
-	 * @return a <tt>Stream&lt;Fact&gt;</tt> providing access to all 
-	 * the <tt>Fact<tt>s in this <tt>Sudoku</tt>
+	 * @return a {@code Stream&lt;Fact&gt;} providing access to all 
+	 * the {@code Fact{@code s in this {@code Sudoku}
 	 */
 	public Stream<Fact> factStream();
 	

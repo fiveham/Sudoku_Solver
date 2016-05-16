@@ -70,8 +70,8 @@ public class SpaceMap implements Iterable<Claim>{
 	 * @param x the x-coordinate of the Claim returned
 	 * @param y the y-coordinate of the Claim returned
 	 * @param z the z-coordinate (symbol) of the Claim returned
-	 * @throws ArrayIndexOutOfBoundsException if <tt>x<tt>, <tt>y<tt>, 
-	 * or <tt>z<tt> are equal to or greater than <tt>target.sideLength()</tt>
+	 * @throws ArrayIndexOutOfBoundsException if {@code x{@code , {@code y{@code , 
+	 * or {@code z{@code  are equal to or greater than {@code target.sideLength()}
 	 * @return  the Claim in this Puzzle having the specified spatial 
 	 * coordinates
 	 */

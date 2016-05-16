@@ -174,7 +174,7 @@ public class Sledgehammer extends Technique {
 	 * this method found and resolved and detailing any subsequent automatic 
 	 * resolution events as {@link common.time.Time#children() children} of 
 	 * the sledgehammer event, or null if this method made no changes to its 
-	 * <tt>target</tt>
+	 * {@code target}
 	 */
 	@Override
 	protected SolutionEvent process(){
@@ -282,6 +282,14 @@ public class Sledgehammer extends Technique {
 				.collect(Collectors.toList());
 	}
 	
+	/**
+	 * <p>A {@link java.util.HashMap HashMap} whose {@link HashMap#get(Object) get} method 
+	 * automatically checks for the argument's existence in the Map and adds a mapping 
+	 * from the specified Rule to a Set of that Rule's {@link Rule#visibleRules() visible Rules} 
+	 * to the Map.</p>
+	 * @author fiveham
+	 *
+	 */
 	private class VisibleCache extends HashMap<Rule,Set<Rule>>{
 		/**
 		 * 
@@ -309,10 +317,10 @@ public class Sledgehammer extends Technique {
 	}
 	
 	/* *
-	 * <p>Returns true if none of the Rules in <tt>ruleList</tt> intersect any 
-	 * of the other Rules in the list and every Rule in <tt>ruleList</tt> shares at least 
+	 * <p>Returns true if none of the Rules in {@code ruleList} intersect any 
+	 * of the other Rules in the list and every Rule in {@code ruleList} shares at least 
 	 * one {@link Rule#visibleRules() visible Rule} in common with at least one 
-	 * other Rule in the <tt>ruleList</tt>.</p>
+	 * other Rule in the {@code ruleList}.</p>
 	 * 
 	 * <p>This method partially checks the validity of a combination of Rules that 
 	 * might be a source combination for a sledgehammer solution scenario. The Rules 
@@ -331,21 +339,21 @@ public class Sledgehammer extends Technique {
 	 * 
 	 * @param ruleList a candidate source combo for a sledgehammer solution scenario 
 	 * being tested for validity
-	 * @return true if none of the Rules in <tt>ruleList</tt> intersect any 
-	 * of the other Rules in the list and every Rule in <tt>ruleList</tt> shares at least 
+	 * @return true if none of the Rules in {@code ruleList} intersect any 
+	 * of the other Rules in the list and every Rule in {@code ruleList} shares at least 
 	 * one {@link Rule#visibleRules() visible Rule} in common with at least one 
-	 * other Rule in the <tt>ruleList</tt>, false otherwise
+	 * other Rule in the {@code ruleList}, false otherwise
 	 */
 	
 	/**
 	 * <p>Returns a set of all the Rules that intersect at least two of 
-	 * the Rules in <tt>sources</tt>.</p> 
+	 * the Rules in {@code sources}.</p> 
 	 * @param sources a collection of Rules to be used as an originating 
 	 * combination for a sledgehammer solution event
 	 * @param allowableRules a collection of Rules that are allowed to be 
 	 * used in the returned ComboGen
 	 * @return a set of all the Rules that intersect any of the Rules 
-	 * in <tt>sources</tt>, excluding the Rules in <tt>sources</tt>.
+	 * in {@code sources}, excluding the Rules in {@code sources}.
 	 */
 	private ComboGen<Rule> recipientCombinations(List<Rule> sources, Collection<Rule> allowableRules){
 		//FIXME distinctRulesBySize accounts explicitly for viable SOURCE rules at size. 
@@ -443,9 +451,9 @@ public class Sledgehammer extends Technique {
 	}
 	
 	/**
-	 * <p>Sets all the Claims in <tt>claimsToSetFalse</tt> false.</p>
+	 * <p>Sets all the Claims in {@code claimsToSetFalse} false.</p>
 	 * @param claimsToSetFalse the Claims to be set false
-	 * @return true if any of the <tt>claimsToSetFalse</tt> were set 
+	 * @return true if any of the {@code claimsToSetFalse} were set 
 	 * from possible to false, false otherwise.
 	 */
 	private SolutionEvent resolve(Collection<Claim> claimsToSetFalse){
@@ -608,17 +616,17 @@ public class Sledgehammer extends Technique {
 		}
 	}
 	/**
-	 * <p>Unions all the collections in <tt>srcCombo</tt> into one set and returns 
+	 * <p>Unions all the collections in {@code srcCombo} into one set and returns 
 	 * that set, unless some elements are shared among the collections in 
-	 * srcCombo, in which case, if <tt>nullIfNotDisjoint</tt> is true, null is 
+	 * srcCombo, in which case, if {@code nullIfNotDisjoint} is true, null is 
 	 * returned instead.</p>
 	 * @param collections a collection of collections whose elements are combined 
 	 * into one set and returned.
 	 * @param nullIfNotDisjoint controls whether an intersection among the elements 
-	 * of <tt>srcCombo</tt> results in <tt>null</tt> being returned.
-	 * @return <tt>null</tt> if <tt>nullIfNotDisjoint</tt> is <tt>true</tt> and 
-	 * some of the elements of <tt>srcCombo</tt> intersect each other, or otherwise 
-	 * the mass-union of all the elements of <tt>srcCombo</tt>.
+	 * of {@code srcCombo} results in {@code null} being returned.
+	 * @return {@code null} if {@code nullIfNotDisjoint} is {@code true} and 
+	 * some of the elements of {@code srcCombo} intersect each other, or otherwise 
+	 * the mass-union of all the elements of {@code srcCombo}.
 	 */
 	static <T> ToolSet<T> sideEffectUnion(Collection<? extends Collection<T>> collections, boolean nullIfNotDisjoint){
 		ToolSet<T> result = new ToolSet<>();

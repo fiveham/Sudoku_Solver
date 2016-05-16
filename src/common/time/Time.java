@@ -20,9 +20,9 @@ public interface Time extends Iterable<Time>{
 	
 	/**
 	 * <p>Returns the TIme to which this Time {@link #defers() defers}, or 
-	 * <tt>this</tt> if this Time does not defer to another Time.</p>
+	 * {@code this} if this Time does not defer to another Time.</p>
 	 * @return the TIme to which this Time {@link #defers() defers}, or 
-	 * <tt>this</tt> if this Time does not defer to another Time
+	 * {@code this} if this Time does not defer to another Time
 	 */
 	public Time focus();
 	

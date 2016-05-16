@@ -11,7 +11,7 @@ public abstract class AbstractTimeBuilder extends AbstractTime implements TimeBu
 	
 	/**
 	 * <p>Constructs an AbstractTimeBuilder whose {@link Time#parent() parent} 
-	 * is <tt>parent</tt>.</p>
+	 * is {@code parent}.</p>
 	 * @param parent the parent of this Time
 	 */
 	public AbstractTimeBuilder(Time parent) {
@@ -21,7 +21,7 @@ public abstract class AbstractTimeBuilder extends AbstractTime implements TimeBu
 	
 	/**
 	 * <p>Returns the top of the implicit time-stack, the Time to which new time 
-	 * nodes are added as children by calling <tt>push()</tt> with a new time 
+	 * nodes are added as children by calling {@code push()} with a new time 
 	 * node as a parameter.</p>
 	 */
 	@Override
@@ -40,7 +40,7 @@ public abstract class AbstractTimeBuilder extends AbstractTime implements TimeBu
 	}
 	
 	/**
-	 * <p>Adds <tt>time</tt> to the implicit time stack, making it the new 
+	 * <p>Adds {@code time} to the implicit time stack, making it the new 
 	 * {@link #top() top} time.</p>
 	 */
 	@Override

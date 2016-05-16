@@ -110,7 +110,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	}
 	
 	/**
-	 * <p>Removes <tt>o</tt> and removes <tt>this</tt> from <tt>o</tt> 
+	 * <p>Removes {@code o} and removes {@code this} from {@code o} 
 	 * without {@link #validateFinalState() validating the set afterwards}.</p>
 	 * 
 	 * <p>Used internally so that bulk operations can validate the set's state 
@@ -284,7 +284,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	
 	/**
 	 * <p>Returns a collection of the nodes visible to this node at a 
-	 * position <tt>n</tt> edges away.</p>
+	 * position {@code n} edges away.</p>
 	 * @param n
 	 * @return
 	 */

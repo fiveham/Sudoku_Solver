@@ -20,10 +20,10 @@ public class Rule extends Fact{
 	
 	/**
 	 * <p>The number ({@value}) of elements (neighbors) of a Rule that 
-	 * is a <tt>xor</tt>.  A Rule is a <tt>xor</tt> if it has two Claims, 
+	 * is a {@code xor}.  A Rule is a {@code xor} if it has two Claims, 
 	 * because exactly one of them is true and the other is false. Given 
-	 * that we know that the Rule is satisfied (is <tt>true</tt>), the 
-	 * Claims, as inputs to the Rule, make such a Rule a <tt>xor</tt> 
+	 * that we know that the Rule is satisfied (is {@code true}), the 
+	 * Claims, as inputs to the Rule, make such a Rule a {@code xor} 
 	 * operation on its neighbors.</p>
 	 */
 	public static final int SIZE_WHEN_XOR = 2;
@@ -32,7 +32,7 @@ public class Rule extends Fact{
 	
 	/**
 	 * <p>Constructs a Rule belonging to the specified Puzzle and 
-	 * having only the specified <tt>types</tt>.</p>
+	 * having only the specified {@code types}.</p>
 	 * @param target the Puzzle to which this Rule belongs
 	 * @param types the single initial {@link #getTypes() types} of 
 	 * this Rule
@@ -45,8 +45,8 @@ public class Rule extends Fact{
 	
 	/**
 	 * <p>Constructs a Rule belonging to the specified Puzzle, 
-	 * having only the specified <tt>types</tt>, and containing 
-	 * all the elements of <tt>c</tt>.</p>
+	 * having only the specified {@code types}, and containing 
+	 * all the elements of {@code c}.</p>
 	 * @param target the Puzzle to which this Rule belongs
 	 * @param types the single initial {@link #getTypes() types} of 
 	 * this Rule
@@ -61,7 +61,7 @@ public class Rule extends Fact{
 	
 	/**
 	 * <p>Constructs a Rule belonging to the specified Puzzle, 
-	 * having only the specified <tt>types</tt>, with the 
+	 * having only the specified {@code types}, with the 
 	 * specified initial capacity.</p>
 	 * @param target the Puzzle to which this Rule belongs
 	 * @param types the single initial {@link #getTypes() types} of 
@@ -76,7 +76,7 @@ public class Rule extends Fact{
 	
 	/**
 	 * <p>Constructs a Rule belonging to the specified Puzzle, 
-	 * having only the specified <tt>types</tt>, with the 
+	 * having only the specified {@code types}, with the 
 	 * specified initial capacity and load factor.</p>
 	 * @param target the Puzzle to which this Rule belongs
 	 * @param types the single initial {@link #getTypes() types} of 
@@ -222,7 +222,7 @@ public class Rule extends Fact{
 	 * Rule as a subset of the other bag in a manner compatible with 
 	 * the deprecated solution technique known as ValueClaim.</p>
 	 * @return true if this Rule is not a {@link Puzzle.RegionSpecies#CELL cell Rule} 
-	 * and has <tt>size() <= target.magnitude()</tt>
+	 * and has {@code size() <= target.magnitude()}
 	 */
 	private boolean shouldCheckForValueClaim(){
 		return type == RegionSpecies.CELL 

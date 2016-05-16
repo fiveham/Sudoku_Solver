@@ -34,8 +34,8 @@ public class BagModel {
 	private final Map<Claim,VoxelModel> map;
 	
 	/**
-	 * <p>Constructs a BagModel coordinating the specified <tt>voxels</tt>. The 
-	 * <tt>voxels</tt> are all given the specified <tt>bagColor</tt>.</p>
+	 * <p>Constructs a BagModel coordinating the specified {@code voxels}. The 
+	 * {@code voxels} are all given the specified {@code bagColor}.</p>
 	 * @param p the target to which this BagModel pertains
 	 * @param voxels the VoxelModels coordinated by this BagModel
 	 * @param bagColor the color given to this fact-bag model and all its 
@@ -94,10 +94,10 @@ public class BagModel {
 	 * after some of its Claims have been falsified and those Claims' 
 	 * VoxelModels have been compressed to mark their Claims as false in 
 	 * the animation
-	 * @param postDisoccupyLength initial length of <tt>timeline</tt> before 
+	 * @param postDisoccupyLength initial length of {@code timeline} before 
 	 * animation for this BagModel's contraction is added and before any other 
 	 * BagModels' contractions that occur at the same time as that of this one 
-	 * are added to <tt>timeline</tt>
+	 * are added to {@code timeline}
 	 * @return
 	 */
 	void trimUnoccupiedExtremeVoxels(Timeline timeline, double postDisoccupyLength){
@@ -113,9 +113,9 @@ public class BagModel {
 	public static final double VANISH_TRANSITION_TIME = VoxelModel.FALSIFY_TRANSITION_TIME;
 	
 	/**
-	 * <p>Removes from <tt>emptyVoxels</tt> all the Claims that are at an extreme position 
+	 * <p>Removes from {@code emptyVoxels} all the Claims that are at an extreme position 
 	 * in the Rule to which this BagModel pertains and returns the number of Claims removed 
-	 * from <tt>emptyVoxels</tt>.</p>
+	 * from {@code emptyVoxels}.</p>
 	 * @param emptyVoxels Claims whose VoxelModels are to be removed (in terms of being 
 	 * {@link #markedVoxels marked} from this BagModel
 	 * @return the number of Claims whose VoxelModels were 
@@ -150,17 +150,17 @@ public class BagModel {
 	public static final BiPredicate<Claim,Claim> ADJACENT_CLAIMS = (c1,c2) -> c1.spaceDistTo(c2)==1;
 	
 	/**
-	 * <p>Returns true if removing <tt>emptyVoxel</tt> from <tt>markedVoxels</tt> 
-	 * would not split <tt>markedVoxels</tt> into multiple connected components.</p>
+	 * <p>Returns true if removing {@code emptyVoxel} from {@code markedVoxels} 
+	 * would not split {@code markedVoxels} into multiple connected components.</p>
 	 * 
 	 * <p>For the purpose of this assessment, voxels are considered connected if they 
 	 * share a cubic face (share two values out of X, Y, and Z with a difference of 1 
 	 * in the non-same dimension).</p>
 	 * @param emptyVoxel the VoxelModel whose removal from this BagModel's list of 
-	 * <tt>markedVoxels</tt> is tested in terms of whether that removal splits this 
+	 * {@code markedVoxels} is tested in terms of whether that removal splits this 
 	 * BagModel visible features into multiple connected components
-	 * @return true if removing <tt>emptyVoxel</tt> from <tt>markedVoxels</tt> 
-	 * would not split <tt>markedVoxels</tt> into multiple connected components, 
+	 * @return true if removing {@code emptyVoxel} from {@code markedVoxels} 
+	 * would not split {@code markedVoxels} into multiple connected components, 
 	 * false otherwise
 	 */
 	private boolean canRemoveEmptyVoxel(Claim emptyVoxel){

@@ -61,7 +61,7 @@ public class PuzzleVizApp extends Application {
 	 * {@link main(String[]) main()}, which precipitated the call to this 
 	 * method, extracts the root of the thread-termination time-tree, 
 	 * {@link Stage#setScene(Scene) sets the Scene}, generates 
-	 * <tt>Timeline</tt>s that animate the solution process, and plays them.</p>
+	 * {@code Timeline}s that animate the solution process, and plays them.</p>
 	 */
 	@Override
 	public void start(Stage primaryStage) throws Exception{
@@ -130,15 +130,15 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	/**
-	 * <p>Creates all the voxel models for the claims of <tt>target</tt>, sequenced so that first quarter 
+	 * <p>Creates all the voxel models for the claims of {@code target}, sequenced so that first quarter 
 	 * of the list contains voxel models for all the claims of the target in order of increasing 
 	 * {@link Claim#linearizeCoords(int, int, int, int) linearized coordinates}. The voxel models in the 
 	 * first fourth of the list all pertain to the same {@link #RegionSpecies type} of Rule.  Each of 
-	 * the other three fourths pertains to another <tt>type</tt> so that all voxel models for all claims are 
+	 * the other three fourths pertains to another {@code type} so that all voxel models for all claims are 
 	 * represented.
 	 * Ordering the 
 	 * @param target the Puzzle whose solution process is being animated
-	 * @return a {@link Group Group} encapsulating the voxel models for the Claims of <tt>target</tt>
+	 * @return a {@link Group Group} encapsulating the voxel models for the Claims of {@code target}
 	 * @see #associates(Claim, List)
 	 */
 	private static Group genVoxelModels(Puzzle puzzle){
@@ -159,7 +159,7 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	/**
-	 * <p>Creates the <tt>BagModel</tt>s for the solved Puzzle, 
+	 * <p>Creates the {@code BagModel}s for the solved Puzzle, 
 	 * and gives each VoxelModel belonging to each BagModel a 
 	 * {@link VoxelModel#getOwnerBag() reference} to that 
 	 * BagModel.</p>
@@ -178,7 +178,7 @@ public class PuzzleVizApp extends Application {
 	 * @param voxels a List of all the VoxelModels (a List<Node> 
 	 * in the calling context, but all the child nodes listed 
 	 * are necessarily VoxelModels in that context) needed to 
-	 * animate the Puzzle <tt>p</tt>
+	 * animate the Puzzle {@code p}
 	 * @param p the Puzzle whose solution process is being animated
 	 */
 	private static void genBagModels(List<? super VoxelModel> voxels, Puzzle p){
@@ -391,12 +391,12 @@ public class PuzzleVizApp extends Application {
 		}
 		
 		/**
-		 * <p>Returns -1, 1, or 0 if <tt>dimensionValue</tt> is 0, 
-		 * <tt>dimValueWhenPos</tt>, or between 0 and <tt>dimValueWhenPos</tt> 
+		 * <p>Returns -1, 1, or 0 if {@code dimensionValue} is 0, 
+		 * {@code dimValueWhenPos}, or between 0 and {@code dimValueWhenPos} 
 		 * respectively.</p>
 		 * 
 		 * <p>0 is returned when the voxel whose location within its cell, 
-		 * box, row, or column or represented by <tt>dimensionValue</tt> 
+		 * box, row, or column or represented by {@code dimensionValue} 
 		 * is not an edge position. For cells, rows, and columns, edge voxels 
 		 * are on the edge of the typically 9x9x9 cube; for boxes, edge voxels 
 		 * are on the borders between boxes.</p>
@@ -404,10 +404,10 @@ public class PuzzleVizApp extends Application {
 		 * @param p the Puzzle whose solution process is being animated
 		 * @param xyz an adjusted component of a VoxelModel's Claim's position 
 		 * in physical space
-		 * @return -1 if the <tt>xyz</tt> is 0, indicating the VoxelModel 
+		 * @return -1 if the {@code xyz} is 0, indicating the VoxelModel 
 		 * in question is on the lower-valued end of the pertinent physical 
-		 * dimension, 1 if <tt>xyz</tt> equals the value output by 
-		 * <tt>farEdgeForType</tt> when passed <tt>p</tt> as a parameter, or 
+		 * dimension, 1 if {@code xyz} equals the value output by 
+		 * {@code farEdgeForType} when passed {@code p} as a parameter, or 
 		 * 0 otherwise
 		 */
 		private int edgeSign(Puzzle p, int xyz){
@@ -469,7 +469,7 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	/**
-	 * <p>Wraps <tt>parallelTimeline()</tt></p>
+	 * <p>Wraps {@code parallelTimeline()}</p>
 	 * @param voxelModels
 	 * @param puzzle
 	 * @return
@@ -577,7 +577,7 @@ public class PuzzleVizApp extends Application {
 	/**
 	 * <p>Produces a Timeline animating all the Claim-falsification and BagModel 
 	 * contraction events that occured as a direct or indirect part of the 
-	 * specified <tt>event</tt>.</p>
+	 * specified {@code event}.</p>
 	 * @param event
 	 * @param modelHandler
 	 * @return
@@ -603,8 +603,8 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	/**
-	 * <p>Adds to <tt>timeline</tt> the falsification animation (VoxleModel collapse and 
-	 * BagModel contraction) an {@link FalsifiedTime event} whose <tt>falsified</tt> Claims 
+	 * <p>Adds to {@code timeline} the falsification animation (VoxleModel collapse and 
+	 * BagModel contraction) an {@link FalsifiedTime event} whose {@code falsified} Claims 
 	 * are specified.</p>
 	 * @param timeline
 	 * @param falsified

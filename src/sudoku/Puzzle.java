@@ -25,7 +25,7 @@ import java.util.HashSet;
  *  the cells.</p>
  *  
  *  <p>A Puzzle features a sort of memory of history in the 
- *  form of a time tree, built upon by calling {@link #timeBuilder() timeBuilder()}</tt> 
+ *  form of a time tree, built upon by calling {@link #timeBuilder() timeBuilder()}} 
  *  and using {@link TimeBuilder its methods}. Automatic Rule-collapse 
  *  uses this time-tree, and all Techniques used in solving the 
  *  target should do so, too.</p>
@@ -68,18 +68,18 @@ public class Puzzle extends SudokuNetwork{
 	private List<List<IndexInstance>> dimensions;
 	
 	/**
-	 * <p>Constructs a Puzzle using the text in the specified file <tt>f</tt>.</p>
+	 * <p>Constructs a Puzzle using the text in the specified file {@code f}.</p>
 	 * 
 	 * @param f the file containing the target in text form at the start of the file
 	 * 
-	 * @throws FileNotFoundException if <tt>f</tt> cannot be found or read
+	 * @throws FileNotFoundException if {@code f} cannot be found or read
 	 */
 	public Puzzle(File f) throws FileNotFoundException{
 		this(new Scanner(f), null);
 	}
 	
 	/**
-	 * <p>Constructs a Puzzle using the specified text source <tt>s</tt>.</p>
+	 * <p>Constructs a Puzzle using the specified text source {@code s}.</p>
 	 * 
 	 * @param s the target in text
 	 */
@@ -88,7 +88,7 @@ public class Puzzle extends SudokuNetwork{
 	}
 	
 	/**
-	 * <p>Constructs a Puzzle based on the text scanned by <tt>s</tt>.</p>
+	 * <p>Constructs a Puzzle based on the text scanned by {@code s}.</p>
 	 * 
 	 * @param s a Scanner whose {@link Scanner#next() output} is used to 
 	 * create the Puzzle object
@@ -116,12 +116,12 @@ public class Puzzle extends SudokuNetwork{
 	}
 	
 	/**
-	 * <p>Generates the Rules for <tt>p</tt>.</p>
+	 * <p>Generates the Rules for {@code p}.</p>
 	 * 
 	 * @param p the Puzzle whose Rules are being generated
-	 * @param sideLength the pre-computed side-length of <tt>p</tt>
-	 * @param claims the pre-built array of Claims in <tt>p</tt>
-	 * @return a list of the Rules for <tt>p</tt>
+	 * @param sideLength the pre-computed side-length of {@code p}
+	 * @param claims the pre-built array of Claims in {@code p}
+	 * @return a list of the Rules for {@code p}
 	 */
 	private List<Rule> genRuleNodes(Puzzle p, int sideLength, SpaceMap claims){
 		List<Rule> factbags = new ArrayList<>(RegionSpecies.values().length * p.sideLength * p.sideLength * p.sideLength);
@@ -141,12 +141,12 @@ public class Puzzle extends SudokuNetwork{
 	
 	/**
 	 * <p>Generates the lists of dimension-associated valid coordinate values for 
-	 * <tt>p</tt>.</p>
-	 * @param indices a pre-computed list of the valid coordinate values for <tt>p</tt>
+	 * {@code p}.</p>
+	 * @param indices a pre-computed list of the valid coordinate values for {@code p}
 	 * @param p the Puzzle for which these dimensions are being generated
 	 * @see #dimensions
 	 * @return a list of the lists of dimension-associated valid coordinate values 
-	 * for <tt>p</tt>
+	 * for {@code p}
 	 */
 	private static List<List<IndexInstance>> genDimensions(List<IndexValue> indices, Puzzle p){
 		List<List<IndexInstance>> dimensions = new ArrayList<>(DimensionType.values().length);
@@ -162,12 +162,12 @@ public class Puzzle extends SudokuNetwork{
 	
 	/**
 	 * <p>Generates the {@link #indices indices} for a Puzzle with 
-	 * the specified <tt>sideLength</tt>.</p>
-	 * @param sideLength the pre-computed side-length of <tt>p</tt>
+	 * the specified {@code sideLength}.</p>
+	 * @param sideLength the pre-computed side-length of {@code p}
 	 * @param p the target for which the {@link #indices indices} are 
 	 * being generated
 	 * @see #indices
-	 * @return the list of {@link #indices indices} generated for <tt>p</tt>
+	 * @return the list of {@link #indices indices} generated for {@code p}
 	 */
 	private static List<IndexValue> genIndices(int sideLength, Puzzle p){
 		List<IndexValue> indices = new ArrayList<>(sideLength);
@@ -205,7 +205,7 @@ public class Puzzle extends SudokuNetwork{
 	 * specified int.</p>
 	 * 
 	 * @param i the int whose equivalent IndexValue will be returned
-	 * @return the IndexValue for this Puzzle equivalent to <tt>i</tt>
+	 * @return the IndexValue for this Puzzle equivalent to {@code i}
 	 */
 	public IndexValue indexFromInt(int i){
 		try{
@@ -226,7 +226,7 @@ public class Puzzle extends SudokuNetwork{
 	 * @param i a 1-based human-readable integer from a target's source 
 	 * text file
 	 * @return a 0-based IndexValue corresponding to the 1-based integer 
-	 * <tt>i</tt>.
+	 * {@code i}.
 	 */
 	public IndexValue indexFromHumanReadableInt(int i){
 		return indexFromInt(i-1);
@@ -310,14 +310,14 @@ public class Puzzle extends SudokuNetwork{
 	
 	/**
 	 * <p>Returns the x-component of the point in space specified 
-	 * by <tt>dims</tt>. x-components of each element of <tt>dims</tt> 
+	 * by {@code dims}. x-components of each element of {@code dims} 
 	 * are determined and summed, and {@link #indexFromInt(int) the corresponding IndexValue} 
 	 * is returned.</p>
 	 * @param dims the x-component of the geometric point, line, or 
 	 * plane specified by these IndexInstances will be returned in 
 	 * the form of an IndexValue pertaining to this Puzzle.
 	 * @return the x-component of the point in space specified 
-	 * by <tt>dims</tt>
+	 * by {@code dims}
 	 */
 	public IndexValue decodeX(IndexInstance... dims){
 		return decodeDim((d) -> d.contributionX(), dims);
@@ -325,14 +325,14 @@ public class Puzzle extends SudokuNetwork{
 	
 	/**
 	 * <p>Returns the y-component of the point in space specified 
-	 * by <tt>dims</tt>. y-components of each element of <tt>dims</tt> 
+	 * by {@code dims}. y-components of each element of {@code dims} 
 	 * are determined and summed, and {@link #indexFromInt(int) the corresponding IndexValue} 
 	 * is returned.</p>
 	 * @param dims the y-component of the geometric point, line, or 
 	 * plane specified by these IndexInstances will be returned in 
 	 * the form of an IndexValue pertaining to this Puzzle.
 	 * @return the y-component of the point in space specified 
-	 * by <tt>dims</tt>
+	 * by {@code dims}
 	 */
 	public IndexValue decodeY(IndexInstance... dims){
 		return decodeDim((d) -> d.contributionY(), dims);
@@ -340,14 +340,14 @@ public class Puzzle extends SudokuNetwork{
 	
 	/**
 	 * <p>Returns the z-component of the point in space specified 
-	 * by <tt>dims</tt>. z-components of each element of <tt>dims</tt> 
+	 * by {@code dims}. z-components of each element of {@code dims} 
 	 * are determined and summed, and {@link #indexFromInt(int) the corresponding IndexValue} 
 	 * is returned.</p>
 	 * @param dims the z-component of the geometric point, line, or 
 	 * plane specified by these IndexInstances will be returned in 
 	 * the form of an IndexValue pertaining to this Puzzle.
 	 * @return the z-component of the point in space specified 
-	 * by <tt>dims</tt>
+	 * by {@code dims}
 	 */
 	public IndexValue decodeSymbol(IndexInstance... dims){
 		return decodeDim((d) -> d.contributionZ(), dims);
@@ -364,7 +364,7 @@ public class Puzzle extends SudokuNetwork{
 	 * and returns the {@link #indexFromInt(int) corresponding IndexValue}. 
 	 * Performs the actual work for decodeX, decodeY, and decodeSymbol.</p>
 	 * @param contrib a function used to specify which dimension's component 
-	 * will be used for the elements of <tt>dims</tt> to produce a result.
+	 * will be used for the elements of {@code dims} to produce a result.
 	 * @param dims dimension-values indicating a point (or other, non-point 
 	 * primitive geometric object) in space.
 	 * @return the IndexValue {@link #indexFromInt(int) corresponding} to 
@@ -403,11 +403,11 @@ public class Puzzle extends SudokuNetwork{
 	
 	/**
 	 * <p>Returns a string representation of the Puzzle, with 
-	 * each cell represented by a string of <tt>sideLength</tt> 
+	 * each cell represented by a string of {@code sideLength} 
 	 * characters, each {@link Claim#possText() character} 
 	 * pertaining to a possible value of the cell.</p>
 	 * @return a string representation of the Puzzle, with 
-	 * each cell represented by a string of <tt>sideLength</tt> 
+	 * each cell represented by a string of {@code sideLength} 
 	 * characters, each {@link Claim#possText() character} 
 	 * pertaining to a possible value of the cell
 	 */
@@ -627,8 +627,8 @@ public class Puzzle extends SudokuNetwork{
 		private IndexValue val;
 		
 		/**
-		 * <p>Constructs an IndexInstance belonging to the <tt>target</tt>, pertaining 
-		 * to the specified dimension <tt>type</tt> and having the value <tt>val</tt>.</p>
+		 * <p>Constructs an IndexInstance belonging to the {@code target}, pertaining 
+		 * to the specified dimension {@code type} and having the value {@code val}.</p>
 		 * @param target the Puzzle to which this IndexInstance belongs
 		 * @param type the dimension along which this IndedInstance lies
 		 * @param val the value of this IndexInstance's position along its dimension
@@ -799,7 +799,7 @@ public class Puzzle extends SudokuNetwork{
 	 * source text, its allowable index values must be determined at runtime 
 	 * instead of being hard-coded in an enum as has previously been the 
 	 * case. The use of an enum is preferable over the use of raw primitive 
-	 * data types such as <tt>int</tt> because <tt>int</tt> and other 
+	 * data types such as {@code int} because {@code int} and other 
 	 * applicable types can vary over a wider range than a Puzzle ever needs 
 	 * and thus need to be range-checked. Another reason to avoid the use of 
 	 * primitive data types for the purposes that IndexValue fulfills is that 
@@ -823,8 +823,8 @@ public class Puzzle extends SudokuNetwork{
 		private final int v;
 		
 		/**
-		 * <p>Constructs an IndexValue belonging to <tt>target</tt> and 
-		 * wrapping <tt>v</tt>.</p>
+		 * <p>Constructs an IndexValue belonging to {@code target} and 
+		 * wrapping {@code v}.</p>
 		 * @param target the Puzzle to which this IndexValue belongs
 		 * @param v the int value wrapped by this IndexValue
 		 */

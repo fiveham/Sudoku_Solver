@@ -39,12 +39,12 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * (formerly) neighboring Rules to initiate a 
 	 * {@link #TimeValueClaim value-claim} that targets the very same Claim 
 	 * that's still in the process of being set false as one of the Claims 
-	 * to be set false. Calling <tt>setFalse</tt> on such a Claim will create 
+	 * to be set false. Calling {@code setFalse} on such a Claim will create 
 	 * a second Iterator, which will remove the remaining Rules from that 
 	 * Claim, modifying the underlying collection. When that method call 
-	 * and all others subordinate to the initial <tt>setFalse</tt> call on 
+	 * and all others subordinate to the initial {@code setFalse} call on 
 	 * the twice-falsified Claim return and control passes back to that 
-	 * initial <tt>setFalse</tt>, the Iterator therein for that Claim will 
+	 * initial {@code setFalse}, the Iterator therein for that Claim will 
 	 * still {@link Iterator#hasNext() have a next element} available, 
 	 * even though the actual collection may be empty, resulting in a 
 	 * ConcurrentModificationException the next time {@link Iterator#next() next()} 
@@ -75,8 +75,8 @@ public class Claim extends NodeSet<Fact,Claim>{
 	private IndexValue symbol;
 	
 	/**
-	 * <p>Constructs a Claim at the specified <tt>x</tt>, <tt>y</tt>, and 
-	 * <tt>symbol</tt> coordinates, pertaining to the specified <tt>target</tt>.</p>
+	 * <p>Constructs a Claim at the specified {@code x}, {@code y}, and 
+	 * {@code symbol} coordinates, pertaining to the specified {@code target}.</p>
 	 * @param target the {@link Puzzle Puzzle} of whose underlying 
 	 * {@link common.graph.Graph Graph} this Claim is a 
 	 * {@link common.graph.Vertex vertex}
@@ -112,7 +112,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * <p>Returns true if this Claim is known to be true, false otherwise. 
 	 * If this Claim is known true and there aren't any Rules that still need 
 	 * to {@link Rule#verifyFinalState() collapse automatically} in the target, 
-	 * then all of this Claim's neighbors have only one Claim: <tt>this</tt> one.</p>
+	 * then all of this Claim's neighbors have only one Claim: {@code this} one.</p>
 	 * @return true if this Claim is known to be true, false otherwise
 	 */
 	public boolean isKnownTrue(){
@@ -186,10 +186,10 @@ public class Claim extends NodeSet<Fact,Claim>{
 	
 	/**
 	 * <p>Returns an int that encodes the specified x, y, and z coordinates as if they 
-	 * belong to a Claim whose target has the specified <tt>sideLength</tt>.</p>
+	 * belong to a Claim whose target has the specified {@code sideLength}.</p>
 	 * 
 	 * <p>The coordinates are concatenated as digits in a number system with a base 
-	 * equal to the specified <tt>sideLength</tt>, with the first digit being the 
+	 * equal to the specified {@code sideLength}, with the first digit being the 
 	 * x-coordinate, followed by the y-coordinate, followed by the z-coordinate.</p>
 	 * @param x the coordinate given the highest significance
 	 * @param y the coordinate given the second-highest significance
@@ -197,7 +197,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * @param sideLength the side-length of the target to which belongs the Claim 
 	 * whose coordinates are being linearized.
 	 * @return an int that encodes the specified x, y, and z coordinates as if they 
-	 * belong to a Claim whose target has the specified <tt>sideLength</tt>
+	 * belong to a Claim whose target has the specified {@code sideLength}
 	 */
 	public static int linearizeCoords(int x, int y, int z, int sideLength){
 		return x*sideLength*sideLength + y*sideLength + z;
@@ -225,10 +225,10 @@ public class Claim extends NodeSet<Fact,Claim>{
 	}
 	
 	/**
-	 * <p>Returns the distance between this Claim and <tt>otherClaim</tt> 
+	 * <p>Returns the distance between this Claim and {@code otherClaim} 
 	 * in claim-space.</p>
 	 * @param otherClaim
-	 * @return the distance between this Claim and <tt>otherClaim</tt> 
+	 * @return the distance between this Claim and {@code otherClaim} 
 	 * in claim-space
 	 */
 	public double spaceDistTo(Claim otherClaim){
@@ -242,10 +242,10 @@ public class Claim extends NodeSet<Fact,Claim>{
 	}
 	
 	/**
-	 * <p>Returns a vector in claim-space from this Claim to <tt>cn</tt>.</p>
+	 * <p>Returns a vector in claim-space from this Claim to {@code cn}.</p>
 	 * @param cn another Claim
 	 * @return a vector in claim-space from this Claim 
-	 * to <tt>cn</tt>
+	 * to {@code cn}
 	 */
 	public int[] vectorTo(Claim cn) {
 		int[] result = new int[Puzzle.DIMENSION_COUNT];

@@ -42,7 +42,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	/**
 	 * <p>Constructs an AbstractGraph whose backing collection of 
-	 * vertices is initialized empty but with a capacity of <tt>size</tt>.</p>
+	 * vertices is initialized empty but with a capacity of {@code size}.</p>
 	 * @param size the capacity which the backing collection of 
 	 * vertices will have
 	 */
@@ -52,7 +52,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	}
 	
 	/**
-	 * <p>Constructs an AbstractGraph having the elements of <tt>coll</tt> 
+	 * <p>Constructs an AbstractGraph having the elements of {@code coll} 
 	 * as vertices.</p>
 	 * @param coll vertices for this Graph
 	 */
@@ -62,8 +62,8 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	}
 	
 	/**
-	 * <p>Constructs an AbstractGraph having the elements of <tt>coll</tt> 
-	 * as vertices and having all the elements of <tt>factories</tt> as 
+	 * <p>Constructs an AbstractGraph having the elements of {@code coll} 
+	 * as vertices and having all the elements of {@code factories} as 
 	 * event-listener sources.</p>
 	 * @param coll vertices for this Graph
 	 * @param factories connected-component contraction event-listers for 
@@ -75,7 +75,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	}
 	
 	/**
-	 * <p>Add to <tt>contractEventListenerFactories</tt> the specified object that supplies a 
+	 * <p>Add to {@code contractEventListenerFactories} the specified object that supplies a 
 	 * list of event-listeners for when a ConnectedComponent {@link ConnectedComponent#contract() contracts}.</p>
 	 * @param newEL an event-listener
 	 * @return this Graph
@@ -150,7 +150,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	/**
 	 * <p>Returns a list of objects that will respond to a ConnectedComponent {@link ConnectedComponent#contract() contracting} 
 	 * to move its vertices inward toward its core.  The returned list contains all the contents of all the 
-	 * lists produced by the individual event-listener factories in <tt>contractEventListenerFactories</tt>.</p>
+	 * lists produced by the individual event-listener factories in {@code contractEventListenerFactories}.</p>
 	 * @return
 	 */
 	@Override
@@ -211,13 +211,13 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	 * <p>Since the elements of the matrices involved are boolean values instead 
 	 * of numbers, the operations of (scalar) multiplication and addition used 
 	 * in combining the elements of matrices whose elements are numbers when 
-	 * multiplying those matrices are replaced here with <tt>and</tt> (&&) and 
-	 * <tt>or</tt> (||).</p>
+	 * multiplying those matrices are replaced here with {@code and} (&&) and 
+	 * {@code or} (||).</p>
 	 * 
 	 * @param a a square symmetrical matrix of boolean values
 	 * @param b a square symmetrical matrix of boolean values
 	 * @return a square symmetrical matrix of boolean values corresponding to 
-	 * the matrix-product of <tt>a</tt> and <tt>b</tt>
+	 * the matrix-product of {@code a} and {@code b}
 	 */
 	private boolean[][] times(boolean[][] a, boolean[][] b){
 		boolean[][] result = new boolean[a.length][a.length];
@@ -233,10 +233,10 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	/**
 	 * <p>Returns the dot product of two vectors. Implicitly assumes 
-	 * that <tt>a</tt> and <tt>b</tt> are the same length. The 
+	 * that {@code a} and {@code b} are the same length. The 
 	 * operations of multiplication and addition used in calculating 
 	 * the dot product of two vectors of numbers are replaced with 
-	 * <tt>and</tt> (&&) and <tt>or</tt> (||).</p>
+	 * {@code and} (&&) and {@code or} (||).</p>
 	 * @param a a vector
 	 * @param b a vector
 	 * @return the boolean dot product of two boolean vectors
@@ -251,12 +251,12 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	}
 	
 	/**
-	 * <p>Determines the distance between vertices <tt>t1</tt> and <tt>t2</tt> 
+	 * <p>Determines the distance between vertices {@code t1} and {@code t2} 
 	 * if both are in this graph and in the same connected component by building 
-	 * a connected component around <tt>t1</tt>.</p>
+	 * a connected component around {@code t1}.</p>
 	 * @param t1 a vertex in this Graph
 	 * @param t2 a vertex in this Graph
-	 * @return the distance between <tt>t1</tt> and <tt>t2</tt> in this Graph, 
+	 * @return the distance between {@code t1} and {@code t2} in this Graph, 
 	 * or -1 if there is no path connecting them
 	 */
 	public int distance2(final T t1, final T t2){

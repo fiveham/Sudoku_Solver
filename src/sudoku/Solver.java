@@ -53,7 +53,7 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	
 	/**
 	 * <p>Constructs a Solver that works to solve the target defined 
-	 * at the beginning of the file named <tt>filename</tt>.</p>
+	 * at the beginning of the file named {@code filename}.</p>
 	 * @param filename the name of the file containing the target to 
 	 * be solved
 	 * @throws FileNotFoundException if the named file could not be 
@@ -65,9 +65,9 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	
 	/**
 	 * <p>Constructs a Solver that works to solve the target 
-	 * specified by the text at the beginning of <tt>f</tt>.</p>
+	 * specified by the text at the beginning of {@code f}.</p>
 	 * @param f the file containing a target to be solved
-	 * @throws FileNotFoundException if <tt>f</tt> could not 
+	 * @throws FileNotFoundException if {@code f} could not 
 	 * be found
 	 */
 	public Solver(File f) throws FileNotFoundException{
@@ -76,7 +76,7 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	
 	/**
 	 * <p>Constructs a Solver that works to solve the specified 
-	 * <tt>target</tt>.</p>
+	 * {@code target}.</p>
 	 * @param target the Puzzle to be solved
 	 */
 	public Solver(Sudoku puzzle){
@@ -118,8 +118,8 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	}
 	
 	/**
-	 * <p>Applies each technique in <tt>processors</tt> to 
-	 * <tt>target</tt>. If a technique reports that it was made 
+	 * <p>Applies each technique in {@code processors} to 
+	 * {@code target}. If a technique reports that it was made 
 	 * a change to the target, then instead of moving on to the 
 	 * next technique in the list, technique selection resets to 
 	 * the start of the technique list. This reset mechanism 
@@ -155,7 +155,7 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	 * terminates. This method {@link Thread#join() waits} for the daemon 
 	 * thread to terminate before returning.</p>
 	 * <p>Use this method when creating a single initial Solver for a 
-	 * <tt>Puzzle</tt>.</p>
+	 * {@code Puzzle}.</p>
 	 * @throws InterruptedException
 	 */
 	public void solve() throws InterruptedException{
@@ -205,7 +205,7 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	
 	/**
 	 * <p>Applies this Solver's initializer and processor Techniques, stores 
-	 * the produced SolutionEvent in <tt>event</tt>, and returns the appropriate 
+	 * the produced SolutionEvent in {@code event}, and returns the appropriate 
 	 * BiFunction to generate this Solver's children.</p>
 	 * @see #HAS_INITIALIZERS
 	 * @see #HAS_NO_INITIALIZERS

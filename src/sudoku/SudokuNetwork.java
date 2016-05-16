@@ -17,14 +17,14 @@ import common.graph.Graph;
 public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	
 	/**
-	 * <p>Returns true if and only if the specified <tt>NodeSet<?,?></tt> is 
-	 * a <tt>Rule</tt>.</p>
+	 * <p>Returns true if and only if the specified {@code NodeSet<?,?>} is 
+	 * a {@code Rule}.</p>
 	 */
 	public static final Predicate<NodeSet<?,?>> IS_FACT  = (ns)->ns instanceof Fact;
 	
 	/**
-	 * <p>Returns true if and only if the specified <tt>NodeSet<?,?></tt> is 
-	 * a <tt>Rule</tt>.</p>
+	 * <p>Returns true if and only if the specified {@code NodeSet<?,?>} is 
+	 * a {@code Rule}.</p>
 	 */
 	public static final Predicate<NodeSet<?,?>> IS_CLAIM = (ns)->ns instanceof Claim;
 	
@@ -62,9 +62,9 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	}
 	
 	/**
-	 * <p>Returns a Stream of all the <tt>Claim</tt>-type nodes in this 
+	 * <p>Returns a Stream of all the {@code Claim}-type nodes in this 
 	 * Puzzle's underlying graph.</p>
-	 * @return a Stream of all the <tt>Claim</tt>-type nodes in this 
+	 * @return a Stream of all the {@code Claim}-type nodes in this 
 	 * Puzzle's underlying graph.
 	 */
 	@Override
@@ -134,11 +134,11 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 		
 		/**
 		 * <p>Returns the radix to be used for {@link Integer#parseInt(String) parsing} 
-		 * human-readable text integers into <tt>int</tt>s for internal use. The value 
+		 * human-readable text integers into {@code int}s for internal use. The value 
 		 * returned depends on the current value of {@link #mag mag}.</p>
 		 * @return the radix to be used for parsing the human-readable values of the 
-		 * cells specified in the text source for this target into <tt>int</tt>s for 
-		 * internal use, depending on the current value of <tt>mag</tt>
+		 * cells specified in the text source for this target into {@code int}s for 
+		 * internal use, depending on the current value of {@code mag}
 		 */
 		private int radix(){
 			return mag*mag+1;
@@ -146,7 +146,7 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 		
 		/**
 		 * <p>Converts a human-readable integer in an unknown base, from a target of 
-		 * unknown size, into an <tt>int</tt> while determining what base is appropriate 
+		 * unknown size, into an {@code int} while determining what base is appropriate 
 		 * for parsing the current and remaining text into ints.</p>
 		 * @param token the string to be parsed into an int
 		 * @return the int parsed from the specified token

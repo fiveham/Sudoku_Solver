@@ -35,8 +35,8 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	
 	/**
 	 * <p>Constructs a ComboGen that produces combinations of elements from 
-	 * <tt>source</tt> that have a size at least {@value #MIN_COMBO_SIZE} and at 
-	 * most <tt>source.size()</tt>.</p>
+	 * {@code source} that have a size at least {@value #MIN_COMBO_SIZE} and at 
+	 * most {@code source.size()}.</p>
 	 * @param source a collection of elements combinations of which are 
 	 * produced by this ComboGen
 	 */
@@ -105,7 +105,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	 * <p>Returns an IsoIterator wrapping this ComboGen's normal 
 	 * iterator, allowing elements from the underlying element 
 	 * pool to be excluded from combos produced  by subsequent 
-	 * calls to <tt>next()</tt>.</p>
+	 * calls to {@code next()}.</p>
 	 * 
 	 * @return an IsoIterator wrapping this ComboGen's normal 
 	 * iterator
@@ -178,11 +178,11 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		
 		/**
 		 * <p>Returns a BigInteger {@link #genComboList(BigInteger) pointing} to 
-		 * the first <tt>size</tt> elements from <tt>list</tt>.</p>
+		 * the first {@code size} elements from {@code list}.</p>
 		 * 
 		 * @param size the size of the combo whose backing bitstring is returned
 		 * @return a BigInteger {@link #genComboList(BigInteger) pointing} to 
-		 * the first <tt>size</tt> elements from <tt>list</tt>
+		 * the first {@code size} elements from {@code list}
 		 */
 		private BigInteger finalCombo(int size){
 			return leastCombo(size);
@@ -206,11 +206,11 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		
 		/**
 		 * <p>Returns a BigInteger {@link #genComboList(BigInteger) pointing} to 
-		 * the last <tt>size</tt> elements from <tt>list</tt>.</p>
+		 * the last {@code size} elements from {@code list}.</p>
 		 * 
 		 * @param size the size of the combo whose backing bitstring is returned
 		 * @return a BigInteger {@link #genComboList(BigInteger) pointing} to 
-		 * the last <tt>size</tt> elements from <tt>list</tt>
+		 * the last {@code size} elements from {@code list}
 		 */
 		private BigInteger firstCombo(int size){
 			return greatestCombo(size);
@@ -220,8 +220,8 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		 * </p>Returns a BigInteger having the greatest numerical value of any 
 		 * BigInteger {@link #genComboList(BigInteger) pointing} to a 
 		 * combination of the current size. The value returned is equal to 
-		 * <tt>(2^(size+1) - 1) * 2^(source.size() - size)</tt>, which equals 
-		 * <tt>2^(source.size()+1) - 2^(source.size() - size)</tt>.</p>
+		 * {@code (2^(size+1) - 1) * 2^(source.size() - size)}, which equals 
+		 * {@code 2^(source.size()+1) - 2^(source.size() - size)}.</p>
 		 * 
 		 * @param size the number of set bits in the BigIteger returned
 		 * @return a BigInteger having the greatest numerical value of any 
@@ -280,17 +280,17 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		}
 		
 		/**
-		 * <p>Returns the lowest index in <tt>combo</tt> of a 
+		 * <p>Returns the lowest index in {@code combo} of a 
 		 * {@link BigInteger#testBit(int) 1} such that the bit at the 
-		 * next lower index is 0. If no such bit exists in <tt>combo</tt>, 
-		 * then <tt>source.size()</tt> is returned.</p>
+		 * next lower index is 0. If no such bit exists in {@code combo}, 
+		 * then {@code source.size()} is returned.</p>
 		 * 
 		 * @param combo the combo whose lowest-index 1 with a 0 
 		 * immediately below it (in terms of index) is returned
-		 * @return the lowest index in <tt>combo</tt> of a 
+		 * @return the lowest index in {@code combo} of a 
 		 * {@link BigInteger#testBit(int) 1} such that the bit at the 
-		 * next lower index is 0, or <tt>source.size()</tt> if no such 
-		 * bit exists in <tt>combo</tt>
+		 * next lower index is 0, or {@code source.size()} if no such 
+		 * bit exists in {@code combo}
 		 */
 		private int lowerableOne(BigInteger combo){
 			int i=0;
@@ -303,13 +303,13 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		}
 		
 		/**
-		 * <p>Returns the number of 1s in <tt>combo</tt> at indices less 
-		 * than <tt>swapIndex</tt>.</p>
-		 * @param swapIndex the index in <tt>combo</tt> below which 1s 
+		 * <p>Returns the number of 1s in {@code combo} at indices less 
+		 * than {@code swapIndex}.</p>
+		 * @param swapIndex the index in {@code combo} below which 1s 
 		 * are counted
 		 * @param combo the BigInteger from which 1s are counted
-		 * @return the number of 1s in <tt>combo</tt> at indices less 
-		 * than <tt>swapIndex
+		 * @return the number of 1s in {@code combo} at indices less 
+		 * than {@code swapIndex
 		 */
 		private int onesBelow(int swapIndex, BigInteger combo){
 			int result = 0;

@@ -21,8 +21,8 @@ public class Pair<T,S> {
 	private S b;
 	
 	/**
-	 * <p>Constructs a Pair whose first element is <tt>a</tt> and 
-	 * whose second element is <tt>b</tt>.</p>
+	 * <p>Constructs a Pair whose first element is {@code a} and 
+	 * whose second element is {@code b}.</p>
 	 * @param a the first element of this Pair
 	 * @param b the second element of this Pair
 	 */
@@ -33,7 +33,7 @@ public class Pair<T,S> {
 	
 	/**
 	 * <p>Constructs a Pair containing the first two elements output 
-	 * by the <tt>c</tt>'s {@link Collection#iterator() iterator}.</p>
+	 * by the {@code c}'s {@link Collection#iterator() iterator}.</p>
 	 * @param c the Collection whose iterator's first two results 
 	 * will be the elements of this pair
 	 */
@@ -64,10 +64,10 @@ public class Pair<T,S> {
 	}
 	
 	/**
-	 * <p>Returns true if <tt>o</tt> is either of the elements of 
+	 * <p>Returns true if {@code o} is either of the elements of 
 	 * this Pair, false otherwise.</p>
 	 * @param o the object being tested as a member of this Pair
-	 * @return true if <tt>o</tt> is either of the elements of 
+	 * @return true if {@code o} is either of the elements of 
 	 * this Pair, false otherwise
 	 */
 	public boolean contains(Object o){
@@ -75,14 +75,14 @@ public class Pair<T,S> {
 	}
 	
 	/**
-	 * <p>Returns the counterpart of <tt>o</tt> in this Pair if 
-	 * <tt>o</tt> is a member of this Pair.</p>
+	 * <p>Returns the counterpart of {@code o} in this Pair if 
+	 * {@code o} is a member of this Pair.</p>
 	 * @param o the object whose counterpart in this Pair will 
 	 * be returned
-	 * @throws IllegalArgumentException if <tt>o</tt> is not a 
+	 * @throws IllegalArgumentException if {@code o} is not a 
 	 * member of this Pair
-	 * @return the counterpart of <tt>o</tt> in this Pair if 
-	 * <tt>o</tt> is a member of this Pair
+	 * @return the counterpart of {@code o} in this Pair if 
+	 * {@code o} is a member of this Pair
 	 */
 	public Object partner(Object o){
 		if(a.equals(o)){

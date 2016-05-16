@@ -27,7 +27,7 @@ public class Initializer extends Technique {
 	}
 	
 	/**
-	 * <p>Finds an Init in <tt>target</tt> and sets that Init's 
+	 * <p>Finds an Init in {@code target} and sets that Init's 
 	 * one Claim neighbor true.</p>
 	 * @return an Initialization describing the verification of 
 	 * an Init's sole Claim neighbor and any and all resulting 

@@ -27,13 +27,13 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	
 	/**
 	 * <p>Returns the number of edges to be traversed to move on the Graph 
-	 * from <tt>t1</tt> to <tt>t2</tt>, or -1 if there is no path connecting 
-	 * <tt>t1</tt> and <tt>t2</tt>.</p>
+	 * from {@code t1} to {@code t2}, or -1 if there is no path connecting 
+	 * {@code t1} and {@code t2}.</p>
 	 * @param t1 a vertex in this Graph
 	 * @param t2 a vertex in this Graph
 	 * @return the number of edges to be traversed to move on the Graph 
-	 * from <tt>t1</tt> to <tt>t2</tt>, or -1 if there is no path connecting 
-	 * <tt>t1</tt> and <tt>t2</tt>
+	 * from {@code t1} to {@code t2}, or -1 if there is no path connecting 
+	 * {@code t1} and {@code t2}
 	 */
 	public int distance(T t1, T t2);
 	
@@ -75,25 +75,25 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	 * {@link #connectedComponents(List<Consumer<Set<T>>>, Function<List<T>,T>) connectedComponents(List<Consumer<Set<T>>>, Function<List<T>,T>)}.
 	 * The default list of event-listeners supplied is the list returned by 
 	 * {@link contractEventListeners() contractEventListeners()}. The default 
-	 * <tt>seedSrc</tt> supplied is a function that removes and returns the 
+	 * {@code seedSrc} supplied is a function that removes and returns the 
 	 * last element of the list it is given.</p>
 	 * @return
 	 */
 	public Collection<Graph<T>> connectedComponents();
 	
 	/**
-	 * <p>Returns the connected component of this Graph that contains the <tt>T</tt> 
-	 * output by <tt>seedSrc</tt> when <tt>unassignedNodes</tt> is given to it as 
+	 * <p>Returns the connected component of this Graph that contains the {@code T} 
+	 * output by {@code seedSrc} when {@code unassignedNodes} is given to it as 
 	 * input.</p>
 	 * @param unassignedNodes nodes from this Puzzle for which a connected component 
 	 * will be built
-	 * @param seedSrc a function that specifies an element from <tt>unassignedNodes</tt> 
+	 * @param seedSrc a function that specifies an element from {@code unassignedNodes} 
 	 * with which to begin building the connected component that is returned
 	 * @param eventListeners a list of event-listeners that respond when the connected 
 	 * component being built moves newly-added nodes inward and out of the outermost 
 	 * layer
-	 * @return the connected component of this Grapht hat contains the <tt>T</tt> 
-	 * output by <tt>seedSrc</tt> when <tt>unassignedNodes</tt> is given to it as 
+	 * @return the connected component of this Grapht hat contains the {@code T} 
+	 * output by {@code seedSrc} when {@code unassignedNodes} is given to it as 
 	 * input
 	 */
 	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc, List<Consumer<Set<T>>> eventListeners);

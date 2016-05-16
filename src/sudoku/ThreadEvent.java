@@ -16,7 +16,7 @@ public class ThreadEvent extends AbstractTime {
 	private final SolutionEvent wrapped;
 	
 	/**
-	 * <p>Constructs a ThreadEvent having the specified <tt>parent</tt> 
+	 * <p>Constructs a ThreadEvent having the specified {@code parent} 
 	 * and wrapping the specified SolutionEvent.</p>
 	 * @param parent the ThreadEvent marking the change-making termination 
 	 * of the thread that spawned the thread whose change-making 

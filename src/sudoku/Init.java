@@ -27,7 +27,7 @@ public class Init extends Fact {
 	private Claim claim;
 	
 	/**
-	 * <p>Constructs an Init belonging to the specified <tt>puzzle</tt>, 
+	 * <p>Constructs an Init belonging to the specified {@code puzzle}, 
 	 * with an initial capacity of {@value #CAPACITY}.</p>
 	 * @param puzzle
 	 */

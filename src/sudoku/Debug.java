@@ -15,10 +15,10 @@ public class Debug {
 	private static final PrintStream log = System.out;//initLog();
 	
 	/**
-	 * <p>Returns the PrintStream referred to by <tt>log</tt>, 
+	 * <p>Returns the PrintStream referred to by {@code log}, 
 	 * which points to a file named "dump.txt".</p>
-	 * <p><tt>log</tt> is initialized by a call to this method.</p>
-	 * @return the PrintStream to be stored in <tt>log</tt>
+	 * <p>{@code log} is initialized by a call to this method.</p>
+	 * @return the PrintStream to be stored in {@code log}
 	 */
 	private static PrintStream initLog(){
 		try{
@@ -33,16 +33,16 @@ public class Debug {
 	}
 	
 	/**
-	 * <p>Prints <tt>s</tt> to the file specified by <tt>log</tt>.</p>
+	 * <p>Prints {@code s} to the file specified by {@code log}.</p>
 	 * @param s the string to be printed to the file specified by 
-	 * <tt>log</tt>
+	 * {@code log}
 	 */
 	public static void log(Object s){
 		log.println(s);
 	}
 	
 	/**
-	 * <p>Prints a newline to the file specified by <tt>log</tt>.</p>
+	 * <p>Prints a newline to the file specified by {@code log}.</p>
 	 */
 	public static void log(){
 		log.println();
