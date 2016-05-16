@@ -448,8 +448,8 @@ public class Sledgehammer extends Technique {
 		int prevUnconSrcCount = unconnectedSources.size();
 		
 		//seed the "connected" area with a source Rule
-		Map<Rule,Integer> rulesVisibleToConnectedSources = new HashMap<>();
-		addAll(rulesVisibleToConnectedSources, visibleCache.get(unconnectedSources.remove(unconnectedSources.size()-1)));
+		Map<Rule,Set<Rule>> rulesVisibleToConnectedSources = new HashMap<>();
+		addVisibles(rulesVisibleToConnectedSources, unconnectedSources.remove(unconnectedSources.size()-1));
 		
 		//connect as many of the sources together as possible
 		while(unconnectedSources.size() != prevUnconSrcCount){
@@ -467,20 +467,25 @@ public class Sledgehammer extends Technique {
 				//If the current Rule is 4 steps away from at least one other source Rule, 
 				Set<Rule> visibleToCurrentRule = visibleCache.get(currentUnconnectedSource);
 				if(!Collections.disjoint(visibleToCurrentRule, rulesVisibleToConnectedSources.keySet())){
-					addAll(rulesVisibleToConnectedSources, visibleToCurrentRule);
+					addVisibles(rulesVisibleToConnectedSources, currentUnconnectedSource);
 					iter.remove();
 				}
 			}
 		}
 		
 		if(unconnectedSources.size() == 0){
-			Set<Rule> recipientsVisibleToMultipleSources = rulesVisibleToConnectedSources.keySet().stream()
-					.filter((r) -> rulesVisibleToConnectedSources.get(r) > 1) //MAGIC
-					.collect(Collectors.toSet());
+			Set<Rule> recipientsVisibleToMultipleSources = new HashSet<>();
+			List<Set<Rule>> sourcesSeenByRemainingRecipients = rulesVisibleToConnectedSources.keySet().stream()
+					.filter((r) -> rulesVisibleToConnectedSources.get(r).size() > 1) //MAGIC
+					.peek((r) -> recipientsVisibleToMultipleSources.add(r))
+					.map((r) -> rulesVisibleToConnectedSources.get(r))
+					.collect(Collectors.toList());
 			recipientsVisibleToMultipleSources.retainAll(allowableRules);
+			Map<Rule,Integer> sourceCounts = countingUnion(sourcesSeenByRemainingRecipients);
 			
 			if(recipientsVisibleToMultipleSources.size() < sources.size() 
-					|| eachXSees2FromY(sources, recipientsVisibleToMultipleSources)){
+					|| sourceCounts.size() < sources.size() 
+					|| !sourceCounts.keySet().stream().allMatch((r) -> sourceCounts.get(r) > 1)){ //MAGIC
 				return NO_COMBOS;
 			} else{
 				return new ComboGen<>(recipientsVisibleToMultipleSources, sources.size(), sources.size());
@@ -491,6 +496,18 @@ public class Sledgehammer extends Technique {
 	}
 	
 	private static final ComboGen<Rule> NO_COMBOS = new ComboGen<>(Collections.emptyList(), 0, 0);
+	
+	private void addVisibles(Map<Rule,Set<Rule>> map, Rule seer){
+		for(Rule visible : seer.visibleRules()){
+			if(map.containsKey(visible)){
+				map.get(visible).add(seer);
+			} else{
+				Set<Rule> value = new HashSet<>();
+				value.add(seer);
+				map.put(visible, value);
+			}
+		}
+	}
 	
 	private static <T> void addAll(Map<T,Integer> map, Collection<? extends T> collection){
 		for(T t : collection){
@@ -504,13 +521,7 @@ public class Sledgehammer extends Technique {
 		ToolSet<Claim> sourceClaims = sideEffectUnion(sources,false);
 		ToolSet<Claim> recipClaims = sideEffectUnion(recipients,false);
 		
-		if(recipClaims.hasProperSubset(sourceClaims) 
-				
-				//every recipient must be visible from two or more srcs just to 
-				//be included in the ComboGen list output by recipientCombinations()
-				//&& eachXSees2FromY(recipients, sources) 
-				//&& eachXSees2FromY(sources, recipients) //TODO incorporate the "each source sees 2 (remaining) recipients" test into recipientCombinations()
-				){
+		if(recipClaims.hasProperSubset(sourceClaims)){
 			recipClaims.removeAll(sourceClaims);
 			return recipClaims;
 		} else{
