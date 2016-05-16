@@ -246,8 +246,10 @@ public class Sledgehammer extends Technique {
 		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
 			Rule seed = distinctSourcesAtSize.get(i);
 			Collection<Rule> visVisible = visVisible(seed);
-			List<Rule> distinctSourcesAtSizeNotYetUsedAsSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size());
-			visVisible.retainAll(distinctSourcesAtSizeNotYetUsedAsSeed);
+			{
+				List<Rule> distinctSourcesAtSizeNotYetUsedAsSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size());
+				visVisible.retainAll(distinctSourcesAtSizeNotYetUsedAsSeed);
+			}
 			for(Rule nonSeedRule : visVisible){
 				List<Rule> srcCombo = new ArrayList<>(2); //MAGIC
 				Collections.addAll(srcCombo, seed, nonSeedRule);
@@ -296,8 +298,10 @@ public class Sledgehammer extends Technique {
 		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
 			Rule seed = distinctSourcesAtSize.get(i);
 			Collection<Rule> visVisible = visVisible(seed);
-			List<Rule> distinctSourcesAtSizeNotYetUsedAsSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size()); //TODO rename as "distinctSourcesAt..."
-			visVisible.retainAll(distinctSourcesAtSizeNotYetUsedAsSeed);
+			{
+				List<Rule> distinctSourcesAtSizeNotYetUsedAsSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size()); //TODO rename as "distinctSourcesAt..."
+				visVisible.retainAll(distinctSourcesAtSizeNotYetUsedAsSeed);
+			}
 			for(List<Rule> srcCombo : new ComboGen<>(visVisible, 2,2)){ //MAGIC
 				srcCombo.add(seed);
 				
@@ -316,8 +320,9 @@ public class Sledgehammer extends Technique {
 		//For each source combo
 		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
 			Rule seed = distinctSourcesAtSize.get(i);
-			List<Rule> nonSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size());
-			for(List<Rule> srcCombo : new ComboGen<>(nonSeed, size-1, size-1)){
+			List<Rule> nonSeedInvisibleToSeed = new ArrayList<>(distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size()));
+			nonSeedInvisibleToSeed.removeAll(visibleCache.get(seed));
+			for(List<Rule> srcCombo : new ComboGen<>(nonSeedInvisibleToSeed, size-1, size-1)){
 				srcCombo.add(seed);
 				
 				SolutionEvent event = forEachRecipientCombo(seed, srcCombo, distinctRulesAtSize);
@@ -359,6 +364,13 @@ public class Sledgehammer extends Technique {
 		}
 	}
 	
+	/**
+	 * <p>Returns a collection of the Rules of {@code target} such that 
+	 * if there are any Rules in {@code target} that are equal as {@code Set}s, 
+	 * then only one of them appears.</p>
+	 * @param target the Sudoku whose distinct Rules are identified
+	 * @return the distinct Rules found in {@code target}
+	 */
 	private static Collection<Rule> distinctRules(Sudoku target){
 		class RuleWrap{
 			private final Rule wrapped;
