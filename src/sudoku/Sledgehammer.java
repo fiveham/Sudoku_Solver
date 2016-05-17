@@ -179,7 +179,7 @@ public class Sledgehammer extends Technique {
 	 */
 	@Override
 	protected SolutionEvent process(){
-		return processBySeed();
+		return processByGrowth();
 	}
 	
 	//TODO describe sledgehammer solution scenarios and their stipulations in the class javadoc
@@ -215,7 +215,6 @@ public class Sledgehammer extends Technique {
 		return null;
 	}
 	
-	//TODO make the search for new source Rules iterate over a cloud of acceptable Rules at a distance of 4 from other sources
 	private SolutionEvent addSourceToSledgehammer(List<Rule> initialSources, int size, Set<Rule> recipientMask, List<Rule> sourceMask){
 		if(initialSources.size() < size){
 			for(Rule addedSource : sourcePool(initialSources, sourceMask)){
@@ -262,159 +261,6 @@ public class Sledgehammer extends Technique {
 	
 	private int maxSledgehammerSize(){
 		return target.size()/2; //TODO determine the true maximum size of a sledgehammer (probably target.sideLength())
-	}
-	
-	/**
-	 * <p>Processes this Sledgehammer's target by iterating over all the viable 
-	 * sizes of sledgehammer solutions, and for each one picking a seed Rule among 
-	 * the distinct rules that can be sledgehammer sources at that size and iterating 
-	 * over all the combinations of other Rules (except those visible to the seed) 
-	 * where the combinations have a size 1 less than the sledgehammer's size. A total 
-	 * source combination is obtained by adding the seed to the {@code size-1} combo 
-	 * of Rules invisible to the seed. The total source combo and a collection of 
-	 * distinct</p>
-	 * @return
-	 */
-	private SolutionEvent processBySeed(){
-		
-		List<Rule> distinctRulesAtSize = new ArrayList<>();
-		List<Rule> distinctSourcesAtSize = new ArrayList<>();
-		for(int i=0; i<MIN_SRC_COMBO_SIZE; ++i){
-			distinctRulesAtSize(distinctRulesAtSize, i);
-			distinctSourcesAtSize(distinctSourcesAtSize, i);
-		}
-		for(int size = MIN_SRC_COMBO_SIZE; size<=distinctRules.size()/2; ++size){
-			distinctRulesAtSize(distinctRulesAtSize, size);
-			distinctSourcesAtSize(distinctSourcesAtSize, size);
-			
-			SolutionEvent event = processBySeedAtSize(size, distinctRulesAtSize, distinctSourcesAtSize);
-			if(event != null){
-				return event;
-			}
-		}
-		
-		return null;
-	}
-	
-	private SolutionEvent processBySeedAtSize(int size, List<Rule> distinctRulesAtSize, List<Rule> distinctSourcesAtSize){
-		
-		switch(size){
-		case 2 : return processBySeedAtSize2(distinctRulesAtSize, distinctSourcesAtSize);
-		case 3 : return processBySeedAtSize3(distinctRulesAtSize, distinctSourcesAtSize);
-		default : return processBySeedAtSizeGT3(size, distinctRulesAtSize, distinctSourcesAtSize);
-		}
-	}
-	
-	/**
-	 * <p>A modified clone of the original processBySeedAtSize method. Size is known to be 
-	 * 2; so, all the generated combinations of non-seed Rules for the source combo are 
-	 * singleton lists; as such, iteration over the individual other Rules is used in this 
-	 * case where the sledgehammer size is known to be 2. Furthermore, the population of 
-	 * potential source Rules to be iterated over can be reduced significanty by </p>
-	 * which iterates not over combinations of 
-	 * unaccounted-for potential sources but instead over a collection of Rules at a distance 
-	 * of 4 from the seed Rule (having one Rule between each Rule in the iterated-over 
-	 * collection and the seed Rule). That reduction in the iterative search space is 
-	 * included because if there is an acceptable partner source Rule for the seed Rule, 
-	 * then such an other source Rule must be among those Rules at a distance of 4 from 
-	 * the seed Rule.
-	 * @param distinctRulesAtSize
-	 * @param distinctSourcesAtSize
-	 * @return
-	 */
-	private SolutionEvent processBySeedAtSize2(List<Rule> distinctRulesAtSize, List<Rule> distinctSourcesAtSize){
-		
-		//For each source combo
-		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
-			Rule seed = distinctSourcesAtSize.get(i);
-			Collection<Rule> visVisible = visVisible(seed);
-			{
-				List<Rule> distinctSourcesAtSizeNotYetUsedAsSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size());
-				visVisible.retainAll(distinctSourcesAtSizeNotYetUsedAsSeed);
-			}
-			for(Rule nonSeedRule : visVisible){
-				List<Rule> srcCombo = new ArrayList<>(2); //MAGIC
-				Collections.addAll(srcCombo, seed, nonSeedRule);
-				
-				SolutionEvent event = forEachRecipientCombo(srcCombo, distinctRulesAtSize);
-				if(event != null){
-					return event;
-				}
-			}
-		}
-		
-		return null;
-	}
-	
-	/**
-	 * <p>Returns a collection of the Rules that are separated from {@code r} by 
-	 * exactly one other Rule.</p>
-	 * @param r
-	 * @return
-	 */
-	private List<Rule> visVisible(Rule r){ //TODO use a cache for this method
-		Set<Rule> visible = visibleCache.get(r);
-		Set<Rule> visVisible = visible.stream().collect(Collector.of(
-				HashSet::new, 
-				(Set<Rule> s, Rule rule) -> s.addAll(visibleCache.get(rule)), 
-				(Set<Rule> left, Set<Rule> right) -> {left.addAll(right); return left;}));
-		
-		visVisible.remove(r);
-		visVisible.removeAll(visible);
-		
-		return new ArrayList<>(visVisible);
-	}
-	
-	/**
-	 * <p>A clone of the original processBySeedAtSize method, to be modified to bridge the 
-	 * general process-by-seed technique (processBySeedAtSizeGT3) with the marginally more 
-	 * efficient processBySeedAtSize2 technique which at present is intended to be a 
-	 * base-case for a recursive search for an acceptable collection of source Rules.</p>
-	 * @param distinctRulesAtSize
-	 * @param distinctSourcesAtSize
-	 * @return
-	 */
-	private SolutionEvent processBySeedAtSize3(List<Rule> distinctRulesAtSize, List<Rule> distinctSourcesAtSize){
-		
-		//For each source combo
-		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
-			Rule seed = distinctSourcesAtSize.get(i);
-			Collection<Rule> visVisible = visVisible(seed);
-			{
-				List<Rule> distinctSourcesAtSizeNotYetUsedAsSeed = distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size()); //TODO rename as "distinctSourcesAt..."
-				visVisible.retainAll(distinctSourcesAtSizeNotYetUsedAsSeed);
-			}
-			for(List<Rule> srcCombo : new ComboGen<>(visVisible, 2,2)){ //MAGIC
-				srcCombo.add(seed);
-				
-				SolutionEvent event = forEachRecipientCombo(srcCombo, distinctRulesAtSize);
-				if(event != null){
-					return event;
-				}
-			}
-		}
-		
-		return null;
-	}
-	
-	private SolutionEvent processBySeedAtSizeGT3(int size, List<Rule> distinctRulesAtSize, List<Rule> distinctSourcesAtSize){
-		
-		//For each source combo
-		for(int i=0; i<distinctSourcesAtSize.size(); ++i){
-			Rule seed = distinctSourcesAtSize.get(i);
-			List<Rule> nonSeedInvisibleToSeed = new ArrayList<>(distinctSourcesAtSize.subList(i+1, distinctSourcesAtSize.size()));
-			nonSeedInvisibleToSeed.removeAll(visibleCache.get(seed));
-			for(List<Rule> srcCombo : new ComboGen<>(nonSeedInvisibleToSeed, size-1, size-1)){
-				srcCombo.add(seed);
-				
-				SolutionEvent event = forEachRecipientCombo(srcCombo, distinctRulesAtSize);
-				if(event != null){
-					return event;
-				}
-			}
-		}
-		
-		return null;
 	}
 	
 	/**
@@ -485,40 +331,6 @@ public class Sledgehammer extends Technique {
 				.distinct()
 				.map((rw)->rw.wrapped)
 				.collect(Collectors.toList());
-	}
-	
-	/**
-	 * <p>A {@link java.util.HashMap HashMap} whose {@link HashMap#get(Object) get} method 
-	 * automatically checks for the argument's existence in the Map and adds a mapping 
-	 * from the specified Rule to a Set of that Rule's {@link Rule#visibleRules() visible Rules} 
-	 * to the Map.</p>
-	 * @author fiveham
-	 *
-	 */
-	private class VisibleCache extends HashMap<Rule,Set<Rule>>{
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = -4493964015606661803L;
-
-		@Override
-		public Set<Rule> get(Object o){
-			if(containsKey(o)){
-				return super.get(o);
-			} else{
-				if(o instanceof Rule){
-					Rule r = (Rule) o;
-					
-					Set<Rule> result = r.visibleRules();
-					result.retainAll(distinctRules);
-					super.put(r, result);
-					
-					return result;
-				} else{
-					throw new IllegalArgumentException("specified key must be a Rule");
-				}
-			}
-		}
 	}
 	
 	/**
@@ -826,6 +638,40 @@ public class Sledgehammer extends Technique {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * <p>A {@link java.util.HashMap HashMap} whose {@link HashMap#get(Object) get} method 
+	 * automatically checks for the argument's existence in the Map and adds a mapping 
+	 * from the specified Rule to a Set of that Rule's {@link Rule#visibleRules() visible Rules} 
+	 * to the Map.</p>
+	 * @author fiveham
+	 *
+	 */
+	private class VisibleCache extends HashMap<Rule,Set<Rule>>{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = -4493964015606661803L;
+
+		@Override
+		public Set<Rule> get(Object o){
+			if(containsKey(o)){
+				return super.get(o);
+			} else{
+				if(o instanceof Rule){
+					Rule r = (Rule) o;
+					
+					Set<Rule> result = r.visibleRules();
+					result.retainAll(distinctRules);
+					super.put(r, result);
+					
+					return result;
+				} else{
+					throw new IllegalArgumentException("specified key must be a Rule");
+				}
+			}
+		}
 	}
 	
 	/**
