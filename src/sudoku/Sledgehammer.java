@@ -182,6 +182,68 @@ public class Sledgehammer extends Technique {
 		return processBySeed();
 	}
 	
+	//TODO describe sledgehammer solution scenarios and their stipulations in the class javadoc
+	/**
+	 * <p>Finds sledgehammer solution scenarios by growing them from a seed source Rule, which 
+	 * limits the combinatorial space to be explored to find all sledgehammer scenarios.</p>
+	 * 
+	 * <p>Iterates over all possible sledgehammer sizes for this {@code Technique}'s {@code target}. 
+	 * For each size, iterates over all the Rules that can serve as sources in sledgehammers of 
+	 * that size. All other possible source Rules at that size that have not served as a seed Rule 
+	 * at that size are used as a pool ("&amp;" mask) of which any other potential sources near the 
+	 * current seed Rule must be a member.</p>
+	 * @return
+	 */
+	private SolutionEvent processByGrowth(){
+		List<Rule> possibleSourcesAtSize = new ArrayList<>();
+		List<Rule> validSledgehammerRulesAtSize = new ArrayList<>();
+		for(int i = 0; i<MIN_SLEDGEHAMMER_SIZE; ++i){
+			distinctRulesAtSize(validSledgehammerRulesAtSize, i);
+			distinctSourcesAtSize(possibleSourcesAtSize, i);
+		}
+		
+		for(int size = MIN_SLEDGEHAMMER_SIZE; size < maxSledgehammerSize(); ++size){
+			distinctRulesAtSize(validSledgehammerRulesAtSize, size);
+			distinctSourcesAtSize(possibleSourcesAtSize, size);
+			
+			SolutionEvent event = addSourceToSledgehammer(new ArrayList<>(0), size, validSledgehammerRulesAtSize, possibleSourcesAtSize);
+			if(event != null){
+				return event;
+			}
+		}
+		
+		return null;
+	}
+	
+	//TODO make the search for new source Rules iterate over a cloud of acceptable Rules at a distance of 4 from other sources
+	private SolutionEvent addSourceToSledgehammer(List<Rule> initialSources, int size, List<Rule> validRules, List<Rule> validSources){
+		if(initialSources.size() < size){
+			for(int i = 0; i<validSources.size(); ++i){
+				Rule addedSource = validSources.get(i);
+				List<Rule> modifiedValidSources = new ArrayList<>(validSources.subList(i+1, validSources.size()));
+				modifiedValidSources.removeAll(visibleCache.get(addedSource));
+				
+				List<Rule> addedSources = new ArrayList<>(initialSources.size()+1);
+				addedSources.addAll(initialSources);
+				addedSources.add(addedSource);
+				
+				SolutionEvent event = addSourceToSledgehammer(addedSources, size, validRules, modifiedValidSources);
+				if(event != null){
+					return event;
+				}
+			}
+			return null;
+		} else if(initialSources.size() == size){
+			return forEachRecipientCombo(initialSources, validRules);
+		} else{
+			throw new IllegalStateException("Current source-combination size greater than prescribed sledgehammer size: "+initialSources.size() + " > " + size);
+		}
+	}
+	
+	private int maxSledgehammerSize(){
+		return target.size()/2; //TODO determine the true maximum size of a sledgehammer (probably target.sideLength())
+	}
+	
 	/**
 	 * <p>Processes this Sledgehammer's target by iterating over all the viable 
 	 * sizes of sledgehammer solutions, and for each one picking a seed Rule among 
@@ -254,7 +316,7 @@ public class Sledgehammer extends Technique {
 				List<Rule> srcCombo = new ArrayList<>(2); //MAGIC
 				Collections.addAll(srcCombo, seed, nonSeedRule);
 				
-				SolutionEvent event = forEachRecipientCombo(seed, srcCombo, distinctRulesAtSize);
+				SolutionEvent event = forEachRecipientCombo(srcCombo, distinctRulesAtSize);
 				if(event != null){
 					return event;
 				}
@@ -305,7 +367,7 @@ public class Sledgehammer extends Technique {
 			for(List<Rule> srcCombo : new ComboGen<>(visVisible, 2,2)){ //MAGIC
 				srcCombo.add(seed);
 				
-				SolutionEvent event = forEachRecipientCombo(seed, srcCombo, distinctRulesAtSize);
+				SolutionEvent event = forEachRecipientCombo(srcCombo, distinctRulesAtSize);
 				if(event != null){
 					return event;
 				}
@@ -325,7 +387,7 @@ public class Sledgehammer extends Technique {
 			for(List<Rule> srcCombo : new ComboGen<>(nonSeedInvisibleToSeed, size-1, size-1)){
 				srcCombo.add(seed);
 				
-				SolutionEvent event = forEachRecipientCombo(seed, srcCombo, distinctRulesAtSize);
+				SolutionEvent event = forEachRecipientCombo(srcCombo, distinctRulesAtSize);
 				if(event != null){
 					return event;
 				}
@@ -335,11 +397,16 @@ public class Sledgehammer extends Technique {
 		return null;
 	}
 	
-	private SolutionEvent forEachRecipientCombo(Rule seed, List<Rule> srcCombo, List<Rule> distinctRulesAtSize){
-		//For each recipient combo derivable from that disjoint, closely connected source combo
-		List<Rule> distinctRulesAtSizeNotVisibleToSeed = new ArrayList<>(distinctRulesAtSize);
-		distinctRulesAtSizeNotVisibleToSeed.removeAll(visibleCache.get(seed));
-		for(List<Rule> recipientCombo : recipientCombinations(srcCombo, distinctRulesAtSizeNotVisibleToSeed)){
+	/**
+	 * <p></p>
+	 * @param srcCombo a closely-connected, disjoint collection of distinct Rules suitable 
+	 * for use as sources in a sledgehammer solution scenario
+	 * @param distinctRuleMask
+	 * @return
+	 */
+	private SolutionEvent forEachRecipientCombo(List<Rule> srcCombo, List<Rule> distinctRuleMask){
+		//For each recipient combo derivable from srcCombo that disjoint, closely connected source combo
+		for(List<Rule> recipientCombo : recipientCombinations(srcCombo, distinctRuleMask)){
 			
 			//If the source and recipient combos make a valid sledgehammer scenario
 			Set<Claim> claimsToSetFalse = areSledgehammerScenario(srcCombo, recipientCombo);
@@ -449,12 +516,12 @@ public class Sledgehammer extends Technique {
 	 * at all.</p>
 	 * @param sources a collection of Rules to be used as an originating 
 	 * combination for a sledgehammer solution event
-	 * @param allowableRules a collection of Rules that are allowed to be 
+	 * @param distinctRuleMask a collection of Rules that are allowed to be 
 	 * used in the returned ComboGen
 	 * @return a set of all the Rules that intersect any of the Rules 
 	 * in {@code sources}, excluding the Rules in {@code sources}.
 	 */
-	private ComboGen<Rule> recipientCombinations(List<Rule> sources, Collection<Rule> allowableRules){
+	private ComboGen<Rule> recipientCombinations(List<Rule> sources, Collection<Rule> distinctRuleMask){
 		
 		List<Rule> unconnectedSources = new ArrayList<>(sources);
 		int prevUnconSrcCount = unconnectedSources.size();
@@ -492,7 +559,7 @@ public class Sledgehammer extends Technique {
 					.peek((r) -> recipientsVisibleToMultipleSources.add(r))
 					.map((r) -> rulesVisibleToConnectedSources.get(r))
 					.collect(Collectors.toList());
-			recipientsVisibleToMultipleSources.retainAll(allowableRules);
+			recipientsVisibleToMultipleSources.retainAll(distinctRuleMask);
 			Map<Rule,Integer> sourceCounts = countingUnion(sourcesSeenByRemainingRecipients);
 			
 			if(recipientsVisibleToMultipleSources.size() < sources.size() 
@@ -539,33 +606,6 @@ public class Sledgehammer extends Technique {
 		} else{
 			return null;
 		}
-	}
-	
-	/**
-	 * <p>Returns true if and only if each element of {@code xs} can 
-	 * {@link Rule#visibleRules() see} at least two elements of {@code ys}.</p>
-	 * @param xs a collection of source or recipient Rules whose visibility 
-	 * with elements of {@code ys} is tested
-	 * @param ys a collection of recipient or source Rules whose visibility 
-	 * with elements of {@code xs} is tested
-	 * @return true if and only if each element of {@code xs} can 
-	 * {@link Rule#visibleRules() see} at least two elements of {@code ys}, 
-	 * false otherwise
-	 */
-	private boolean eachXSees2FromY(Collection<Rule> xs, Collection<Rule> ys){
-		for(Rule x : xs){
-			Set<Rule> visible = visibleCache.get(x);
-			int visibleSources = 0;
-			for(Iterator<Rule> iter = ys.iterator(); iter.hasNext() && visibleSources < 2;){ //MAGIC
-				if(visible.contains(iter.next())){
-					++visibleSources;
-				}
-			}
-			if(visibleSources < 2){
-				return false;
-			}
-		}
-		return true;
 	}
 	
 	/**
