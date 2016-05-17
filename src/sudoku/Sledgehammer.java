@@ -196,7 +196,7 @@ public class Sledgehammer extends Technique {
 	 */
 	private SolutionEvent processByGrowth(){
 		List<Rule> possibleSourcesAtSize = new ArrayList<>();
-		List<Rule> validSledgehammerRulesAtSize = new ArrayList<>();
+		Set<Rule> validSledgehammerRulesAtSize = new HashSet<>();
 		for(int i = 0; i<MIN_SLEDGEHAMMER_SIZE; ++i){
 			distinctRulesAtSize(validSledgehammerRulesAtSize, i);
 			distinctSourcesAtSize(possibleSourcesAtSize, i);
@@ -216,27 +216,47 @@ public class Sledgehammer extends Technique {
 	}
 	
 	//TODO make the search for new source Rules iterate over a cloud of acceptable Rules at a distance of 4 from other sources
-	private SolutionEvent addSourceToSledgehammer(List<Rule> initialSources, int size, List<Rule> validRules, List<Rule> validSources){
+	private SolutionEvent addSourceToSledgehammer(List<Rule> initialSources, int size, Set<Rule> recipientMask, List<Rule> sourceMask){
 		if(initialSources.size() < size){
-			for(int i = 0; i<validSources.size(); ++i){
-				Rule addedSource = validSources.get(i);
-				List<Rule> modifiedValidSources = new ArrayList<>(validSources.subList(i+1, validSources.size()));
-				modifiedValidSources.removeAll(visibleCache.get(addedSource));
+			for(Rule addedSource : sourcePool(initialSources, sourceMask)){
 				
 				List<Rule> addedSources = new ArrayList<>(initialSources.size()+1);
 				addedSources.addAll(initialSources);
 				addedSources.add(addedSource);
 				
-				SolutionEvent event = addSourceToSledgehammer(addedSources, size, validRules, modifiedValidSources);
+				SolutionEvent event = addSourceToSledgehammer(addedSources, size, recipientMask, sourceMask);
 				if(event != null){
 					return event;
 				}
 			}
 			return null;
 		} else if(initialSources.size() == size){
-			return forEachRecipientCombo(initialSources, validRules);
+			return forEachRecipientCombo(initialSources, recipientMask);
 		} else{
 			throw new IllegalStateException("Current source-combination size greater than prescribed sledgehammer size: "+initialSources.size() + " > " + size);
+		}
+	}
+	
+	private List<Rule> sourcePool(List<Rule> initialSources, List<Rule> sourceMask){
+		if(initialSources.isEmpty()){
+			return sourceMask;
+		} else{
+			Set<Rule> visibles = new HashSet<>();
+			for(Rule src : initialSources){
+				visibles.addAll(visibleCache.get(src));
+			}
+			visibles.removeAll(initialSources);
+			visibles.retainAll(sourceMask);
+			
+			Set<Rule> visVisibles = new HashSet<>();
+			for(Rule visible : visibles){
+				visVisibles.addAll(visibleCache.get(visible));
+			}
+			visVisibles.removeAll(initialSources);
+			visVisibles.removeAll(visibles);
+			visVisibles.retainAll(sourceMask);
+			
+			return new ArrayList<>(visVisibles);
 		}
 	}
 	
@@ -332,7 +352,7 @@ public class Sledgehammer extends Technique {
 	 * @param r
 	 * @return
 	 */
-	private Collection<Rule> visVisible(Rule r){
+	private List<Rule> visVisible(Rule r){ //TODO use a cache for this method
 		Set<Rule> visible = visibleCache.get(r);
 		Set<Rule> visVisible = visible.stream().collect(Collector.of(
 				HashSet::new, 
@@ -342,7 +362,7 @@ public class Sledgehammer extends Technique {
 		visVisible.remove(r);
 		visVisible.removeAll(visible);
 		
-		return visVisible;
+		return new ArrayList<>(visVisible);
 	}
 	
 	/**
@@ -404,7 +424,7 @@ public class Sledgehammer extends Technique {
 	 * @param distinctRuleMask
 	 * @return
 	 */
-	private SolutionEvent forEachRecipientCombo(List<Rule> srcCombo, List<Rule> distinctRuleMask){
+	private SolutionEvent forEachRecipientCombo(List<Rule> srcCombo, Collection<Rule> distinctRuleMask){
 		//For each recipient combo derivable from srcCombo that disjoint, closely connected source combo
 		for(List<Rule> recipientCombo : recipientCombinations(srcCombo, distinctRuleMask)){
 			
