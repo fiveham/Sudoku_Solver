@@ -87,15 +87,6 @@ public class Sledgehammer extends Technique {
 			VALUE_MAPPER, 
 			MERGE_FUNCTION);
 	
-	/**
-	 * <p>The minimum number ({@value}) of Rules in a source combo relevant to Sledgehammer analysis. 
-	 * Because Rules {@link Rule#verifyFinalState() automatically detect} when they need to 
-	 * collapse and also automatically perform the resulting collapse, single-source 
-	 * Sledgehammers won't be available in the target. This leaves two-Rule sources as 
-	 * the smallest source combinations.</p>
-	 */
-	private static final int MIN_SRC_COMBO_SIZE = 2;
-	
 	public static final int MIN_RECIPIENT_COUNT_PER_SOURCE = 2;
 	public static final int MIN_SOURCE_COUNT_PER_RECIPIENT = 2;
 	
@@ -217,13 +208,17 @@ public class Sledgehammer extends Technique {
 	
 	private SolutionEvent addSourceToSledgehammer(List<Rule> initialSources, int size, Set<Rule> recipientMask, List<Rule> sourceMask){
 		if(initialSources.size() < size){
-			for(Rule addedSource : sourcePool(initialSources, sourceMask)){
+			List<Rule> localSourceMask = new ArrayList<>(sourceMask);
+			for(Rule newSource : sourcePool(initialSources, sourceMask)){
+				localSourceMask.remove(newSource);
 				
-				List<Rule> addedSources = new ArrayList<>(initialSources.size()+1);
-				addedSources.addAll(initialSources);
-				addedSources.add(addedSource);
+				List<Rule> newSources = new ArrayList<>(initialSources.size()+1);
+				newSources.addAll(initialSources);
+				newSources.add(newSource);
 				
-				SolutionEvent event = addSourceToSledgehammer(addedSources, size, recipientMask, sourceMask);
+				
+				
+				SolutionEvent event = addSourceToSledgehammer(newSources, size, recipientMask, localSourceMask);
 				if(event != null){
 					return event;
 				}
@@ -236,6 +231,7 @@ public class Sledgehammer extends Technique {
 		}
 	}
 	
+	//TODO reuse ingredients (visible cloud, visVisible cloud) externally in the calling context
 	private List<Rule> sourcePool(List<Rule> initialSources, List<Rule> sourceMask){
 		if(initialSources.isEmpty()){
 			return sourceMask;
@@ -605,6 +601,7 @@ public class Sledgehammer extends Technique {
 			return result;*/
 		}
 	}
+	
 	/**
 	 * <p>Unions all the collections in {@code srcCombo} into one set and returns 
 	 * that set, unless some elements are shared among the collections in 
