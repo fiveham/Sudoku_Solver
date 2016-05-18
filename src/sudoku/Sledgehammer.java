@@ -530,25 +530,16 @@ public class Sledgehammer extends Technique {
 	public static final Predicate<Rule> IS_COLUMN = (r) -> r.getType() == RegionSpecies.COLUMN;
 	public static final Predicate<Rule> IS_ROW = (r) -> r.getType() == RegionSpecies.ROW;
 	
+	public static final Function<Sudoku,NCuboid<Integer>> STD_NCUBOID_SRC = (s)->new NCuboid<>(dimSource.apply(s));
+	public static final Function<Sudoku,NCuboid<Integer>> ALT_NCUBOID_SRC = (s)->new NCuboid<>(dimSource.apply(s), IntStream.range(0,s.magnitude()).mapToObj((i)->(Integer)i).collect(Collectors.toList()));
+	
 	private static enum TypePair{
-		CELL_COL((p)->new NCuboid<>(dimSource.apply(p)), 
-				IS_CELL, IS_COLUMN,
-				(r,l) -> r.stream().findFirst().get().getX()==l.get(0)), 
-		CELL_ROW((p)->new NCuboid<>(dimSource.apply(p)), 
-				IS_CELL, IS_ROW, 
-				(r,l) -> r.stream().findFirst().get().getY()==l.get(0)), 
-		CELL_BOX((p)->new NCuboid<>(dimSource.apply(p)), 
-				IS_CELL, IS_BOX, 
-				(r,l) -> l.get(0).equals(boxIndex(r))), 
-		BOX_ROW ((p)->new NCuboid<>(dimSource.apply(p), IntStream.range(0,p.magnitude()).mapToObj((i)->(Integer)i).collect(Collectors.toList())), 
-				IS_BOX, IS_ROW, 
-				(r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxY(r)), 
-		BOX_COL ((p)->new NCuboid<>(dimSource.apply(p), IntStream.range(0,p.magnitude()).mapToObj((i)->(Integer)i).collect(Collectors.toList())), 
-				IS_BOX, IS_COLUMN,
-				(r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxX(r)), 
-		ROW_COL ((p)->new NCuboid<>(dimSource.apply(p)), 
-				IS_ROW, IS_COLUMN, 
-				(r,l) -> l.get(0) == r.stream().findFirst().get().getZ());
+		CELL_COL(STD_NCUBOID_SRC, IS_CELL, IS_COLUMN, (r,l) -> r.stream().findFirst().get().getX()==l.get(0)), 
+		CELL_ROW(STD_NCUBOID_SRC, IS_CELL, IS_ROW,    (r,l) -> r.stream().findFirst().get().getY()==l.get(0)), 
+		CELL_BOX(STD_NCUBOID_SRC, IS_CELL, IS_BOX,    (r,l) -> l.get(0).equals(boxIndex(r))), 
+		BOX_ROW (ALT_NCUBOID_SRC, IS_BOX,  IS_ROW,    (r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxY(r)), 
+		BOX_COL (ALT_NCUBOID_SRC, IS_BOX,  IS_COLUMN, (r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxX(r)), 
+		ROW_COL (STD_NCUBOID_SRC, IS_ROW,  IS_COLUMN, (r,l) -> l.get(0) == r.stream().findFirst().get().getZ());
 		
 		private Function<Sudoku,NCuboid<Integer>> nCuboidSource;
 		private Predicate<Rule> isTypeA;
@@ -566,12 +557,12 @@ public class Sledgehammer extends Technique {
 		 * <p>Returns an Iterable whose Iterator returns Pairs of Collections such that each 
 		 * Collection in a Pair contains all the Rules of a certain RegionSpecies pertaining 
 		 * to a specific pack. A pack is a geometrically bound subset of the Rules in a Sudoku, 
-		 * each of which groups together Rules that can be recipients or sources in a short-
-		 * form Sledgehammer.</p>
+		 * each of which unites Rules that can be recipients or sources in certain sledgehammer 
+		 * solution scenarios.</p>
 		 * 
 		 * <p>There exists a pack for each flat layer of the spatial cube of the claims of a 
 		 * Puzzle, one for each box of a printed puzzle, and six more for each unvertical slice 
-		 * of the puzzle cube: three one each layer for each of the two unvertical orientations. 
+		 * of the puzzle cube: three on each layer for each of the two unvertical orientations. 
 		 * Each pack as such pertains 
 		 * to all possible intersections of Rules of two specified RegionSpecies such that all 
 		 * those Rules of either RegionSpecies in that pack share a certain 
@@ -580,30 +571,11 @@ public class Sledgehammer extends Technique {
 		 * @return
 		 */
 		public Iterable<Pair<Collection<Rule>,Collection<Rule>>> packs(Sudoku s){
-			/*NCuboid<Integer> ncube = nCuboidSource.apply(s);
-			
-			List<List<Rule>> a = new ArrayList<>(s.sideLength());
-			List<List<Rule>> b = new ArrayList<>(s.sideLength());*/
-			
 			return StreamSupport.stream(nCuboidSource.apply(s).spliterator(),false)
-					.map(
-							(list) -> new Pair<Collection<Rule>,Collection<Rule>>(
-									s.factStream().map((f)->(Rule)f).filter(isTypeA.and((r) -> ruleIsDim.test(r,list))).collect(Collectors.toList()), 
-									s.factStream().map((f)->(Rule)f).filter(isTypeB.and((r) -> ruleIsDim.test(r,list))).collect(Collectors.toList())))
+					.map((list) -> new Pair<Collection<Rule>,Collection<Rule>>(
+							s.factStream().map((f)->(Rule)f).filter(isTypeA.and((r) -> ruleIsDim.test(r,list))).collect(Collectors.toList()), 
+							s.factStream().map((f)->(Rule)f).filter(isTypeB.and((r) -> ruleIsDim.test(r,list))).collect(Collectors.toList())))
 					.collect(Collectors.toList());
-			
-			/*for(List<Integer> l : ncube){
-				a.add( s.factStream().map((f)->(Rule)f).filter(isTypeA.and((r) -> ruleIsDim.test(r,l))).collect(Collectors.toList()) );
-				b.add( s.factStream().map((f)->(Rule)f).filter(isTypeB.and((r) -> ruleIsDim.test(r,l))).collect(Collectors.toList()) );
-			}
-			
-			List<Pair<Collection<Rule>,Collection<Rule>>> result = new ArrayList<>(s.sideLength());
-			
-			for(int i=0; i<a.size(); i++){
-				result.add(new Pair<Collection<Rule>,Collection<Rule>>(a.get(i), b.get(i)));
-			}
-			
-			return result;*/
 		}
 	}
 	
