@@ -117,22 +117,41 @@ import sudoku.Puzzle.RuleType;
  */
 public class Sledgehammer extends Technique {
 	
+	/**
+	 * <p>The {@code valueMapper} for the {@link Collectors#toMap(Function,Function,BinaryOperator) toMap} 
+	 * calls that define {@link #MAP_SOURCES_BY_SIZE} and {@link #MAP_RULES_BY_SIZE}.</p>
+	 */
 	private static final Function<Rule,List<Rule>> VALUE_MAPPER = (Rule rule) -> {
 		List<Rule> result = new ArrayList<>(1); 
 		result.add(rule); 
 		return result;
 	};
 	
+	/**
+	 * <p>The {@code mergeFunction} for the {@link Collectors#toMap(Function,Function,BinaryOperator) toMap} 
+	 * calls that define {@link #MAP_SOURCES_BY_SIZE} and {@link #MAP_RULES_BY_SIZE}.</p>
+	 */
 	private static final BinaryOperator<List<Rule>> MERGE_FUNCTION = (list1,list2) -> {
 		list1.addAll(list2); 
 		return list1;
 	};
 	
+	/**
+	 * <p>Collects a list of distinct Rules from a Sudoku into a Map partitioning them 
+	 * according to the minimum size of a sledgehammer in which those Rules can serve 
+	 * as a source.</p>
+	 */
 	public static final Collector<Rule,?,Map<Integer,List<Rule>>> MAP_SOURCES_BY_SIZE = Collectors.toMap(
 			Sledgehammer::sledgehammerSizeIfSource, 
 			VALUE_MAPPER, 
 			MERGE_FUNCTION);
 	
+	/**
+	 * <p>Collects a list of distinct Rules from a Sudoku into a Map partitioning them 
+	 * according to the minimum size of a sledgehammer in which those Rules can serve 
+	 * as a recipient.</p>
+	 */
+	//FIXME this is actually not used that way, i think.
 	public static final Collector<Rule,?,Map<Integer,List<Rule>>> MAP_RULES_BY_SIZE = Collectors.toMap(
 			Rule::size, 
 			VALUE_MAPPER, 
@@ -450,23 +469,20 @@ public class Sledgehammer extends Technique {
 		if(unconnectedSources.size() == 0){
 			Set<Rule> recipientsVisibleToMultipleSources = new HashSet<>();
 			List<Set<Rule>> sourcesSeenByRemainingRecipients = rulesVisibleToConnectedSources.keySet().stream()
-					.filter((r) -> rulesVisibleToConnectedSources.get(r).size() > 1) //MAGIC
+					.filter((r) -> rulesVisibleToConnectedSources.get(r).size() >= MIN_SOURCE_COUNT_PER_RECIPIENT)
 					.peek((r) -> recipientsVisibleToMultipleSources.add(r))
 					.map((r) -> rulesVisibleToConnectedSources.get(r))
 					.collect(Collectors.toList());
 			recipientsVisibleToMultipleSources.retainAll(distinctRulesAtSize(sources.size()));
 			Map<Rule,Integer> sourceCounts = countingUnion(sourcesSeenByRemainingRecipients);
 			
-			if(recipientsVisibleToMultipleSources.size() < sources.size() 
-					|| sourceCounts.size() < sources.size() 
-					|| !sourceCounts.keySet().stream().allMatch((r) -> sourceCounts.get(r) > 1)){ //MAGIC
-				return NO_COMBOS;
-			} else{
+			if(recipientsVisibleToMultipleSources.size() >= sources.size() 
+					&& sourceCounts.size() >= sources.size() 
+					&& sourceCounts.keySet().stream().allMatch((r) -> sourceCounts.get(r) >= MIN_RECIPIENT_COUNT_PER_SOURCE)){
 				return new ComboGen<>(recipientsVisibleToMultipleSources, sources.size(), sources.size());
 			}
-		} else{
-			return NO_COMBOS;
 		}
+		return NO_COMBOS;
 	}
 	
 	private static final ComboGen<Rule> NO_COMBOS = new ComboGen<>(Collections.emptyList(), 0, 0);
