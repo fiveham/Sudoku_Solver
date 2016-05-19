@@ -143,7 +143,7 @@ public class PuzzleVizApp extends Application {
 	 */
 	private static Group genVoxelModels(Puzzle puzzle){
 		Group result = new Group();
-		for(RegionSpecies region : RegionSpecies.values()){
+		for(RuleType region : RuleType.values()){
 			for(int x=0; x<puzzle.sideLength(); ++x){
 				for(int y=0; y<puzzle.sideLength(); ++y){
 					for(int z=0; z<puzzle.sideLength(); ++z){
@@ -183,9 +183,9 @@ public class PuzzleVizApp extends Application {
 	 */
 	private static void genBagModels(List<? super VoxelModel> voxels, Puzzle p){
 		int claimCount = (int)Math.pow(p.sideLength(), Puzzle.DIMENSION_COUNT);
-		for(RegionSpecies reg : RegionSpecies.values()){
+		for(RuleType reg : RuleType.values()){
 			
-			Puzzle.RegionSpecies region = reg.pertainsTo;
+			Puzzle.RuleType region = reg.pertainsTo;
 			int offset = reg.ordinal() * claimCount;
 			
 			for(IndexInstance dimA : region.dimA(p)){
@@ -224,10 +224,10 @@ public class PuzzleVizApp extends Application {
 	 */
 	public static final double MED_HALFEDGE = (SMALL_HALFEDGE + LONG_HALFEDGE)/2;
 	
-	private static final RegionSpecies.DimensionSelector SELECT_X = (x,y,z) -> x;
-	private static final RegionSpecies.DimensionSelector SELECT_Y = (x,y,z) -> y;
-	private static final RegionSpecies.DimensionSelector SELECT_Z = (x,y,z) -> z;
-	private static final RegionSpecies.DimensionSelector NO_SELECTION = (x,y,z) -> 0;
+	private static final RuleType.DimensionSelector SELECT_X = (x,y,z) -> x;
+	private static final RuleType.DimensionSelector SELECT_Y = (x,y,z) -> y;
+	private static final RuleType.DimensionSelector SELECT_Z = (x,y,z) -> z;
+	private static final RuleType.DimensionSelector NO_SELECTION = (x,y,z) -> 0;
 	
 	private static final Function<int[],Double> MED  = (i) -> MED_HALFEDGE;
 	private static final Function<int[],Double> L0ML = (i) -> i[0]<0?MED_HALFEDGE:LONG_HALFEDGE;
@@ -260,29 +260,29 @@ public class PuzzleVizApp extends Application {
 	 * 
 	 * <p>The pieces of information mapped from each region type are 
 	 * <ul>
-	 * <li>pertinent {@link Puzzle.RegionSpecies Puzzle.RegionSpecies}</li>
+	 * <li>pertinent {@link Puzzle.RuleType Puzzle.RegionSpecies}</li>
 	 * 
-	 * <li>a function that takes a {@link RegionSpecies#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
+	 * <li>a function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
 	 * the distance from the center of a VoxelModel having those signs to 
 	 * the lower-X face of that VoxelModel</li>
 	 * 
-	 * <li>a function that takes a {@link RegionSpecies#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
+	 * <li>a function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
 	 * the distance from the center of a VoxelModel having those signs to 
 	 * the higher-X face of that VoxelModel</li>
 	 * 
-	 * <li>a function that takes a {@link RegionSpecies#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
+	 * <li>a function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
 	 * the distance from the center of a VoxelModel having those signs to 
 	 * the lower-Y face of that VoxelModel</li>
 	 * 
-	 * <li>a function that takes a {@link RegionSpecies#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
+	 * <li>a function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
 	 * the distance from the center of a VoxelModel having those signs to 
 	 * the higher-Y face of that VoxelModel</li>
 	 * 
-	 * <li>a function that takes a {@link RegionSpecies#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
+	 * <li>a function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
 	 * the distance from the center of a VoxelModel having those signs to 
 	 * the lower-Z face of that VoxelModel</li>
 	 * 
-	 * <li>a function that takes a {@link RegionSpecies#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
+	 * <li>a function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
 	 * the distance from the center of a VoxelModel having those signs to 
 	 * the higher-Z face of that VoxelModel</li>
 	 * 
@@ -314,17 +314,17 @@ public class PuzzleVizApp extends Application {
 	 * a BagModel of this type that needs to shift as this VoxelModel compresses once 
 	 * its Claim is discovered to be false in order to keep the non-moving face stationary</li>
 	 * </ul></p>
-	 * @see Puzzle.RegionSpecies
+	 * @see Puzzle.RuleType
 	 * @author fiveham
 	 *
 	 */
-	public static enum RegionSpecies{
-		CELL  (Puzzle.RegionSpecies.CELL,   MED,  MED,  MED,  MED,  L0ML, G0ML, EDGE_LIN, DIM_IN_LIN, SELECT_Z, NO_SELECTION, CELL_BLUE,    WIDTH, X_POS), 
-		COLUMN(Puzzle.RegionSpecies.COLUMN, MED,  MED,  L0ML, G0ML, MED,  MED,  EDGE_LIN, DIM_IN_LIN, SELECT_X, NO_SELECTION, COLUMN_GREEN, DEPTH, Z_POS), 
-		ROW   (Puzzle.RegionSpecies.ROW,    L0ML, G0ML, MED,  MED,  MED,  MED,  EDGE_LIN, DIM_IN_LIN, SELECT_Y, NO_SELECTION, ROW_RED,      DEPTH, Z_POS), 
-		BOX   (Puzzle.RegionSpecies.BOX,    L0ML, G0ML, L1ML, G1ML, MED,  MED,  EDGE_BOX, DIM_IN_BOX, SELECT_X, SELECT_Y,     BOX_YELLOW,   DEPTH, Z_POS);
+	public static enum RuleType{
+		CELL  (Puzzle.RuleType.CELL,   MED,  MED,  MED,  MED,  L0ML, G0ML, EDGE_LIN, DIM_IN_LIN, SELECT_Z, NO_SELECTION, CELL_BLUE,    WIDTH, X_POS), 
+		COLUMN(Puzzle.RuleType.COLUMN, MED,  MED,  L0ML, G0ML, MED,  MED,  EDGE_LIN, DIM_IN_LIN, SELECT_X, NO_SELECTION, COLUMN_GREEN, DEPTH, Z_POS), 
+		ROW   (Puzzle.RuleType.ROW,    L0ML, G0ML, MED,  MED,  MED,  MED,  EDGE_LIN, DIM_IN_LIN, SELECT_Y, NO_SELECTION, ROW_RED,      DEPTH, Z_POS), 
+		BOX   (Puzzle.RuleType.BOX,    L0ML, G0ML, L1ML, G1ML, MED,  MED,  EDGE_BOX, DIM_IN_BOX, SELECT_X, SELECT_Y,     BOX_YELLOW,   DEPTH, Z_POS);
 		
-		private final Puzzle.RegionSpecies pertainsTo;
+		private final Puzzle.RuleType pertainsTo;
 		private final Function<int[],Double> xNeg;
 		private final Function<int[],Double> xPos;
 		private final Function<int[],Double> yNeg;
@@ -339,7 +339,7 @@ public class PuzzleVizApp extends Application {
 		private final Function<VoxelModel,DoubleProperty> thicknessProperty;
 		private final Function<VoxelModel,DoubleProperty> shiftProperty;
 		
-		private RegionSpecies(Puzzle.RegionSpecies type, 
+		private RuleType(Puzzle.RuleType type, 
 				Function<int[],Double> xNeg, Function<int[],Double> xPos, 
 				Function<int[],Double> yNeg, Function<int[],Double> yPos, 
 				Function<int[],Double> zNeg, Function<int[],Double> zPos, 

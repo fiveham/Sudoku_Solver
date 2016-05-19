@@ -37,7 +37,7 @@ public class VoxelModel extends Box{
 	private final int x;
 	private final int y;
 	private final int z;
-	private final PuzzleVizApp.RegionSpecies type;
+	private final PuzzleVizApp.RuleType type;
 	private BagModel ownerBag;
 	
 	private Status status;
@@ -66,7 +66,7 @@ public class VoxelModel extends Box{
 	 * @param zNeg the part of the width of this Box that is on the lower-valued side of the plane specified by {@code z}.
 	 * @param zPos the part of the width of this Box that is on the higher-valued side of the plane specified by {@code z}.
 	 */
-	public VoxelModel(Puzzle p, int x, int y, int z, PuzzleVizApp.RegionSpecies type, double xNeg, double xPos, double yNeg, double yPos, double zNeg, double zPos) {
+	public VoxelModel(Puzzle p, int x, int y, int z, PuzzleVizApp.RuleType type, double xNeg, double xPos, double yNeg, double yPos, double zNeg, double zPos) {
 		super(xNeg+xPos, yNeg+yPos, zNeg+zPos);
 		
 		this.puzzle = p;
@@ -249,7 +249,7 @@ public class VoxelModel extends Box{
 	 * while the opposite face does all the moving.</p>
 	 * 
 	 * <p>If this VoxelModel pertains to a 
-	 * {@link Puzzle.RegionSpecies#CELL cell-type} Rule then the shrinking 
+	 * {@link Puzzle.RuleType#CELL cell-type} Rule then the shrinking 
 	 * action moves in the negative-x direction; otherwise, the motion is in 
 	 * the negative-z direction. The lower and upper z-faces are available to 
 	 * act as a bridge between occupied voxel models in row, column, and box 

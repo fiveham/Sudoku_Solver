@@ -124,8 +124,8 @@ public class Puzzle extends SudokuNetwork{
 	 * @return a list of the Rules for {@code p}
 	 */
 	private List<Rule> genRuleNodes(Puzzle p, int sideLength, SpaceMap claims){
-		List<Rule> factbags = new ArrayList<>(RegionSpecies.values().length * p.sideLength * p.sideLength * p.sideLength);
-		for(RegionSpecies region : RegionSpecies.values()){
+		List<Rule> factbags = new ArrayList<>(RuleType.values().length * p.sideLength * p.sideLength * p.sideLength);
+		for(RuleType region : RuleType.values()){
 			for(IndexInstance dimA : region.dimA(p)){
 				for(IndexInstance dimB : region.dimB(p)){
 					Rule regionBag = new Rule(p, region, sideLength, dimA, dimB);
@@ -526,7 +526,7 @@ public class Puzzle extends SudokuNetwork{
 	 * @author fiveham
 	 *
 	 */
-	public static enum RegionSpecies{
+	public static enum RuleType{
 		
 		/**
 		 * <p>For a cell, the first dimension is {@link Puzzle.DimensionType#Y y}, the 
@@ -560,7 +560,7 @@ public class Puzzle extends SudokuNetwork{
 		private final DimensionType dimBType;
 		private final DimensionType dimCType;
 		
-		private RegionSpecies(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType){
+		private RuleType(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType){
 			this.dimAType = dimAType;
 			this.dimBType = dimBType;
 			this.dimCType = dimCType;

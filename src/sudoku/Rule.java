@@ -2,11 +2,10 @@ package sudoku;
 
 import common.time.Time;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import sudoku.Puzzle.RegionSpecies;
+import sudoku.Puzzle.RuleType;
 import sudoku.Puzzle.IndexInstance;
 
 public class Rule extends Fact{
@@ -28,7 +27,7 @@ public class Rule extends Fact{
 	 */
 	public static final int SIZE_WHEN_XOR = 2;
 	
-	private final Puzzle.RegionSpecies type;
+	private final Puzzle.RuleType type;
 	
 	/**
 	 * <p>Constructs a Rule belonging to the specified Puzzle and 
@@ -37,7 +36,7 @@ public class Rule extends Fact{
 	 * @param types the single initial {@link #getTypes() types} of 
 	 * this Rule
 	 */
-	public Rule(Puzzle puzzle, RegionSpecies type, IndexInstance dimA, IndexInstance dimB){
+	public Rule(Puzzle puzzle, RuleType type, IndexInstance dimA, IndexInstance dimB){
 		super(puzzle);
 		this.type = type;
 		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
@@ -53,7 +52,7 @@ public class Rule extends Fact{
 	 * @param c a collection whose elements this Rule will also 
 	 * have as elements
 	 */
-	public Rule(Puzzle puzzle, RegionSpecies type, Collection<Claim> c, IndexInstance dimA, IndexInstance dimB) {
+	public Rule(Puzzle puzzle, RuleType type, Collection<Claim> c, IndexInstance dimA, IndexInstance dimB) {
 		super(puzzle, c);
 		this.type = type;
 		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
@@ -68,7 +67,7 @@ public class Rule extends Fact{
 	 * this Rule
 	 * @param initialCapacity the initial capacity of this Rule
 	 */
-	public Rule(Puzzle puzzle, RegionSpecies type, int initialCapacity, IndexInstance dimA, IndexInstance dimB) {
+	public Rule(Puzzle puzzle, RuleType type, int initialCapacity, IndexInstance dimA, IndexInstance dimB) {
 		super(puzzle, initialCapacity);
 		this.type = type;
 		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
@@ -84,7 +83,7 @@ public class Rule extends Fact{
 	 * @param initialCapacity the initial capacity of this Rule
 	 * @param loadFactor the load factor for this Rule
 	 */
-	public Rule(Puzzle puzzle, RegionSpecies type, int initialCapacity, float loadFactor, IndexInstance dimA, IndexInstance dimB) {
+	public Rule(Puzzle puzzle, RuleType type, int initialCapacity, float loadFactor, IndexInstance dimA, IndexInstance dimB) {
 		super(puzzle, initialCapacity, loadFactor);
 		this.type = type;
 		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
@@ -114,7 +113,7 @@ public class Rule extends Fact{
 	
 	private final int hashCode;
 	
-	private static int genHashCode(Puzzle puzzle, RegionSpecies type, IndexInstance dimA, IndexInstance dimB){
+	private static int genHashCode(Puzzle puzzle, RuleType type, IndexInstance dimA, IndexInstance dimB){
 		Puzzle.IndexValue[] a = puzzle.decodeXYZ(dimA, dimB);
 		return Claim.linearizeCoords(a[Puzzle.X_DIM].intValue(), a[Puzzle.Y_DIM].intValue(), a[Puzzle.Z_DIM].intValue(), puzzle.sideLength()) 
 				+ (int)Math.pow(puzzle.sideLength(), Puzzle.DIMENSION_COUNT) 
@@ -133,7 +132,7 @@ public class Rule extends Fact{
 		return sb.toString();
 	}
 	
-	public RegionSpecies getType(){
+	public RuleType getType(){
 		return type;
 	}
 	
@@ -184,11 +183,7 @@ public class Rule extends Fact{
 	 * of another.</p>
 	 */
 	private void findAndAddressValueClaim(SolutionEvent time){
-		Set<Fact> possibleSupersets = new HashSet<>();
-		stream().forEach((c) -> possibleSupersets.addAll(c));
-		possibleSupersets.remove(this);
-		
-		for(Fact possibleSuperset : possibleSupersets){
+		for(Fact possibleSuperset : visibleRules()){
 			if(possibleSuperset.hasProperSubset(this)){
 				Fact superset = possibleSuperset;
 				Set<Claim> falsified = superset.stream()
@@ -221,11 +216,11 @@ public class Rule extends Fact{
 	 * <p>Returns true if this Rule is possibly contained in another 
 	 * Rule as a subset of the other bag in a manner compatible with 
 	 * the deprecated solution technique known as ValueClaim.</p>
-	 * @return true if this Rule is not a {@link Puzzle.RegionSpecies#CELL cell Rule} 
+	 * @return true if this Rule is not a {@link Puzzle.RuleType#CELL cell Rule} 
 	 * and has {@code size() <= target.magnitude()}
 	 */
 	private boolean shouldCheckForValueClaim(){
-		return type == RegionSpecies.CELL 
+		return type == RuleType.CELL 
 				? false 
 				: size() <= puzzle.magnitude();
 	}

@@ -21,26 +21,27 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
-import sudoku.Puzzle.RegionSpecies;
+import sudoku.Puzzle.RuleType;
 
+//TODO describe sledgehammer solution scenarios and their stipulations in the class javadoc
 /**
  * <p>The sledgehammer technique for solving sudoku puzzles is defined 
  * at http://onigame.livejournal.com/18580.html and at 
  * http://onigame.livejournal.com/20626.html and uses one collection 
- * of specific statements of the rules of a sudoku target against 
+ * of specific statements of the rules of a sudoku network against 
  * another collection of such statements to determine that certain 
- * claims about the sudoku target are false.</p>
+ * claims about that network are false.</p>
  * 
- * <p>The sledgehammer technique relies on the fact that the target can 
- * be interpreted as a collection of {@link Claim truth-claims} about the values of the 
- * cells ("Cell x,y, has value z.") and {@link Rule groupings of those truth-claims} of 
- * which exactly one claim from a grouping is true and all the rest are 
+ * <p>The sledgehammer technique relies on the fact that a sudoku puzzle can 
+ * be interpreted as a graph of {@link Claim truth-claims} about the values of the 
+ * cells ("Cell x,y, has value z.") connected with {@link Rule groupings of those truth-claims} of 
+ * which exactly one claim from a given grouping is true and all the rest are 
  * false.</p>
  * 
  * <p>These groupings of claims are pedantic and precise statements 
- * of the rules that specify what makes a solution to a sudoku target valid. 
+ * of the general rules that specify what makes a solution to a sudoku target valid. 
  * For example, the rule that any row contains each value exactly once 
- * pedantically expands into 81 statements in a 9x9 target: 9 statements 
+ * pedantically expands into 81 statements in a 9x9 puzzle: 9 statements 
  * about an individual row, each of which is actually 9 statements 
  * specifying a particular value: "Row y has value z in exactly one cell." 
  * The rule that any cell contains exactly one value similarly becomes 81 
@@ -48,19 +49,68 @@ import sudoku.Puzzle.RegionSpecies;
  * 
  * <p>The sledgehammer technique generalizes a great number of analysis 
  * techniques including
- * <ul><li>cell death</li>
- * <li>organ failure</li>
+ * <ul><li>naked singles</li>
+ * <li>hidden singles</li>
  * <li>naked pairs/triples/etc.</li>
  * <li>x-wing, swordfish, jellyfish, etc.</li>
  * <li>xy-wing, xyz-wing, etc.</li>
  * </ul></p>
  * 
- * <p>This is effected by modeling those situation as the collapse of several 
- * recipient rules onto several source rules so that all the claims belonging 
+ * <p>This is achieved by modeling those situation as the collapse of several 
+ * "recipient" rules onto several "source" rules so that all the claims belonging 
  * to the recipient rules but not belonging to any of the source rules are 
  * known to be false. No matter which (viable) set of claims among the source 
  * rules is the source rules' set of true claims, all the recipient rules' 
  * claims that aren't also source claims must be false.</p>
+ * 
+ * <p>Sledgehammer solutions have a {@code size} equal to the number of source rules 
+ * in the given solution scenario. This is also the minimum number of recipient 
+ * rules in a sledgehammer of that {@code size}. In this implementation, it is only allowed for there 
+ * to be exactly {@code size} recipients in a given sledgehammer scenario. This is 
+ * because any sledgehammer scenario with more recipients than sources can be 
+ * reinterpreted with no loss of veracity as multiple sledgehammers with exactly 
+ * {@code size} recipients.</p>
+ * 
+ * <p>In this implementation, each source rule must intersect at least two recipient 
+ * rules because otherwise either the one-recipient source rule does not have all its 
+ * claims accounted for and the overall sledgehammer arrangement is not actionable, or 
+ * the one-recipient source does have all its claims accounted for by one recipient, 
+ * in which case the sledgehammer being examined can be broken down into two or more 
+ * smaller sledgehammers. This implementation constructs sledgehammers starting at the 
+ * smallest possible non-trivial size and increasing the size of the sledgehammers it 
+ * looks for; so, the latter case should never be available for action by this implementation 
+ * of this technique at all.</p>
+ * 
+ * <p>In this implementation, each recipient rule must intersect at least two source 
+ * rules because, if it only intersects one of the sources, then either 
+ * <ul>
+ * <li>If that source only intersects one recipient (this recipient), then the overall 
+ * sledgehammer in question can be broken into multiple smaller-size sledgehammers, in 
+ * which case those sledgehammers will already have been explored by this implementation.</li>
+ * <li>If that source intersects multiple recipient rules, then any solution-state among 
+ * the sources that doesn't verify one of the Claims shared by this recipient and its source 
+ * should merely disjoin the recipient from its source, leaving it with exactly those 
+ * of its Claims that were never elements of the recipient's source rule. The contradicts 
+ * how a sledgehammer should work, which is to remove all the non-source Claims of all 
+ * the recipients.</li>
+ * </ul></p>
+ * 
+ * <p>In general we can say that sources and recipients must connect with at least two 
+ * rules of the complementary role because the resolution of a sledgehammer scenario is 
+ * an identity statement: "These source Rules <i>are</i> these recipient Rules." As such, 
+ * any one of the involved rules connected to only one of the rules of the complementary 
+ * role must be that exact other rule once it is subjected to the identity-sharing 
+ * stipulation of the sledgehammer. If a simple "this Rule is this other Rule" statement 
+ * is true, then it proper to identify and resolve that smaller-scale situation as a 
+ * separate concern not involved with this implementation.</p>
+ * 
+ * <p>A sledgehammer of size 1 is trivial and not accounted for by this implementation. 
+ * Since a sledgehammer of size 1 has exactly one source rule, detection and resolution 
+ * of size-1 sledgehammers is automated. Rules {@link Rule#validateFinalState(SolutionEvent) check themselves} 
+ * for size-1 sledgehammer actionability every time some Claims are removed from them, 
+ * and if that Rule is a proper subset of any of the rules that share any of its Claims, 
+ * the superset is collapsed onto the subset before the method that removed some Claims 
+ * from the subset returns.</p>
  * 
  * @author fiveham
  *
@@ -97,6 +147,8 @@ public class Sledgehammer extends Technique {
 	private final Collection<Rule> distinctRules;
 	private final Map<Integer,List<Rule>> distinctRulesBySledgehammerSize;
 	private final Map<Integer,List<Rule>> distinctSourcesBySledgehammerSize;
+	
+	private boolean builtSrcComboAtLastSize = true;
 	
 	/**
 	 * <p>Constructs a SledgeHammer that works to solve the specified Puzzle.</p>
@@ -174,7 +226,6 @@ public class Sledgehammer extends Technique {
 		return processByGrowth();
 	}
 	
-	//TODO describe sledgehammer solution scenarios and their stipulations in the class javadoc
 	/**
 	 * <p>Finds sledgehammer solution scenarios by growing them from a seed source Rule, which 
 	 * limits the combinatorial space to be explored to find all sledgehammer scenarios.</p>
@@ -187,7 +238,8 @@ public class Sledgehammer extends Technique {
 	 * @return
 	 */
 	private SolutionEvent processByGrowth(){
-		for(int size = MIN_SLEDGEHAMMER_SIZE; size < maxSledgehammerSize(); ++size){
+		for(int size = MIN_SLEDGEHAMMER_SIZE; size <= target.size()/2 && builtSrcComboAtLastSize; ++size){
+			builtSrcComboAtLastSize = false;
 			SolutionEvent event = addSourceToSledgehammer(new ArrayList<>(0), size, distinctSourcesAtSize(size));
 			if(event != null){
 				return event;
@@ -197,6 +249,19 @@ public class Sledgehammer extends Technique {
 		return null;
 	}
 	
+	/**
+	 * <p></p>
+	 * @param initialSources the established sources in the source-combinations being built
+	 * @param size the number of sources in the source-combinations being built
+	 * @param sourceMask a collection of Rules that are capable of serving (and allowed to serve) 
+	 * as sources in a sledgehammer at this {@code size} and having the construction history of 
+	 * {@code initialSources} so that potential sources that have been fully explored can be skipped
+	 * @param whenBuiltSourceCombo an action to be performed when a source combo is successfully 
+	 * built at the specified {@code size}
+	 * @return a {@link SolutionEvent} describing the resolution of a sledgehammer built using 
+	 * {@code initialSources} as-is or as a starting population, or {@code null} if no resolvable 
+	 * sledgehammer is found
+	 */
 	private SolutionEvent addSourceToSledgehammer(List<Rule> initialSources, int size, Set<Rule> sourceMask){
 		if(initialSources.size() < size){
 			Set<Rule> localSourceMask = new HashSet<>(sourceMask);
@@ -214,6 +279,7 @@ public class Sledgehammer extends Technique {
 			}
 			return null;
 		} else if(initialSources.size() == size){
+			builtSrcComboAtLastSize = true;
 			return forEachRecipientCombo(initialSources);
 		} else{
 			throw new IllegalStateException("Current source-combination size greater than prescribed sledgehammer size: "+initialSources.size() + " > " + size);
@@ -242,10 +308,6 @@ public class Sledgehammer extends Technique {
 			
 			return new HashSet<>(visVisibles);
 		}
-	}
-	
-	private int maxSledgehammerSize(){
-		return target.size()/2; //TODO determine the true maximum size of a sledgehammer (probably target.sideLength())
 	}
 	
 	/**
@@ -455,7 +517,7 @@ public class Sledgehammer extends Technique {
 	
 	/**
 	 * <p>Looks for sledgehammer solution scenarios exclusively as relations between 
-	 * Rules of different {@link Puzzle.RegionSpecies types}. This allows this implementation 
+	 * Rules of different {@link Puzzle.RuleType types}. This allows this implementation 
 	 * of the sledgehammer technique to simultaneously generalize X-Wing, Swordfish, 
 	 * Jellyfish, naked pairs, naked triples, naked quadruples, hidden pairs, hidden 
 	 * triples, hidden quadruples, etc. without the overheard incurred by earlier 
@@ -525,10 +587,10 @@ public class Sledgehammer extends Technique {
 	
 	public static final Function<Sudoku,List<Integer>> dimSource = (s) -> IntStream.range(0,s.sideLength()).mapToObj((i)->(Integer)i).collect(Collectors.toList());
 	
-	public static final Predicate<Rule> IS_CELL = (r) -> r.getType() == RegionSpecies.CELL;
-	public static final Predicate<Rule> IS_BOX = (r) -> r.getType() == RegionSpecies.BOX;
-	public static final Predicate<Rule> IS_COLUMN = (r) -> r.getType() == RegionSpecies.COLUMN;
-	public static final Predicate<Rule> IS_ROW = (r) -> r.getType() == RegionSpecies.ROW;
+	public static final Predicate<Rule> IS_CELL = (r) -> r.getType() == RuleType.CELL;
+	public static final Predicate<Rule> IS_BOX = (r) -> r.getType() == RuleType.BOX;
+	public static final Predicate<Rule> IS_COLUMN = (r) -> r.getType() == RuleType.COLUMN;
+	public static final Predicate<Rule> IS_ROW = (r) -> r.getType() == RuleType.ROW;
 	
 	public static final Function<Sudoku,NCuboid<Integer>> STD_NCUBOID_SRC = (s)->new NCuboid<>(dimSource.apply(s));
 	public static final Function<Sudoku,NCuboid<Integer>> ALT_NCUBOID_SRC = (s)->new NCuboid<>(dimSource.apply(s), IntStream.range(0,s.magnitude()).mapToObj((i)->(Integer)i).collect(Collectors.toList()));

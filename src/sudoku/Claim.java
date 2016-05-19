@@ -68,7 +68,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * It is the count of the kinds of FactBags that can hold the same 
 	 * Claim in common: a Rule for a cell, a box, a column, and a row.</p>
 	 */
-	public static final int INIT_OWNER_COUNT = Puzzle.RegionSpecies.values().length;
+	public static final int INIT_OWNER_COUNT = Puzzle.RuleType.values().length;
 	
 	private IndexValue x;
 	private IndexValue y;
