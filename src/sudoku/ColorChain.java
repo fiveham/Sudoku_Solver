@@ -7,6 +7,7 @@ import common.graph.BasicGraph;
 import common.graph.WrapVertex;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,6 +18,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -70,9 +72,7 @@ public class ColorChain extends Technique {
 	@Override
 	protected SolutionEvent process(){
 		List<Supplier<SolutionEvent>> actions = new ArrayList<>();
-		actions.add(()->internal());
-		actions.add(()->bridge());
-		actions.add(()->external());
+		Collections.addAll(actions, ()->external(), ()->bridge());
 		
 		for(Supplier<SolutionEvent> test : actions){
 			SolutionEvent result = test.get();
@@ -101,7 +101,7 @@ public class ColorChain extends Technique {
 	 * @return true if any changes to the {@code target} were made by this call 
 	 * to this method
 	 */
-	private SolutionEvent internal(){
+	/*private SolutionEvent internal(){
 		for(Graph<ColorClaim> chain : generateChains()){
 			SolutionEvent result = contradictionInternal(chain);
 			if( result != null ){
@@ -109,7 +109,7 @@ public class ColorChain extends Technique {
 			}
 		}
 		return null;
-	}
+	}*/
 	
 	/* *
 	 * <p>Checks pairs of chains for bridge-based interactions that force 
@@ -157,22 +157,42 @@ public class ColorChain extends Technique {
 		return null;
 	}
 	
-	/* *
+	/**
 	 * <p>Detects and {@link Claim#setFalse() sets false} Claims that 
-	 * can see Claims from {@code concom} with opposite colors.</p>
+	 * can see both of the colors in {@code concom}.</p>
+	 * 
+	 * <p>In a xor-chain, either all the positive-colored Claims are true 
+	 * and all the negative-colored Claims are false or all the positive-
+	 * colored Claims are false and all the negative-colored Claims are 
+	 * true. </p>
 	 * @param concom a xor-chain
 	 * @return true if changes were made to the target, false otherwise
 	 */
-	private SolutionEvent contradictionExternal(Graph<ColorClaim> concom){
-		List<Claim> claimsToSetFalse = target.claimStream().filter((claim)->claimContradictsChain(claim,concom)).collect(Collectors.toList());
+	private SolutionEvent contradictionExternal(Graph<ColorClaim> concom){ //TODO replace chain-self-destruction with this subtechnique
+		Set<Claim> visibleToPositives = concom.nodeStream()
+				.filter((cc) -> cc.color > 0)
+				.map((cc) -> cc.wrapped())
+				.collect(CLAIMS_TO_VISIBLE_CLAIMS);
+		Set<Claim> visibleToNegatives = concom.nodeStream()
+				.filter((cc) -> cc.color < 0)
+				.map((cc) -> cc.wrapped())
+				.collect(CLAIMS_TO_VISIBLE_CLAIMS);
+		
+		Set<Claim> claimsToSetFalse = visibleToPositives;
+		claimsToSetFalse.retainAll(visibleToNegatives);
 		if(!claimsToSetFalse.isEmpty()){
 			SolutionEvent result = new SolveEventColorChainExternal(claimsToSetFalse);
-			claimsToSetFalse.stream().filter(Claim.CLAIM_IS_BEING_SET_FALSE.negate()).forEach((c)->c.setFalse(result));
+			claimsToSetFalse.stream().forEach((c)->c.setFalse(result));
 			return result;
 		}
 		
 		return null;
 	}
+	
+	public static final Collector<Claim,?,Set<Claim>> CLAIMS_TO_VISIBLE_CLAIMS = Collector.of(
+			HashSet::new, 
+			(r,t) -> r.addAll(t.visibleClaims()), 
+			(r1,r2) -> {r1.addAll(r2); return r1;});
 	
 	/**
 	 * <p>Isolates those Rules in the target which have two Claims, makes 
@@ -200,6 +220,8 @@ public class ColorChain extends Technique {
 		return wg.connectedComponents();
 	}
 	
+	//TODO redesign Wrap.wrap() so that this method's action can be achieved by a call to Wrap.wrap(), including 
+	//the stipulation that the returned List have ColorClaim as its parameterized type.
 	public static List<ColorClaim> link(Collection<Claim> claims, BiPredicate<Claim,Claim> edgeDetector){
 		List<ColorClaim> result = claims.stream().map(ColorClaim::new).collect(Collectors.toList());
 		
@@ -226,33 +248,6 @@ public class ColorChain extends Technique {
 	private Consumer<Set<ColorClaim>> nextColorReturnList(Consumer<Set<ColorClaim>> list){
 		colorSource.nextColor();
 		return list;
-	}
-	
-	/**
-	 * <p>Checks for chain-contradictions, wherein a xor-chain interacts with itself 
-	 * and collapses because two Claims with the same color share a Rule, and collapses 
-	 * {@code chain} if it is found to have such a self-interaction. When two 
-	 * Claims share a Rule, at most, one of them can be true, but they also both be 
-	 * false, and any Claims with the same color have to have the same truth-state; 
-	 * so, only one solution-state is available: both are false, in which case all 
-	 * claims of that color are false: The entire chain collapses.</p>
-	 * 
-	 * <p>Returns true if the target was changed by the call to this method, false otherwise.</p>
-	 * @param chain the xor-chain being analysed
-	 * @return true if the target was changed by the call to this method, false otherwise
-	 */
-	private SolutionEvent contradictionInternal(Graph<ColorClaim> chain){
-		List<ColorClaim> chainList = chain.nodeStream().collect(Collectors.toList());
-		for(int i=0; i<chainList.size(); ++i){
-			ColorClaim cc1 = chainList.get(i);
-			for(int j=0; j<i; ++j){
-				ColorClaim cc2 = chainList.get(j);
-				if(cc1.color() == cc2.color() && cc1.wrapped().intersects(cc2.wrapped())){
-					return setChainFalseForColor(new SolveEventColorChainInternal(), chain, cc1.color());
-				}
-			}
-		}
-		return null;
 	}
 	
 	/**

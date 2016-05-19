@@ -527,7 +527,7 @@ public class Sledgehammer extends Technique {
 	 */
 	private SolutionEvent resolve(Collection<Claim> claimsToSetFalse){
 		SolutionEvent time = new SolveEventSledgehammer(claimsToSetFalse);
-		claimsToSetFalse.stream().filter(Claim.CLAIM_IS_BEING_SET_FALSE.negate()).forEach((c)->c.setFalse(time));
+		claimsToSetFalse.stream().forEach((c)->c.setFalse(time));
 		return time;
 	}
 	
