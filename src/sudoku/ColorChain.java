@@ -165,44 +165,41 @@ public class ColorChain extends Technique {
 	 * at the time when this method is called
 	 */
 	private Collection<Graph<ColorClaim>> generateChains(){
-		return target.nodeStream()
+		List<Rule> xorRules = target.nodeStream()
 				.filter((nodeSet)->(nodeSet.size()==Rule.SIZE_WHEN_XOR && nodeSet instanceof Rule))
 				.map((nodeSet)->(Rule)nodeSet)
-				.collect(Collector.of(
-						HashSet::new,
-						(Set<Rule> ruleSet, Rule rule) -> ruleSet.add(rule),
-						(left,right) -> {left.addAll(right); return left;},
-						(result) -> new BasicGraph<ColorClaim>(link(Sledgehammer.sideEffectUnion(result, false)))))
+				.collect(Collectors.toList());
+		return new BasicGraph<ColorClaim>(link(xorRules))
 				.addContractEventListenerFactory(colorSource)
 				.connectedComponents();
 	}
 	
 	/**
-	 * <p>Wraps the elements of {@code claims} in {@code ColorClaim}s and 
-	 * adds bidirectional edges linking those ColorClaims if the Claims 
-	 * wrapped by the ColorClaims linked by such an edge are 
-	 * {@link Claim#visibleClaims() visible} to one another. Edge-linking 
-	 * is done in {@code O(n)} time where {@code n = claims.size()}.</p>
+	 * <p>Wraps the Claims of the {@code xorRules} in {@code ColorClaim}s and 
+	 * adds bidirectional edges linking those ColorClaims that wrap Claims that 
+	 * are both connected to a common element of {@code xorRules}.</p>
 	 * @param claims a set of Claims to be wrapped by ColorClaims and linked 
 	 * by edges
 	 * @return a list of connected ColorClaim each of which wraps a Claim 
 	 * from {@code claims} and tags that Claim with a color
 	 */
-	private static List<ColorClaim> link(Set<Claim> claims){
+	private static List<ColorClaim> link(Collection<Rule> xorRules){
 		Map<Claim,ColorClaim> map = new HashMap<>();
-		return claims.stream()
+		List<ColorClaim> colorClaims = Sledgehammer.sideEffectUnion(xorRules, false).stream()
 				.map(ColorClaim::new)
 				.peek((colorClaim) -> map.put(colorClaim.wrapped(), colorClaim))
-				.peek( (colorClaim) -> colorClaim.wrapped().visibleClaims().stream()
-						.filter((visibleClaim) -> map.containsKey(visibleClaim))
-						.filter((visClaimInChain) -> colorClaim.wrapped().stream() //TODO de-stream this stuff so that "chain claims connect through a binary Rule" is more clear
-								.filter((fact)->visClaimInChain.contains(fact))
-								.anyMatch(Fact.IS_XOR))
-						.map((visClaimInChain) -> map.get(visClaimInChain))
-						.forEach((colorVisClaim) -> {
-							colorClaim.neighbors().add(colorVisClaim); 
-						}) )
 				.collect(Collectors.toList());
+		
+		xorRules.stream()
+				.map((f) -> new ArrayList<>(f))
+				.forEach((edge) -> {
+					ColorClaim cc0 = map.get(edge.get(0));
+					ColorClaim cc1 = map.get(edge.get(1));
+					cc0.neighbors().add(cc1);
+					cc1.neighbors().add(cc0);
+				});
+		
+		return colorClaims;
 	}
 	
 	/**
