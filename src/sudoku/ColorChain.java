@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -164,21 +165,16 @@ public class ColorChain extends Technique {
 	 * at the time when this method is called
 	 */
 	private Collection<Graph<ColorClaim>> generateChains(){
-		Set<Rule> xors = target.nodeStream()
-				.filter((ns)->(ns.size()==Rule.SIZE_WHEN_XOR && ns instanceof Rule))
-				.map((ns)->(Rule)ns)
-				.collect(Collectors.toSet());
-		Set<Claim> claimsInXors = Sledgehammer.sideEffectUnion(xors, false);
-		
-		Graph<ColorClaim> wg = new BasicGraph<ColorClaim>(link(claimsInXors));
-		
-		Consumer<Set<ColorClaim>> painter = (cuttingEdge) -> {
-			cuttingEdge.stream().forEach((e)->e.setColor(colorSource.get()));
-			colorSource.invertColor();
-		};
-		
-		wg.addContractEventListenerFactory(()->colorSource.nextColor(painter));
-		return wg.connectedComponents();
+		return target.nodeStream()
+				.filter((nodeSet)->(nodeSet.size()==Rule.SIZE_WHEN_XOR && nodeSet instanceof Rule))
+				.map((nodeSet)->(Rule)nodeSet)
+				.collect(Collector.of(
+						HashSet::new,
+						(Set<Rule> ruleSet, Rule rule) -> ruleSet.add(rule),
+						(left,right) -> {left.addAll(right); return left;},
+						(result) -> new BasicGraph<ColorClaim>(link(Sledgehammer.sideEffectUnion(result, false)))))
+				.addContractEventListenerFactory(colorSource)
+				.connectedComponents();
 	}
 	
 	/**
@@ -199,10 +195,12 @@ public class ColorChain extends Technique {
 				.peek((colorClaim) -> map.put(colorClaim.wrapped(), colorClaim))
 				.peek( (colorClaim) -> colorClaim.wrapped().visibleClaims().stream()
 						.filter((visibleClaim) -> map.containsKey(visibleClaim))
+						.filter((visClaimInChain) -> colorClaim.wrapped().stream() //TODO de-stream this stuff so that "chain claims connect through a binary Rule" is more clear
+								.filter((fact)->visClaimInChain.contains(fact))
+								.anyMatch(Fact.IS_XOR))
 						.map((visClaimInChain) -> map.get(visClaimInChain))
 						.forEach((colorVisClaim) -> {
 							colorClaim.neighbors().add(colorVisClaim); 
-							colorVisClaim.neighbors().add(colorClaim);
 						}) )
 				.collect(Collectors.toList());
 	}
@@ -451,7 +449,7 @@ public class ColorChain extends Technique {
 	 * @author fiveham
 	 *
 	 */
-	private static class ColorSource{
+	private static class ColorSource implements Consumer<Set<ColorClaim>>, Supplier<Consumer<Set<ColorClaim>>>{
 		
 		public static final int INIT_COLOR = 1;
 		
@@ -476,7 +474,7 @@ public class ColorChain extends Technique {
 		 * <p>Returns the current color with the current sign.</p>
 		 * @return the current color with the current sign
 		 */
-		int get(){
+		int getColor(){
 			return positive ? color : -color;
 		}
 		
@@ -484,10 +482,21 @@ public class ColorChain extends Technique {
 		 * <p>Increments the internal unsigned color and resets 
 		 * the internal color-sign to positive.</p>
 		 */
-		<T> T nextColor(T t){
+		void nextColor(){
 			++color;
 			positive = true;
-			return t;
+		}
+
+		@Override
+		public void accept(Set<ColorClaim> cuttingEdge) {
+			cuttingEdge.stream().forEach((e)->e.setColor(getColor()));
+			invertColor();
+		}
+
+		@Override
+		public Consumer<Set<ColorClaim>> get() {
+			nextColor();
+			return this;
 		}
 	}
 }

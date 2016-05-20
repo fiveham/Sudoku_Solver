@@ -2,8 +2,11 @@ package sudoku;
 
 import java.util.Collection;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class Fact extends NodeSet<Claim,Fact>{
+	
+	public static final Predicate<Fact> IS_XOR = (f) -> f.size() == Rule.SIZE_WHEN_XOR;
 	
 	/**
 	 * <p>The number ({@value}) of elements (neighbors) of a Rule when 
