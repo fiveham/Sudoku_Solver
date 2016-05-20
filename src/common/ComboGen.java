@@ -86,7 +86,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 
 		bi = BigInteger.ZERO;
 		lo = ci.lowerableOne(bi);
-		ob = ci.onesBelow(lo, bi);
+		ob = ci.bitsSetToTheRight(lo, bi);
 		System.out.println(bi.toString(2));
 		System.out.println(lo + " " + ob);
 		System.out.println();
@@ -94,7 +94,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		for(int i=0; i<25; i++){
 			bi = ci.comboAfter(bi);
 			lo = ci.lowerableOne(bi);
-			ob = ci.onesBelow(lo, bi);
+			ob = ci.bitsSetToTheRight(lo, bi);
 			System.out.println(bi.toString(2));
 			System.out.println(lo + " " + ob);
 			System.out.println();
@@ -254,24 +254,24 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		 */
 		private BigInteger comboAfter(BigInteger combo){
 			int swapIndex = lowerableOne(combo);
-			int onesBelow = onesBelow(swapIndex, combo);
+			int onesBelow = bitsSetToTheRight(swapIndex, combo);
 			
-			//swap the 1 with the 0 below it
+			//swap the 1 with the 0 to the right of it
 			BigInteger result = combo.clearBit(swapIndex);
 			swapIndex--;
 			result = result.setBit(swapIndex);
 			swapIndex--;
 			
-			//move all the 1s from below the swapped 0 to a position 
-			//immediately below the swapped 0's initial position
+			//move all the 1s from the right of the swapped 0 to a position 
+			//immediately to the right of the swapped 0's initial position
 			for(int onesSet = 0; onesSet < onesBelow; ++onesSet){
 				result = result.setBit(swapIndex);
 				swapIndex--;
 			}
 			
-			//fill the space between the lowest moved 1 and the bottom of 
-			//the BigInteger with 0s
-			while(swapIndex>=0){
+			//fill the space between the rightmost moved 1 and the ones' 
+			//place of the BigInteger with 0s
+			while(swapIndex >= 0){
 				result = result.clearBit(swapIndex);
 				swapIndex--;
 			}
@@ -311,7 +311,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		 * @return the number of 1s in {@code combo} at indices less 
 		 * than {@code swapIndex
 		 */
-		private int onesBelow(int swapIndex, BigInteger combo){
+		private int bitsSetToTheRight(int swapIndex, BigInteger combo){
 			int result = 0;
 			for(int i=swapIndex-1; i>=0; --i){
 				if(combo.testBit(i)){

@@ -60,7 +60,7 @@ public class SpaceMap implements Iterable<Claim>{
 		List<IndexValue> symbols = puzzle.indexValues().stream().filter((symbol)->!get(x,y,symbol).isKnownFalse()).collect(Collectors.toList());
 		
 		return symbols.size() == Rule.SIZE_WHEN_SOLVED 
-				? symbols.get(0).humanReadableSymbol() 
+				? symbols.get(0).humanReadableSymbol() //there is exactly 1 element in symbols
 				: "0";
 	}
 	
@@ -136,9 +136,9 @@ public class SpaceMap implements Iterable<Claim>{
 		@Override
 		public Claim next(){
 			List<Integer> coords = cubeIterator.next();
-			int x = coords.get(0);
-			int y = coords.get(1);
-			int z = coords.get(2);
+			int x = coords.get(Puzzle.X_DIM);
+			int y = coords.get(Puzzle.Y_DIM);
+			int z = coords.get(Puzzle.Z_DIM);
 			return get(x,y,z);
 		}
 	}

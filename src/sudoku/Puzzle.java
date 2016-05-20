@@ -4,6 +4,7 @@ import common.time.TimeBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Scanner;
@@ -515,6 +516,10 @@ public class Puzzle extends SudokuNetwork{
 	 */
 	public static final int BLANK_CELL = 0;
 	
+	private static final int COLUMN_ORDINAL = 3;
+	private static final int BOX_ORDINAL = 1;
+	private static final int ROW_ORDINAL = 2;
+	
 	/**
 	 * <p>Entries in this enum describe properties of the four types of regions in a sudoku target: 
 	 * <ul><li>box</li><li>row</li><li>column</li><li>cell</li></ul></p>
@@ -540,30 +545,32 @@ public class Puzzle extends SudokuNetwork{
 		 * second dimension is {@link Puzzle.DimensionType#BOX box-index}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#CELL_ID_IN_BOX cell-index}.</p>
 		 */
-		BOX		(DimensionType.SYMBOL, DimensionType.BOX, DimensionType.CELL_ID_IN_BOX), 
+		BOX		(DimensionType.SYMBOL, DimensionType.BOX, DimensionType.CELL_ID_IN_BOX, ROW_ORDINAL, COLUMN_ORDINAL), 
 		
 		/**
 		 * <p>For a row, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the 
 		 * second dimension is {@link Puzzle.DimensionType#Y y}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#X x}.</p>
 		 */
-		ROW		(DimensionType.SYMBOL, DimensionType.Y,   DimensionType.X),
+		ROW		(DimensionType.SYMBOL, DimensionType.Y,   DimensionType.X, BOX_ORDINAL),
 		
 		/**
 		 * <p>For a box, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the 
 		 * second dimension is {@link Puzzle.DimensionType#X x}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#Y y}.</p>
 		 */
-		COLUMN	(DimensionType.SYMBOL, DimensionType.X,   DimensionType.Y);
+		COLUMN	(DimensionType.SYMBOL, DimensionType.X,   DimensionType.Y, BOX_ORDINAL);
 		
 		private final DimensionType dimAType;
 		private final DimensionType dimBType;
 		private final DimensionType dimCType;
+		private final Set<Integer> indicesOfSubsumableTypes;
 		
-		private RuleType(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType){
+		private RuleType(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType, Integer... canSubsume){
 			this.dimAType = dimAType;
 			this.dimBType = dimBType;
 			this.dimCType = dimCType;
+			this.indicesOfSubsumableTypes = new HashSet<>(Arrays.asList(canSubsume));
 		}
 		
 		/**
@@ -609,11 +616,20 @@ public class Puzzle extends SudokuNetwork{
 		}
 		
 		public Set<DimensionType> dimsOutsideRule(Puzzle p){
-			Set<DimensionType> result = new HashSet<>(2); //MAGIC
+			Set<DimensionType> result = new HashSet<>(DIMENSION_COUNT - DIMENSIONS_INSIDE_RULE);
 			Collections.addAll(result, dimAType, dimBType);
 			return result;
 		}
+		
+		public boolean canClaimValue(RuleType type){
+			return indicesOfSubsumableTypes.contains(type.ordinal());
+		}
 	}
+	
+	/**
+	 * <p>The number of dimensions that the Claims of a given Rule traverse.</p>
+	 */
+	public static final int DIMENSIONS_INSIDE_RULE = 1;
 	
 	/**
 	 * <p>A wrapper for IndexValue that internally specifies to which 

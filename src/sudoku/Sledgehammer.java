@@ -612,8 +612,8 @@ public class Sledgehammer extends Technique {
 	public static final Function<Sudoku,NCuboid<Integer>> ALT_NCUBOID_SRC = (s)->new NCuboid<>(dimSource.apply(s), IntStream.range(0,s.magnitude()).mapToObj((i)->(Integer)i).collect(Collectors.toList()));
 	
 	private static enum TypePair{
-		CELL_COL(STD_NCUBOID_SRC, IS_CELL, IS_COLUMN, (r,l) -> r.stream().findFirst().get().getX()==l.get(0)), 
-		CELL_ROW(STD_NCUBOID_SRC, IS_CELL, IS_ROW,    (r,l) -> r.stream().findFirst().get().getY()==l.get(0)), 
+		CELL_COL(STD_NCUBOID_SRC, IS_CELL, IS_COLUMN, (r,l) -> l.get(0) == r.stream().findFirst().get().getX()), 
+		CELL_ROW(STD_NCUBOID_SRC, IS_CELL, IS_ROW,    (r,l) -> l.get(0) == r.stream().findFirst().get().getY()), 
 		CELL_BOX(STD_NCUBOID_SRC, IS_CELL, IS_BOX,    (r,l) -> l.get(0).equals(boxIndex(r))), 
 		BOX_ROW (ALT_NCUBOID_SRC, IS_BOX,  IS_ROW,    (r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxY(r)), 
 		BOX_COL (ALT_NCUBOID_SRC, IS_BOX,  IS_COLUMN, (r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxX(r)), 
@@ -745,7 +745,7 @@ public class Sledgehammer extends Technique {
 	}
 	
 	/**
-	 * <p>Represents an event (group) when a valid sledgehamemr 
+	 * <p>Represents an event (group) when a valid sledgehammer 
 	 * has been found and is being resolved.</p>
 	 * @author fiveham
 	 *

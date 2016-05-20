@@ -186,7 +186,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		
 		boolean[][] adjPower = new boolean[nodes.size()][nodes.size()];
 		Arrays.fill(adjPower[0], false);
-		Arrays.fill(adjPower, adjPower[0]);
+		Arrays.fill(adjPower, adjPower[0]); //TODO make sure this doesn't make changes to adjPower[0] write through to all the corresponding indices of adjPower
 		for(int i=0; i<adjPower.length; ++i){
 			adjPower[i][i] = true;
 		}

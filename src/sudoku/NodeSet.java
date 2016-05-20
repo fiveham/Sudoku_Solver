@@ -333,6 +333,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	 *
 	 */
 	private class DummyTime extends SolutionEvent{
+		public static final int DUMMY_COLLECTION_SIZE = 0;
 		private DummyTime(){
 		}
 		public void pop(){
@@ -345,10 +346,10 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 			//do nothing
 		}
 		public Set<Claim> falsified(){
-			return new HashSet<Claim>(0);
+			return new HashSet<Claim>(DUMMY_COLLECTION_SIZE);
 		}
 		public List<Time> children(){
-			return new ArrayList<Time>(0);
+			return new ArrayList<Time>(DUMMY_COLLECTION_SIZE);
 		}
 		public boolean addChild(Time child){
 			return false;

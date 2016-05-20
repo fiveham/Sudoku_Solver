@@ -21,12 +21,12 @@ import java.util.stream.Collectors;
  */
 public class Solver implements Runnable{ //TODO switch order of Sledgehammer and ColorChain techniques to debug/test ColorChain
 	
-	public static final List<Function<Sudoku,Technique>> DEFAULT_INITIALIZER_SOURCE = new ArrayList<>(1);
+	public static final List<Function<Sudoku,Technique>> DEFAULT_INITIALIZER_SOURCE = new ArrayList<>(1); //MAGIC
 	static {
 		DEFAULT_INITIALIZER_SOURCE.add( (sudoku) -> new Initializer(sudoku) );
 	}
 	
-	public static final List<Function<Sudoku,Technique>> DEFAULT_PROCESSOR_SOURCE = new ArrayList<>(2);
+	public static final List<Function<Sudoku,Technique>> DEFAULT_PROCESSOR_SOURCE = new ArrayList<>(2); //MAGIC
 	static {
 		DEFAULT_PROCESSOR_SOURCE.add( (sudoku) -> new Sledgehammer(sudoku) );
 		DEFAULT_PROCESSOR_SOURCE.add( (sudoku) -> new ColorChain(sudoku) );
@@ -35,8 +35,8 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	public static final BiFunction<Sudoku, List<Function<Sudoku,Technique>>, List<Technique>> SOURCE_TO_TECHNIQUES = 
 			(sudoku,funcList) -> funcList.stream().map((func)->func.apply(sudoku)).collect(Collectors.toList());
 	
-	public static final List<Technique> NO_INITIALIZERS = new ArrayList<>(0);
-	public static final List<Function<Sudoku,Technique>> NO_INITIALIZER_SOURCE = new ArrayList<>(0);
+	public static final List<Technique> NO_INITIALIZERS = new ArrayList<>(0); //MAGIC
+	public static final List<Function<Sudoku,Technique>> NO_INITIALIZER_SOURCE = new ArrayList<>(0); //MAGIC
 	
 	private final List<Function<Sudoku,Technique>> initializerSource;
 	private final List<Function<Sudoku,Technique>> processorSource;
@@ -192,7 +192,7 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 				String name = Thread.currentThread().getName();
 				for(int i=0; i<networks.size(); ++i){
 					SudokuNetwork network = networks.get(i);
-					new Thread(group, runnableSource.apply(this, network), name+Integer.toString(i,36)).start();
+					new Thread(group, runnableSource.apply(this, network), name+Integer.toString(i,36)).start(); //MAGIC
 				}
 			} else{
 				synchronized(lock){
@@ -248,7 +248,7 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	 */
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException{
 		Debug.log("STARTING"); //DEBUG
-		Solver s = new Solver(new File(args[0]));
+		Solver s = new Solver(new File(args[0])); //MAGIC
 		s.solve();
 		System.out.println(s.target.toString());
 	}

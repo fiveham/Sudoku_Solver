@@ -8,12 +8,11 @@ import java.util.Collection;
  * <p>A time node denoting and encapsulating an event in which some 
  * progress is made in solving the target.</p>
  * 
- * <p>Known solution events include<ul>
+ * <p>Known solution events:<ul>
  * <li>{@link Puzzle.Initialization Initialization}</li>
- * <li>{@link Sledgehammer.TimeSledgeHammer2Found Sledgehammer}</li>
- * <li>{@link ColorChain.TimeColorChainInternalContradiction Xor-chain collapse by self-interaction}</li>
- * <li>{@link ColorChain.TimeColorChainCollapseBridges Xor-chain collapse by chain-interaction}</li>
- * <li>{@link ColorChain.TimeColorChainExternalContradiction Elimination of Claims outside a xor-chain}</li>
+ * <li>{@link Sledgehammer.SolveEventSledgehammer Sledgehammer}</li>
+ * <li>{@link ColorChain.SolveEventColorChainVisibleContradiction visible-contradiction}</li>
+ * <li>{@link ColorChain.SolveEventColorChainBridge bridge-collapse}</li>
  * </ul></p>
  * @author fiveham
  *

@@ -516,8 +516,8 @@ public class PuzzleVizApp extends Application {
 		return stitch(timelineList);
 	}
 	
-	private static int treeSize(Time time){
-		AtomicInteger ai = new AtomicInteger(1);
+	private static int treeSize(Time time){ //TODO redo the tree-size calculation thing in a way that makes sense in context
+		AtomicInteger ai = new AtomicInteger(1); //MAGIC
 		treeSize(time, ai);
 		return ai.get();
 	}
@@ -654,7 +654,7 @@ public class PuzzleVizApp extends Application {
 				.collect(Collectors.groupingBy((v) -> v.getClaim()));
 	}
 	
-	public static final int MODELS_PER_CLAIM = 4;
+	public static final int MODELS_PER_CLAIM = RuleType.values().length;
 	
 	private static Timeline stitch(List<Timeline> timelines){
 		Iterator<Timeline> iter = timelines.iterator();

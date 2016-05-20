@@ -315,7 +315,7 @@ public class VoxelModel extends Box{
 	 * after it has collapsed due to its Claim having been set false
 	 */
 	private KeyValue[] keyValuesVanish(int[] vanishSigns){
-		ArrayList<KeyValue> result = new ArrayList<>(6);
+		ArrayList<KeyValue> result = new ArrayList<>(6); //MAGIC
 		
 		for(Dimension dimension : Dimension.values()){
 			if( vanishSigns[dimension.dimNo] != VANISH_NOT ){
@@ -326,7 +326,7 @@ public class VoxelModel extends Box{
 			}
 		}
 		
-		return result.toArray(new KeyValue[0]);
+		return result.toArray(new KeyValue[0]); //FIXME shouldn't this say return result; ?
 	}
 	
 	/**
@@ -396,7 +396,7 @@ public class VoxelModel extends Box{
 	 * or {@link #VANISH_POSITIVE_DIR 1} specifying the direction in which this 
 	 * VoxelModel is collapsing
 	 */
-	private static int vanishSign(int dim, BagModel ownerBag, Function<Integer,Claim> thing){
+	private static int vanishSign(int dim, BagModel ownerBag, Function<Integer,Claim> thing){ //TODO name parameter "thing"
 		Claim claimNeg = thing.apply(dim-1);
 		Claim claimPos = thing.apply(dim+1);
 		
@@ -431,7 +431,7 @@ public class VoxelModel extends Box{
 		return durationMap.get(time);
 	}
 	
-	private static final Map<Double,Duration> durationMap = new HashMap<>(13);
+	private static final Map<Double,Duration> durationMap = new HashMap<>(13); //MAGIC
 	
 	@Override
 	public int hashCode(){

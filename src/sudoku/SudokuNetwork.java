@@ -96,7 +96,15 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	 */
 	protected static class Parser{
 		
-		private int mag = 2;
+		/**
+		 * <p>The lowest possible magnitude of a sudoku puzzle that anyone 
+		 * would want to subject to an automated solver: {@value}.</p>
+		 * 
+		 * <p>The only smaller size is 1, which has exactly 1 solution.</p>
+		 */
+		public static final int MIN_REASONABLE_SUDOKU_MAGNTITUDE = 2;
+		
+		private int mag = MIN_REASONABLE_SUDOKU_MAGNTITUDE;
 		private final List<Integer> values;
 		
 		/**
@@ -179,7 +187,7 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 			
 			while(s.hasNext() && mag*mag*mag*mag > result.size()){
 				String token = s.next();
-				if(token.length() > 1){
+				if(token.length() > 1){ //MAGIC
 					throw new IllegalArgumentException(token+" is more than a single char");
 				}
 				result.add(parseInt(token));

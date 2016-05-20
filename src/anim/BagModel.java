@@ -167,6 +167,8 @@ public class BagModel {
 		Set<Claim> newMarkedVoxels = voxels.parallelStream()
 				.filter((e) -> e != emptyVoxel && map.get(e).getStatus() != VoxelModel.Status.VANISHED)
 				.collect(Collectors.toSet());
-		return new BasicGraph<Wrap<Claim>>(Wrap.wrap(newMarkedVoxels, ADJACENT_CLAIMS)).connectedComponents().size() == 1;
+		return new BasicGraph<Wrap<Claim>>(Wrap.wrap(newMarkedVoxels, ADJACENT_CLAIMS)).connectedComponents().size() == SINGLE_CONNECTED_COMPONENT;
 	}
+	
+	public static final int SINGLE_CONNECTED_COMPONENT = 1;
 }

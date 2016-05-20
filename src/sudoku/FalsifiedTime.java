@@ -46,6 +46,9 @@ public class FalsifiedTime extends AbstractTime {
 	/**
 	 * <p>Returns the set of claims set false by the operation that 
 	 * this time node represents.</p>
+	 * 
+	 * <p>{@link Set#add(Object) Additions} to the returned Set write 
+	 * through to the underlying collection.</p>
 	 * @return the set of claims set false by the operation that 
 	 * this time node represents
 	 */

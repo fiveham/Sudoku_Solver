@@ -3,6 +3,7 @@ package sudoku;
 import common.time.Time;
 import java.util.Collection;
 import java.util.Set;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import sudoku.Puzzle.RuleType;
@@ -183,19 +184,16 @@ public class Rule extends Fact{
 	 * of another.</p>
 	 */
 	private void findAndAddressValueClaim(SolutionEvent time){
-		for(Fact possibleSuperset : visibleRules()){
-			if(possibleSuperset.hasProperSubset(this)){
-				Fact superset = possibleSuperset;
-				Set<Claim> falsified = superset.stream()
-						.filter((e)->!contains(e))
-						.collect(Collectors.toSet());
-				time.push(new TimeValueClaim(time.top(), falsified));
-				
-				falsified.stream().filter(Claim.CLAIM_IS_BEING_SET_FALSE.negate()).forEach((claim) -> claim.setFalse(time));
-				
-				time.pop();
-				return;
-			}
+		Optional<Rule> superset = visibleRules().stream()
+				.filter((r) -> r.type.canClaimValue(type) && r.hasProperSubset(this))
+				.findFirst();
+		if(superset.isPresent()){
+			Set<Claim> falsified = superset.get();
+			falsified.removeAll(this);
+			
+			time.push(new TimeValueClaim(time.top(), falsified));
+			falsified.stream().filter(Claim.CLAIM_IS_BEING_SET_FALSE.negate()).forEach((claim) -> claim.setFalse(time));
+			time.pop();
 		}
 	}
 	
