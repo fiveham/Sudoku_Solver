@@ -4,7 +4,6 @@ package sudoku;
  * <p>Represents a technique used for solving sudoku puzzles.</p>
  * @author fiveham
  */
-
 public abstract class Technique {
 	
 	/*
@@ -13,7 +12,7 @@ public abstract class Technique {
 	 */
 	
 	/**
-	 * <p>The target to which this instance of this technique pertains.</p>
+	 * <p>The Sudoku graph that this Technique tries to solve.</p>
 	 */
 	protected Sudoku target; //Privacy is protected to allow access from subclasses
 	
@@ -29,6 +28,7 @@ public abstract class Technique {
 	
 	/**
 	 * <p>Performs this technique's analysis on the underlying target.</p>
+	 * 
 	 * <p>If opportunities to set values in any cells or to mark values
 	 * impossible in any cells arise, such an opportunity must be 
 	 * exploited before the method returns.<p>

@@ -254,7 +254,8 @@ public class Sledgehammer extends Technique {
 	 * that size. All other possible source Rules at that size that have not served as a seed Rule 
 	 * at that size are used as a pool ("&amp;" mask) of which any other potential sources near the 
 	 * current seed Rule must be a member.</p>
-	 * @return
+	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
+	 * if no changes were made
 	 */
 	private SolutionEvent processByGrowth(){
 		for(int size = MIN_SLEDGEHAMMER_SIZE; size <= target.size()/2 && builtSrcComboAtLastSize; ++size){
@@ -334,7 +335,8 @@ public class Sledgehammer extends Technique {
 	 * @param srcCombo a closely-connected, disjoint collection of distinct Rules suitable 
 	 * for use as sources in a sledgehammer solution scenario
 	 * @param distinctRuleMask
-	 * @return
+	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
+	 * if no changes were made
 	 */
 	private SolutionEvent forEachRecipientCombo(List<Rule> srcCombo){
 		//For each recipient combo derivable from srcCombo that disjoint, closely connected source combo
@@ -522,8 +524,8 @@ public class Sledgehammer extends Technique {
 	/**
 	 * <p>Sets all the Claims in {@code claimsToSetFalse} false.</p>
 	 * @param claimsToSetFalse the Claims to be set false
-	 * @return true if any of the {@code claimsToSetFalse} were set 
-	 * from possible to false, false otherwise.
+	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
+	 * if no changes were made
 	 */
 	private SolutionEvent resolve(Collection<Claim> claimsToSetFalse){
 		SolutionEvent time = new SolveEventSledgehammer(claimsToSetFalse);
@@ -543,7 +545,8 @@ public class Sledgehammer extends Technique {
 	 * <p>This is a heuristic technique, meant to be used before ColorChain but requiring 
 	 * a complete form of Sledgehammer that does explore all possible valid source combos 
 	 * to be included in the Solver's techniques following ColorChain.</p>
-	 * @return
+	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
+	 * if no changes were made
 	 */
 	private SolutionEvent regionSpeciesPairProcessing(){
 		

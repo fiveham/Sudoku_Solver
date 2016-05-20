@@ -4,7 +4,6 @@ import common.ComboGen;
 import common.Pair;
 import common.graph.Graph;
 import common.graph.BasicGraph;
-import common.graph.Wrap;
 import common.graph.WrapVertex;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,7 +13,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
@@ -22,23 +20,12 @@ import java.util.stream.Collectors;
 
 /**
  * <p>The color-chain technique exploits the fact that a Rule with 
- * only two connected Claims is a {@code xor} gate. A collection of 
- * interconnected two-Claim Rules, regardless of the size and shape 
- * of a connected network of these Rules, has only two possible 
+ * only two connected Claims is analogous to a {@code xor} operation. 
+ * A collection of interconnected two-Claim Rules, regardless of 
+ * the size and shape of such a network, has only two possible 
  * solution-states.</p>
- * @author fiveham
- *
- */
-/*
- * http://www.sadmansoftware.com/sudoku/colouring.php
  * 
- * If you can chain together a bunch of FactBags of size 2 
- * all pertaining to the same Symbol, then any cells outside 
- * that chain that are in a bag with one of the Claims in 
- * the chain and in another bag with another Claim of 
- * opposite truth-state in the Chain, then that outside-the-
- * chain cell can have the Symbol in question marked impossible 
- * in it.
+ * @author fiveham
  * 
  */
 public class ColorChain extends Technique {
@@ -102,7 +89,7 @@ public class ColorChain extends Technique {
 			Pair<Graph<ColorClaim>,Integer> evenSideAndFalseColor = evenSideAndFalseColor(chainPair);
 			if(evenSideAndFalseColor != null){
 				Graph<ColorClaim> falseEvenSideChain = evenSideAndFalseColor.getA();
-				return setChainFalseForColor(new SolveEventColorChainBridge(), falseEvenSideChain, evenSideAndFalseColor.getB());
+				return setChainFalseForColor(falseEvenSideChain, evenSideAndFalseColor.getB());
 			}
 		}
 		
@@ -183,7 +170,7 @@ public class ColorChain extends Technique {
 				.collect(Collectors.toSet());
 		Set<Claim> claimsInXors = Sledgehammer.sideEffectUnion(xors, false);
 		
-		Graph<ColorClaim> wg = new BasicGraph<ColorClaim>(link(claimsInXors, (c1,c2)->c1.intersects(c2)));
+		Graph<ColorClaim> wg = new BasicGraph<ColorClaim>(link(claimsInXors));
 		
 		Consumer<Set<ColorClaim>> painter = (cuttingEdge) -> {
 			cuttingEdge.stream().forEach((e)->e.setColor(colorSource.get()));
@@ -195,30 +182,29 @@ public class ColorChain extends Technique {
 	}
 	
 	/**
-	 * <p>Works just like 
-	 * {@link common.graph.Wrap#wrap(Collection,BiPredicate,Function) Wrap.wrap()}
-	 * except that this method returns a {@code List<ColorClaim>} instead of 
-	 * a {@code List<Wrap<Claim>>}.</p>
-	 * @param claims
-	 * @param edgeDetector
-	 * @return a list of ColorClaim each of which wraps a Claim from {@code claims} 
-	 * and tags that Claim with a color
+	 * <p>Wraps the elements of {@code claims} in {@code ColorClaim}s and 
+	 * adds bidirectional edges linking those ColorClaims if the Claims 
+	 * wrapped by the ColorClaims linked by such an edge are 
+	 * {@link Claim#visibleClaims() visible} to one another. Edge-linking 
+	 * is done in {@code O(n)} time where {@code n = claims.size()}.</p>
+	 * @param claims a set of Claims to be wrapped by ColorClaims and linked 
+	 * by edges
+	 * @return a list of connected ColorClaim each of which wraps a Claim 
+	 * from {@code claims} and tags that Claim with a color
 	 */
-	//TODO redesign Wrap.wrap() so that this method's action can be achieved by a call to Wrap.wrap(), including 
-	//the stipulation that the returned List have ColorClaim as its parameterized type.
-	public static List<ColorClaim> link(Collection<Claim> claims, BiPredicate<Claim,Claim> edgeDetector){
-		List<ColorClaim> result = claims.stream().map(ColorClaim::new).collect(Collectors.toList());
-		
-		for(List<ColorClaim> pair : new ComboGen<>(result, Wrap.VERTICES_PER_EDGE, Wrap.VERTICES_PER_EDGE)){
-			ColorClaim cc0 = pair.get(0);
-			ColorClaim cc1 = pair.get(1);
-			if(edgeDetector.test(cc0.wrapped(), cc1.wrapped())){
-				cc0.neighbors().add(cc1);
-				cc1.neighbors().add(cc0);
-			}
-		}
-		
-		return result;
+	private static List<ColorClaim> link(Set<Claim> claims){
+		Map<Claim,ColorClaim> map = new HashMap<>();
+		return claims.stream()
+				.map(ColorClaim::new)
+				.peek((colorClaim) -> map.put(colorClaim.wrapped(), colorClaim))
+				.peek( (colorClaim) -> colorClaim.wrapped().visibleClaims().stream()
+						.filter((visibleClaim) -> map.containsKey(visibleClaim))
+						.map((visClaimInChain) -> map.get(visClaimInChain))
+						.forEach((colorVisClaim) -> {
+							colorClaim.neighbors().add(colorVisClaim); 
+							colorVisClaim.neighbors().add(colorClaim);
+						}) )
+				.collect(Collectors.toList());
 	}
 	
 	/**
@@ -232,15 +218,13 @@ public class ColorChain extends Technique {
 	 * the specified xor-{@code chain} are added to its pool of 
 	 * {@link FalsifiedTime#falsified() falsified Claims}
 	 */
-	private SolutionEvent setChainFalseForColor(SolutionEvent time, Graph<ColorClaim> chain, final int color){
+	private SolutionEvent setChainFalseForColor(Graph<ColorClaim> chain, final int color){
 		List<Claim> setFalse = chain.nodeStream()
 				.filter((cc)->cc.color()==color)
 				.map( (cc)->cc.wrapped() )
 				.collect(Collectors.toList());
-		time.falsified().addAll(setFalse);
-		
+		SolutionEvent time = new SolveEventColorChainBridge(setFalse);
 		setFalse.stream().filter(Claim.CLAIM_IS_BEING_SET_FALSE.negate()).forEach((c)->c.setFalse(time));
-		
 		return time;
 	}
 	
@@ -251,7 +235,8 @@ public class ColorChain extends Technique {
 	 *
 	 */
 	public static class SolveEventColorChainBridge extends SolutionEvent{
-		private SolveEventColorChainBridge(){
+		private SolveEventColorChainBridge(Collection<Claim> falsified){
+			super(falsified);
 		}
 	}
 	

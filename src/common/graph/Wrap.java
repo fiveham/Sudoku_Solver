@@ -76,6 +76,7 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 		return wrap(c, edgeDetector, (w)->new Wrap<>(w));
 	}
 	
+	//TODO redesign Wrap.wrap() so that the returned List have an arbitrary parameterized type.
 	public static <T extends Wrap<W>, W> List<T> wrap(Collection<? extends W> c, BiPredicate<? super W, ? super W> edgeDetector, Function<? super W,T> mapper){
 		List<T> result = c.stream().map(mapper).collect(Collectors.toList());
 		connect(result, edgeDetector);
