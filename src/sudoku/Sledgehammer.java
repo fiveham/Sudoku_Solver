@@ -151,7 +151,6 @@ public class Sledgehammer extends Technique {
 	 * according to the minimum size of a sledgehammer in which those Rules can serve 
 	 * as a recipient.</p>
 	 */
-	//FIXME this is actually not used that way, i think.
 	public static final Collector<Rule,?,Map<Integer,List<Rule>>> MAP_RULES_BY_SIZE = Collectors.toMap(
 			Rule::size, 
 			VALUE_MAPPER, 

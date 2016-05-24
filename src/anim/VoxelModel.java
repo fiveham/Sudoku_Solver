@@ -326,7 +326,7 @@ public class VoxelModel extends Box{
 			}
 		}
 		
-		return result.toArray(new KeyValue[0]); //FIXME shouldn't this say return result; ?
+		return result.toArray(KEYVALUE_ARRAY_TYPE);
 	}
 	
 	/**
