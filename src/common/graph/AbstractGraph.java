@@ -187,7 +187,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 			adjacencyMatrix[i][i] = false;
 		}
 		
-		//adjacency matrix to a power (initially 1)
+		//adjacency matrix raised to a power (initially the power of 1)
 		boolean[][] adjPower = new boolean[nodes.size()][nodes.size()];
 		for(int i=0; i<adjPower.length; ++i){
 			adjPower[i] = Arrays.copyOf(adjacencyMatrix[i], adjacencyMatrix.length);

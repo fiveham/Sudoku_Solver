@@ -13,6 +13,9 @@ import java.util.function.Function;
 import java.util.stream.StreamSupport;
 import java.util.Set;
 import java.util.HashSet;
+import sudoku.parse.Parser;
+import sudoku.parse.SadmanParser;
+import sudoku.parse.TxtParser;
 
 /**
  * <p>Represents a sudoku target as a bipartite graph of 
@@ -76,30 +79,11 @@ public class Puzzle extends SudokuNetwork{
 	 * @throws FileNotFoundException if {@code f} cannot be found or read
 	 */
 	public Puzzle(File f) throws FileNotFoundException{
-		this(new Scanner(f), null);
+		this(chooseParser(f));
 	}
 	
-	/**
-	 * <p>Constructs a Puzzle using the specified text source {@code s}.</p>
-	 * 
-	 * @param s the target in text
-	 */
-	public Puzzle(String s){
-		this(new Scanner(s), null);
-	}
-	
-	/**
-	 * <p>Constructs a Puzzle based on the text scanned by {@code s}.</p>
-	 * 
-	 * @param s a Scanner whose {@link Scanner#next() output} is used to 
-	 * create the Puzzle object
-	 */
-	public Puzzle(Scanner s){
-		this(s, null);
-	}
-	
-	private Puzzle(Scanner s, Parser parser){
-		super((parser = new Parser(s)).mag());
+	private Puzzle(Parser txtParser){
+		super(txtParser.mag());
 		
 		this.indices = genIndices(sideLength, this);
 		this.dimensions = genDimensions(indices, this);
@@ -109,10 +93,21 @@ public class Puzzle extends SudokuNetwork{
 		this.nodes.ensureCapacity(nodes.size()+sideLength*sideLength*sideLength);
 		StreamSupport.stream(claims.spliterator(), false).forEach((claim)->nodes.add(claim));
 		
-		for(Claim c : parseText(parser.values())){
+		for(Claim c : parseText(txtParser.values())){
 			Init specificValue = new Init(this);
 			nodes.add(specificValue);
 			specificValue.add(c);
+		}
+	}
+	
+	private static Parser chooseParser(File f) throws FileNotFoundException{
+		String extension = f.getName();
+		extension = extension.substring(extension.lastIndexOf("."),extension.length());
+		
+		switch(extension){
+		case ".txt": return new TxtParser(new Scanner(f));
+		case ".sdk": return new SadmanParser(f);
+		default: throw new IllegalArgumentException("Illegal file extension "+extension+" only .txt and .sdk allowed.");
 		}
 	}
 	

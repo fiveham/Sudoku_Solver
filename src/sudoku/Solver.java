@@ -52,18 +52,6 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	private final Object lock;
 	
 	/**
-	 * <p>Constructs a Solver that works to solve the target defined 
-	 * at the beginning of the file named {@code filename}.</p>
-	 * @param filename the name of the file containing the target to 
-	 * be solved
-	 * @throws FileNotFoundException if the named file could not be 
-	 * found
-	 */
-	public Solver(String filename) throws FileNotFoundException{
-		this(new Puzzle(new File(filename)));
-	}
-	
-	/**
 	 * <p>Constructs a Solver that works to solve the target 
 	 * specified by the text at the beginning of {@code f}.</p>
 	 * @param f the file containing a target to be solved
