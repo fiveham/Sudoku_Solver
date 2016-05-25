@@ -92,20 +92,12 @@ public class Rule extends Fact{
 	
 	public Set<Rule> visibleRules(){
 		Set<Rule> result = Sledgehammer.sideEffectUnion(this, false).stream()
+				.filter((f) -> f instanceof Rule)
 				.map((f)->(Rule)f)
 				.collect(Collectors.toSet());
 		result.remove(this);
 		return result;
 	}
-	
-	/*@Override
-	public boolean equals(Object o){
-		if(o instanceof Rule){
-			//Rule r = (Rule) o;
-			return super.equals(o);
-		}
-		return false;
-	}*/
 	
 	@Override
 	public int hashCode(){
