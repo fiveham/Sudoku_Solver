@@ -166,8 +166,11 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	@Override
 	public int distance(T v1, T v2){
+		
+		//TODO cache these values
 		int index1 = nodes.indexOf(v1);
 		int index2 = nodes.indexOf(v2);
+		
 		if( index1<0 || index2<0 ){
 			throw new IllegalArgumentException("At least one of the specified nodes is not in this graph.");
 		}
@@ -184,35 +187,36 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 			adjacencyMatrix[i][i] = false;
 		}
 		
+		//adjacency matrix to a power (initially 1)
 		boolean[][] adjPower = new boolean[nodes.size()][nodes.size()];
-		Arrays.fill(adjPower[0], false);
-		Arrays.fill(adjPower, adjPower[0]); //TODO make sure this doesn't make changes to adjPower[0] write through to all the corresponding indices of adjPower
 		for(int i=0; i<adjPower.length; ++i){
-			adjPower[i][i] = true;
+			adjPower[i] = Arrays.copyOf(adjacencyMatrix[i], adjacencyMatrix.length);
 		}
 		
-		for(int n=0; n<nodes.size(); ++n){
+		for(int n=1; n<nodes.size(); ++n){
 			if(adjPower[index1][index2]){
 				return n;
 			} else{
 				adjPower = times(adjPower,adjacencyMatrix);
 			}
 		}
-		return -1;
+		return NO_CONNECTION;
 	}
+	
+	public static final int NO_CONNECTION = -1;
 	
 	/**
 	 * <p>Matrix-multiplies the specified boolean matrices under the assumption 
 	 * that they are both symmetrical about the main diagonal and that they are 
 	 * both square and both have the same dimensions, all of which will be true 
 	 * for all calls to this method because method is private and is called from 
-	 * only one place, where those assumptions holds true.</p>
+	 * only one place, where those assumptions hold true.</p>
 	 * 
 	 * <p>Since the elements of the matrices involved are boolean values instead 
 	 * of numbers, the operations of (scalar) multiplication and addition used 
 	 * in combining the elements of matrices whose elements are numbers when 
-	 * multiplying those matrices are replaced here with {@code and} (&&) and 
-	 * {@code or} (||).</p>
+	 * multiplying those matrices are replaced here with {@code and (&&)} and 
+	 * {@code or (||)}.</p>
 	 * 
 	 * @param a a square symmetrical matrix of boolean values
 	 * @param b a square symmetrical matrix of boolean values
@@ -223,27 +227,28 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		boolean[][] result = new boolean[a.length][a.length];
 		
 		for(int i=0; i<nodes.size(); ++i){
-			for(int j=0; j<=i; ++j){
+			for(int j=0; j<i; ++j){
 				result[i][j] = result[j][i] = dot(a[j],b[i]);
 			}
+			result[i][i] = dot(a[i],b[i]);
 		}
 		
 		return result;
 	}
 	
 	/**
-	 * <p>Returns the dot product of two vectors. Implicitly assumes 
+	 * <p>Returns the dot product of two boolean vectors. Assumes 
 	 * that {@code a} and {@code b} are the same length. The 
 	 * operations of multiplication and addition used in calculating 
-	 * the dot product of two vectors of numbers are replaced with 
-	 * {@code and} (&&) and {@code or} (||).</p>
+	 * the dot product of two numerical vectors are replaced with 
+	 * {@code and (&&)} and {@code or (||)} respectively.</p>
 	 * @param a a vector
 	 * @param b a vector
 	 * @return the boolean dot product of two boolean vectors
 	 */
 	private boolean dot(boolean[] a, boolean[] b){
 		for(int i=0; i<a.length; ++i){
-			if( a[i]&&b[i] ){
+			if( a[i] && b[i] ){
 				return true;
 			}
 		}

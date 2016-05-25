@@ -253,6 +253,7 @@ public class ColorChain extends Technique {
 		Graph<ColorClaim> chain0 = chains.get(0);
 		Graph<ColorClaim> chain1 = chains.get(1);
 		
+		//TODO use a cache for these calls
 		Set<Fact> chainUnion0 = Sledgehammer.sideEffectUnion( chain0.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
 		Set<Fact> chainUnion1 = Sledgehammer.sideEffectUnion( chain1.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
 		
