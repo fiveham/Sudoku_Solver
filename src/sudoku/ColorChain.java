@@ -45,8 +45,8 @@ public class ColorChain extends Technique {
 	
 	/**
 	 * <p>Imitates the slide structure of {@link Solver#solve() Solver.solve()}, 
-	 * with subtechniques for {@link #visibleColorContradiction() color-contradiction} 
-	 * and {@link #bridge() chain-chain interaction}. Subtechniques are applied 
+	 * with subtechniques for {@link #visibleColorContradiction(Collection) color-contradiction} 
+	 * and {@link #bridge(Collection) chain-chain interaction}. Subtechniques are applied 
 	 * in sequence.</p>
 	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
@@ -253,9 +253,8 @@ public class ColorChain extends Technique {
 		Graph<ColorClaim> chain0 = chains.get(0);
 		Graph<ColorClaim> chain1 = chains.get(1);
 		
-		//TODO use a cache for these calls
-		Set<Fact> chainUnion0 = Sledgehammer.sideEffectUnion( chain0.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
-		Set<Fact> chainUnion1 = Sledgehammer.sideEffectUnion( chain1.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
+		Set<Fact> chainUnion0 = cacheMassUnion(chain0);
+		Set<Fact> chainUnion1 = cacheMassUnion(chain1);
 		
 		Set<Fact> bridges = chainUnion0;
 		bridges.retainAll(chainUnion1);
@@ -276,6 +275,18 @@ public class ColorChain extends Technique {
 	}
 	
 	public static final int RULES_FOR_BRIDGE = 2;
+	
+	private final Map<Graph<ColorClaim>, Set<Fact>> massUnionCache = new HashMap<>();
+	
+	private Set<Fact> cacheMassUnion(Graph<ColorClaim> chain){
+		if(massUnionCache.containsKey(chain)){
+			return massUnionCache.get(chain);
+		} else{
+			Set<Fact> result = Sledgehammer.sideEffectUnion( chain.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
+			massUnionCache.put(chain, result);
+			return result;
+		}
+	}
 	
 	/**
 	 * <p>A Function mapping a ColorClaim to its {@link ColorClaim#wrapped() wrapped} Claim.</p>

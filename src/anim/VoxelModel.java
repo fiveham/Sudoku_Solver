@@ -223,7 +223,7 @@ public class VoxelModel extends Box{
 		
 		List<KeyValue> result = new ArrayList<>();
 		for(Dimension dimension : Dimension.values()){
-			if( vanishSigns[dimension.dimNo] != VANISH_NOT ){
+			if( vanishSigns[dimension.dimNo] != DO_NOT_VANISH ){
 				DoubleProperty thickness = dimension.thicknessProperty(this);
 				DoubleProperty translation = dimension.translateProperty(this);
 				result.add(new KeyValue(thickness, thickness.get()));
@@ -305,7 +305,7 @@ public class VoxelModel extends Box{
 	 * @see #vanishSign(int,BagModel,Function)
 	 * @see #vanishSigns()
 	 */
-	private static final int VANISH_NOT = 0;
+	private static final int DO_NOT_VANISH = 0;
 	
 	/**
 	 * <p>Returns an array of KeyValues describing the state of this VoxelModel 
@@ -318,7 +318,7 @@ public class VoxelModel extends Box{
 		ArrayList<KeyValue> result = new ArrayList<>(6); //MAGIC
 		
 		for(Dimension dimension : Dimension.values()){
-			if( vanishSigns[dimension.dimNo] != VANISH_NOT ){
+			if( vanishSigns[dimension.dimNo] != DO_NOT_VANISH ){
 				DoubleProperty thickness = dimension.thicknessProperty(this);
 				DoubleProperty translation = dimension.translateProperty(this);
 				result.add(new KeyValue(thickness, FLAT));
@@ -380,7 +380,7 @@ public class VoxelModel extends Box{
 	}
 	
 	/**
-	 * <p>Returns an int ({@link #VANISH_NEGATIVE_DIR -1}, {@link #VANISH_NOT 0}, 
+	 * <p>Returns an int ({@link #VANISH_NEGATIVE_DIR -1}, {@link #DO_NOT_VANISH 0}, 
 	 * or {@link #VANISH_POSITIVE_DIR 1} specifying the direction in which this 
 	 * VoxelModel is collapsing.</p>
 	 * 
@@ -392,13 +392,13 @@ public class VoxelModel extends Box{
 	 * 
 	 * @param dim a value 
 	 * @param claimSrc
-	 * @return an int ({@link #VANISH_NEGATIVE_DIR -1}, {@link #VANISH_NOT 0}, 
-	 * or {@link #VANISH_POSITIVE_DIR 1} specifying the direction in which this 
+	 * @return an int ({@link #VANISH_NEGATIVE_DIR -1}, {@link #DO_NOT_VANISH 0}, 
+	 * or {@link #VANISH_POSITIVE_DIR 1}) specifying the direction in which this 
 	 * VoxelModel is collapsing
 	 */
-	private static int vanishSign(int dim, BagModel ownerBag, Function<Integer,Claim> thing){ //TODO name parameter "thing"
-		Claim claimNeg = thing.apply(dim-1);
-		Claim claimPos = thing.apply(dim+1);
+	private static int vanishSign(int dim, BagModel ownerBag, Function<Integer,Claim> claimsOnAxis){
+		Claim claimNeg = claimsOnAxis.apply(dim-1);
+		Claim claimPos = claimsOnAxis.apply(dim+1);
 		
 		boolean hasNegativeDirectionNeighbor = ownerBag.map().containsKey(claimNeg);
 		boolean hasPositiveDirectionNeighbor = ownerBag.map().containsKey(claimPos);
@@ -408,7 +408,7 @@ public class VoxelModel extends Box{
 		} else if( hasNegativeDirectionNeighbor && !hasPositiveDirectionNeighbor ){
 			return VANISH_NEGATIVE_DIR;
 		} else{
-			return VANISH_NOT;
+			return DO_NOT_VANISH;
 		}
 	}
 	
