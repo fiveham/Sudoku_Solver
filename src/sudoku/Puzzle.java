@@ -82,8 +82,8 @@ public class Puzzle extends SudokuNetwork{
 		this(chooseParser(f));
 	}
 	
-	private Puzzle(Parser txtParser){
-		super(txtParser.mag());
+	public Puzzle(Parser parser){
+		super(parser.mag());
 		
 		this.indices = genIndices(sideLength, this);
 		this.dimensions = genDimensions(indices, this);
@@ -93,7 +93,7 @@ public class Puzzle extends SudokuNetwork{
 		this.nodes.ensureCapacity(nodes.size()+sideLength*sideLength*sideLength);
 		StreamSupport.stream(claims.spliterator(), false).forEach((claim)->nodes.add(claim));
 		
-		for(Claim c : parseText(txtParser.values())){
+		for(Claim c : parseText(parser.values())){
 			Init specificValue = new Init(this);
 			nodes.add(specificValue);
 			specificValue.add(c);
