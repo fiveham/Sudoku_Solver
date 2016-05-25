@@ -221,7 +221,7 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 		return null;
 	}
 	
-	private enum TechniqueInheritance{
+	private static enum TechniqueInheritance{
 		WITH_INITIALIZERS((solver)->solver.initialize(), HAS_INITIALIZERS), 
 		WITHOUT_INITIALIZERS((solver)->solver.process(), HAS_NO_INITIALIZERS);
 		

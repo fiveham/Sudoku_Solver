@@ -19,12 +19,6 @@ public abstract class AbstractTime implements Time{
 		this.focus = this;
 	}
 	
-	public AbstractTime(Time parent, Time focus) { //TODO remove this constructor and all constructors like it
-		this.parent = parent;
-		this.children = new ArrayList<>();
-		this.focus = focus;
-	}
-	
 	@Override
 	public Time parent(){
 		return parent;
