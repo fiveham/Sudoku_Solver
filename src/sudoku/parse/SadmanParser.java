@@ -29,16 +29,19 @@ public class SadmanParser implements Parser{
 	public SadmanParser(File f) throws FileNotFoundException{
 		Scanner s = new Scanner(f);
 		while(s.hasNext() && !INITIAL_PUZZLE_MARKER.equals(s.nextLine()));
-		StringBuilder initCells = new StringBuilder(s.next());
+		StringBuilder initCells = new StringBuilder(s.nextLine());
 		this.mag = (int)Math.sqrt(initCells.length());
-		for(int i=1; i<initCells.length(); ++i){
+		for(int i=1; i<mag*mag; ++i){
 			initCells.append(s.nextLine());
 		}
 		s.close();
 		this.values = new ArrayList<>(initCells.length());
 		for(int i=0; i<initCells.length(); ++i){
-			if(initCells.charAt(i) == EMPTY_CELL){
-				values.add(0);
+			char c = initCells.charAt(i);
+			if(c == EMPTY_CELL){
+				values.add(0); //MAGIC
+			} else{
+				values.add(Integer.parseInt(Character.toString(c), mag*mag+1));
 			}
 		}
 	}

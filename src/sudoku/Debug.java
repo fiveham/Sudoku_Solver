@@ -12,10 +12,10 @@ import java.io.PrintStream;
  */
 public class Debug {
 	
-	private static final PrintStream log = System.out;//initLog();
+	private static final PrintStream log = /*System.out;*/initLog();
 	
 	/**
-	 * <p>Returns the PrintStream referred to by {@code log}, 
+	 * <p>Creates the PrintStream referred to by {@code log}, 
 	 * which points to a file named "dump.txt".</p>
 	 * <p>{@code log} is initialized by a call to this method.</p>
 	 * @return the PrintStream to be stored in {@code log}
