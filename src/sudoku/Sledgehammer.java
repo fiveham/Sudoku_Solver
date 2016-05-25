@@ -162,6 +162,7 @@ public class Sledgehammer extends Technique {
 	private static final int MIN_SLEDGEHAMMER_SIZE = 2;
 	
 	private final VisibleCache visibleCache;
+	
 	private final Collection<Rule> distinctRules;
 	private final Map<Integer,List<Rule>> distinctRulesBySledgehammerSize;
 	private final Map<Integer,List<Rule>> distinctSourcesBySledgehammerSize;
@@ -176,9 +177,16 @@ public class Sledgehammer extends Technique {
 		super(puzzle);
 		
 		this.visibleCache = new VisibleCache();
-		this.distinctRules = distinctRules(target);
-		this.distinctRulesBySledgehammerSize = distinctRules.stream().collect(MAP_RULES_BY_SIZE);
-		this.distinctSourcesBySledgehammerSize = distinctRules.stream().collect(MAP_SOURCES_BY_SIZE);
+		
+		this.distinctRules = new ArrayList<>();
+		this.distinctRulesBySledgehammerSize = new HashMap<>();
+		this.distinctSourcesBySledgehammerSize = new HashMap<>();
+	}
+	
+	private static void populateDistinctRules(Sledgehammer sh){
+		sh.distinctRules.addAll(distinctRules(sh.target));
+		sh.distinctRulesBySledgehammerSize.putAll( sh.distinctRules.stream().collect(MAP_RULES_BY_SIZE) );
+		sh.distinctSourcesBySledgehammerSize.putAll( sh.distinctRules.stream().collect(MAP_SOURCES_BY_SIZE) );
 	}
 	
 	/**
@@ -257,6 +265,10 @@ public class Sledgehammer extends Technique {
 	 * if no changes were made
 	 */
 	private SolutionEvent processByGrowth(){
+		if(distinctRules.isEmpty()){
+			populateDistinctRules(this);
+		}
+		
 		for(int size = MIN_SLEDGEHAMMER_SIZE; size <= target.size()/2 && builtSrcComboAtLastSize; ++size){
 			builtSrcComboAtLastSize = false;
 			SolutionEvent event = addSourceToSledgehammer(new ArrayList<>(0), size, distinctSourcesAtSize(size));
