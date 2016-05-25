@@ -142,7 +142,10 @@ public class Claim extends NodeSet<Fact,Claim>{
 	boolean setTrue(SolutionEvent time){
 		Set<Claim> s = visibleClaims();
 		int init = s.size();
-		s.stream().filter(CLAIM_IS_BEING_SET_FALSE.negate()).forEach((c) -> c.setFalse(time));
+		Debug.log("SET TRUE: "+this); //DEBUG
+		s.stream()
+				.filter(CLAIM_IS_BEING_SET_FALSE.negate())
+				.forEach((c) -> c.setFalse(time)); //NOTE maybe the lazy evaluation of CLAIM_IS_BEING_SET_FALSE causes 
 		return init != visibleClaims().size();
 	}
 	
@@ -156,6 +159,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 */
 	public boolean setFalse(SolutionEvent time){
 		int initSize = size();
+		Debug.log("SET FALSE: "+this); //DEBUG
 		clear(time);
 		return size() != initSize;
 	}
@@ -205,7 +209,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	
 	@Override
 	public String toString(){
-		return "Claim: cell "+x.intValue()+","+y.intValue()+" is "+symbol.intValue();
+		return "Claim: cell "+x.humanReadableIntValue()+","+y.humanReadableIntValue()+" is "+symbol.humanReadableIntValue();
 	}
 	
 	private final int hashCode;

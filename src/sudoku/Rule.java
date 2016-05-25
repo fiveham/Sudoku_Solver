@@ -29,6 +29,7 @@ public class Rule extends Fact{
 	public static final int SIZE_WHEN_XOR = 2;
 	
 	private final Puzzle.RuleType type;
+	private final IndexInstance dimA, dimB;
 	
 	/**
 	 * <p>Constructs a Rule belonging to the specified Puzzle and 
@@ -40,6 +41,8 @@ public class Rule extends Fact{
 	public Rule(Puzzle puzzle, RuleType type, IndexInstance dimA, IndexInstance dimB){
 		super(puzzle);
 		this.type = type;
+		this.dimA = dimA;
+		this.dimB = dimB;
 		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
 	}
 	
@@ -56,6 +59,8 @@ public class Rule extends Fact{
 	public Rule(Puzzle puzzle, RuleType type, Collection<Claim> c, IndexInstance dimA, IndexInstance dimB) {
 		super(puzzle, c);
 		this.type = type;
+		this.dimA = dimA;
+		this.dimB = dimB;
 		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
 	}
 	
@@ -71,6 +76,8 @@ public class Rule extends Fact{
 	public Rule(Puzzle puzzle, RuleType type, int initialCapacity, IndexInstance dimA, IndexInstance dimB) {
 		super(puzzle, initialCapacity);
 		this.type = type;
+		this.dimA = dimA;
+		this.dimB = dimB;
 		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
 	}
 	
@@ -87,6 +94,8 @@ public class Rule extends Fact{
 	public Rule(Puzzle puzzle, RuleType type, int initialCapacity, float loadFactor, IndexInstance dimA, IndexInstance dimB) {
 		super(puzzle, initialCapacity, loadFactor);
 		this.type = type;
+		this.dimA = dimA;
+		this.dimB = dimB;
 		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
 	}
 	
@@ -117,7 +126,7 @@ public class Rule extends Fact{
 	public String toString(){
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append("Rule: type:").append(type).append(System.lineSeparator());
+		sb.append("Rule: ").append(type.msg(dimA,dimB)).append(System.lineSeparator());
 		for(Claim c : this){
 			sb.append("\t").append(c).append(System.lineSeparator());
 		}

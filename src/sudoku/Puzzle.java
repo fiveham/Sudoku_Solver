@@ -538,39 +538,46 @@ public class Puzzle extends SudokuNetwork{
 		 * second dimension is {@link Puzzle.DimensionType#X x}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#SYMBOL z}.</p>
 		 */
-		CELL	(DimensionType.Y, 	   DimensionType.X,   DimensionType.SYMBOL), 
+		CELL	(DimensionType.Y, 	   DimensionType.X,   DimensionType.SYMBOL,			(a,b) -> "The value in CELL "+a.val.humanReadableIntValue()+","+b.val.humanReadableIntValue()), 
 		
 		/**
 		 * <p>For a box, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the 
 		 * second dimension is {@link Puzzle.DimensionType#BOX box-index}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#CELL_ID_IN_BOX cell-index}.</p>
 		 */
-		BOX		(DimensionType.SYMBOL, DimensionType.BOX, DimensionType.CELL_ID_IN_BOX, ROW_ORDINAL, COLUMN_ORDINAL), 
+		BOX		(DimensionType.SYMBOL, DimensionType.BOX, DimensionType.CELL_ID_IN_BOX, (a,b) -> "The "+a.val.humanReadableIntValue()+" in BOX "+b.val.humanReadableIntValue(), ROW_ORDINAL, COLUMN_ORDINAL), 
 		
 		/**
 		 * <p>For a row, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the 
 		 * second dimension is {@link Puzzle.DimensionType#Y y}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#X x}.</p>
 		 */
-		ROW		(DimensionType.SYMBOL, DimensionType.Y,   DimensionType.X, BOX_ORDINAL),
+		ROW		(DimensionType.SYMBOL, DimensionType.Y,   DimensionType.X, 				(a,b) -> "The "+a.val.humanReadableIntValue()+" in ROW "+b.val.humanReadableIntValue(), BOX_ORDINAL),
 		
 		/**
 		 * <p>For a box, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the 
 		 * second dimension is {@link Puzzle.DimensionType#X x}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#Y y}.</p>
 		 */
-		COLUMN	(DimensionType.SYMBOL, DimensionType.X,   DimensionType.Y, BOX_ORDINAL);
+		COLUMN	(DimensionType.SYMBOL, DimensionType.X,   DimensionType.Y, 				(a,b) -> "The "+a.val.humanReadableIntValue()+" in COLUMN "+b.val.humanReadableIntValue(), BOX_ORDINAL);
 		
 		private final DimensionType dimAType;
 		private final DimensionType dimBType;
 		private final DimensionType dimCType;
 		private final Set<Integer> indicesOfSubsumableTypes;
+		private final BiFunction<IndexInstance,IndexInstance,String> msg;
 		
-		private RuleType(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType, Integer... canSubsume){
+		private RuleType(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType, 
+				BiFunction<IndexInstance,IndexInstance,String> msg, Integer... canSubsume){
 			this.dimAType = dimAType;
 			this.dimBType = dimBType;
 			this.dimCType = dimCType;
+			this.msg = msg;
 			this.indicesOfSubsumableTypes = new HashSet<>(Arrays.asList(canSubsume));
+		}
+		
+		public String msg(IndexInstance dimA, IndexInstance dimB){ //TODO rename
+			return msg.apply(dimA,dimB);
 		}
 		
 		/**

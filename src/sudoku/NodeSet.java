@@ -234,24 +234,25 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	 *
 	 */
 	private class SafeRemovingIterator implements Iterator<T>{
-		private Iterator<T> wrappee = NodeSet.super.iterator();
+		private Iterator<T> wrapped = NodeSet.super.iterator();
 		private T lastResult=null;
 		@Override
 		public void remove(){
-			wrappee.remove();
+			wrapped.remove();
 			lastResult.remove(NodeSet.this);
 		}
 		public void remove(SolutionEvent time){
-			wrappee.remove();
+			wrapped.remove();
+			Debug.log("Remove "+lastResult+" from "+NodeSet.this+" /remove"); //DEBUG
 			lastResult.remove(time, NodeSet.this);
 		}
 		@Override
 		public T next(){
-			return lastResult = wrappee.next();
+			return lastResult = wrapped.next();
 		}
 		@Override
 		public boolean hasNext(){
-			return wrappee.hasNext();
+			return wrapped.hasNext();
 		}
 	}
 	
