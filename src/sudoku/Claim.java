@@ -142,7 +142,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 	boolean setTrue(SolutionEvent time){
 		Set<Claim> s = visibleClaims();
 		int init = s.size();
-		Debug.log("SET TRUE: "+this); //DEBUG
 		s.stream()
 				.filter(CLAIM_IS_BEING_SET_FALSE.negate())
 				.forEach((c) -> c.setFalse(time)); //NOTE maybe the lazy evaluation of CLAIM_IS_BEING_SET_FALSE causes 
@@ -159,7 +158,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 */
 	public boolean setFalse(SolutionEvent time){
 		int initSize = size();
-		Debug.log("SET FALSE: "+this); //DEBUG
 		clear(time);
 		return size() != initSize;
 	}

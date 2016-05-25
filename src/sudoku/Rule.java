@@ -2,6 +2,7 @@ package sudoku;
 
 import common.time.Time;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.Optional;
 import java.util.function.Function;
@@ -150,7 +151,7 @@ public class Rule extends Fact{
 	@Override
 	protected void validateFinalState(SolutionEvent time){
 		if(size() == SIZE_WHEN_SOLVED){
-			Claim c = iterator().next();
+			Claim c = iterator().next(); //there is only one Claim
 			if( CLAIM_IS_TRUE_NOT_YET_SET_TRUE.apply(c) ){
 				time.push(new TimeTotalLocalization(time.top(), c.visibleClaims()));
 				//TODO rework methods that accept a SolutionEvent so they directly accept the 
@@ -189,7 +190,7 @@ public class Rule extends Fact{
 				.filter((r) -> r.type.canClaimValue(type) && r.hasProperSubset(this))
 				.findFirst();
 		if(superset.isPresent()){
-			Set<Claim> falsified = superset.get();
+			Set<Claim> falsified = new HashSet<>(superset.get());
 			falsified.removeAll(this);
 			
 			time.push(new TimeValueClaim(time.top(), falsified));

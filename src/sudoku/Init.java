@@ -54,7 +54,6 @@ public class Init extends Fact {
 	@Override
 	protected void validateFinalState(SolutionEvent time){
 		if( CLAIM_IS_TRUE_NOT_YET_SET_TRUE.apply(claim) ){
-			Debug.log("Initializing on "+claim); //DEBUG
 			claim.setTrue(time);
 		}
 	}

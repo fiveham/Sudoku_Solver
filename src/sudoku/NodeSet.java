@@ -243,7 +243,6 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		}
 		public void remove(SolutionEvent time){
 			wrapped.remove();
-			Debug.log("Remove "+lastResult+" from "+NodeSet.this+" /remove"); //DEBUG
 			lastResult.remove(time, NodeSet.this);
 		}
 		@Override
