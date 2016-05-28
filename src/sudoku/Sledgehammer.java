@@ -766,7 +766,7 @@ public class Sledgehammer extends Technique {
 	 */
 	public static class SolveEventSledgehammer extends SolutionEvent{
 		private SolveEventSledgehammer(Collection<Claim> claimsToSetFalse){
-			falsified().addAll(claimsToSetFalse);
+			super(claimsToSetFalse);
 		}
 	}
 }

@@ -29,6 +29,12 @@ public class SadmanParser implements Parser{
 	public SadmanParser(File f) throws FileNotFoundException{
 		Scanner s = new Scanner(f);
 		while(s.hasNext() && !INITIAL_PUZZLE_MARKER.equals(s.nextLine()));
+		
+		if(!s.hasNext()){
+			s.close();
+			s = new Scanner(f);
+		}
+		
 		StringBuilder initCells = new StringBuilder(s.nextLine());
 		this.mag = (int)Math.sqrt(initCells.length());
 		for(int i=1; i<mag*mag; ++i){

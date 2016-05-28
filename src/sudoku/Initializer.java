@@ -37,8 +37,18 @@ public class Initializer extends Technique {
 	protected SolutionEvent process(){
 		Optional<NodeSet<?,?>> i = target.nodeStream().filter((e)-> e instanceof Init).findFirst();
 		if(i.isPresent()){
-			SolutionEvent result = new Initialization();
-			i.get().validateFinalState(result);
+			
+			Init init = (Init) i.get();
+			
+			//DEBUG
+			Debug.log(init);
+			for(Claim c : init){
+				Debug.log("Content of "+c+": ");
+				Debug.log(new java.util.HashSet<>(c));
+			}
+			
+			SolutionEvent result = new Initialization(init);
+			init.validateFinalState(result);
 			return result;
 		}
 		
@@ -53,8 +63,17 @@ public class Initializer extends Technique {
 	 *
 	 */
 	public static class Initialization extends SolutionEvent{
-		private Initialization(){
-			super();
+		private Initialization(Init init){
+			super(init.claim().visibleClaims());
+		}
+		
+		@Override
+		public boolean equals(Object o){
+			if(o instanceof Initialization){
+				Initialization se = (Initialization) o;
+				return falsified().equals(se.falsified());
+			}
+			return false;
 		}
 	}
 }

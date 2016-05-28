@@ -142,9 +142,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	boolean setTrue(SolutionEvent time){
 		Set<Claim> s = visibleClaims();
 		int init = s.size();
-		s.stream()
-				.filter(CLAIM_IS_BEING_SET_FALSE.negate())
-				.forEach((c) -> c.setFalse(time)); //NOTE maybe the lazy evaluation of CLAIM_IS_BEING_SET_FALSE causes 
+		s.stream().forEach((c) -> c.setFalse(time)); //NOTE maybe the lazy evaluation of CLAIM_IS_BEING_SET_FALSE causes 
 		return init != visibleClaims().size();
 	}
 	
@@ -158,7 +156,9 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 */
 	public boolean setFalse(SolutionEvent time){
 		int initSize = size();
-		clear(time);
+		if(CLAIM_IS_BEING_SET_FALSE.negate().test(this)){
+			clear(time);
+		}
 		return size() != initSize;
 	}
 	
@@ -262,8 +262,21 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * it has been modified.</p>
 	 */
 	@Override
-	protected void validateFinalState(SolutionEvent time){ //TO DO make sure this doesn't break Rule-class operations still in-progress
-		//do nothing
+	protected void validateFinalState(SolutionEvent time){
+		/*boolean[] types = new boolean[Puzzle.RuleType.values().length];
+		
+		for(Fact f : this){
+			if(f instanceof Rule){
+				Rule r = (Rule)f;
+				types[r.getType().ordinal()] = true;
+			}
+		}
+		
+		for(boolean b : types){
+			if(!b){
+				throw new IllegalStateException("A Claim must remain connected to four Rules, one of each type.");
+			}
+		}*/
 	}
 	
 	/**

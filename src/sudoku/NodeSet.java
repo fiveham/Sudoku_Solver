@@ -335,6 +335,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	private class DummyTime extends SolutionEvent{
 		public static final int DUMMY_COLLECTION_SIZE = 0;
 		private DummyTime(){
+			super(Collections.emptyList());
 		}
 		public void pop(){
 			//do nothing
@@ -442,5 +443,14 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		public Iterator<Time> iterator() {
 			return currentTrail().iterator();
 		}
+	}
+	
+	/**
+	 * <p>Returns the toString() content for this NodeSet as if it were only 
+	 * a HashSet.</p>
+	 * @return {@link HashSet#toString() super.toString()}
+	 */
+	public String contentString(){
+		return super.toString();
 	}
 }

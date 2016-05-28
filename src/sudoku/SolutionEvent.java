@@ -3,6 +3,8 @@ package sudoku;
 import common.time.Time;
 import common.time.TimeBuilder;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * <p>A time node denoting and encapsulating an event in which some 
@@ -20,11 +22,6 @@ import java.util.Collection;
 public abstract class SolutionEvent extends FalsifiedTime implements TimeBuilder {
 	
 	protected Time top;
-	
-	public SolutionEvent(){
-		super(null);
-		top = this;
-	}
 	
 	public SolutionEvent(Collection<Claim> falsified){
 		super(null, falsified);
@@ -45,5 +42,32 @@ public abstract class SolutionEvent extends FalsifiedTime implements TimeBuilder
 	@Override
 	public Time top() {
 		return top;
+	}
+	
+	@Override
+	public String toString(){
+		StringBuilder result = new StringBuilder();
+		result.append(getClass()).append(" falsified ").append(falsified().size()).append(" Claims directly, and ").append(deepFalse()).append(" Claims indirectly. Direct: ")
+		.append(falsified());
+		return result.toString();
+	}
+	
+	private int deepFalse(){
+		int count = 0;
+		
+		Set<Time> layer = new HashSet<>(children());
+		while(!layer.isEmpty()){
+			Set<Time> newLayer = new HashSet<>();
+			for(Time t : layer){
+				newLayer.addAll(t.children());
+				if(t instanceof FalsifiedTime){
+					FalsifiedTime ft = (FalsifiedTime) t;
+					count += ft.falsified().size();
+				}
+			}
+			layer = newLayer;
+		}
+		
+		return count;
 	}
 }

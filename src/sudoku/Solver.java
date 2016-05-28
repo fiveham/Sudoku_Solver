@@ -1,5 +1,6 @@
 package sudoku;
 
+import common.Pair;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -101,35 +102,6 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 		return target;
 	}
 	
-	private ThreadEvent initialize(){
-		return handleTechniques(initializers, eventParent);
-	}
-	
-	/**
-	 * <p>Applies each technique in {@code processors} to 
-	 * {@code target}. If a technique reports that it was made 
-	 * a change to the target, then instead of moving on to the 
-	 * next technique in the list, technique selection resets to 
-	 * the start of the technique list. This reset mechanism 
-	 * allows the prioritization of techniques by placing higher-
-	 * priority techniques earlier in the list.</p>
-	 * 
-	 * @return true if the target is solved, false otherwise
-	 */
-	private ThreadEvent process(){
-		return handleTechniques(processors, eventParent);
-	}
-	
-	private static ThreadEvent handleTechniques(List<Technique> techniques, ThreadEvent eventParent){
-		for(Technique technique : techniques){
-			SolutionEvent solutionEvent = technique.digest();
-			if(solutionEvent != null){
-				return new ThreadEvent(eventParent, solutionEvent);
-			}
-		}
-		return null;
-	}
-	
 	public static final BiFunction<Solver,SudokuNetwork,Solver> HAS_NO_INITIALIZERS = 
 			(solver,network) -> new Solver(network, solver.event, solver.group, solver.lock, DEFAULT_INITIALIZER_SOURCE, solver.processorSource);
 	public static final BiFunction<Solver,SudokuNetwork,Solver> HAS_INITIALIZERS = 
@@ -165,8 +137,24 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	public void run(){
 		Debug.log("Running a thread: " + Thread.currentThread().getName()); //DEBUG
 		
-		BiFunction<Solver, SudokuNetwork, Solver> runnableSource = getRunnableSource();
+		Pair<ThreadEvent,BiFunction<Solver, SudokuNetwork, Solver>> runnableSource = getRunnableSource();
 		if(runnableSource != null){
+			this.event = runnableSource.getA();
+			BiFunction<Solver, SudokuNetwork, Solver> successorSolver = runnableSource.getB();
+			
+			//DEBUG
+			if(event.equals(eventParent)){
+				
+				
+				
+				
+				
+				
+				
+				
+				throw new IllegalStateException("" + (event==eventParent));
+			}
+			
 			List<SudokuNetwork> networks = target.connectedComponents().stream()
 					.map((component) -> new SudokuNetwork(target.magnitude(), component))
 					.filter((sn) -> !sn.isSolved())
@@ -175,12 +163,22 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 			//System.exit(0);//DEBUG
 			
 			if( !networks.isEmpty()){
-				Debug.log("Something passed, splitting thread: " + networks.size() + " children"); //DEBUG
+				
+				//DEBUG
+				Debug.log("Something passed, splitting thread: " + networks.size() + " children");
+				Debug.log(event.wrapped());
 				
 				String name = Thread.currentThread().getName();
 				for(int i=0; i<networks.size(); ++i){
 					SudokuNetwork network = networks.get(i);
-					new Thread(group, runnableSource.apply(this, network), name+Integer.toString(i,36)).start(); //MAGIC
+					
+					//DEBUG
+					Debug.log("Start thread for component with "+network.size()+" nodes.");
+					Debug.log();
+					debugPrintNetwork(network);
+					Debug.log();
+					
+					new Thread(group, successorSolver.apply(this, network), name+Integer.toString(i,36)).start(); //MAGIC
 				}
 			} else{
 				synchronized(lock){
@@ -188,7 +186,17 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 					lock.notify();
 				}
 			}
-		}
+		} ///TODO should there be something in the case of a null runnableSource?
+	}
+	
+	//DEBUG
+	private static void debugPrintNetwork(SudokuNetwork network){
+		Debug.log("////////////////BEGIN NETWORK\\\\\\\\\\\\\\\\");
+		Debug.log("network size: "+network.size());
+		network.nodeStream().forEach((node) -> {
+			Debug.log(node.toString() + "\t" + node.contentString());
+		});
+		Debug.log("\\\\\\\\\\\\\\\\END   NETWORK////////////////");
 	}
 	
 	/**
@@ -199,11 +207,41 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	 * @see #HAS_NO_INITIALIZERS
 	 * @return
 	 */
-	private BiFunction<Solver, SudokuNetwork, Solver> getRunnableSource(){
+	private Pair<ThreadEvent,BiFunction<Solver, SudokuNetwork, Solver>> getRunnableSource(){
 		for(TechniqueInheritance ti : TechniqueInheritance.values()){
-			if((event = ti.solutionStyle.apply(this)) != null){
+			ThreadEvent e = ti.solutionStyle.apply(this);
+			if(e != null){
 				//Debug.log("Will use inheritance type " + ti); //DEBUG
-				return ti.initializerInheritance;
+				return new Pair<>(e,ti.initializerInheritance);
+			}
+		}
+		return null;
+	}
+	
+	private ThreadEvent initialize(){
+		return handleTechniques(initializers, eventParent);
+	}
+	
+	/**
+	 * <p>Applies each technique in {@code processors} to 
+	 * {@code target}. If a technique reports that it was made 
+	 * a change to the target, then instead of moving on to the 
+	 * next technique in the list, technique selection resets to 
+	 * the start of the technique list. This reset mechanism 
+	 * allows the prioritization of techniques by placing higher-
+	 * priority techniques earlier in the list.</p>
+	 * 
+	 * @return true if the target is solved, false otherwise
+	 */
+	private ThreadEvent process(){
+		return handleTechniques(processors, eventParent);
+	}
+	
+	private static ThreadEvent handleTechniques(List<Technique> techniques, ThreadEvent eventParent){
+		for(Technique technique : techniques){
+			SolutionEvent solutionEvent = technique.digest();
+			if(solutionEvent != null){
+				return new ThreadEvent(eventParent, solutionEvent);
 			}
 		}
 		return null;

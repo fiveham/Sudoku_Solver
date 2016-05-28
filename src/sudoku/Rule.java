@@ -4,7 +4,6 @@ import common.time.Time;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import sudoku.Puzzle.RuleType;
@@ -125,14 +124,7 @@ public class Rule extends Fact{
 	
 	@Override
 	public String toString(){
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append("Rule: ").append(type.msg(dimA,dimB)).append(System.lineSeparator());
-		for(Claim c : this){
-			sb.append("\t").append(c).append(System.lineSeparator());
-		}
-		
-		return sb.toString();
+		return "Rule: " + type.msg(dimA,dimB) + " ["+size()+"]";
 	}
 	
 	public RuleType getType(){
@@ -186,17 +178,16 @@ public class Rule extends Fact{
 	 * of another.</p>
 	 */
 	private void findAndAddressValueClaim(SolutionEvent time){
-		Optional<Rule> superset = visibleRules().stream()
+		visibleRules().stream()
 				.filter((r) -> r.type.canClaimValue(type) && r.hasProperSubset(this))
-				.findFirst();
-		if(superset.isPresent()){
-			Set<Claim> falsified = new HashSet<>(superset.get());
-			falsified.removeAll(this);
-			
-			time.push(new TimeValueClaim(time.top(), falsified));
-			falsified.stream().filter(Claim.CLAIM_IS_BEING_SET_FALSE.negate()).forEach((claim) -> claim.setFalse(time));
-			time.pop();
-		}
+				.forEach((r) -> {
+					Set<Claim> falsified = new HashSet<>(r);
+					falsified.removeAll(this);
+					
+					time.push(new TimeValueClaim(time.top(), falsified));
+					falsified.stream().forEach((claim) -> claim.setFalse(time));
+					time.pop();
+				});
 	}
 	
 	/**
@@ -233,8 +224,7 @@ public class Rule extends Fact{
 	 */
 	public static class AutoResolve extends FalsifiedTime{
 		private AutoResolve(Time parent, Collection<Claim> falseClaims){
-			super(parent);
-			falsified().addAll(falseClaims);
+			super(parent, falseClaims);
 		}
 	}
 }

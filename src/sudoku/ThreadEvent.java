@@ -56,4 +56,13 @@ public class ThreadEvent extends AbstractTime {
 	public SolutionEvent wrapped(){
 		return wrapped;
 	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof ThreadEvent){
+			ThreadEvent te = (ThreadEvent) o;
+			return wrapped.equals(te.wrapped);
+		}
+		return false;
+	}
 }

@@ -24,20 +24,14 @@ public class Init extends Fact {
 	 */
 	private static final long serialVersionUID = 3700799253734450539L;
 	
-	private Claim claim;
-	
 	/**
 	 * <p>Constructs an Init belonging to the specified {@code puzzle}, 
 	 * with an initial capacity of {@value #CAPACITY}.</p>
 	 * @param puzzle
 	 */
-	public Init(Puzzle puzzle) {
+	public Init(Puzzle puzzle, Claim c) {
 		super(puzzle, SIZE_WHEN_SOLVED);
-	}
-	
-	@Override
-	public boolean add(Claim e){
-		return super.add(this.claim = e);
+		add(c);
 	}
 	
 	/**
@@ -48,28 +42,21 @@ public class Init extends Fact {
 	 * Init
 	 */
 	public Claim claim(){
-		return this.claim;
+		return iterator().next();
 	}
 	
 	@Override
 	protected void validateFinalState(SolutionEvent time){
+		Claim claim = claim();
 		if( CLAIM_IS_TRUE_NOT_YET_SET_TRUE.apply(claim) ){
+			Debug.log("Initial-value verifying "+claim);
 			claim.setTrue(time);
 		}
 	}
 	
-	/*@Override
-	public boolean equals(Object o){
-		if(o instanceof Init){
-			Init i = (Init) o;
-			return (claim == null ? i.claim == null : claim.equals(i.claim)) && super.equals(o);
-		}
-		return false;
-	}*/
-	
 	@Override
 	public String toString(){
-		StringBuilder sb = new StringBuilder("An Init verifying this Claim: ");
+		StringBuilder sb = new StringBuilder("An Init verifying ");
 		for(Claim c : this){
 			sb.append(c);
 		}

@@ -94,9 +94,8 @@ public class Puzzle extends SudokuNetwork{
 		StreamSupport.stream(claims.spliterator(), false).forEach((claim)->nodes.add(claim));
 		
 		for(Claim c : parseText(parser.values())){
-			Init specificValue = new Init(this);
+			Init specificValue = new Init(this, c);
 			nodes.add(specificValue);
-			specificValue.add(c);
 		}
 	}
 	

@@ -24,15 +24,6 @@ public class FalsifiedTime extends AbstractTime {
 	private final Set<Claim> falsified;
 	
 	/**
-	 * <p>Constructs a FalsifiedTime having the specified {@code parent}.</p>
-	 * @param parent the event which caused this event
-	 */
-	public FalsifiedTime(Time parent) {
-		super(parent);
-		this.falsified = new HashSet<>();
-	}
-	
-	/**
 	 * <p>Constructs a FalsifiedTime having the specified {@code parent} and 
 	 * the specified {@code falsified} Claims.</p>
 	 * @param parent the event which caused this event

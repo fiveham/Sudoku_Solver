@@ -219,7 +219,7 @@ public class ColorChain extends Technique {
 				.map( (cc)->cc.wrapped() )
 				.collect(Collectors.toList());
 		SolutionEvent time = new SolveEventColorChainBridge(setFalse);
-		setFalse.stream().filter(Claim.CLAIM_IS_BEING_SET_FALSE.negate()).forEach((c)->c.setFalse(time));
+		setFalse.stream().forEach((c)->c.setFalse(time));
 		return time;
 	}
 	
@@ -397,7 +397,7 @@ public class ColorChain extends Technique {
 	 */
 	public static class SolveEventColorChainVisibleContradiction extends SolutionEvent{
 		private SolveEventColorChainVisibleContradiction(Collection<Claim> falseClaims){
-			falsified().addAll(falseClaims);
+			super(falseClaims);
 		}
 	}
 	
