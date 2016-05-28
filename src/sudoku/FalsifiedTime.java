@@ -32,6 +32,10 @@ public class FalsifiedTime extends AbstractTime {
 	public FalsifiedTime(Time parent, Collection<Claim> falsified){
 		super(parent);
 		this.falsified = new HashSet<>(falsified);
+		upTrail().stream()
+				.filter((t) -> t instanceof FalsifiedTime && t != this)
+				.map((t) -> (FalsifiedTime)t)
+				.forEach((ft) -> falsified.removeAll(ft.falsified));
 	}
 	
 	/**

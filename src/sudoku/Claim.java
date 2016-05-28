@@ -156,10 +156,14 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 */
 	public boolean setFalse(SolutionEvent time){
 		int initSize = size();
-		if(CLAIM_IS_BEING_SET_FALSE.negate().test(this)){
+		if(!setFalseInProgress()){
 			clear(time);
 		}
 		return size() != initSize;
+	}
+	
+	private boolean setFalseInProgress(){
+		return !isEmpty() && size() < INIT_OWNER_COUNT;
 	}
 	
 	/**
