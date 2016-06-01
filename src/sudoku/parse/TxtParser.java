@@ -10,10 +10,9 @@ import sudoku.Sudoku;
  * source via a specified Scanner that scans from that text.</p>
  * 
  * <p>Used by Puzzle to read a sudoku puzzle of unknown dimensions 
- * from a .txt file and both extract the content of the puzzle and 
- * also extract the {@link Sudoku#magnitude() order} of the puzzle 
- * as a side-effect, without requiring further after-the-fact 
- * analysis.</p>
+ * from a .txt file and to extract both the content of the puzzle and 
+ * the {@link Sudoku#magnitude() magnitude} of the puzzle without 
+ * requiring separate passes for each of those results.</p>
  * @author fiveham
  *
  */
@@ -32,9 +31,9 @@ public class TxtParser implements Parser{
 	
 	/**
 	 * <p>Constructs a Parser that extracts and parses text via 
-	 * the specified Scanner.</p>
+	 * the specified Scanner. {@code s} is closed by this constructor.</p>
 	 * @param s the Scanner that sources the text that this 
-	 * Parser analyses
+	 * Parser analyses. {@code s} is closed by this constructor
 	 */
 	public TxtParser(Scanner s){
 		this.values = parse(s);
@@ -42,11 +41,11 @@ public class TxtParser implements Parser{
 	}
 	
 	/**
-	 * <p>Returns the order of the puzzle specified by the text 
+	 * <p>Returns the magnitude of the puzzle specified by the text 
 	 * behind the Scanner sent to the {@link #Parser(Scanner) constructor}, 
 	 * which is determined as a side-effect of the {@link #parse(Scanner) parsing} 
 	 * process.</p>
-	 * @return the order of the puzzle specified by the text 
+	 * @return the magnitude of the puzzle specified by the text 
 	 * behind the Scanner sent to the {@link #Parser(Scanner) constructor}
 	 */
 	@Override
@@ -58,7 +57,8 @@ public class TxtParser implements Parser{
 	 * <p>Returns a list of the integers present in the text of the 
 	 * puzzle as read from the text source specified by the Scanner 
 	 * sent to the {@link #Parser(Scanner) constructor}.</p>
-	 * @return
+	 * @return the initial values in the cells of this Parser's puzzle, 
+	 * where 0 represents an empty cell
 	 */
 	@Override
 	public List<Integer> values(){

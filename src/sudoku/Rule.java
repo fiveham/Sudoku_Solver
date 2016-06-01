@@ -167,7 +167,7 @@ public class Rule extends Fact{
 	 *
 	 */
 	public static class TimeTotalLocalization extends AutoResolve{
-		private TimeTotalLocalization(Time parent, Collection<Claim> falseClaims){
+		private TimeTotalLocalization(Time parent, Set<Claim> falseClaims){
 			super(parent, falseClaims);
 		}
 	}
@@ -198,7 +198,7 @@ public class Rule extends Fact{
 	 *
 	 */
 	public static class TimeValueClaim extends AutoResolve{
-		private TimeValueClaim(Time parent, Collection<Claim> falseClaims){
+		private TimeValueClaim(Time parent, Set<Claim> falseClaims){
 			super(parent, falseClaims);
 		}
 	}
@@ -223,7 +223,7 @@ public class Rule extends Fact{
 	 *
 	 */
 	public static class AutoResolve extends FalsifiedTime{
-		private AutoResolve(Time parent, Collection<Claim> falseClaims){
+		private AutoResolve(Time parent, Set<Claim> falseClaims){
 			super(parent, falseClaims);
 		}
 	}

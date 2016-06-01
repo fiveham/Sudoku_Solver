@@ -1,8 +1,10 @@
 package sudoku;
 
-import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import common.time.AbstractTime;
 import common.time.Time;
 
@@ -29,13 +31,28 @@ public class FalsifiedTime extends AbstractTime {
 	 * @param parent the event which caused this event
 	 * @param falsified the Claims set false in this event itself
 	 */
-	public FalsifiedTime(Time parent, Collection<Claim> falsified){
+	public FalsifiedTime(Time parent, Set<Claim> falsified){
 		super(parent);
-		this.falsified = new HashSet<>(falsified);
-		upTrail().stream()
-				.filter((t) -> t instanceof FalsifiedTime && t != this)
-				.map((t) -> (FalsifiedTime)t)
-				.forEach((ft) -> falsified.removeAll(ft.falsified));
+		Set<Claim> upFalsified = upFalsified();
+		this.falsified = Collections.unmodifiableSet(falsified.stream().filter((fc) -> !upFalsified.contains(fc)).collect(Collectors.toSet()));
+	}
+	
+	/**
+	 * <p>Returns a Set of all the Claims falsified in all the 
+	 * FalsifiedTime nth parents of this FalsifiedTime.</p>
+	 * @return
+	 */
+	private Set<Claim> upFalsified(){
+		return upTrail().stream().skip(1) //MAGIC
+				.filter((t) -> t instanceof FalsifiedTime)
+				.map((t) -> ((FalsifiedTime)t))
+				.collect(Collector.of(
+						HashSet::new, 
+						(Set<Claim> r, FalsifiedTime t) -> r.addAll(t.falsified), 
+						(l,r) -> {
+							l.addAll(r); 
+							return l;
+						}));
 	}
 	
 	/**

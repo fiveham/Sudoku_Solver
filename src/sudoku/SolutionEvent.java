@@ -2,7 +2,6 @@ package sudoku;
 
 import common.time.Time;
 import common.time.TimeBuilder;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,7 +22,7 @@ public abstract class SolutionEvent extends FalsifiedTime implements TimeBuilder
 	
 	protected Time top;
 	
-	public SolutionEvent(Collection<Claim> falsified){
+	public SolutionEvent(Set<Claim> falsified){
 		super(null, falsified);
 		top = this;
 	}

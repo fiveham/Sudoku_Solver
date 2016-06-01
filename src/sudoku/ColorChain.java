@@ -214,10 +214,10 @@ public class ColorChain extends Technique {
 	 * {@link FalsifiedTime#falsified() falsified Claims}
 	 */
 	private SolutionEvent setChainFalseForColor(Graph<ColorClaim> chain, final int color){
-		List<Claim> setFalse = chain.nodeStream()
+		Set<Claim> setFalse = chain.nodeStream()
 				.filter((cc)->cc.color()==color)
 				.map( (cc)->cc.wrapped() )
-				.collect(Collectors.toList());
+				.collect(Collectors.toSet());
 		SolutionEvent time = new SolveEventColorChainBridge(setFalse);
 		setFalse.stream().forEach((c)->c.setFalse(time));
 		return time;
@@ -230,7 +230,7 @@ public class ColorChain extends Technique {
 	 *
 	 */
 	public static class SolveEventColorChainBridge extends SolutionEvent{
-		private SolveEventColorChainBridge(Collection<Claim> falsified){
+		private SolveEventColorChainBridge(Set<Claim> falsified){
 			super(falsified);
 		}
 	}
@@ -396,7 +396,7 @@ public class ColorChain extends Technique {
 	 *
 	 */
 	public static class SolveEventColorChainVisibleContradiction extends SolutionEvent{
-		private SolveEventColorChainVisibleContradiction(Collection<Claim> falseClaims){
+		private SolveEventColorChainVisibleContradiction(Set<Claim> falseClaims){
 			super(falseClaims);
 		}
 	}

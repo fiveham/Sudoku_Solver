@@ -335,7 +335,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	private class DummyTime extends SolutionEvent{
 		public static final int DUMMY_COLLECTION_SIZE = 0;
 		private DummyTime(){
-			super(Collections.emptyList());
+			super(Collections.emptySet());
 		}
 		public void pop(){
 			//do nothing
