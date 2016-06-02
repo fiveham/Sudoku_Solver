@@ -3,6 +3,7 @@ package sudoku;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
+import java.util.function.BiConsumer;
 
 /**
  * <p>This class provides less verbose {@link #log(String) access} 
@@ -12,7 +13,9 @@ import java.io.PrintStream;
  */
 public class Debug {
 	
-	private static final PrintStream log = /*System.out;*/initLog();
+	private static final State state = State.NO_LOG;
+	
+	private static final PrintStream log = /*System.out*/ initLog();
 	
 	/**
 	 * <p>Creates the PrintStream referred to by {@code log}, 
@@ -38,13 +41,28 @@ public class Debug {
 	 * {@code log}
 	 */
 	public static void log(Object s){
-		log.println(s);
+		state.log(log,s);
 	}
 	
 	/**
 	 * <p>Prints a newline to the file specified by {@code log}.</p>
 	 */
 	public static void log(){
-		log.println();
+		state.log(log,"");
+	}
+	
+	private static enum State{
+		NO_LOG( (ps,o) -> {}),
+		LOG( (ps,o) -> ps.println(o));
+		
+		private final BiConsumer<PrintStream,Object> writer;
+		
+		private State(BiConsumer<PrintStream,Object> writer){
+			this.writer = writer;
+		}
+		
+		private void log(PrintStream ps, Object o){
+			writer.accept(ps,o);
+		}
 	}
 }
