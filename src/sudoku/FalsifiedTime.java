@@ -32,13 +32,16 @@ public class FalsifiedTime extends AbstractTime {
 	 * the specified {@code falsified} Claims.</p>
 	 * @param parent the event which caused this event
 	 * @param falsified the Claims set false in this event itself
+	 * @throws NoUnaccountedClaims if all the Claims in {@code falsified} are 
+	 * accounted for as false by other {@code FalsifiedTime}s that are nth 
+	 * parents of this one
 	 */
 	public FalsifiedTime(Time parent, Set<Claim> falsified){
 		super(parent);
 		Set<Claim> upFalsified = upFalsified(this, true);
 		this.falsified = Collections.unmodifiableSet(falsified.stream().filter((fc) -> !upFalsified.contains(fc)).collect(Collectors.toSet()));
 		if(this.falsified.isEmpty()){
-			throw new IllegalArgumentException("No unaccounted-for Claims specified.");
+			throw new NoUnaccountedClaims("No unaccounted-for Claims specified.");
 		}
 	}
 	
@@ -117,5 +120,11 @@ public class FalsifiedTime extends AbstractTime {
 		}
 		
 		return count;
+	}
+	
+	static class NoUnaccountedClaims extends RuntimeException{
+		NoUnaccountedClaims(String s){
+			super(s);
+		}
 	}
 }

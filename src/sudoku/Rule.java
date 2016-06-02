@@ -147,7 +147,15 @@ public class Rule extends Fact{
 			if( !c.setTrueInProgress() ){
 				Set<Claim> falsify = c.visibleClaims();
 				if(!falsify.isEmpty()){
-					time.push(new TimeTotalLocalization(time.top(), falsify, this));
+					
+					Time solve;
+					try{
+						solve = new TimeTotalLocalization(time.top(), falsify, this);
+					} catch(FalsifiedTime.NoUnaccountedClaims e){
+						return;
+					}
+					
+					time.push(solve);
 					//TODO rework methods that accept a SolutionEvent so they directly accept the 
 					//FalsifiedTime onto which they should append new Time nodes
 					c.setTrue(time);
