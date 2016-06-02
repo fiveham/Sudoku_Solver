@@ -156,8 +156,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 		int initSize = size();
 		if(!setFalseInProgress()){
 			clear(time);
-		} else{
-			throw new IllegalStateException("Cannot set Claim false while setting the same Claim false.");
 		}
 		return size() != initSize;
 	}
