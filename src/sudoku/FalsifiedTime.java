@@ -35,6 +35,9 @@ public class FalsifiedTime extends AbstractTime {
 		super(parent);
 		Set<Claim> upFalsified = upFalsified();
 		this.falsified = Collections.unmodifiableSet(falsified.stream().filter((fc) -> !upFalsified.contains(fc)).collect(Collectors.toSet()));
+		if(this.falsified.isEmpty()){
+			throw new IllegalArgumentException("No unaccounted-for Claims specified.");
+		}
 	}
 	
 	/**

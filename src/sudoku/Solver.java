@@ -4,6 +4,7 @@ import common.Pair;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -28,10 +29,13 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	}
 	
 	public static final List<Function<Sudoku,Technique>> DEFAULT_PROCESSOR_SOURCE = new ArrayList<>(2); //MAGIC
-	static {
-		DEFAULT_PROCESSOR_SOURCE.add( (sudoku) -> new Sledgehammer(sudoku) );
-		DEFAULT_PROCESSOR_SOURCE.add( (sudoku) -> new ColorChain(sudoku) );
-	}
+	//DEBUG restore processors when done debugging
+	/*static {
+		Collections.addAll(DEFAULT_PROCESSOR_SOURCE, 
+				(sudoku) -> new Sledgehammer(sudoku),
+				(sudoku) -> new ColorChain(sudoku)
+				);
+	}*/
 	
 	public static final BiFunction<Sudoku, List<Function<Sudoku,Technique>>, List<Technique>> SOURCE_TO_TECHNIQUES = 
 			(sudoku,funcList) -> funcList.stream().map((func)->func.apply(sudoku)).collect(Collectors.toList());
@@ -144,15 +148,8 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 			
 			//DEBUG
 			if(event.equals(eventParent)){
-				
-				
-				
-				
-				
-				
-				
-				
-				throw new IllegalStateException("" + (event==eventParent));
+				//stuff goes here
+				throw new IllegalStateException(Boolean.toString(event==eventParent));
 			}
 			
 			List<SudokuNetwork> networks = target.connectedComponents().stream()
@@ -211,7 +208,6 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 		for(TechniqueInheritance ti : TechniqueInheritance.values()){
 			ThreadEvent e = ti.solutionStyle.apply(this);
 			if(e != null){
-				//Debug.log("Will use inheritance type " + ti); //DEBUG
 				return new Pair<>(e,ti.initializerInheritance);
 			}
 		}
