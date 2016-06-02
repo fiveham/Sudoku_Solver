@@ -63,8 +63,12 @@ public class Initializer extends Technique {
 	 *
 	 */
 	public static class Initialization extends SolutionEvent{
+		
+		private final Init src;
+		
 		private Initialization(Init init){
 			super(init.claim().visibleClaims());
+			this.src = init;
 		}
 		
 		@Override
@@ -74,6 +78,11 @@ public class Initializer extends Technique {
 				return falsified().equals(se.falsified());
 			}
 			return false;
+		}
+		
+		@Override
+		public String toString(){
+			return "Initialization from "+src + super.toString();
 		}
 	}
 }

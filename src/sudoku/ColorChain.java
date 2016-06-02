@@ -233,6 +233,11 @@ public class ColorChain extends Technique {
 		private SolveEventColorChainBridge(Set<Claim> falsified){
 			super(falsified);
 		}
+		
+		@Override
+		public String toString(){
+			return "Color-chain bridge contradiction" + super.toString();
+		}
 	}
 	
 	/**
@@ -398,6 +403,11 @@ public class ColorChain extends Technique {
 	public static class SolveEventColorChainVisibleContradiction extends SolutionEvent{
 		private SolveEventColorChainVisibleContradiction(Set<Claim> falseClaims){
 			super(falseClaims);
+		}
+		
+		@Override
+		public String toString(){
+			return "color-chain visibility contradiction " + super.toString();
 		}
 	}
 	

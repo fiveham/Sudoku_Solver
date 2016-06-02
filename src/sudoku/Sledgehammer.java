@@ -356,7 +356,7 @@ public class Sledgehammer extends Technique {
 			//If the source and recipient combos make a valid sledgehammer scenario
 			Set<Claim> claimsToSetFalse = areSledgehammerScenario(srcCombo, recipientCombo);
 			if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
-				return resolve(claimsToSetFalse);
+				return resolve(claimsToSetFalse, srcCombo, recipientCombo);
 			}
 		}
 		return null;
@@ -538,8 +538,8 @@ public class Sledgehammer extends Technique {
 	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
 	 */
-	private SolutionEvent resolve(Set<Claim> claimsToSetFalse){
-		SolutionEvent time = new SolveEventSledgehammer(claimsToSetFalse);
+	private SolutionEvent resolve(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip){
+		SolutionEvent time = new SolveEventSledgehammer(claimsToSetFalse, src, recip);
 		claimsToSetFalse.stream().forEach((c)->c.setFalse(time));
 		return time;
 	}
@@ -572,7 +572,7 @@ public class Sledgehammer extends Technique {
 							Set<Claim> falsify = falsifiedClaims(comboA, comboB);
 							
 							if(falsify != null){
-								return resolve(falsify);
+								return resolve(falsify, comboA, comboB);
 							}
 						}
 					}
@@ -765,8 +765,18 @@ public class Sledgehammer extends Technique {
 	 *
 	 */
 	public static class SolveEventSledgehammer extends SolutionEvent{
-		private SolveEventSledgehammer(Set<Claim> claimsToSetFalse){
+		
+		private final Collection<Fact> src, recip;
+		
+		private SolveEventSledgehammer(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip){
 			super(claimsToSetFalse);
+			this.src = new ArrayList<>(src);
+			this.recip = new ArrayList<>(recip);
+		}
+		
+		@Override
+		public String toString(){
+			return "Sledgehammer scenario: "+src+" ARE "+recip + super.toString();
 		}
 	}
 }

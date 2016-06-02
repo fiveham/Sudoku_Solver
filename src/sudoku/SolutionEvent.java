@@ -2,7 +2,6 @@ package sudoku;
 
 import common.time.Time;
 import common.time.TimeBuilder;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -41,32 +40,5 @@ public abstract class SolutionEvent extends FalsifiedTime implements TimeBuilder
 	@Override
 	public Time top() {
 		return top;
-	}
-	
-	@Override
-	public String toString(){
-		StringBuilder result = new StringBuilder();
-		result.append(getClass()).append(" falsified ").append(falsified().size()).append(" Claims directly, and ").append(deepFalse()).append(" Claims indirectly. Direct: ")
-		.append(falsified());
-		return result.toString();
-	}
-	
-	private int deepFalse(){
-		int count = 0;
-		
-		Set<Time> layer = new HashSet<>(children());
-		while(!layer.isEmpty()){
-			Set<Time> newLayer = new HashSet<>();
-			for(Time t : layer){
-				newLayer.addAll(t.children());
-				if(t instanceof FalsifiedTime){
-					FalsifiedTime ft = (FalsifiedTime) t;
-					count += ft.falsified().size();
-				}
-			}
-			layer = newLayer;
-		}
-		
-		return count;
 	}
 }

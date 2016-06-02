@@ -124,7 +124,7 @@ public class Rule extends Fact{
 	
 	@Override
 	public String toString(){
-		return "Rule: " + type.msg(dimA,dimB) + " ["+size()+"]";
+		return "Rule: " + type.msg(dimA,dimB) /*+ " ["+size()+"]"*/;
 	}
 	
 	public RuleType getType(){
@@ -144,8 +144,8 @@ public class Rule extends Fact{
 	protected void validateFinalState(SolutionEvent time){
 		if(size() == SIZE_WHEN_SOLVED){
 			Claim c = iterator().next(); //there is only one Claim
-			if( CLAIM_IS_TRUE_NOT_YET_SET_TRUE.apply(c) ){
-				time.push(new TimeTotalLocalization(time.top(), c.visibleClaims()));
+			if( !c.setTrueInProgress() ){
+				time.push(new TimeTotalLocalization(time.top(), c.visibleClaims(), this));
 				//TODO rework methods that accept a SolutionEvent so they directly accept the 
 				//FalsifiedTime onto which they should append new Time nodes
 				c.setTrue(time);
@@ -167,8 +167,17 @@ public class Rule extends Fact{
 	 *
 	 */
 	public static class TimeTotalLocalization extends AutoResolve{
-		private TimeTotalLocalization(Time parent, Set<Claim> falseClaims){
+		
+		private final Fact src;
+		
+		private TimeTotalLocalization(Time parent, Set<Claim> falseClaims, Fact src){
 			super(parent, falseClaims);
+			this.src = src;
+		}
+		
+		@Override
+		public String toString(){
+			return "Total localization from "+src+src.contentString() + super.toString();
 		}
 	}
 	
@@ -178,7 +187,7 @@ public class Rule extends Fact{
 	 * of another.</p>
 	 */
 	private void findAndAddressValueClaim(SolutionEvent time){
-		visibleRules().stream()
+		/*visibleRules().stream()
 				.filter((r) -> r.type.canClaimValue(type) && r.hasProperSubset(this))
 				.forEach((r) -> {
 					Set<Claim> falsified = new HashSet<>(r);
@@ -187,7 +196,21 @@ public class Rule extends Fact{
 					time.push(new TimeValueClaim(time.top(), falsified));
 					falsified.stream().forEach((claim) -> claim.setFalse(time));
 					time.pop();
-				});
+				});*/
+		
+		for(Rule r : visibleRules()){
+			if(r.type.canClaimValue(type) && r.hasProperSubset(this)){
+				Set<Claim> falsified = new HashSet<>(r);
+				falsified.removeAll(this);
+				FalsifiedTime.clean(falsified, time.top());
+				
+				if(!falsified.isEmpty()){
+					time.push(new TimeValueClaim(time.top(), falsified, this, r));
+					falsified.stream().forEach((claim) -> claim.setFalse(time));
+					time.pop();
+				}
+			}
+		}
 	}
 	
 	/**
@@ -198,8 +221,18 @@ public class Rule extends Fact{
 	 *
 	 */
 	public static class TimeValueClaim extends AutoResolve{
-		private TimeValueClaim(Time parent, Set<Claim> falseClaims){
+		
+		private final Fact sub, sup;
+		
+		private TimeValueClaim(Time parent, Set<Claim> falseClaims, Fact sub, Fact sup){
 			super(parent, falseClaims);
+			this.sub = sub;
+			this.sup = sup;
+		}
+		
+		@Override
+		public String toString(){
+			return "Value-claim "+sup+" subsumes "+sub + super.toString();
 		}
 	}
 	

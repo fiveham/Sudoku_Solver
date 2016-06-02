@@ -142,7 +142,15 @@ public class Claim extends NodeSet<Fact,Claim>{
 	boolean setTrue(SolutionEvent time){
 		Set<Claim> s = visibleClaims();
 		int init = s.size();
-		s.stream().forEach((c) -> c.setFalse(time)); //NOTE maybe the lazy evaluation of CLAIM_IS_BEING_SET_FALSE causes 
+		
+		if(!setTrueInProgress){
+			setTrueInProgress = true;
+			
+			s.stream().forEach((c) -> c.setFalse(time)); //NOTE maybe the lazy evaluation of CLAIM_IS_BEING_SET_FALSE causes 
+			
+			setTrueInProgress = false;
+		}
+		
 		return init != visibleClaims().size();
 	}
 	
@@ -164,6 +172,12 @@ public class Claim extends NodeSet<Fact,Claim>{
 	
 	private boolean setFalseInProgress(){
 		return !isEmpty() && size() < INIT_OWNER_COUNT;
+	}
+	
+	private boolean setTrueInProgress = false;
+	
+	public boolean setTrueInProgress(){
+		return setTrueInProgress;
 	}
 	
 	/**

@@ -1,5 +1,8 @@
 package sudoku;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 import common.time.AbstractTime;
 import common.time.Time;
 
@@ -14,6 +17,7 @@ import common.time.Time;
 public class ThreadEvent extends AbstractTime {
 	
 	private final SolutionEvent wrapped;
+	private final String threadName;
 	
 	/**
 	 * <p>Constructs a ThreadEvent having the specified {@code parent} 
@@ -24,9 +28,10 @@ public class ThreadEvent extends AbstractTime {
 	 * @param wrapped the SolutionEvent that terminated the thread 
 	 * to which this ThreadEvent pertains
 	 */
-	public ThreadEvent(ThreadEvent parent, SolutionEvent wrapped) {
+	public ThreadEvent(ThreadEvent parent, SolutionEvent wrapped, String threadName) {
 		super(parent);
 		this.wrapped = wrapped;
+		this.threadName = threadName;
 		
 		if(parent != null){
 			parent.addChild(this);
@@ -64,5 +69,22 @@ public class ThreadEvent extends AbstractTime {
 			return wrapped.equals(te.wrapped);
 		}
 		return false;
+	}
+	
+	@Override
+	public String toString(){
+		StringBuilder result = new StringBuilder("ThreadEvent terminating ").append(threadName).append(System.lineSeparator());
+		
+		List<Object> things = new ArrayList<>(children().size()+1);
+		things.add(wrapped);
+		things.addAll(children());
+		for(Object o : things){
+			String oString = o.toString();
+			for(Scanner s = new Scanner(oString); s.hasNextLine();){
+				result.append("  ").append(s.nextLine()).append(System.lineSeparator());
+			}
+		}
+		
+		return result.toString();
 	}
 }

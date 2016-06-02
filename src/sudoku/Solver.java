@@ -4,7 +4,6 @@ import common.Pair;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -40,7 +39,6 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	public static final BiFunction<Sudoku, List<Function<Sudoku,Technique>>, List<Technique>> SOURCE_TO_TECHNIQUES = 
 			(sudoku,funcList) -> funcList.stream().map((func)->func.apply(sudoku)).collect(Collectors.toList());
 	
-	public static final List<Technique> NO_INITIALIZERS = new ArrayList<>(0); //MAGIC
 	public static final List<Function<Sudoku,Technique>> NO_INITIALIZER_SOURCE = new ArrayList<>(0); //MAGIC
 	
 	private final List<Function<Sudoku,Technique>> initializerSource;
@@ -50,10 +48,10 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	private final List<Technique> initializers;
 	private final Sudoku target;
 	
-	private final ThreadEvent eventParent;
+	private final Pair<ThreadEvent,Void> eventParent;
 	private ThreadEvent event = null;
 	
-	private final ThreadGroup group;
+	private final SudokuThreadGroup group;
 	private final Object lock;
 	
 	/**
@@ -73,24 +71,24 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	 * @param target the Puzzle to be solved
 	 */
 	public Solver(Sudoku puzzle){
-		this(puzzle, new ThreadGroup("sudoku"), new Object());
-	}
-
-	private Solver(Sudoku puzzle, ThreadGroup group, Object waiter){
-		this(puzzle, null, group, waiter, DEFAULT_INITIALIZER_SOURCE, DEFAULT_PROCESSOR_SOURCE);
+		this(puzzle, null, new SudokuThreadGroup(), new Object(), DEFAULT_INITIALIZER_SOURCE, DEFAULT_PROCESSOR_SOURCE);
 	}
 	
-	private Solver(Sudoku sudoku, ThreadEvent eventParent, ThreadGroup group, Object waiter, List<Function<Sudoku,Technique>> initializers, List<Function<Sudoku,Technique>> processors){
-		this.target = sudoku;
+	private Solver(Sudoku target, Pair<ThreadEvent,Void> eventParent, SudokuThreadGroup group, Object waiter, List<Function<Sudoku,Technique>> initializers, List<Function<Sudoku,Technique>> processors){
+		this.target = target;
 		
 		this.initializerSource = initializers;
 		this.processorSource = processors;
 		
-		this.initializers = SOURCE_TO_TECHNIQUES.apply(sudoku, initializers);
-		this.processors = SOURCE_TO_TECHNIQUES.apply(sudoku, processors);
+		this.initializers = SOURCE_TO_TECHNIQUES.apply(target, initializers);
+		this.processors = SOURCE_TO_TECHNIQUES.apply(target, processors);
 		
 		this.eventParent = eventParent;
 		this.group = group;
+		if(eventParent==null){
+			group.setRootSolver(this);
+		}
+		
 		this.lock = waiter;
 	}
 	
@@ -107,9 +105,9 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	}
 	
 	public static final BiFunction<Solver,SudokuNetwork,Solver> HAS_NO_INITIALIZERS = 
-			(solver,network) -> new Solver(network, solver.event, solver.group, solver.lock, DEFAULT_INITIALIZER_SOURCE, solver.processorSource);
+			(solver,network) -> new Solver(network, new Pair<>(solver.event,null), solver.group, solver.lock, NO_INITIALIZER_SOURCE, solver.processorSource);
 	public static final BiFunction<Solver,SudokuNetwork,Solver> HAS_INITIALIZERS = 
-			(solver,network) -> new Solver(network, solver.event, solver.group, solver.lock, solver.initializerSource, solver.processorSource);
+			(solver,network) -> new Solver(network, new Pair<>(solver.event,null), solver.group, solver.lock, solver.initializerSource, solver.processorSource);
 	
 	/**
 	 * <p>Creates a thread to {@link #run() run} this Solver and creates 
@@ -147,9 +145,9 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 			BiFunction<Solver, SudokuNetwork, Solver> successorSolver = runnableSource.getB();
 			
 			//DEBUG
-			if(event.equals(eventParent)){
+			if(event.equals( extract(eventParent) )){
 				//stuff goes here
-				throw new IllegalStateException(Boolean.toString(event==eventParent));
+				throw new IllegalStateException(Boolean.toString(event==eventParent.getA()));
 			}
 			
 			List<SudokuNetwork> networks = target.connectedComponents().stream()
@@ -171,9 +169,6 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 					
 					//DEBUG
 					Debug.log("Start thread for component with "+network.size()+" nodes.");
-					Debug.log();
-					debugPrintNetwork(network);
-					Debug.log();
 					
 					new Thread(group, successorSolver.apply(this, network), name+Integer.toString(i,36)).start(); //MAGIC
 				}
@@ -184,16 +179,6 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 				}
 			}
 		} ///TODO should there be something in the case of a null runnableSource?
-	}
-	
-	//DEBUG
-	private static void debugPrintNetwork(SudokuNetwork network){
-		Debug.log("////////////////BEGIN NETWORK\\\\\\\\\\\\\\\\");
-		Debug.log("network size: "+network.size());
-		network.nodeStream().forEach((node) -> {
-			Debug.log(node.toString() + "\t" + node.contentString());
-		});
-		Debug.log("\\\\\\\\\\\\\\\\END   NETWORK////////////////");
 	}
 	
 	/**
@@ -233,14 +218,30 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 		return handleTechniques(processors, eventParent);
 	}
 	
-	private static ThreadEvent handleTechniques(List<Technique> techniques, ThreadEvent eventParent){
+	private static ThreadEvent handleTechniques(List<Technique> techniques, Pair<ThreadEvent,Void> eventParent){
 		for(Technique technique : techniques){
 			SolutionEvent solutionEvent = technique.digest();
+			
 			if(solutionEvent != null){
-				return new ThreadEvent(eventParent, solutionEvent);
+				
+				ThreadEvent ep = extract(eventParent);
+				
+				//DEBUG
+				if(solutionEvent.equals( ep == null ? null : ep.wrapped() )){
+					Debug.log("Repeat solution event in handleTechnique: "+solutionEvent);
+				}
+				
+				return new ThreadEvent(ep, solutionEvent, Thread.currentThread().getName());
 			}
 		}
 		return null;
+	}
+	
+	//DEBUG
+	private static ThreadEvent extract(Pair<ThreadEvent,Void> ep){
+		return ep == null 
+				? null 
+				: ep.getA();
 	}
 	
 	private static enum TechniqueInheritance{
@@ -273,5 +274,31 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 		Solver s = new Solver(new File(args[0])); //MAGIC
 		s.solve();
 		System.out.println(s.target.toString());
+	}
+	
+	/**
+	 * <p>Extends ThreadGroup to override uncaughtException() so that 
+	 * all the Solver threads spawned from a call to main() can be 
+	 * easily forced to share the same </p>
+	 * @author fiveham
+	 *
+	 */
+	public static class SudokuThreadGroup extends ThreadGroup{
+		public SudokuThreadGroup(){
+			super("sudoku");
+		}
+		
+		@Override
+		public void uncaughtException(Thread t, Throwable e){
+			Debug.log(rootSolver.getEvent());
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
+		Solver rootSolver;
+		
+		public void setRootSolver(Solver s){
+			this.rootSolver = s;
+		}
 	}
 }
