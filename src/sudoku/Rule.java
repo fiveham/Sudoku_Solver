@@ -145,11 +145,14 @@ public class Rule extends Fact{
 		if(size() == SIZE_WHEN_SOLVED){
 			Claim c = iterator().next(); //there is only one Claim
 			if( !c.setTrueInProgress() ){
-				time.push(new TimeTotalLocalization(time.top(), c.visibleClaims(), this));
-				//TODO rework methods that accept a SolutionEvent so they directly accept the 
-				//FalsifiedTime onto which they should append new Time nodes
-				c.setTrue(time);
-				time.pop();
+				Set<Claim> falsify = c.visibleClaims();
+				if(!falsify.isEmpty()){
+					time.push(new TimeTotalLocalization(time.top(), falsify, this));
+					//TODO rework methods that accept a SolutionEvent so they directly accept the 
+					//FalsifiedTime onto which they should append new Time nodes
+					c.setTrue(time);
+					time.pop();
+				}
 			}
 		} else if( shouldCheckForValueClaim() ){
 			findAndAddressValueClaim(time);

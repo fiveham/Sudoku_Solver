@@ -245,8 +245,12 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	}
 	
 	private static enum TechniqueInheritance{
-		WITH_INITIALIZERS((solver)->solver.initialize(), HAS_INITIALIZERS), 
-		WITHOUT_INITIALIZERS((solver)->solver.process(), HAS_NO_INITIALIZERS);
+		WITH_INITIALIZERS(
+				(solver)->solver.initialize(), 
+				HAS_INITIALIZERS), 
+		WITHOUT_INITIALIZERS(
+				(solver)->solver.process(), 
+				HAS_NO_INITIALIZERS);
 		
 		private final Function<Solver,ThreadEvent> solutionStyle;
 		private final BiFunction<Solver,SudokuNetwork,Solver> initializerInheritance;
