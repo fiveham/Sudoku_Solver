@@ -129,7 +129,7 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 		while(group.activeCount() > 0){
 			synchronized(lock){
 				//if(group.activeCount() > 0){
-					lock.wait();
+					lock.wait(100);
 				//}
 			}
 		}
@@ -178,7 +178,7 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 					lock.notify();
 				}
 			}
-		} ///TODO should there be something in the case of a null runnableSource?
+		} //TODO should there be something in the case of a null runnableSource?
 	}
 	
 	/**
