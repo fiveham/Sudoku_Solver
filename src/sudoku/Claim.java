@@ -16,18 +16,6 @@ import java.util.function.Predicate;
 public class Claim extends NodeSet<Fact,Claim>{
 	
 	/**
-	 * <p>The number of {@link Collection#size() size}-one (1) Facts a 
-	 * Claim has when it's necessarily true (being the only Claim belonging 
-	 * to that Fact) and evidently not presently being set true. After 
-	 * {@link #setTrue() setTrue()} is called, it is possible for separate 
-	 * neighboring Facts to independently become unary and to therefore 
-	 * begin a process of falsifying the remaining Claims that this Claim 
-	 * can see, which causes unecessary duplication of AutoResolve events in 
-	 * the time-tree, as well as being aesthetically unpleasant.</p>
-	 */
-	public static final int UNARY_RULE_COUNT_FOR_SET_TRUE = 1;
-	
-	/**
 	 * <p>Indicates whether the specified Claim is in the process of being 
 	 * {@link Claim#setFalse(SolutionEvent) set false}. Outputs true if 
 	 * and only if the specified Claim has a number of neighbors between 
@@ -149,6 +137,8 @@ public class Claim extends NodeSet<Fact,Claim>{
 			s.stream().forEach((c) -> c.setFalse(time)); //NOTE maybe the lazy evaluation of CLAIM_IS_BEING_SET_FALSE causes 
 			
 			setTrueInProgress = false;
+		} else{
+			throw new IllegalStateException("Cannot set Claim true while setting the same Claim true.");
 		}
 		
 		return init != visibleClaims().size();
@@ -166,6 +156,8 @@ public class Claim extends NodeSet<Fact,Claim>{
 		int initSize = size();
 		if(!setFalseInProgress()){
 			clear(time);
+		} else{
+			throw new IllegalStateException("Cannot set Claim false while setting the same Claim false.");
 		}
 		return size() != initSize;
 	}
