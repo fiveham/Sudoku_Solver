@@ -123,6 +123,11 @@ public class FalsifiedTime extends AbstractTime {
 	}
 	
 	static class NoUnaccountedClaims extends RuntimeException{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 5259033659237872620L;
+		
 		NoUnaccountedClaims(String s){
 			super(s);
 		}

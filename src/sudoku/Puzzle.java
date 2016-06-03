@@ -560,19 +560,27 @@ public class Puzzle extends SudokuNetwork{
 		private final DimensionType dimBType;
 		private final DimensionType dimCType;
 		private final Set<Integer> indicesOfSubsumableTypes;
-		private final BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> msg;
+		private final BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> description;
 		
 		private RuleType(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType, 
-				BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> msg, Integer... canSubsume){
+				BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> description, Integer... canSubsume){
 			this.dimAType = dimAType;
 			this.dimBType = dimBType;
 			this.dimCType = dimCType;
-			this.msg = msg;
+			this.description = description;
 			this.indicesOfSubsumableTypes = new HashSet<>(Arrays.asList(canSubsume));
 		}
 		
-		public String msg(IndexInstance dimA, IndexInstance dimB){ //TODO rename
-			return msg.apply(this, new Pair<>(dimA,dimB));
+		/**
+		 * <p>Returns a description of a Rule of this type having the 
+		 * specified {@code dimA} and {@code dimB}.</p>
+		 * @param dimA the first dimension of the Rule being described
+		 * @param dimB the second dimension of the Rule being described
+		 * @return a description of a Rule of this type having the 
+		 * specified {@code dimA} and {@code dimB}
+		 */
+		public String descriptionFor(IndexInstance dimA, IndexInstance dimB){
+			return description.apply(this, new Pair<>(dimA,dimB));
 		}
 		
 		/**

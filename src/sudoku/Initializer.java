@@ -37,16 +37,7 @@ public class Initializer extends Technique {
 	protected SolutionEvent process(){
 		Optional<NodeSet<?,?>> i = target.nodeStream().filter((e)-> e instanceof Init).findFirst();
 		if(i.isPresent()){
-			
 			Init init = (Init) i.get();
-			
-			//DEBUG
-			Debug.log(init);
-			for(Claim c : init){
-				Debug.log("Content of "+c+": ");
-				Debug.log(new java.util.HashSet<>(c));
-			}
-			
 			SolutionEvent result = new Initialization(init);
 			init.validateFinalState(result);
 			return result;

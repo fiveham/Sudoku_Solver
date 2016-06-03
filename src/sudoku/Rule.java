@@ -124,7 +124,7 @@ public class Rule extends Fact{
 	
 	@Override
 	public String toString(){
-		return "Rule: " + type.msg(dimA,dimB) /*+ " ["+size()+"]"*/;
+		return "Rule: " + type.descriptionFor(dimA,dimB) /*+ " ["+size()+"]"*/;
 	}
 	
 	public RuleType getType(){

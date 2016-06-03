@@ -307,6 +307,9 @@ public class VoxelModel extends Box{
 	 */
 	private static final int DO_NOT_VANISH = 0;
 	
+	private static final int DIRECTIONS_PER_DIMENSION = 2;
+	private static final int DIRECTIONS_IN_SPACE = Puzzle.DIMENSION_COUNT * DIRECTIONS_PER_DIMENSION;
+	
 	/**
 	 * <p>Returns an array of KeyValues describing the state of this VoxelModel 
 	 * after it has been contracted to zero size due to its Claim having been 
@@ -315,7 +318,7 @@ public class VoxelModel extends Box{
 	 * after it has collapsed due to its Claim having been set false
 	 */
 	private KeyValue[] keyValuesVanish(int[] vanishSigns){
-		ArrayList<KeyValue> result = new ArrayList<>(6); //MAGIC
+		ArrayList<KeyValue> result = new ArrayList<>(DIRECTIONS_IN_SPACE);
 		
 		for(Dimension dimension : Dimension.values()){
 			if( vanishSigns[dimension.dimNo] != DO_NOT_VANISH ){
@@ -430,8 +433,9 @@ public class VoxelModel extends Box{
 		}
 		return durationMap.get(time);
 	}
-	
-	private static final Map<Double,Duration> durationMap = new HashMap<>(13); //MAGIC
+
+	private static final int DURATION_MAP_INIT_SIZE = 13;
+	private static final Map<Double,Duration> durationMap = new HashMap<>(DURATION_MAP_INIT_SIZE);
 	
 	@Override
 	public int hashCode(){

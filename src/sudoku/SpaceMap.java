@@ -61,8 +61,10 @@ public class SpaceMap implements Iterable<Claim>{
 		
 		return symbols.size() == Rule.SIZE_WHEN_SOLVED 
 				? symbols.get(0).humanReadableSymbol() //there is exactly 1 element in symbols
-				: "0";
+				: UNSOLVED_CELL_TEXT;
 	}
+	
+	public static final String UNSOLVED_CELL_TEXT = "0";
 	
 	/**
 	 * <p>Returns the Claim in this SpaceMap's target having the 

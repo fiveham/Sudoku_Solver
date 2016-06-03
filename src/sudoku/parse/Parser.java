@@ -18,6 +18,8 @@ import java.util.List;
  */
 public interface Parser {
 	
+	public static final int MAX_RADIX = 36;
+	
 	/**
 	 * <p>The magnitude of the puzzle parsed from the file. A 
 	 * Puzzle's {@link sudoku.Sudoku#magnitude() magnitude} is 

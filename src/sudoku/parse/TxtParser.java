@@ -96,6 +96,8 @@ public class TxtParser implements Parser{
 		return result;
 	}
 	
+	public static final int MAX_CELL_CONTENT_STRING_LEN = 1;
+	
 	/**
 	 * <p>Gets tokens one-at-a-time from the specified Scanner, and 
 	 * parses them into ints while determining the size of the target 
@@ -112,7 +114,7 @@ public class TxtParser implements Parser{
 		
 		while(s.hasNext() && mag*mag*mag*mag > result.size()){
 			String token = s.next();
-			if(token.length() > 1){ //MAGIC
+			if(token.length() > MAX_CELL_CONTENT_STRING_LEN){
 				throw new IllegalArgumentException(token+" is more than a single char");
 			}
 			result.add(parseInt(token));

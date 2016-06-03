@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
+import sudoku.Puzzle;
 
 /**
  * <p>Parses the initial puzzle out of a Sadman Sudoku puzzle 
@@ -45,7 +46,7 @@ public class SadmanParser implements Parser{
 		for(int i=0; i<initCells.length(); ++i){
 			char c = initCells.charAt(i);
 			if(c == EMPTY_CELL){
-				values.add(0); //MAGIC
+				values.add(Puzzle.BLANK_CELL);
 			} else{
 				values.add(Integer.parseInt(Character.toString(c), mag*mag+1));
 			}
