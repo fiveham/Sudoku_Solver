@@ -46,7 +46,7 @@ public class ColorChain extends Technique {
 	/**
 	 * <p>Imitates the slide structure of {@link Solver#solve() Solver.solve()}, 
 	 * with subtechniques for {@link #visibleColorContradiction(Collection) color-contradiction} 
-	 * and {@link #bridge(Collection) chain-chain interaction}. Subtechniques are applied 
+	 * and {@link #bridgeCollapse(Collection) chain-chain interaction}. Subtechniques are applied 
 	 * in sequence.</p>
 	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
@@ -54,7 +54,10 @@ public class ColorChain extends Technique {
 	@Override
 	protected SolutionEvent process(){
 		List<Function<Collection<Graph<ColorClaim>>,SolutionEvent>> actions = new ArrayList<>(SUBTECHNIQUE_COUNT);
-		Collections.addAll(actions, (graph)->visibleColorContradiction(graph), (graph)->bridge(graph));
+		Collections.addAll(actions, 
+				(graph)->visibleColorContradiction(graph), 
+				(graph)->bridgeCollapse(graph), 
+				(graph)->bridgeJoin(graph));
 		
 		Collection<Graph<ColorClaim>> chains = generateChains();
 		for(Function<Collection<Graph<ColorClaim>>,SolutionEvent> test : actions){
@@ -67,7 +70,7 @@ public class ColorChain extends Technique {
 		return null;
 	}
 	
-	public static final int SUBTECHNIQUE_COUNT = 2;
+	public static final int SUBTECHNIQUE_COUNT = 3;
 	
 	/**
 	 * <p>Checks pairs of xor-chains for bridge-based interactions that force 
@@ -85,7 +88,7 @@ public class ColorChain extends Technique {
 	 * null if no changes were made
 	 */
 	//TODO create a graph where each xor-chain is a node, connected to each other chain-node with which the chain shares some rules
-	private SolutionEvent bridge(Collection<Graph<ColorClaim>> chains){
+	private SolutionEvent bridgeCollapse(Collection<Graph<ColorClaim>> chains){
 		for(List<Graph<ColorClaim>> chainPair : new ComboGen<>(chains, CHAINS_FOR_BRIDGE, CHAINS_FOR_BRIDGE)){
 			Pair<Graph<ColorClaim>,Integer> evenSideAndFalseColor = evenSideAndFalseColor(chainPair);
 			if(evenSideAndFalseColor != null){
@@ -95,6 +98,62 @@ public class ColorChain extends Technique {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * <p>Examines pairs of xor-chains to find sledgehammerable bridges between chains. 
+	 * A bridge is sledgehammerable if the distances from one lane to the other in 
+	 * either connected chain is even. In such a sledgehammer situation, </p>
+	 * @param chains
+	 * @return
+	 */
+	private SolutionEvent bridgeJoin(Collection<Graph<ColorClaim>> chains){
+		for(List<Graph<ColorClaim>> chainPair : new ComboGen<>(chains, CHAINS_FOR_BRIDGE, CHAINS_FOR_BRIDGE)){
+			Pair<Collection<Rule>,Collection<Rule>> sledgehammer = chainSledgehammer(chainPair);
+			if(sledgehammer != null){
+				Collection<Rule> sources = sledgehammer.getA();
+				Collection<Rule> recipients = sledgehammer.getB();
+				
+				Set<Claim> falsified = Sledgehammer.sideEffectUnion(recipients, false);
+				falsified.removeAll(Sledgehammer.sideEffectUnion(sources, false));
+				
+				return Sledgehammer.resolve(falsified, sources, recipients);
+			}
+		}
+		
+		return null;
+	}
+	
+	private Pair<Collection<Rule>,Collection<Rule>> chainSledgehammer(List<Graph<ColorClaim>> chains){
+		Graph<ColorClaim> chain0 = chains.get(0);
+		Graph<ColorClaim> chain1 = chains.get(1);
+		
+		Set<Fact> chainUnion0 = cacheMassUnion(chain0);
+		Set<Fact> chainUnion1 = cacheMassUnion(chain1);
+		
+		Set<Fact> bridges = new HashSet<>(chainUnion0);
+		bridges.retainAll(chainUnion1);
+		
+		for(List<Fact> bridge : new ComboGen<>(bridges, RULES_FOR_BRIDGE, RULES_FOR_BRIDGE)){
+			Fact lane0 = bridge.get(0);
+			Fact lane1 = bridge.get(1);
+			
+			int dist0 = dist(lane0, lane1, chain0);
+			int dist1 = dist(lane0, lane1, chain1);
+			if( dist0%2==0 && dist1%2==1 ){
+				return new Pair<Graph<ColorClaim>,Integer>(chain0, bridgeColor(chain0, lane0, lane1));
+			} else if(dist1%2==0 && dist0%2==1){
+				return new Pair<Graph<ColorClaim>,Integer>(chain1, bridgeColor(chain0, lane0, lane1));
+			}
+		}
+		return null;
+	}
+	
+	public static class SolveEventBridgeJoin extends SolutionEvent{
+		private SolveEventBridgeJoin(Sledgehammer.SolveEventSledgehammer usurped){
+			super(usurped.falsified());
+			children().addAll(usurped.children());
+		}
 	}
 	
 	public static final int CHAINS_FOR_BRIDGE = 2;
@@ -225,7 +284,7 @@ public class ColorChain extends Technique {
 	
 	/**
 	 * <p>A Time node describing two xor-chains' collapse due 
-	 * to {@link #bridge(Collection) bridge} interaction.</p>
+	 * to {@link #bridgeCollapse(Collection) bridge} interaction.</p>
 	 * @author fiveham
 	 *
 	 */
@@ -261,7 +320,7 @@ public class ColorChain extends Technique {
 		Set<Fact> chainUnion0 = cacheMassUnion(chain0);
 		Set<Fact> chainUnion1 = cacheMassUnion(chain1);
 		
-		Set<Fact> bridges = chainUnion0;
+		Set<Fact> bridges = new HashSet<>(chainUnion0);
 		bridges.retainAll(chainUnion1);
 		
 		for(List<Fact> bridge : new ComboGen<>(bridges, RULES_FOR_BRIDGE, RULES_FOR_BRIDGE)){

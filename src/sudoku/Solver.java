@@ -159,6 +159,7 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 				
 				//DEBUG
 				Debug.log("Have some unsolved networks; splitting thread: " + networks.size() + " children");
+				Debug.log(target.nodeStream().findFirst().get().getPuzzle());
 				Debug.log("SolutionEvent: "+event.wrapped());
 				
 				String name = Thread.currentThread().getName();

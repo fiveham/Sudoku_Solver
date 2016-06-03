@@ -539,8 +539,8 @@ public class Sledgehammer extends Technique {
 	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
 	 */
-	private SolutionEvent resolve(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip){
-		SolutionEvent time = new SolveEventSledgehammer(claimsToSetFalse, src, recip);
+	static SolveEventSledgehammer resolve(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip){
+		SolveEventSledgehammer time = new SolveEventSledgehammer(claimsToSetFalse, src, recip);
 		claimsToSetFalse.stream().forEach((c)->c.setFalse(time));
 		return time;
 	}
