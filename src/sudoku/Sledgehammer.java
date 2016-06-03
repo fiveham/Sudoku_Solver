@@ -270,8 +270,9 @@ public class Sledgehammer extends Technique {
 		}
 		
 		for(int size = MIN_SLEDGEHAMMER_SIZE; size <= target.size()/2 && builtSrcComboAtLastSize; ++size){
+			Debug.log("At srcCombo size "+size); //DEBUG
 			builtSrcComboAtLastSize = false;
-			SolutionEvent event = addSourceToSledgehammer(new ArrayList<>(0), size, distinctSourcesAtSize(size));
+			SolutionEvent event = exploreSourceCombos(new ArrayList<>(0), size, distinctSourcesAtSize(size));
 			if(event != null){
 				return event;
 			}
@@ -293,7 +294,7 @@ public class Sledgehammer extends Technique {
 	 * {@code initialSources} as-is or as a starting population, or {@code null} if no resolvable 
 	 * sledgehammer is found
 	 */
-	private SolutionEvent addSourceToSledgehammer(List<Rule> initialSources, int size, Set<Rule> sourceMask){
+	private SolutionEvent exploreSourceCombos(List<Rule> initialSources, int size, Set<Rule> sourceMask){
 		if(initialSources.size() < size){
 			Set<Rule> localSourceMask = new HashSet<>(sourceMask);
 			for(Rule newSource : sourcePool(initialSources, sourceMask, size)){
@@ -303,7 +304,7 @@ public class Sledgehammer extends Technique {
 				newSources.addAll(initialSources);
 				newSources.add(newSource);
 				
-				SolutionEvent event = addSourceToSledgehammer(newSources, size, localSourceMask);
+				SolutionEvent event = exploreSourceCombos(newSources, size, localSourceMask);
 				if(event != null){
 					return event;
 				}
@@ -311,7 +312,7 @@ public class Sledgehammer extends Technique {
 			return null;
 		} else if(initialSources.size() == size){
 			builtSrcComboAtLastSize = true;
-			return forEachRecipientCombo(initialSources);
+			return exploreRecipientCombos(initialSources);
 		} else{
 			throw new IllegalStateException("Current source-combination size greater than prescribed sledgehammer size: "+initialSources.size() + " > " + size);
 		}
@@ -349,7 +350,7 @@ public class Sledgehammer extends Technique {
 	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
 	 */
-	private SolutionEvent forEachRecipientCombo(List<Rule> srcCombo){
+	private SolutionEvent exploreRecipientCombos(List<Rule> srcCombo){
 		//For each recipient combo derivable from srcCombo that disjoint, closely connected source combo
 		for(List<Rule> recipientCombo : recipientCombinations(srcCombo)){
 			

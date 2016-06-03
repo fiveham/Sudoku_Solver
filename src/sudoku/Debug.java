@@ -13,9 +13,9 @@ import java.util.function.BiConsumer;
  */
 public class Debug {
 	
-	private static final State state = State.NO_LOG;
+	private static final State state = State.LOG;
 	
-	private static final PrintStream log = /*System.out*/ initLog();
+	private static final PrintStream log = System.out;// initLog();
 	
 	/**
 	 * <p>Creates the PrintStream referred to by {@code log}, 

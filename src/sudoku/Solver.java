@@ -31,9 +31,7 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	
 	public static final List<Function<Sudoku,Technique>> DEFAULT_PROCESSOR_SOURCE = new ArrayList<>(2);
 	static {
-		Collections.addAll(DEFAULT_PROCESSOR_SOURCE, 
-				(sudoku) -> new Sledgehammer(sudoku),
-				(sudoku) -> new ColorChain(sudoku));
+		Collections.addAll(DEFAULT_PROCESSOR_SOURCE, ColorChain::new, Sledgehammer::new);
 	}
 	
 	public static final BiFunction<Sudoku, List<Function<Sudoku,Technique>>, List<Technique>> SOURCE_TO_TECHNIQUES = 
@@ -160,8 +158,8 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 			if( !networks.isEmpty()){
 				
 				//DEBUG
-				Debug.log("Something passed, splitting thread: " + networks.size() + " children");
-				Debug.log(event.wrapped());
+				Debug.log("Have some unsolved networks; splitting thread: " + networks.size() + " children");
+				Debug.log("SolutionEvent: "+event.wrapped());
 				
 				String name = Thread.currentThread().getName();
 				for(int i=0; i<networks.size(); ++i){
@@ -174,7 +172,11 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 				}
 			} else{
 				synchronized(lock){
-					Debug.log("Nothing passed, notifying lock"); //DEBUG
+					
+					//DEBUG
+					Debug.log("Have no unsolved networks; notifying lock");
+					Debug.log("SolutionEvent: "+event.wrapped());
+					
 					lock.notify();
 				}
 			}
