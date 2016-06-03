@@ -117,7 +117,7 @@ public class ColorChain extends Technique {
 				Set<Claim> falsified = Sledgehammer.sideEffectUnion(recipients, false);
 				falsified.removeAll(Sledgehammer.sideEffectUnion(sources, false));
 				
-				return Sledgehammer.resolve(falsified, sources, recipients);
+				return Sledgehammer.resolve(falsified, sources, recipients, SolveEventBridgeJoin::new);
 			}
 		}
 		
@@ -150,9 +150,8 @@ public class ColorChain extends Technique {
 	}
 	
 	public static class SolveEventBridgeJoin extends SolutionEvent{
-		private SolveEventBridgeJoin(Sledgehammer.SolveEventSledgehammer usurped){
-			super(usurped.falsified());
-			children().addAll(usurped.children());
+		private SolveEventBridgeJoin(Set<Claim> falsified, Collection<? extends Fact> src, Collection<? extends Fact> recip){
+			super(falsified);
 		}
 	}
 	

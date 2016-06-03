@@ -357,7 +357,7 @@ public class Sledgehammer extends Technique {
 			//If the source and recipient combos make a valid sledgehammer scenario
 			Set<Claim> claimsToSetFalse = areSledgehammerScenario(srcCombo, recipientCombo);
 			if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
-				return resolve(claimsToSetFalse, srcCombo, recipientCombo);
+				return resolve(claimsToSetFalse, srcCombo, recipientCombo, SolveEventSledgehammer::new);
 			}
 		}
 		return null;
@@ -539,10 +539,14 @@ public class Sledgehammer extends Technique {
 	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
 	 */
-	static SolveEventSledgehammer resolve(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip){
-		SolveEventSledgehammer time = new SolveEventSledgehammer(claimsToSetFalse, src, recip);
+	static SolutionEvent resolve(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip, Resolve res){
+		SolutionEvent time = res.resolve(claimsToSetFalse, src, recip);
 		claimsToSetFalse.stream().forEach((c)->c.setFalse(time));
 		return time;
+	}
+	
+	static interface Resolve{
+		public SolutionEvent resolve(Set<Claim> falsified, Collection<? extends Fact> src, Collection<? extends Fact> recip);
 	}
 	
 	/**
@@ -573,7 +577,7 @@ public class Sledgehammer extends Technique {
 							Set<Claim> falsify = falsifiedClaims(comboA, comboB);
 							
 							if(falsify != null){
-								return resolve(falsify, comboA, comboB);
+								return resolve(falsify, comboA, comboB, SolveEventSledgehammer::new);
 							}
 						}
 					}
