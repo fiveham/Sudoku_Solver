@@ -1,6 +1,10 @@
-package sudoku;
+package sudoku.technique;
 
+import sudoku.Init;
 import sudoku.NodeSet;
+import sudoku.Sudoku;
+import sudoku.time.SolutionEvent;
+
 import java.util.Optional;
 
 /**
@@ -14,7 +18,7 @@ import java.util.Optional;
  * @author fiveham
  *
  */
-public class Initializer extends Technique {
+public class Initializer extends AbstractTechnique {
 	
 	/**
 	 * <p>Constructs an Initializer that works to solve the 

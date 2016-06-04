@@ -1,10 +1,10 @@
-package sudoku;
+package sudoku.time;
 
+import common.time.AbstractTime;
+import common.time.Time;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import common.time.AbstractTime;
-import common.time.Time;
 
 /**
  * <p>Denotes the termination of a Solver thread because a 

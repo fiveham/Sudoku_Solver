@@ -8,6 +8,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import sudoku.Puzzle.RuleType;
+import sudoku.technique.Sledgehammer;
+import sudoku.time.FalsifiedTime;
+import sudoku.time.SolutionEvent;
 import sudoku.Puzzle.IndexInstance;
 
 public class Rule extends Fact{
@@ -134,7 +137,7 @@ public class Rule extends Fact{
 	 * @throws IllegalStateException if this Rule is empty
 	 */
 	@Override
-	protected void validateFinalState(SolutionEvent time){
+	public void validateFinalState(SolutionEvent time){
 		if(isSolved()){
 			Claim c = iterator().next(); //there is only one Claim
 			if( !c.setTrueInProgress() ){

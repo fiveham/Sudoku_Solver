@@ -1,9 +1,14 @@
 package sudoku;
 
 import sudoku.Puzzle.IndexValue;
+import sudoku.technique.Sledgehammer;
+import sudoku.time.SolutionEvent;
+
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import common.ToolSet;
 
 /**
  * <p>Represents a claim that "Cell x,y has value z."</p>

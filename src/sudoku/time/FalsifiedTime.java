@@ -1,5 +1,7 @@
-package sudoku;
+package sudoku.time;
 
+import common.time.AbstractTime;
+import common.time.Time;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -7,8 +9,8 @@ import java.util.Set;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import common.time.AbstractTime;
-import common.time.Time;
+import sudoku.Claim;
+import sudoku.Rule;
 
 /**
  * <p>A Time in which some Claims are {@link Claim#setFalse(SolutionEvent) set false}.</p>
@@ -122,7 +124,7 @@ public class FalsifiedTime extends AbstractTime {
 		return count;
 	}
 	
-	static class NoUnaccountedClaims extends RuntimeException{
+	public static class NoUnaccountedClaims extends RuntimeException{
 		/**
 		 * 
 		 */

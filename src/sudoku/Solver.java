@@ -9,6 +9,12 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import sudoku.technique.ColorChain;
+import sudoku.technique.Initializer;
+import sudoku.technique.Sledgehammer;
+import sudoku.technique.Technique;
+import sudoku.time.SolutionEvent;
+import sudoku.time.ThreadEvent;
 import sudoku.parse.Parser;
 
 /**
@@ -22,7 +28,7 @@ import sudoku.parse.Parser;
  * @author fiveham
  *
  */
-public class Solver implements Runnable{ //TODO switch order of Sledgehammer and ColorChain techniques to debug/test ColorChain
+public class Solver implements Runnable{
 	
 	public static final List<Function<Sudoku,Technique>> DEFAULT_INITIALIZER_SOURCE = new ArrayList<>(1);
 	static {
@@ -221,9 +227,9 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 		return handleTechniques(processors, eventParent);
 	}
 	
-	private static ThreadEvent handleTechniques(List<Technique> techniques, ThreadEvent eventParent){
-		for(Technique technique : techniques){
-			SolutionEvent solutionEvent = technique.digest();
+	private static ThreadEvent handleTechniques(List<Technique> abstractTechniques, ThreadEvent eventParent){
+		for(Technique abstractTechnique : abstractTechniques){
+			SolutionEvent solutionEvent = abstractTechnique.digest();
 			
 			if(solutionEvent != null){
 				return new ThreadEvent(eventParent, solutionEvent, Thread.currentThread().getName());

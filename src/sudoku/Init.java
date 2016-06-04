@@ -1,5 +1,7 @@
 package sudoku;
 
+import sudoku.time.SolutionEvent;
+
 /**
  * <p>An expression of a specific value of a cell in a sudoku 
  * puzzle.</p>
@@ -46,7 +48,7 @@ public class Init extends Fact {
 	}
 	
 	@Override
-	protected void validateFinalState(SolutionEvent time){
+	public void validateFinalState(SolutionEvent time){
 		Claim claim = claim();
 		if( !claim.setTrueInProgress() ){
 			Debug.log("Initial-value verifying "+claim);

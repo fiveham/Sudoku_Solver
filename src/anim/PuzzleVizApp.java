@@ -3,11 +3,12 @@ package anim;
 import common.Pair;
 import common.time.Time;
 import sudoku.Claim;
-import sudoku.FalsifiedTime;
 import sudoku.Puzzle;
 import sudoku.Puzzle.IndexInstance;
+import sudoku.time.FalsifiedTime;
+import sudoku.time.ThreadEvent;
 import sudoku.Solver;
-import sudoku.ThreadEvent;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;

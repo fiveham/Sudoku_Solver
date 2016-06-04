@@ -18,7 +18,7 @@ public interface Sudoku extends Graph<NodeSet<?,?>>{
 	public boolean isSolved();
 	
 	/**
-	 * <p>Returns a {@code Stream&lt;Fact&gt;} providing access to all 
+	 * <p>Returns a {@code Stream<Fact>} providing access to all 
 	 * the {@code Fact{@code s in this {@code Sudoku}'s underlying 
 	 * {@link common.graph.Graph Graph}.</p>
 	 * 
@@ -31,7 +31,7 @@ public interface Sudoku extends Graph<NodeSet<?,?>>{
 	 * factStream() should be {@link Stream#collect(java.util.stream.Collector) collected} 
 	 * as {@link java.util.stream.Collectors#toSet() a Set}.</p>
 	 * 
-	 * @return a {@code Stream&lt;Fact&gt;} providing access to all 
+	 * @return a {@code Stream<Fact>} providing access to all 
 	 * the {@code Fact{@code s in this {@code Sudoku}
 	 */
 	public Stream<Fact> factStream();
@@ -43,17 +43,17 @@ public interface Sudoku extends Graph<NodeSet<?,?>>{
 	public Stream<Claim> claimStream();
 	
 	/**
-	 * <p>Returns the underlying order of this Puzzle, the  square root of 
+	 * <p>Returns the underlying order of this puzzle, the  square root of 
 	 * the side length.</p>
-	 * @return the underlying order of this Puzzle, the square root of the 
+	 * @return the underlying order of this puzzle, the square root of the 
 	 * side length
 	 */
 	public int magnitude();
 	
 	/**
-	 * <p>Returns the length of a side of this Puzzle, which is also the number 
+	 * <p>Returns the length of a side of this puzzle, which is also the number 
 	 * of rows, the number of columns, and the number of boxes.</p>
-	 * @return the length of a side of this target
+	 * @return the length of a side of this puzzle
 	 */
 	public int sideLength();
 }

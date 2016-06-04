@@ -1,8 +1,10 @@
-package sudoku;
+package sudoku.technique;
 
 import common.ComboGen;
 import common.NCuboid;
 import common.Pair;
+import common.ToolSet;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,7 +23,15 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
+
+import sudoku.Claim;
+import sudoku.Debug;
+import sudoku.Fact;
+import sudoku.Puzzle;
+import sudoku.Rule;
+import sudoku.Sudoku;
 import sudoku.Puzzle.RuleType;
+import sudoku.time.SolutionEvent;
 
 //TODO describe sledgehammer solution scenarios and their stipulations in the class javadoc
 /**
@@ -115,7 +125,7 @@ import sudoku.Puzzle.RuleType;
  * @author fiveham
  *
  */
-public class Sledgehammer extends Technique {
+public class Sledgehammer extends AbstractTechnique {
 	
 	/**
 	 * <p>The {@code valueMapper} for the {@link Collectors#toMap(Function,Function,BinaryOperator) toMap} 
@@ -693,7 +703,7 @@ public class Sledgehammer extends Technique {
 	 * some of the elements of {@code srcCombo} intersect each other, or otherwise 
 	 * the mass-union of all the elements of {@code srcCombo}.
 	 */
-	static <T> ToolSet<T> sideEffectUnion(Collection<? extends Collection<T>> collections, boolean nullIfNotDisjoint){
+	public static <T> ToolSet<T> sideEffectUnion(Collection<? extends Collection<T>> collections, boolean nullIfNotDisjoint){
 		ToolSet<T> result = new ToolSet<>();
 		
 		int cumulativeSize = 0;

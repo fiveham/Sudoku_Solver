@@ -1,7 +1,9 @@
 package sudoku;
 
+import common.ToolSet;
 import common.graph.Vertex;
 import common.time.Time;
+import sudoku.time.SolutionEvent;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -265,15 +267,15 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	 * class the need to validate the set's final state afterward can call 
 	 * this method while subclasses provide meaningful implementations.</p>
 	 */
-	protected void validateFinalState(SolutionEvent time){
+	public void validateFinalState(SolutionEvent time){
 		//do nothing
 	}
 	
-	final int superHashCode(){
+	public final int superHashCode(){
 		return super.hashCode();
 	}
 	
-	final boolean superEquals(Object o){
+	public final boolean superEquals(Object o){
 		return super.equals(o);
 	}
 	

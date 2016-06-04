@@ -1,4 +1,4 @@
-package sudoku;
+package sudoku.technique;
 
 import common.ComboGen;
 import common.Pair;
@@ -20,6 +20,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import sudoku.Claim;
+import sudoku.Fact;
+import sudoku.Sudoku;
+import sudoku.time.SolutionEvent;
 
 /**
  * <p>The color-chain technique exploits the fact that a Rule with 
@@ -31,7 +35,7 @@ import java.util.stream.IntStream;
  * @author fiveham
  * 
  */
-public class ColorChain extends Technique {
+public class ColorChain extends AbstractTechnique {
 	
 	private final ColorSource colorSource = new ColorSource();
 	
@@ -143,11 +147,11 @@ public class ColorChain extends Technique {
 			
 			List<ColorClaim> pathC0 = chain0.path(CHAIN_RULE_INTERSECTION.apply(chain0, lane0), CHAIN_RULE_INTERSECTION.apply(chain0, lane1));
 			List<Fact> path0 = IntStream.range(1,pathC0.size())
-					.mapToObj((int i) -> new ToolSet<Fact>(pathC0.get(i-1).wrapped()).intersection(pathC0.get(i).wrapped()).iterator().next())
+					.mapToObj((int i) -> pathC0.get(i-1).wrapped().intersection(pathC0.get(i).wrapped()).iterator().next())
 					.collect(Collectors.toList());
 			List<ColorClaim> pathC1 = chain1.path(CHAIN_RULE_INTERSECTION.apply(chain1, lane0), CHAIN_RULE_INTERSECTION.apply(chain1, lane1));
 			List<Fact> path1 = IntStream.range(1, pathC1.size())
-					.mapToObj((int i) -> new ToolSet<Fact>(pathC1.get(i-1).wrapped()).intersection(pathC1.get(i).wrapped()).iterator().next())
+					.mapToObj((int i) -> pathC1.get(i-1).wrapped().intersection(pathC1.get(i).wrapped()).iterator().next())
 					.collect(Collectors.toList());
 			
 			if(path0.size()%2==1 && path1.size()%2==1){
@@ -220,7 +224,7 @@ public class ColorChain extends Technique {
 		Set<Claim> claimsToSetFalse = visibleToPositives;
 		claimsToSetFalse.retainAll(visibleToNegatives);
 		if(!claimsToSetFalse.isEmpty()){
-			SolutionEvent result = new SolveEventColorChainVisibleContradiction(claimsToSetFalse);
+			SolutionEvent result = new SolveEventColorContradiction(claimsToSetFalse);
 			claimsToSetFalse.stream().forEach((c)->c.setFalse(result));
 			return result;
 		}
@@ -244,10 +248,10 @@ public class ColorChain extends Technique {
 	 * at the time when this method is called
 	 */
 	private Collection<Graph<ColorClaim>> generateChains(){
-		List<Rule> xorRules = target.nodeStream()
-				.filter(Rule.IS_RULE)
-				.map(Rule.AS_RULE)
-				.filter(Rule::isXor)
+		List<Fact> xorRules = target.nodeStream()
+				.filter(Fact.IS_FACT)
+				.map(Fact.AS_FACT)
+				.filter(Fact::isXor)
 				.collect(Collectors.toList());
 		return new BasicGraph<ColorClaim>(link(xorRules))
 				.addContractEventListenerFactory(colorSource)
@@ -263,7 +267,7 @@ public class ColorChain extends Technique {
 	 * @return a list of connected ColorClaim each of which wraps a Claim 
 	 * from {@code claims} and tags that Claim with a color
 	 */
-	private static List<ColorClaim> link(Collection<Rule> xorRules){
+	private static List<ColorClaim> link(Collection<Fact> xorRules){
 		Map<Claim,ColorClaim> map = new HashMap<>();
 		List<ColorClaim> colorClaims = Sledgehammer.sideEffectUnion(xorRules, false).stream()
 				.map(ColorClaim::new)
@@ -291,14 +295,14 @@ public class ColorChain extends Technique {
 	 * @param color the color of the Claims being set false
 	 * @return {@code time}, after the Claims of the specified {@code color} from 
 	 * the specified xor-{@code chain} are added to its pool of 
-	 * {@link FalsifiedTime#falsified() falsified Claims}
+	 * {@link sudoku.time.FalsifiedTime#falsified() falsified Claims}
 	 */
 	private SolutionEvent setChainFalseForColor(Graph<ColorClaim> chain, final int color){
 		Set<Claim> setFalse = chain.nodeStream()
 				.filter((cc)->cc.color()==color)
 				.map( ColorClaim::wrapped )
 				.collect(Collectors.toSet());
-		SolutionEvent time = new SolveEventColorChainBridge(setFalse);
+		SolutionEvent time = new SolveEventBridgeCollapse(setFalse);
 		setFalse.stream().forEach((c)->c.setFalse(time));
 		return time;
 	}
@@ -309,8 +313,8 @@ public class ColorChain extends Technique {
 	 * @author fiveham
 	 *
 	 */
-	public static class SolveEventColorChainBridge extends SolutionEvent{
-		private SolveEventColorChainBridge(Set<Claim> falsified){
+	public static class SolveEventBridgeCollapse extends SolutionEvent{
+		private SolveEventBridgeCollapse(Set<Claim> falsified){
 			super(falsified);
 		}
 		
@@ -475,8 +479,8 @@ public class ColorChain extends Technique {
 	 * @author fiveham
 	 *
 	 */
-	public static class SolveEventColorChainVisibleContradiction extends SolutionEvent{
-		private SolveEventColorChainVisibleContradiction(Set<Claim> falseClaims){
+	public static class SolveEventColorContradiction extends SolutionEvent{
+		private SolveEventColorContradiction(Set<Claim> falseClaims){
 			super(falseClaims);
 		}
 		

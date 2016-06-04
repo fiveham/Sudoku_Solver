@@ -30,9 +30,8 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	}
 	
 	public SudokuNetwork(int magnitude, Graph<NodeSet<?,?>> connectedComponent){
+		this(magnitude);
 		this.nodes.addAll(connectedComponent.nodeStream().collect(Collectors.toList()));
-		this.magnitude = magnitude;
-		this.sideLength = magnitude*magnitude;
 	}
 	
 	/**

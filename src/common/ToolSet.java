@@ -1,4 +1,4 @@
-package sudoku;
+package common;
 
 import java.util.Collection;
 import java.util.Collections;
