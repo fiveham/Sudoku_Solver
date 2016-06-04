@@ -395,8 +395,8 @@ public class Puzzle extends SudokuNetwork{
 		Supplier<String> betweenNumbers = new InterNumber();
 		
 		nodeStream()
-				.filter(Rule.IS_RULE)
-				.map(Rule.AS_RULE)
+				.filter(Rule.class::isInstance)
+				.map(Rule.class::cast)
 				.filter((r)->r.getType()==RuleType.CELL)
 				.sorted((cell1, cell2) -> {
 					Claim claim1 = cell1.iterator().next();

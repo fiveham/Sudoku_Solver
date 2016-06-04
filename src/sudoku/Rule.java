@@ -4,8 +4,6 @@ import common.time.Time;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import sudoku.Puzzle.RuleType;
 import sudoku.technique.Sledgehammer;
@@ -14,10 +12,6 @@ import sudoku.time.SolutionEvent;
 import sudoku.Puzzle.IndexInstance;
 
 public class Rule extends Fact{
-	
-	public static final Predicate<NodeSet<?,?>> IS_RULE = (n) -> n instanceof Rule;
-	
-	public static final Function<NodeSet<?,?>,Rule> AS_RULE = (n) -> (Rule)n;
 	
 	/**
 	 * 
@@ -97,8 +91,8 @@ public class Rule extends Fact{
 	
 	public Set<Rule> visibleRules(){
 		Set<Rule> result = Sledgehammer.sideEffectUnion(this, false).stream()
-				.filter(IS_RULE)
-				.map(AS_RULE)
+				.filter(getClass()::isInstance)
+				.map(getClass()::cast)
 				.collect(Collectors.toSet());
 		result.remove(this);
 		return result;

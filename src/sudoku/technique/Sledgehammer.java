@@ -436,7 +436,7 @@ public class Sledgehammer extends AbstractTechnique {
 			}
 		}
 		return target.factStream()
-				.map(Rule.AS_RULE)
+				.map(Rule.class::cast)
 				.map(RuleWrap::new)
 				.distinct()
 				.map(RuleWrap::wrapped)

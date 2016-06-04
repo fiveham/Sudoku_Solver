@@ -47,7 +47,7 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	
 	@Override
 	public Stream<Fact> factStream(){
-		return nodes.stream().filter(Fact.IS_FACT).map(Fact.AS_FACT);
+		return nodes.stream().filter(Fact.class::isInstance).map(Fact.class::cast);
 	}
 	
 	/**
@@ -58,7 +58,7 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	 */
 	@Override
 	public Stream<Claim> claimStream(){
-		return nodes.stream().filter(Claim.IS_CLAIM).map(Claim.AS_CLAIM);
+		return nodes.stream().filter(Claim.class::isInstance).map(Claim.class::cast);
 	}
 	
 	@Override

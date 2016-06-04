@@ -249,8 +249,8 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	private Collection<Graph<ColorClaim>> generateChains(){
 		List<Fact> xorRules = target.nodeStream()
-				.filter(Fact.IS_FACT)
-				.map(Fact.AS_FACT)
+				.filter(Fact.class::isInstance)
+				.map(Fact.class::cast)
 				.filter(Fact::isXor)
 				.collect(Collectors.toList());
 		return new BasicGraph<ColorClaim>(link(xorRules))

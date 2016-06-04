@@ -1,12 +1,10 @@
 package sudoku;
 
+import java.util.Set;
+import java.util.function.Predicate;
 import sudoku.Puzzle.IndexValue;
 import sudoku.technique.Sledgehammer;
 import sudoku.time.SolutionEvent;
-
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 import common.ToolSet;
 
@@ -20,14 +18,6 @@ import common.ToolSet;
  *
  */
 public class Claim extends NodeSet<Fact,Claim>{
-	
-	/**
-	 * <p>Returns true if and only if the specified {@code NodeSet<?,?>} is 
-	 * a {@code Rule}.</p>
-	 */
-	public static final Predicate<NodeSet<?,?>> IS_CLAIM = (ns)->ns instanceof Claim;
-	
-	public static final Function<NodeSet<?,?>,Claim> AS_CLAIM = (ns) -> (Claim) ns;
 	
 	/**
 	 * <p>The initial number of {@link #neighbors() Rules to which this Claim belongs}. 

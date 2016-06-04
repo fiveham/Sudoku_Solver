@@ -1,18 +1,8 @@
 package sudoku;
 
 import java.util.Collection;
-import java.util.function.Function;
-import java.util.function.Predicate;
 
 public class Fact extends NodeSet<Claim,Fact>{
-	
-	/**
-	 * <p>Returns true if and only if the specified {@code NodeSet<?,?>} is 
-	 * a {@code Rule}.</p>
-	 */
-	public static final Predicate<NodeSet<?,?>> IS_FACT  = (ns)->ns instanceof Fact;
-	
-	public static final Function<NodeSet<?,?>,Fact> AS_FACT  = (ns)->(Fact) ns;
 	
 	/**
 	 * <p>The number ({@value}) of elements (neighbors) of a Rule when 
