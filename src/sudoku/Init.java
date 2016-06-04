@@ -24,8 +24,8 @@ public class Init extends Fact {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 3700799253734450539L;
-	
+	private static final long serialVersionUID = 7730369667106322962L;
+
 	/**
 	 * <p>Constructs an Init belonging to the specified {@code puzzle}, 
 	 * with an initial capacity of {@value #CAPACITY}.</p>

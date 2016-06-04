@@ -16,7 +16,7 @@ public class Rule extends Fact{
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 2191355198146127036L;
+	private static final long serialVersionUID = 2703809294481675542L;
 	
 	private final Puzzle.RuleType type;
 	private final IndexInstance dimA, dimB;

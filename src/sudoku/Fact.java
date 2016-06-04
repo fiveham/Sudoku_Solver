@@ -5,6 +5,11 @@ import java.util.Collection;
 public class Fact extends NodeSet<Claim,Fact>{
 	
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -3547362110024521237L;
+
+	/**
 	 * <p>The number ({@value}) of elements (neighbors) of a Rule when 
 	 * the Claim satisfying the Rule has been completely 
 	 * identified.</p>
@@ -13,18 +18,13 @@ public class Fact extends NodeSet<Claim,Fact>{
 	
 	/**
 	 * <p>The number ({@value}) of elements (neighbors) of a Rule that 
-	 * is a {@code xor}.  A Rule is a {@code xor} if it has two Claims, 
+	 * is a {@code xor}. A Rule is a {@code xor} if it has two Claims, 
 	 * because exactly one of them is true and the other is false. Given 
-	 * that we know that the Rule is satisfied (is {@code true}), the 
-	 * Claims, as inputs to the Rule, make such a Rule a {@code xor} 
-	 * operation on its neighbors.</p>
+	 * that the Rule is satisfied (the Rule is {@code true}), the Claims, 
+	 * as inputs to the Rule, make such a Rule a {@code xor} operation on 
+	 * its neighbors.</p>
 	 */
 	private static final int SIZE_WHEN_XOR = 2;
-	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 324978329635129743L;
 	
 	public Fact(Puzzle puzzle){
 		super(puzzle);

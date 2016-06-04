@@ -1,7 +1,6 @@
 package sudoku;
 
 import java.util.Set;
-import java.util.function.Predicate;
 import sudoku.Puzzle.IndexValue;
 import sudoku.technique.Sledgehammer;
 import sudoku.time.SolutionEvent;
@@ -20,47 +19,16 @@ import common.ToolSet;
 public class Claim extends NodeSet<Fact,Claim>{
 	
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2402719833037606449L;
+
+	/**
 	 * <p>The initial number of {@link #neighbors() Rules to which this Claim belongs}. 
 	 * It is the count of the kinds of FactBags that can hold the same 
 	 * Claim in common: a Rule for a cell, a box, a column, and a row.</p>
 	 */
 	public static final int INIT_OWNER_COUNT = Puzzle.RuleType.values().length;
-	
-	/**
-	 * <p>Indicates whether the specified Claim is in the process of being 
-	 * {@link Claim#setFalse(SolutionEvent) set false}. Outputs true if 
-	 * and only if the specified Claim has a number of neighbors between 
-	 * the typical initial {@value Claim#INIT_OWNER_COUNT} and 0, which 
-	 * only occurs after the Claim has had some but not all of its Rule 
-	 * neighbors removed while being set false.</p>
-	 * 
-	 * <p>It is possible for a Claim being set false to trigger one of its 
-	 * (formerly) neighboring Rules to initiate a 
-	 * {@link #TimeValueClaim value-claim} that targets the very same Claim 
-	 * that's still in the process of being set false as one of the Claims 
-	 * to be set false. Calling {@code setFalse} on such a Claim will create 
-	 * a second Iterator, which will remove the remaining Rules from that 
-	 * Claim, modifying the underlying collection. When that method call 
-	 * and all others subordinate to the initial {@code setFalse} call on 
-	 * the twice-falsified Claim return and control passes back to that 
-	 * initial {@code setFalse}, the Iterator therein for that Claim will 
-	 * still {@link Iterator#hasNext() have a next element} available, 
-	 * even though the actual collection may be empty, resulting in a 
-	 * ConcurrentModificationException the next time {@link Iterator#next() next()} 
-	 * is called.</p>
-	 * 
-	 * <p>However, by filtering the Claims to be falsified in a value-claim 
-	 * situation against this Predicate, only falsifying those that this 
-	 * test says are not in the middle of being set false, multiple-
-	 * falsification and the ConcurrentModificationException that comes with 
-	 * it can be avoided.</p>
-	 */
-	public static final Predicate<Claim> CLAIM_IS_BEING_SET_FALSE = (claim) -> !claim.isEmpty() && claim.size() < INIT_OWNER_COUNT;
-	
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1575574810729080115L;
 	
 	private IndexValue x;
 	private IndexValue y;

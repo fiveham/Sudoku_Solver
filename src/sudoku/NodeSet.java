@@ -42,7 +42,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -5327679229184923974L;
+	private static final long serialVersionUID = 6938429068342291749L;
 	
 	protected Puzzle puzzle;
 

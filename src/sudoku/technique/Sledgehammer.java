@@ -738,8 +738,8 @@ public class Sledgehammer extends AbstractTechnique {
 		/**
 		 * 
 		 */
-		private static final long serialVersionUID = -1935783525022691906L;
-
+		private static final long serialVersionUID = -8687502832663252756L;
+		
 		@Override
 		public Set<Rule> get(Object o){
 			if(containsKey(o)){

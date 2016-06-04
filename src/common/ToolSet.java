@@ -21,7 +21,7 @@ public class ToolSet<T> extends HashSet<T> {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 7950470421023736025L;
+	private static final long serialVersionUID = 7562530465837262993L;
 	
 	/**
 	 * <p>Constructs an empty ToolSet.</p>
