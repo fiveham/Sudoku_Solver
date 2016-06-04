@@ -54,7 +54,7 @@ public class FalsifiedTime extends AbstractTime {
 	private static Set<Claim> upFalsified(Time time, boolean skip){
 		return skip(time.upTrail().stream(), skip)
 				.filter((t) -> t instanceof FalsifiedTime)
-				.map((t) -> ((FalsifiedTime)t))
+				.map((t) -> (FalsifiedTime)t)
 				.collect(Collector.of(
 						HashSet::new, 
 						(Set<Claim> r, FalsifiedTime t) -> r.addAll(t.falsified), 

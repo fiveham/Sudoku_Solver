@@ -126,6 +126,7 @@ public class ColorChain extends Technique {
 		return null;
 	}
 	
+	@SuppressWarnings("unchecked")
 	private Pair<Collection<Fact>,Collection<Fact>> chainSledgehammer(List<Graph<ColorClaim>> chains){
 		Graph<ColorClaim> chain0 = chains.get(0);
 		Graph<ColorClaim> chain1 = chains.get(1);
@@ -209,11 +210,11 @@ public class ColorChain extends Technique {
 	private SolutionEvent visibleColorContradiction(Graph<ColorClaim> concom){
 		Set<Claim> visibleToPositives = concom.nodeStream()
 				.filter((cc) -> cc.color > 0)
-				.map((cc) -> cc.wrapped())
+				.map(ColorClaim::wrapped)
 				.collect(CLAIMS_TO_VISIBLE_CLAIMS);
 		Set<Claim> visibleToNegatives = concom.nodeStream()
 				.filter((cc) -> cc.color < 0)
-				.map((cc) -> cc.wrapped())
+				.map(ColorClaim::wrapped)
 				.collect(CLAIMS_TO_VISIBLE_CLAIMS);
 		
 		Set<Claim> claimsToSetFalse = visibleToPositives;
@@ -244,8 +245,9 @@ public class ColorChain extends Technique {
 	 */
 	private Collection<Graph<ColorClaim>> generateChains(){
 		List<Rule> xorRules = target.nodeStream()
-				.filter((nodeSet)->(nodeSet.size()==Rule.SIZE_WHEN_XOR && nodeSet instanceof Rule))
-				.map((nodeSet)->(Rule)nodeSet)
+				.filter(Rule.IS_RULE)
+				.map(Rule.AS_RULE)
+				.filter(Rule::isXor)
 				.collect(Collectors.toList());
 		return new BasicGraph<ColorClaim>(link(xorRules))
 				.addContractEventListenerFactory(colorSource)
@@ -269,7 +271,7 @@ public class ColorChain extends Technique {
 				.collect(Collectors.toList());
 		
 		xorRules.stream()
-				.map((f) -> new ArrayList<>(f))
+				.map(ArrayList<Claim>::new)
 				.forEach((edge) -> {
 					ColorClaim cc0 = map.get(edge.get(0));
 					ColorClaim cc1 = map.get(edge.get(1));
@@ -294,7 +296,7 @@ public class ColorChain extends Technique {
 	private SolutionEvent setChainFalseForColor(Graph<ColorClaim> chain, final int color){
 		Set<Claim> setFalse = chain.nodeStream()
 				.filter((cc)->cc.color()==color)
-				.map( (cc)->cc.wrapped() )
+				.map( ColorClaim::wrapped )
 				.collect(Collectors.toSet());
 		SolutionEvent time = new SolveEventColorChainBridge(setFalse);
 		setFalse.stream().forEach((c)->c.setFalse(time));
@@ -365,16 +367,11 @@ public class ColorChain extends Technique {
 		if(massUnionCache.containsKey(chain)){
 			return massUnionCache.get(chain);
 		} else{
-			Set<Fact> result = Sledgehammer.sideEffectUnion( chain.nodeStream().map(UNWRAP_TO_CLAIM).collect(Collectors.toList()), false);
+			Set<Fact> result = Sledgehammer.sideEffectUnion( chain.nodeStream().map(ColorClaim::wrapped).collect(Collectors.toList()), false);
 			massUnionCache.put(chain, result);
 			return result;
 		}
 	}
-	
-	/**
-	 * <p>A Function mapping a ColorClaim to its {@link ColorClaim#wrapped() wrapped} Claim.</p>
-	 */
-	public static final Function<ColorClaim,Claim> UNWRAP_TO_CLAIM = (n)->n.wrapped();
 	
 	/**
 	 * <p>Returns the int color of the Claims belonging to {@code chain} 

@@ -26,7 +26,7 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	
 	public static final List<Function<Sudoku,Technique>> DEFAULT_INITIALIZER_SOURCE = new ArrayList<>(1);
 	static {
-		DEFAULT_INITIALIZER_SOURCE.add( (sudoku) -> new Initializer(sudoku) );
+		DEFAULT_INITIALIZER_SOURCE.add(Initializer::new);
 	}
 	
 	public static final List<Function<Sudoku,Technique>> DEFAULT_PROCESSOR_SOURCE = new ArrayList<>(2);
@@ -234,10 +234,10 @@ public class Solver implements Runnable{ //TODO switch order of Sledgehammer and
 	
 	private static enum TechniqueInheritance{
 		WITH_INITIALIZERS(
-				(solver)->solver.initialize(), 
+				Solver::initialize, 
 				HAS_INITIALIZERS), 
 		WITHOUT_INITIALIZERS(
-				(solver)->solver.process(), 
+				Solver::process, 
 				HAS_NO_INITIALIZERS);
 		
 		private final Function<Solver,ThreadEvent> solutionStyle;

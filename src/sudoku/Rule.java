@@ -5,11 +5,14 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import sudoku.Puzzle.RuleType;
 import sudoku.Puzzle.IndexInstance;
 
 public class Rule extends Fact{
+	
+	public static final Predicate<NodeSet<?,?>> IS_RULE = (n) -> n instanceof Rule;
 	
 	public static final Function<NodeSet<?,?>,Rule> AS_RULE = (n) -> (Rule)n;
 	
@@ -101,8 +104,8 @@ public class Rule extends Fact{
 	
 	public Set<Rule> visibleRules(){
 		Set<Rule> result = Sledgehammer.sideEffectUnion(this, false).stream()
-				.filter((f) -> f instanceof Rule)
-				.map((f)->(Rule)f)
+				.filter(IS_RULE)
+				.map(AS_RULE)
 				.collect(Collectors.toSet());
 		result.remove(this);
 		return result;
@@ -198,17 +201,6 @@ public class Rule extends Fact{
 	 * of another.</p>
 	 */
 	private void findAndAddressValueClaim(SolutionEvent time){
-		/*visibleRules().stream()
-				.filter((r) -> r.type.canClaimValue(type) && r.hasProperSubset(this))
-				.forEach((r) -> {
-					Set<Claim> falsified = new HashSet<>(r);
-					falsified.removeAll(this);
-					
-					time.push(new TimeValueClaim(time.top(), falsified));
-					falsified.stream().forEach((claim) -> claim.setFalse(time));
-					time.pop();
-				});*/
-		
 		for(Rule r : visibleRules()){
 			if(r.type.canClaimValue(type) && r.hasProperSubset(this)){
 				Set<Claim> falsified = new HashSet<>(r);
@@ -270,5 +262,9 @@ public class Rule extends Fact{
 		private AutoResolve(Time parent, Set<Claim> falseClaims){
 			super(parent, falseClaims);
 		}
+	}
+	
+	public boolean isXor(){
+		return size() == SIZE_WHEN_XOR;
 	}
 }

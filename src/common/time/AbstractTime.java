@@ -60,12 +60,12 @@ public abstract class AbstractTime implements Time{
 	
 	@Override
 	public List<Time> currentTrail(){
-		return trailGen((t) -> t.focus(), (t)->t.hasChildren());
+		return trailGen(Time::focus, Time::hasChildren);
 	}
 	
 	@Override
 	public List<Time> upTrail(){
-		return trailGen((t) -> t.parent(), (t)->t.hasParent());
+		return trailGen(Time::parent, Time::hasParent);
 	}
 	
 	private List<Time> trailGen(Function<Time,Time> upDown, Predicate<Time> test){

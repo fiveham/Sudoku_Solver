@@ -2,6 +2,7 @@ package sudoku;
 
 import sudoku.Puzzle.IndexValue;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -14,6 +15,21 @@ import java.util.function.Predicate;
  *
  */
 public class Claim extends NodeSet<Fact,Claim>{
+	
+	/**
+	 * <p>Returns true if and only if the specified {@code NodeSet<?,?>} is 
+	 * a {@code Rule}.</p>
+	 */
+	public static final Predicate<NodeSet<?,?>> IS_CLAIM = (ns)->ns instanceof Claim;
+	
+	public static final Function<NodeSet<?,?>,Claim> AS_CLAIM = (ns) -> (Claim) ns;
+	
+	/**
+	 * <p>The initial number of {@link #neighbors() Rules to which this Claim belongs}. 
+	 * It is the count of the kinds of FactBags that can hold the same 
+	 * Claim in common: a Rule for a cell, a box, a column, and a row.</p>
+	 */
+	public static final int INIT_OWNER_COUNT = Puzzle.RuleType.values().length;
 	
 	/**
 	 * <p>Indicates whether the specified Claim is in the process of being 
@@ -44,19 +60,12 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * falsification and the ConcurrentModificationException that comes with 
 	 * it can be avoided.</p>
 	 */
-	public static final Predicate<Claim> CLAIM_IS_BEING_SET_FALSE = (claim) -> !claim.isEmpty() && claim.size() < Claim.INIT_OWNER_COUNT;
+	public static final Predicate<Claim> CLAIM_IS_BEING_SET_FALSE = (claim) -> !claim.isEmpty() && claim.size() < INIT_OWNER_COUNT;
 	
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1575574810729080115L;
-	
-	/**
-	 * <p>The initial number of {@link #neighbors() Rules to which this Claim belongs}. 
-	 * It is the count of the kinds of FactBags that can hold the same 
-	 * Claim in common: a Rule for a cell, a box, a column, and a row.</p>
-	 */
-	public static final int INIT_OWNER_COUNT = Puzzle.RuleType.values().length;
 	
 	private IndexValue x;
 	private IndexValue y;
@@ -263,28 +272,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 		result[Puzzle.Y_DIM] = cn.y.intValue() - y.intValue();
 		result[Puzzle.Z_DIM] = cn.symbol.intValue() - symbol.intValue();
 		return result;
-	}
-	
-	/**
-	 * <p>Verifies that this Claim's state is acceptable after 
-	 * it has been modified.</p>
-	 */
-	@Override
-	protected void validateFinalState(SolutionEvent time){
-		/*boolean[] types = new boolean[Puzzle.RuleType.values().length];
-		
-		for(Fact f : this){
-			if(f instanceof Rule){
-				Rule r = (Rule)f;
-				types[r.getType().ordinal()] = true;
-			}
-		}
-		
-		for(boolean b : types){
-			if(!b){
-				throw new IllegalStateException("A Claim must remain connected to four Rules, one of each type.");
-			}
-		}*/
 	}
 	
 	/**

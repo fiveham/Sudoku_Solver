@@ -1,9 +1,18 @@
 package sudoku;
 
 import java.util.Collection;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class Fact extends NodeSet<Claim,Fact>{
+	
+	/**
+	 * <p>Returns true if and only if the specified {@code NodeSet<?,?>} is 
+	 * a {@code Rule}.</p>
+	 */
+	public static final Predicate<NodeSet<?,?>> IS_FACT  = (ns)->ns instanceof Fact;
+	
+	public static final Function<NodeSet<?,?>,Fact> AS_FACT  = (ns)->(Fact) ns;
 	
 	public static final Predicate<Fact> IS_XOR = (f) -> f.size() == Rule.SIZE_WHEN_XOR;
 	
@@ -42,5 +51,9 @@ public class Fact extends NodeSet<Claim,Fact>{
 			return r.puzzle.equals(puzzle) && super.equals(r);
 		}
 		return false;
+	}
+	
+	public boolean isSolved(){
+		return size() == SIZE_WHEN_SOLVED;
 	}
 }

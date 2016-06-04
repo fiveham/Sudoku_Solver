@@ -377,7 +377,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	@Override
 	public int hashCode(){
 		return nodeStream()
-				.map((n) -> n.hashCode())
-				.reduce(0, (i1,i2) -> i1+i2);
+				.map(Object::hashCode)
+				.reduce(0, Integer::sum);
 	}
 }

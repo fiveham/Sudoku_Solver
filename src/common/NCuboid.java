@@ -45,7 +45,7 @@ public class NCuboid<T> implements Iterable<List<T>> {
 	public NCuboid(Collection<? extends Collection<? extends T>> src) {
 		
 		this.src = new ArrayList<>(src.size());
-		if(src.parallelStream().anyMatch((dimension)->dimension.isEmpty())){
+		if(src.parallelStream().anyMatch(Collection::isEmpty)){
 			throw new IllegalArgumentException("One of the specified dimensions was empty.");
 		} else{
 			src.stream().forEach((dimension)->this.src.add(new ArrayList<T>(dimension)));
@@ -59,7 +59,7 @@ public class NCuboid<T> implements Iterable<List<T>> {
 	
 	@SafeVarargs
 	public NCuboid(Collection<? extends T>... srcs){
-		this(Arrays.asList(srcs).stream().map((collection) -> new ArrayList<>(collection)).collect(Collectors.toList()));
+		this(Arrays.asList(srcs).stream().map(ArrayList<T>::new).collect(Collectors.toList()));
 	}
 	
 	@Override

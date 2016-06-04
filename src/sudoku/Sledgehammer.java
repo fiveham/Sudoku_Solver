@@ -131,7 +131,7 @@ public class Sledgehammer extends Technique {
 	 * <p>The {@code mergeFunction} for the {@link Collectors#toMap(Function,Function,BinaryOperator) toMap} 
 	 * calls that define {@link #MAP_SOURCES_BY_SIZE} and {@link #MAP_RULES_BY_SIZE}.</p>
 	 */
-	private static final BinaryOperator<List<Rule>> MERGE_FUNCTION = (list1,list2) -> {
+	public static final BinaryOperator<List<Rule>> MERGE_LISTS = (list1,list2) -> {
 		list1.addAll(list2); 
 		return list1;
 	};
@@ -144,7 +144,7 @@ public class Sledgehammer extends Technique {
 	public static final Collector<Rule,?,Map<Integer,List<Rule>>> MAP_SOURCES_BY_SIZE = Collectors.toMap(
 			Sledgehammer::sledgehammerSizeIfSource, 
 			VALUE_MAPPER, 
-			MERGE_FUNCTION);
+			MERGE_LISTS);
 	
 	/**
 	 * <p>Collects a list of distinct Rules from a Sudoku into a Map partitioning them 
@@ -154,7 +154,7 @@ public class Sledgehammer extends Technique {
 	public static final Collector<Rule,?,Map<Integer,List<Rule>>> MAP_RULES_BY_SIZE = Collectors.toMap(
 			Rule::size, 
 			VALUE_MAPPER, 
-			MERGE_FUNCTION);
+			MERGE_LISTS);
 	
 	public static final int MIN_RECIPIENT_COUNT_PER_SOURCE = 2;
 	public static final int MIN_SOURCE_COUNT_PER_RECIPIENT = 2;
@@ -407,6 +407,10 @@ public class Sledgehammer extends Technique {
 				this.wrapped = rule;
 			}
 			
+			private Rule wrapped(){
+				return wrapped;
+			}
+			
 			@Override
 			public int hashCode(){
 				return wrapped.superHashCode();
@@ -422,10 +426,10 @@ public class Sledgehammer extends Technique {
 			}
 		}
 		return target.factStream()
-				.map((f) -> (Rule)f)
+				.map(Rule.AS_RULE)
 				.map(RuleWrap::new)
 				.distinct()
-				.map((rw)->rw.wrapped)
+				.map(RuleWrap::wrapped)
 				.collect(Collectors.toList());
 	}
 	

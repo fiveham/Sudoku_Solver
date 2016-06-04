@@ -316,7 +316,7 @@ public class Puzzle extends SudokuNetwork{
 	 * by {@code dims}
 	 */
 	public IndexValue decodeX(IndexInstance... dims){
-		return decodeDim((d) -> d.contributionX(), dims);
+		return decodeDim(IndexInstance::contributionX, dims);
 	}
 	
 	/**
@@ -331,7 +331,7 @@ public class Puzzle extends SudokuNetwork{
 	 * by {@code dims}
 	 */
 	public IndexValue decodeY(IndexInstance... dims){
-		return decodeDim((d) -> d.contributionY(), dims);
+		return decodeDim(IndexInstance::contributionY, dims);
 	}
 	
 	/**
@@ -346,7 +346,7 @@ public class Puzzle extends SudokuNetwork{
 	 * by {@code dims}
 	 */
 	public IndexValue decodeSymbol(IndexInstance... dims){
-		return decodeDim((d) -> d.contributionZ(), dims);
+		return decodeDim(IndexInstance::contributionZ, dims);
 	}
 	
 	/**

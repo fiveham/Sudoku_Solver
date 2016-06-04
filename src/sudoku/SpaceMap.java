@@ -126,7 +126,7 @@ public class SpaceMap implements Iterable<Claim>{
 		private final Iterator<List<Integer>> cubeIterator;
 		
 		private ClaimIterator(){
-			List<Integer> ints = puzzle.getIndices().stream().map((iv)->iv.intValue()).collect(Collectors.toList());
+			List<Integer> ints = puzzle.getIndices().stream().map(IndexValue::intValue).collect(Collectors.toList());
 			this.cubeIterator =  new NCuboid<Integer>(ints, ints, ints).iterator();
 		}
 		

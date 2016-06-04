@@ -1,6 +1,5 @@
 package sudoku;
 
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import common.graph.BasicGraph;
@@ -12,18 +11,6 @@ import common.graph.Graph;
  *
  */
 public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
-	
-	/**
-	 * <p>Returns true if and only if the specified {@code NodeSet<?,?>} is 
-	 * a {@code Rule}.</p>
-	 */
-	public static final Predicate<NodeSet<?,?>> IS_FACT  = (ns)->ns instanceof Fact;
-	
-	/**
-	 * <p>Returns true if and only if the specified {@code NodeSet<?,?>} is 
-	 * a {@code Rule}.</p>
-	 */
-	public static final Predicate<NodeSet<?,?>> IS_CLAIM = (ns)->ns instanceof Claim;
 	
 	/**
 	 * <p>The fundamental order of the target to which the nodes of this graph pertain, 
@@ -55,7 +42,7 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	
 	@Override
 	public Stream<Fact> factStream(){
-		return nodes.stream().filter(IS_FACT).map((ns)->(Fact)ns);
+		return nodes.stream().filter(Fact.IS_FACT).map(Fact.AS_FACT);
 	}
 	
 	/**
@@ -66,7 +53,7 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	 */
 	@Override
 	public Stream<Claim> claimStream(){
-		return nodes.stream().filter(IS_CLAIM).map((ns)->(Claim)ns);
+		return nodes.stream().filter(Claim.IS_CLAIM).map(Claim.AS_CLAIM);
 	}
 	
 	@Override

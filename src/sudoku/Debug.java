@@ -53,7 +53,7 @@ public class Debug {
 	
 	private static enum State{
 		NO_LOG( (ps,o) -> {}),
-		LOG( (ps,o) -> ps.println(o));
+		LOG(PrintStream::println);
 		
 		private final BiConsumer<PrintStream,Object> writer;
 		

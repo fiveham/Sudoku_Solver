@@ -73,7 +73,7 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	 * @return a list of Wraps complete with populated neighbor lists
 	 */
 	public static <W> List<Wrap<W>> wrap(Collection<? extends W> c, BiPredicate<? super W, ? super W> edgeDetector){
-		return wrap(c, edgeDetector, (w)->new Wrap<>(w));
+		return wrap(c, edgeDetector, Wrap<W>::new);
 	}
 	
 	//TODO redesign Wrap.wrap() so that the returned List have an arbitrary parameterized type.
