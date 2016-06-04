@@ -16,7 +16,7 @@ import java.util.Scanner;
  */
 public class ThreadEvent extends AbstractTime {
 	
-	private final SolutionEvent wrapped;
+	private final TechniqueEvent wrapped;
 	private final String threadName;
 	
 	/**
@@ -28,7 +28,7 @@ public class ThreadEvent extends AbstractTime {
 	 * @param wrapped the SolutionEvent that terminated the thread 
 	 * to which this ThreadEvent pertains
 	 */
-	public ThreadEvent(ThreadEvent parent, SolutionEvent wrapped, String threadName) {
+	public ThreadEvent(ThreadEvent parent, TechniqueEvent wrapped, String threadName) {
 		super(parent);
 		this.wrapped = wrapped;
 		this.threadName = threadName;
@@ -58,7 +58,7 @@ public class ThreadEvent extends AbstractTime {
 	 * <p>Returns the SolutionEvent wrapped by this ThreadEvent.</p>
 	 * @return the SolutionEvent wrapped by this ThreadEvent
 	 */
-	public SolutionEvent wrapped(){
+	public TechniqueEvent wrapped(){
 		return wrapped;
 	}
 	

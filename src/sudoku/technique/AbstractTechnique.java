@@ -2,7 +2,7 @@ package sudoku.technique;
 
 import sudoku.Rule;
 import sudoku.Sudoku;
-import sudoku.time.SolutionEvent;
+import sudoku.time.TechniqueEvent;
 
 /**
  * <p>Represents a technique used for solving sudoku puzzles.</p>
@@ -31,7 +31,7 @@ public abstract class AbstractTechnique implements Technique{
 	 * {@link sudoku.Sudoku#isSolved() solved}.</p>
 	 */
 	@Override
-	final public SolutionEvent digest(){
+	final public TechniqueEvent digest(){
 		return target.isSolved() ? null : process();
 	}
 	
@@ -44,7 +44,7 @@ public abstract class AbstractTechnique implements Technique{
 	 * {@link Rule#validateFinalState() automatic resolution} of Rule-subset 
 	 * scenarios, or returns null of no changes were made
 	 */
-	protected abstract SolutionEvent process();
+	protected abstract TechniqueEvent process();
 }
 
 

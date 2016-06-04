@@ -3,8 +3,6 @@ package sudoku;
 import common.ToolSet;
 import common.graph.Vertex;
 import common.time.Time;
-import sudoku.time.SolutionEvent;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,6 +10,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import sudoku.time.FalsifiedTime;
+import sudoku.time.TechniqueEvent;
 
 /**
  * <p>A set that's a node in {@link Puzzle a graph representation of a sudoku target}, 
@@ -102,7 +102,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		return result;
 	}
 	
-	public final boolean remove(SolutionEvent time, Object o){
+	public final boolean remove(FalsifiedTime time, Object o){
 		boolean result = remove_internal(time, o);
 		
 		if(result){
@@ -138,7 +138,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	}
 
 	@SuppressWarnings("unchecked")
-	private boolean remove_internal(SolutionEvent time, Object o){
+	private boolean remove_internal(FalsifiedTime time, Object o){
 		boolean result = super.remove(o);
 		if(result){
 			((T)o).remove(time, this);
@@ -159,7 +159,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		return result;
 	}
 	
-	public final boolean removeAll(SolutionEvent time, Collection<?> c){
+	public final boolean removeAll(FalsifiedTime time, Collection<?> c){
 		boolean result = false;
 		
 		for(Object o : c){
@@ -188,7 +188,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		return result;
 	}
 	
-	public final boolean retainAll(SolutionEvent time, Collection<?> c){
+	public final boolean retainAll(FalsifiedTime time, Collection<?> c){
 		boolean result = false;
 		
 		Iterator<T> iter = super.iterator();
@@ -204,7 +204,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		return result;
 	}
 	
-	public final void clear(SolutionEvent time){
+	public final void clear(FalsifiedTime time){
 		SafeRemovingIterator iter = new SafeRemovingIterator();
 		while(iter.hasNext()){
 			iter.next();
@@ -243,7 +243,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 			wrapped.remove();
 			lastResult.remove(NodeSet.this);
 		}
-		public void remove(SolutionEvent time){
+		public void remove(FalsifiedTime time){
 			wrapped.remove();
 			lastResult.remove(time, NodeSet.this);
 		}
@@ -267,7 +267,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	 * class the need to validate the set's final state afterward can call 
 	 * this method while subclasses provide meaningful implementations.</p>
 	 */
-	public void validateFinalState(SolutionEvent time){
+	public void validateFinalState(FalsifiedTime time){
 		//do nothing
 	}
 	
@@ -334,19 +334,10 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	 * @author fiveham
 	 *
 	 */
-	private class DummyTime extends SolutionEvent{
+	private class DummyTime extends TechniqueEvent{
 		public static final int DUMMY_COLLECTION_SIZE = 0;
 		private DummyTime(){
 			super(Collections.emptySet());
-		}
-		public void pop(){
-			//do nothing
-		}
-		public Time top(){
-			return this;
-		}
-		public void push(Time time){
-			//do nothing
 		}
 		public Set<Claim> falsified(){
 			return new HashSet<Claim>(DUMMY_COLLECTION_SIZE);

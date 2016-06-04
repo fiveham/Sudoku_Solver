@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 import sudoku.Puzzle.RuleType;
 import sudoku.technique.Sledgehammer;
 import sudoku.time.FalsifiedTime;
-import sudoku.time.SolutionEvent;
 import sudoku.Puzzle.IndexInstance;
 
 public class Rule extends Fact{
@@ -131,7 +130,7 @@ public class Rule extends Fact{
 	 * @throws IllegalStateException if this Rule is empty
 	 */
 	@Override
-	public void validateFinalState(SolutionEvent time){
+	public void validateFinalState(FalsifiedTime time){
 		if(isSolved()){
 			Claim c = iterator().next(); //there is only one Claim
 			if( !c.setTrueInProgress() ){
@@ -140,16 +139,13 @@ public class Rule extends Fact{
 					
 					Time solve;
 					try{
-						solve = new TimeTotalLocalization(time.top(), falsify, this);
+						solve = new TimeTotalLocalization(time, falsify, this);
 					} catch(FalsifiedTime.NoUnaccountedClaims e){
 						return;
 					}
 					
-					time.push(solve);
-					//TODO rework methods that accept a SolutionEvent so they directly accept the 
-					//FalsifiedTime onto which they should append new Time nodes
+					time.addChild(solve);
 					c.setTrue(time);
-					time.pop();
 				}
 			}
 		} else if( shouldCheckForValueClaim() ){
@@ -187,17 +183,16 @@ public class Rule extends Fact{
 	 * if found. These are scenarios where one Rule is a subset 
 	 * of another.</p>
 	 */
-	private void findAndAddressValueClaim(SolutionEvent time){
+	private void findAndAddressValueClaim(FalsifiedTime time){
 		for(Rule r : visibleRules()){
 			if(r.type.canClaimValue(type) && r.hasProperSubset(this)){
 				Set<Claim> falsified = new HashSet<>(r);
 				falsified.removeAll(this);
-				FalsifiedTime.clean(falsified, time.top());
+				FalsifiedTime.clean(falsified, time);
 				
 				if(!falsified.isEmpty()){
-					time.push(new TimeValueClaim(time.top(), falsified, this, r));
+					time.addChild(new TimeValueClaim(time, falsified, this, r));
 					falsified.stream().forEach((claim) -> claim.setFalse(time));
-					time.pop();
 				}
 			}
 		}

@@ -31,7 +31,7 @@ import sudoku.Puzzle;
 import sudoku.Rule;
 import sudoku.Sudoku;
 import sudoku.Puzzle.RuleType;
-import sudoku.time.SolutionEvent;
+import sudoku.time.TechniqueEvent;
 
 //TODO describe sledgehammer solution scenarios and their stipulations in the class javadoc
 /**
@@ -116,7 +116,7 @@ import sudoku.time.SolutionEvent;
  * 
  * <p>A sledgehammer of size 1 is trivial and not accounted for by this implementation. 
  * Since a sledgehammer of size 1 has exactly one source rule, detection and resolution 
- * of size-1 sledgehammers is automated. Rules {@link Rule#validateFinalState(SolutionEvent) check themselves} 
+ * of size-1 sledgehammers is automated. Rules {@link Rule#validateFinalState(TechniqueEvent) check themselves} 
  * for size-1 sledgehammer actionability every time some Claims are removed from them, 
  * and if that Rule is a proper subset of any of the rules that share any of its Claims, 
  * the superset is collapsed onto the subset before the method that removed some Claims 
@@ -258,7 +258,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 * {@code target}
 	 */
 	@Override
-	protected SolutionEvent process(){
+	protected TechniqueEvent process(){
 		return processByGrowth();
 	}
 	
@@ -274,7 +274,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
 	 */
-	private SolutionEvent processByGrowth(){
+	private TechniqueEvent processByGrowth(){
 		if(distinctRules.isEmpty()){
 			populateDistinctRules(this);
 		}
@@ -282,7 +282,7 @@ public class Sledgehammer extends AbstractTechnique {
 		for(int size = MIN_SLEDGEHAMMER_SIZE; size <= target.size()/2 && builtSrcComboAtLastSize; ++size){
 			Debug.log("At srcCombo size "+size); //DEBUG
 			builtSrcComboAtLastSize = false;
-			SolutionEvent event = exploreSourceCombos(new ArrayList<>(0), size, distinctSourcesAtSize(size));
+			TechniqueEvent event = exploreSourceCombos(new ArrayList<>(0), size, distinctSourcesAtSize(size));
 			if(event != null){
 				return event;
 			}
@@ -300,11 +300,11 @@ public class Sledgehammer extends AbstractTechnique {
 	 * {@code initialSources} so that potential sources that have been fully explored can be skipped
 	 * @param whenBuiltSourceCombo an action to be performed when a source combo is successfully 
 	 * built at the specified {@code size}
-	 * @return a {@link SolutionEvent} describing the resolution of a sledgehammer built using 
+	 * @return a {@link TechniqueEvent} describing the resolution of a sledgehammer built using 
 	 * {@code initialSources} as-is or as a starting population, or {@code null} if no resolvable 
 	 * sledgehammer is found
 	 */
-	private SolutionEvent exploreSourceCombos(List<Rule> initialSources, int size, Set<Rule> sourceMask){
+	private TechniqueEvent exploreSourceCombos(List<Rule> initialSources, int size, Set<Rule> sourceMask){
 		if(initialSources.size() < size){
 			Set<Rule> localSourceMask = new HashSet<>(sourceMask);
 			for(Rule newSource : sourcePool(initialSources, sourceMask, size)){
@@ -314,7 +314,7 @@ public class Sledgehammer extends AbstractTechnique {
 				newSources.addAll(initialSources);
 				newSources.add(newSource);
 				
-				SolutionEvent event = exploreSourceCombos(newSources, size, localSourceMask);
+				TechniqueEvent event = exploreSourceCombos(newSources, size, localSourceMask);
 				if(event != null){
 					return event;
 				}
@@ -360,7 +360,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
 	 */
-	private SolutionEvent exploreRecipientCombos(List<Rule> srcCombo){
+	private TechniqueEvent exploreRecipientCombos(List<Rule> srcCombo){
 		//For each recipient combo derivable from srcCombo that disjoint, closely connected source combo
 		for(List<Rule> recipientCombo : recipientCombinations(srcCombo)){
 			
@@ -553,14 +553,14 @@ public class Sledgehammer extends AbstractTechnique {
 	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
 	 */
-	static SolutionEvent resolve(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip, Resolve res){
-		SolutionEvent time = res.resolve(claimsToSetFalse, src, recip);
+	static TechniqueEvent resolve(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip, Resolve res){
+		TechniqueEvent time = res.resolve(claimsToSetFalse, src, recip);
 		claimsToSetFalse.stream().forEach((c)->c.setFalse(time));
 		return time;
 	}
 	
 	static interface Resolve{
-		public SolutionEvent resolve(Set<Claim> falsified, Collection<? extends Fact> src, Collection<? extends Fact> recip);
+		public TechniqueEvent resolve(Set<Claim> falsified, Collection<? extends Fact> src, Collection<? extends Fact> recip);
 	}
 	
 	/**
@@ -578,7 +578,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
 	 */
-	private SolutionEvent regionSpeciesPairProcessing(){
+	private TechniqueEvent regionSpeciesPairProcessing(){
 		
 		for(TypePair types : TypePair.values()){
 			for(Pair<Collection<Rule>,Collection<Rule>> pack : types.packs(target)){
@@ -783,7 +783,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 * @author fiveham
 	 *
 	 */
-	public static class SolveEventSledgehammer extends SolutionEvent{
+	public static class SolveEventSledgehammer extends TechniqueEvent{
 		
 		private final Collection<Fact> src, recip;
 		

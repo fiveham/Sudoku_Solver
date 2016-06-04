@@ -3,7 +3,7 @@ package sudoku.technique;
 import sudoku.Init;
 import sudoku.NodeSet;
 import sudoku.Sudoku;
-import sudoku.time.SolutionEvent;
+import sudoku.time.TechniqueEvent;
 
 import java.util.Optional;
 
@@ -38,11 +38,11 @@ public class Initializer extends AbstractTechnique {
 	 * automatic resolution events, or null if no Init is found
 	 */
 	@Override
-	protected SolutionEvent process(){
+	protected TechniqueEvent process(){
 		Optional<NodeSet<?,?>> i = target.nodeStream().filter((e)-> e instanceof Init).findFirst();
 		if(i.isPresent()){
 			Init init = (Init) i.get();
-			SolutionEvent result = new Initialization(init);
+			TechniqueEvent result = new Initialization(init);
 			init.validateFinalState(result);
 			return result;
 		}
@@ -57,7 +57,7 @@ public class Initializer extends AbstractTechnique {
 	 * @author fiveham
 	 *
 	 */
-	public static class Initialization extends SolutionEvent{
+	public static class Initialization extends TechniqueEvent{
 		
 		private final Init src;
 		

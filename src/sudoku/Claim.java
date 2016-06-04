@@ -1,11 +1,10 @@
 package sudoku;
 
+import common.ToolSet;
 import java.util.Set;
 import sudoku.Puzzle.IndexValue;
 import sudoku.technique.Sledgehammer;
-import sudoku.time.SolutionEvent;
-
-import common.ToolSet;
+import sudoku.time.FalsifiedTime;
 
 /**
  * <p>Represents a claim that "Cell x,y has value z."</p>
@@ -99,7 +98,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * @return true if calling this method changed the state of 
 	 * this Claim, false otherwise
 	 */
-	boolean setTrue(SolutionEvent time){
+	boolean setTrue(FalsifiedTime time){
 		Set<Claim> s = visibleClaims();
 		int init = s.size();
 		
@@ -124,7 +123,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * @return true if calling this method changed the state of 
 	 * this Claim, false otherwise
 	 */
-	public boolean setFalse(SolutionEvent time){
+	public boolean setFalse(FalsifiedTime time){
 		int initSize = size();
 		if(!setFalseInProgress()){
 			clear(time);

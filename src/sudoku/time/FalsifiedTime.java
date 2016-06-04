@@ -55,15 +55,15 @@ public class FalsifiedTime extends AbstractTime {
 	 */
 	private static Set<Claim> upFalsified(Time time, boolean skip){
 		return skip(time.upTrail().stream(), skip)
-				.filter((t) -> t instanceof FalsifiedTime)
-				.map((t) -> (FalsifiedTime)t)
+				.filter(FalsifiedTime.class::isInstance)
+				.map(FalsifiedTime.class::cast)
 				.collect(Collector.of(
 						HashSet::new, 
 						(Set<Claim> r, FalsifiedTime t) -> r.addAll(t.falsified), 
 						(l,r) -> {
 							l.addAll(r); 
 							return l;
-						}));
+						})); //TODO use a constant "join left and right" lambda for all lambdas like this one
 	}
 	
 	private static Stream<Time> skip(Stream<Time> stream, boolean skip){

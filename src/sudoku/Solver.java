@@ -13,7 +13,7 @@ import sudoku.technique.ColorChain;
 import sudoku.technique.Initializer;
 import sudoku.technique.Sledgehammer;
 import sudoku.technique.Technique;
-import sudoku.time.SolutionEvent;
+import sudoku.time.TechniqueEvent;
 import sudoku.time.ThreadEvent;
 import sudoku.parse.Parser;
 
@@ -229,10 +229,10 @@ public class Solver implements Runnable{
 	
 	private static ThreadEvent handleTechniques(List<Technique> abstractTechniques, ThreadEvent eventParent){
 		for(Technique abstractTechnique : abstractTechniques){
-			SolutionEvent solutionEvent = abstractTechnique.digest();
+			TechniqueEvent techniqueEvent = abstractTechnique.digest();
 			
-			if(solutionEvent != null){
-				return new ThreadEvent(eventParent, solutionEvent, Thread.currentThread().getName());
+			if(techniqueEvent != null){
+				return new ThreadEvent(eventParent, techniqueEvent, Thread.currentThread().getName());
 			}
 		}
 		return null;

@@ -1,7 +1,5 @@
 package sudoku.time;
 
-import common.time.Time;
-import common.time.TimeBuilder;
 import sudoku.Claim;
 import sudoku.technique.ColorChain;
 import sudoku.technique.Sledgehammer;
@@ -17,32 +15,13 @@ import java.util.Set;
  * <li>{@link Sledgehammer.SolveEventSledgehammer Sledgehammer}</li>
  * <li>{@link ColorChain.SolveEventColorContradiction visible-contradiction}</li>
  * <li>{@link ColorChain.SolveEventBridgeCollapse bridge-collapse}</li>
+ * <li>{@link ColorChain.SolveEventBridgeJoin bridge-join}</li>
  * </ul></p>
  * @author fiveham
  *
  */
-public abstract class SolutionEvent extends FalsifiedTime implements TimeBuilder {
-	
-	protected Time top;
-	
-	public SolutionEvent(Set<Claim> falsified){
+public abstract class TechniqueEvent extends FalsifiedTime /*implements TimeBuilder*/ {
+	public TechniqueEvent(Set<Claim> falsified){
 		super(null, falsified);
-		top = this;
-	}
-	
-	@Override
-	public void pop() {
-		top = top.parent();
-	}
-	
-	@Override
-	public void push(Time time) {
-		top.addChild(time);
-		top = time;
-	}
-	
-	@Override
-	public Time top() {
-		return top;
 	}
 }
