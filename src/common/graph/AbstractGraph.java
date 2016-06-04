@@ -313,21 +313,19 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		return result;
 	}
 	
-	private Branch findPath(T t2, T t1){
+	private Branch findPath(T to, T from){
 		
-		Set<Branch> core = new HashSet<>(nodes.size());
 		Set<Branch> edge = new HashSet<>();
 		Set<Branch> cuttingEdge = new HashSet<>();
 		
 		Set<T> unassigned = new HashSet<>(nodes);
 		
-		unassigned.remove(t2);
-		cuttingEdge.add(new Branch(t2,null));
+		unassigned.remove(to);
+		cuttingEdge.add(new Branch(to,null));
 		
 		while(!cuttingEdge.isEmpty()){
 			
 			//contract
-			core.addAll(edge);
 			edge = cuttingEdge;
 			cuttingEdge = new HashSet<>();
 			
@@ -335,24 +333,12 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 			for(Branch b : edge){
 				Set<? extends T> n = new HashSet<>(b.wrapped.neighbors());
 				n.retainAll(unassigned);
-				/* 
-				 * or 
-				 * removeAll(core.stream().map((b)->b.wrapped).collect(Collectors.toList()); 
-				 * removeAll(edge.stream().map((b)->b.wrapped).collect(Collectors.toList()); 
-				 * removeAll(cuttingEdge.stream().map((b)->b.wrapped).collect(Collectors.toList());
-				 * 
-				 * or
-				 * 
-				 * core.stream().forEach((b)->n.remove(b.wrapped));
-				 * edge.stream().forEach((b)->n.remove(b.wrapped));
-				 * cuttingEdge.stream().forEach((b)->n.remove(b.wrapped));
-				 */
 				
 				unassigned.removeAll(n);
 				for(T t : n){
 					Branch newBranch = new Branch(t, b);
 					
-					if(t.equals(t1)){
+					if(t.equals(from)){
 						return newBranch;
 					} else{
 						cuttingEdge.add(newBranch);
@@ -361,7 +347,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 			}
 		}
 		
-		throw new IllegalArgumentException("Cannot find path between specified nodes: "+t1+" and "+t2);
+		throw new IllegalArgumentException("Cannot find path between specified nodes: "+from+" and "+to);
 	}
 	
 	private class Branch{
@@ -371,6 +357,20 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		private Branch(T wrapped, Branch parent){
 			this.wrapped = wrapped;
 			this.parent = parent;
+		}
+		
+		@Override
+		public boolean equals(Object o){
+			if(o instanceof AbstractGraph.Branch){
+				AbstractGraph<?>.Branch b = (AbstractGraph<?>.Branch)o; 
+				return wrapped.equals(b.wrapped) && (parent == null ? b.parent == null : parent.equals(b.parent));
+			}
+			return false;
+		}
+		
+		@Override
+		public int hashCode(){
+			return wrapped.hashCode();
 		}
 	}
 	
