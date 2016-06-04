@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -293,6 +294,84 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		component(new ArrayList<>(nodes), (list)->t1, Collections.singletonList(distFinder));
 		
 		return distFinder.dist;
+	}
+	
+	@Override
+	public List<T> path(T t1, T t2){
+		//grow a tree of connected nodes (using core/edge/cuttingedge)
+		//add to cuttingedge elementwise (elements of edge) instead of in bulk
+		//test new cuttingedge nodes against core, edge, AND cuttingedge
+		//as part of the process of adding new nodes to cuttingedge, add them as path-children of the edge node that got them added to cuttingedge
+		
+		Branch implicitPath = findPath(t2, t1); //reverse args so parent-path goes in order from t1 to t2
+		
+		List<T> result = new ArrayList<>();
+		for(Branch pointer = implicitPath; pointer != null; pointer = pointer.parent){
+			result.add(pointer.wrapped);
+		}
+		
+		return result;
+	}
+	
+	private Branch findPath(T t2, T t1){
+		
+		Set<Branch> core = new HashSet<>(nodes.size());
+		Set<Branch> edge = new HashSet<>();
+		Set<Branch> cuttingEdge = new HashSet<>();
+		
+		Set<T> unassigned = new HashSet<>(nodes);
+		
+		unassigned.remove(t2);
+		cuttingEdge.add(new Branch(t2,null));
+		
+		while(!cuttingEdge.isEmpty()){
+			
+			//contract
+			core.addAll(edge);
+			edge = cuttingEdge;
+			cuttingEdge = new HashSet<>();
+			
+			//grow
+			for(Branch b : edge){
+				Set<? extends T> n = new HashSet<>(b.wrapped.neighbors());
+				n.retainAll(unassigned);
+				/* 
+				 * or 
+				 * removeAll(core.stream().map((b)->b.wrapped).collect(Collectors.toList()); 
+				 * removeAll(edge.stream().map((b)->b.wrapped).collect(Collectors.toList()); 
+				 * removeAll(cuttingEdge.stream().map((b)->b.wrapped).collect(Collectors.toList());
+				 * 
+				 * or
+				 * 
+				 * core.stream().forEach((b)->n.remove(b.wrapped));
+				 * edge.stream().forEach((b)->n.remove(b.wrapped));
+				 * cuttingEdge.stream().forEach((b)->n.remove(b.wrapped));
+				 */
+				
+				unassigned.removeAll(n);
+				for(T t : n){
+					Branch newBranch = new Branch(t, b);
+					
+					if(t.equals(t1)){
+						return newBranch;
+					} else{
+						cuttingEdge.add(newBranch);
+					}
+				}
+			}
+		}
+		
+		throw new IllegalArgumentException("Cannot find path between specified nodes: "+t1+" and "+t2);
+	}
+	
+	private class Branch{
+		private final T wrapped;
+		private final Branch parent;
+		
+		private Branch(T wrapped, Branch parent){
+			this.wrapped = wrapped;
+			this.parent = parent;
+		}
 	}
 	
 	@Override

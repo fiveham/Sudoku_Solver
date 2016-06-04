@@ -14,10 +14,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * <p>The color-chain technique exploits the fact that a Rule with 
@@ -55,9 +57,9 @@ public class ColorChain extends Technique {
 	protected SolutionEvent process(){
 		List<Function<Collection<Graph<ColorClaim>>,SolutionEvent>> actions = new ArrayList<>(SUBTECHNIQUE_COUNT);
 		Collections.addAll(actions, 
-				(graph)->visibleColorContradiction(graph), 
-				(graph)->bridgeCollapse(graph), 
-				(graph)->bridgeJoin(graph));
+				this::visibleColorContradiction, 
+				this::bridgeCollapse, 
+				this::bridgeJoin);
 		
 		Collection<Graph<ColorClaim>> chains = generateChains();
 		for(Function<Collection<Graph<ColorClaim>>,SolutionEvent> test : actions){
@@ -109,10 +111,10 @@ public class ColorChain extends Technique {
 	 */
 	private SolutionEvent bridgeJoin(Collection<Graph<ColorClaim>> chains){
 		for(List<Graph<ColorClaim>> chainPair : new ComboGen<>(chains, CHAINS_FOR_BRIDGE, CHAINS_FOR_BRIDGE)){
-			Pair<Collection<Rule>,Collection<Rule>> sledgehammer = chainSledgehammer(chainPair);
+			Pair<Collection<Fact>,Collection<Fact>> sledgehammer = chainSledgehammer(chainPair);
 			if(sledgehammer != null){
-				Collection<Rule> sources = sledgehammer.getA();
-				Collection<Rule> recipients = sledgehammer.getB();
+				Collection<Fact> sources = sledgehammer.getA();
+				Collection<Fact> recipients = sledgehammer.getB();
 				
 				Set<Claim> falsified = Sledgehammer.sideEffectUnion(recipients, false);
 				falsified.removeAll(Sledgehammer.sideEffectUnion(sources, false));
@@ -124,30 +126,48 @@ public class ColorChain extends Technique {
 		return null;
 	}
 	
-	private Pair<Collection<Rule>,Collection<Rule>> chainSledgehammer(List<Graph<ColorClaim>> chains){
+	private Pair<Collection<Fact>,Collection<Fact>> chainSledgehammer(List<Graph<ColorClaim>> chains){
 		Graph<ColorClaim> chain0 = chains.get(0);
 		Graph<ColorClaim> chain1 = chains.get(1);
 		
 		Set<Fact> chainUnion0 = cacheMassUnion(chain0);
 		Set<Fact> chainUnion1 = cacheMassUnion(chain1);
 		
-		Set<Fact> bridges = new HashSet<>(chainUnion0);
-		bridges.retainAll(chainUnion1);
+		Set<Fact> lanes = new HashSet<>(chainUnion0);
+		lanes.retainAll(chainUnion1);
 		
-		for(List<Fact> bridge : new ComboGen<>(bridges, RULES_FOR_BRIDGE, RULES_FOR_BRIDGE)){
+		for(List<Fact> bridge : new ComboGen<>(lanes, RULES_FOR_BRIDGE, RULES_FOR_BRIDGE)){
 			Fact lane0 = bridge.get(0);
 			Fact lane1 = bridge.get(1);
 			
-			int dist0 = dist(lane0, lane1, chain0);
-			int dist1 = dist(lane0, lane1, chain1);
-			if( dist0%2==0 && dist1%2==1 ){
-				return new Pair<Graph<ColorClaim>,Integer>(chain0, bridgeColor(chain0, lane0, lane1));
-			} else if(dist1%2==0 && dist0%2==1){
-				return new Pair<Graph<ColorClaim>,Integer>(chain1, bridgeColor(chain0, lane0, lane1));
+			List<ColorClaim> pathC0 = chain0.path(CHAIN_RULE_INTERSECTION.apply(chain0, lane0), CHAIN_RULE_INTERSECTION.apply(chain0, lane1));
+			List<Fact> path0 = IntStream.range(1,pathC0.size())
+					.mapToObj((int i) -> new ToolSet<Fact>(pathC0.get(i-1).wrapped()).intersection(pathC0.get(i).wrapped()).iterator().next())
+					.collect(Collectors.toList());
+			List<ColorClaim> pathC1 = chain1.path(CHAIN_RULE_INTERSECTION.apply(chain1, lane0), CHAIN_RULE_INTERSECTION.apply(chain1, lane1));
+			List<Fact> path1 = IntStream.range(1, pathC1.size())
+					.mapToObj((int i) -> new ToolSet<Fact>(pathC1.get(i-1).wrapped()).intersection(pathC1.get(i).wrapped()).iterator().next())
+					.collect(Collectors.toList());
+			
+			if(path0.size()%2==1 && path1.size()%2==1){
+				List<Fact> recip = new ArrayList<>((path0.size()+path1.size())/2+1);
+				Collections.addAll(recip, lane0, lane1);
+				List<Fact> src = new ArrayList<>((path0.size()+path1.size())/2+1);
+				
+				for(List<Fact> path : new List[]{path0, path1}){
+					for(int i = 0; i<path.size(); ++i){
+						(i%2==0 ? src : recip).add(path.get(i));
+					}
+				}
+				
+				return new Pair<>(src, recip);
 			}
 		}
 		return null;
 	}
+	
+	public static final BiFunction<Graph<ColorClaim>,Set<Claim>,ColorClaim> CHAIN_RULE_INTERSECTION = 
+			(graph, set) -> graph.nodeStream().filter((cc) -> set.contains(cc.wrapped())).findFirst().get();
 	
 	public static class SolveEventBridgeJoin extends SolutionEvent{
 		private SolveEventBridgeJoin(Set<Claim> falsified, Collection<? extends Fact> src, Collection<? extends Fact> recip){
