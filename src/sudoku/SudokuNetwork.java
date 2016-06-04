@@ -35,9 +35,15 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 		this.sideLength = magnitude*magnitude;
 	}
 	
+	/**
+	 * <p>Returns true if this SudokuNetwork is solved, false otherwise. A 
+	 * SudokuNetwork is solved iff all of its {@code Fact}s each have only 
+	 * one {@code Claim}.</p>
+	 * @return true if this SudokuNetwork is solved, false otherwise
+	 */
 	@Override
 	public boolean isSolved(){
-		return factStream().allMatch((f)->f.size() == Fact.SIZE_WHEN_SOLVED);
+		return factStream().allMatch(Fact::isSolved);
 	}
 	
 	@Override

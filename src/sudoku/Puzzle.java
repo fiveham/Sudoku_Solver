@@ -7,13 +7,14 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.StreamSupport;
-import java.util.Set;
-import java.util.HashSet;
 import sudoku.parse.Parser;
 import sudoku.parse.SadmanParser;
 import sudoku.parse.TxtParser;
@@ -253,14 +254,6 @@ public class Puzzle extends SudokuNetwork{
 	}
 	
 	/**
-	 * <p>Returns true if this Puzzle is solved, false otherwise.</p>
-	 * @return true if this Puzzle is solved, false otherwise.
-	 */
-	public boolean isSolved(){
-		return factStream().allMatch((rule)->rule.size()==Fact.SIZE_WHEN_SOLVED);
-	}
-	
-	/**
 	 * <p>Returns the Claim whose location in the {@link #claims SpaceMap} 
 	 * corresponds to the specified values of the specified dimensions.</p>
 	 * 
@@ -387,12 +380,35 @@ public class Puzzle extends SudokuNetwork{
 	public String toString(){
 		StringBuilder result = new StringBuilder();
 		
-		for(IndexValue y : indices){
-			for(IndexValue x : indices){
-				result.append( claims.getPrintingValue(x,y) ).append(" ");
+		class InterNumber implements Supplier<String>{
+			private int useCount = 0;
+			@Override
+			public String get(){
+				if(++useCount%sideLength()==0){
+					return " "+System.lineSeparator();
+				} else{
+					return " ";
+				}
 			}
-			result.append(System.lineSeparator());
 		}
+		
+		Supplier<String> betweenNumbers = new InterNumber();
+		
+		nodeStream()
+				.filter(Rule.IS_RULE)
+				.map(Rule.AS_RULE)
+				.filter((r)->r.getType()==RuleType.CELL)
+				.sorted((cell1, cell2) -> {
+					Claim claim1 = cell1.iterator().next();
+					int snake1 = claim1.getX() + claim1.getY() * sideLength();
+					Claim claim2 = cell2.iterator().next();
+					int snake2 = claim2.getX() + claim2.getY() * sideLength();
+					return Integer.compare(snake1, snake2);
+				})
+				.forEach((cell) -> result.append(cell.isSolved() 
+						? indexValues().get(cell.iterator().next().getZ()).humanReadableIntValue() 
+						: BLANK_CELL)
+						.append(betweenNumbers.get()));
 		
 		return result.toString();
 	}

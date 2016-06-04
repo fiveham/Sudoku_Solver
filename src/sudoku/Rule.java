@@ -21,16 +21,6 @@ public class Rule extends Fact{
 	 */
 	private static final long serialVersionUID = 2191355198146127036L;
 	
-	/**
-	 * <p>The number ({@value}) of elements (neighbors) of a Rule that 
-	 * is a {@code xor}.  A Rule is a {@code xor} if it has two Claims, 
-	 * because exactly one of them is true and the other is false. Given 
-	 * that we know that the Rule is satisfied (is {@code true}), the 
-	 * Claims, as inputs to the Rule, make such a Rule a {@code xor} 
-	 * operation on its neighbors.</p>
-	 */
-	public static final int SIZE_WHEN_XOR = 2;
-	
 	private final Puzzle.RuleType type;
 	private final IndexInstance dimA, dimB;
 	
@@ -145,7 +135,7 @@ public class Rule extends Fact{
 	 */
 	@Override
 	protected void validateFinalState(SolutionEvent time){
-		if(size() == SIZE_WHEN_SOLVED){
+		if(isSolved()){
 			Claim c = iterator().next(); //there is only one Claim
 			if( !c.setTrueInProgress() ){
 				Set<Claim> falsify = c.visibleClaims();
@@ -262,9 +252,5 @@ public class Rule extends Fact{
 		private AutoResolve(Time parent, Set<Claim> falseClaims){
 			super(parent, falseClaims);
 		}
-	}
-	
-	public boolean isXor(){
-		return size() == SIZE_WHEN_XOR;
 	}
 }

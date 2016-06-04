@@ -46,24 +46,6 @@ public class SpaceMap implements Iterable<Claim>{
 		}
 	}
 	
-	/**
-	 * <p>Returns a single-character string describing the value of the 
-	 * cell at x,y in the map's target. If the cell isn't solved, the 
-	 * string is a 0; otherwise, it is the {@link Puzzle.IndexValue#humanReadableSymbol() human-readable symbol} 
-	 * for the value that the cell has.</p>
-	 * @param x the x-coordinate of the cell whose value is output
-	 * @param y the y-coordinate of the cell whose value is output
-	 * @return a single-character string describing the value of the 
-	 * cell at x,y in the map's target
-	 */
-	String getPrintingValue(IndexValue x, IndexValue y){
-		List<IndexValue> symbols = puzzle.indexValues().stream().filter((symbol)->!get(x,y,symbol).isKnownFalse()).collect(Collectors.toList());
-		
-		return symbols.size() == Rule.SIZE_WHEN_SOLVED 
-				? symbols.get(0).humanReadableSymbol() //there is exactly 1 element in symbols
-				: UNSOLVED_CELL_TEXT;
-	}
-	
 	public static final String UNSOLVED_CELL_TEXT = "0";
 	
 	/**
@@ -115,6 +97,15 @@ public class SpaceMap implements Iterable<Claim>{
 		return new ClaimIterator();
 	}
 	
+	private List<Integer> ints = null;
+	
+	private List<Integer> ints(){
+		if(ints == null){
+			ints = puzzle.getIndices().stream().map(IndexValue::intValue).collect(Collectors.toList());
+		}
+		return ints;
+	}
+	
 	/**
 	 * <p>An Iterator<Claim> that traverses the claim-space starting 
 	 * from 0,0,0, ending at the opposite vertex, and passing through 
@@ -126,8 +117,8 @@ public class SpaceMap implements Iterable<Claim>{
 		private final Iterator<List<Integer>> cubeIterator;
 		
 		private ClaimIterator(){
-			List<Integer> ints = puzzle.getIndices().stream().map(IndexValue::intValue).collect(Collectors.toList());
-			this.cubeIterator =  new NCuboid<Integer>(ints, ints, ints).iterator();
+			//List<Integer> ints = puzzle.getIndices().stream().map(IndexValue::intValue).collect(Collectors.toList());
+			this.cubeIterator =  new NCuboid<Integer>(ints(), ints(), ints()).iterator();
 		}
 		
 		@Override

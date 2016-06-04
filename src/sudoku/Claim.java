@@ -113,7 +113,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * @return true if this Claim is known to be true, false otherwise
 	 */
 	public boolean isKnownTrue(){
-		return stream().anyMatch((owner) -> owner.size()==Fact.SIZE_WHEN_SOLVED);
+		return stream().anyMatch(Fact::isSolved);
 	}
 	
 	/**
