@@ -491,7 +491,7 @@ public class ColorChain extends Technique {
 	 * @author fiveham
 	 *
 	 */
-	public static class ColorClaim implements WrapVertex<Claim,ColorClaim>{//TODO move .wrap() from Wrap to WrapVertex
+	public static class ColorClaim implements WrapVertex<Claim,ColorClaim>{
 		private int color = 0;
 		private Claim wrapped;
 		private final List<ColorClaim> neighbors;
@@ -529,6 +529,20 @@ public class ColorChain extends Technique {
 			} else{
 				throw new IllegalStateException("Cannot change color to "+color+" because color has already been set to "+this.color);				
 			}
+		}
+		
+		@Override
+		public boolean equals(Object o){
+			if(o instanceof ColorClaim){
+				ColorClaim cc = (ColorClaim) o;
+				return cc.color == this.color && cc.wrapped == this.wrapped;
+			}
+			return false;
+		}
+		
+		@Override
+		public int hashCode(){
+			return wrapped.hashCode();
 		}
 	}
 	
