@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.BiFunction;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
@@ -215,10 +216,12 @@ public class ColorChain extends AbstractTechnique {
 		Set<Claim> visibleToPositives = concom.nodeStream()
 				.filter((cc) -> cc.color > 0)
 				.map(ColorClaim::wrapped)
+				.map(Claim::visibleClaims)
 				.collect(CLAIMS_TO_VISIBLE_CLAIMS);
 		Set<Claim> visibleToNegatives = concom.nodeStream()
 				.filter((cc) -> cc.color < 0)
 				.map(ColorClaim::wrapped)
+				.map(Claim::visibleClaims)
 				.collect(CLAIMS_TO_VISIBLE_CLAIMS);
 		
 		Set<Claim> claimsToSetFalse = visibleToPositives;
@@ -232,10 +235,12 @@ public class ColorChain extends AbstractTechnique {
 		return null;
 	}
 	
-	public static final Collector<Claim,?,Set<Claim>> CLAIMS_TO_VISIBLE_CLAIMS = Collector.of(
+	public static final BinaryOperator<Set<Claim>> MERGE_CLAIM_SETS = (r1,r2) -> {r1.addAll(r2); return r1;};
+	
+	public static final Collector<Set<Claim>,?,Set<Claim>> CLAIMS_TO_VISIBLE_CLAIMS = Collector.of(
 			HashSet::new, 
-			(r,t) -> r.addAll(t.visibleClaims()), 
-			(r1,r2) -> {r1.addAll(r2); return r1;});
+			Set::addAll, 
+			MERGE_CLAIM_SETS);
 	
 	/**
 	 * <p>Isolates those Rules in the target that have two Claims, makes 

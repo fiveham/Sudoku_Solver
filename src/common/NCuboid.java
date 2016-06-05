@@ -38,17 +38,17 @@ public class NCuboid<T> implements Iterable<List<T>> {
 	/**
 	 * <p>Constructs an NCuboid whose dimensions are the elements of 
 	 * {@code src}.</p>
-	 * @param src
+	 * @param dimensions
 	 * @throws IllegalArgumentException if any of the dimensions specified 
 	 * as elements of {@code src} is empty
 	 */
-	public NCuboid(Collection<? extends Collection<? extends T>> src) {
+	public NCuboid(Collection<? extends Collection<? extends T>> dimensions) {
 		
-		this.src = new ArrayList<>(src.size());
-		if(src.parallelStream().anyMatch(Collection::isEmpty)){
+		this.src = new ArrayList<>(dimensions.size());
+		if(dimensions.parallelStream().anyMatch(Collection::isEmpty)){
 			throw new IllegalArgumentException("One of the specified dimensions was empty.");
 		} else{
-			src.stream().forEach((dimension)->this.src.add(new ArrayList<T>(dimension)));
+			dimensions.stream().forEach((dimension)->this.src.add(new ArrayList<T>(dimension)));
 		}
 		
 		this.key = new int[this.src.size()];

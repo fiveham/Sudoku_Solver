@@ -2,13 +2,6 @@ package anim;
 
 import common.Pair;
 import common.time.Time;
-import sudoku.Claim;
-import sudoku.Puzzle;
-import sudoku.Puzzle.IndexInstance;
-import sudoku.time.FalsifiedTime;
-import sudoku.time.ThreadEvent;
-import sudoku.Solver;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,7 +14,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javafx.beans.property.DoubleProperty;
 import javafx.animation.Timeline;
@@ -38,11 +30,14 @@ import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
+import sudoku.Claim;
+import sudoku.Puzzle;
+import sudoku.Puzzle.IndexInstance;
+import sudoku.time.FalsifiedTime;
+import sudoku.time.ThreadEvent;
+import sudoku.Solver;
 
 public class PuzzleVizApp extends Application {
-	
-	public static final Function<Time,ThreadEvent> AS_THREADEVENT = (time) -> (ThreadEvent) time;
-	public static final Predicate<Time> IS_THREADEVENT = (time) -> time instanceof ThreadEvent;
 	
 	public PuzzleVizApp() {
 	}
@@ -248,12 +243,6 @@ public class PuzzleVizApp extends Application {
 	private static final PhongMaterial ROW_RED      = new PhongMaterial(Color.web("red",BAGMODEL_OPACITY));
 	private static final PhongMaterial BOX_YELLOW   = new PhongMaterial(Color.web("yellow",BAGMODEL_OPACITY));
 	
-	private static final Function<VoxelModel,DoubleProperty> WIDTH = (vm)->vm.widthProperty();
-	private static final Function<VoxelModel,DoubleProperty> DEPTH = (vm)->vm.depthProperty();
-	
-	private static final Function<VoxelModel,DoubleProperty> X_POS = (vm)->vm.translateXProperty();
-	private static final Function<VoxelModel,DoubleProperty> Z_POS = (vm)->vm.translateZProperty();
-	
 	/**
 	 * <p>A mapping from each type of Rule to several pieces of information 
 	 * pertinent to that type of Rule in the context of animating the 
@@ -320,10 +309,10 @@ public class PuzzleVizApp extends Application {
 	 *
 	 */
 	public static enum RuleType{
-		CELL  (Puzzle.RuleType.CELL,   MED,  MED,  MED,  MED,  L0ML, G0ML, EDGE_LIN, DIM_IN_LIN, SELECT_Z, NO_SELECTION, CELL_BLUE,    WIDTH, X_POS), 
-		COLUMN(Puzzle.RuleType.COLUMN, MED,  MED,  L0ML, G0ML, MED,  MED,  EDGE_LIN, DIM_IN_LIN, SELECT_X, NO_SELECTION, COLUMN_GREEN, DEPTH, Z_POS), 
-		ROW   (Puzzle.RuleType.ROW,    L0ML, G0ML, MED,  MED,  MED,  MED,  EDGE_LIN, DIM_IN_LIN, SELECT_Y, NO_SELECTION, ROW_RED,      DEPTH, Z_POS), 
-		BOX   (Puzzle.RuleType.BOX,    L0ML, G0ML, L1ML, G1ML, MED,  MED,  EDGE_BOX, DIM_IN_BOX, SELECT_X, SELECT_Y,     BOX_YELLOW,   DEPTH, Z_POS);
+		CELL  (Puzzle.RuleType.CELL,   MED,  MED,  MED,  MED,  L0ML, G0ML, EDGE_LIN, DIM_IN_LIN, SELECT_Z, NO_SELECTION, CELL_BLUE,    VoxelModel::widthProperty, VoxelModel::translateXProperty), 
+		COLUMN(Puzzle.RuleType.COLUMN, MED,  MED,  L0ML, G0ML, MED,  MED,  EDGE_LIN, DIM_IN_LIN, SELECT_X, NO_SELECTION, COLUMN_GREEN, VoxelModel::depthProperty, VoxelModel::translateZProperty), 
+		ROW   (Puzzle.RuleType.ROW,    L0ML, G0ML, MED,  MED,  MED,  MED,  EDGE_LIN, DIM_IN_LIN, SELECT_Y, NO_SELECTION, ROW_RED,      VoxelModel::depthProperty, VoxelModel::translateZProperty), 
+		BOX   (Puzzle.RuleType.BOX,    L0ML, G0ML, L1ML, G1ML, MED,  MED,  EDGE_BOX, DIM_IN_BOX, SELECT_X, SELECT_Y,     BOX_YELLOW,   VoxelModel::depthProperty, VoxelModel::translateZProperty);
 		
 		private final Puzzle.RuleType pertainsTo;
 		private final Function<int[],Double> xNeg;
@@ -500,7 +489,7 @@ public class PuzzleVizApp extends Application {
 		Timeline result = solutionEventTimeline(event.wrapped(), modelHandler);
 		
 		result.setOnFinished((ae) -> event.children().parallelStream()
-				.filter(IS_THREADEVENT)
+				.filter(ThreadEvent.class::isInstance)
 				.forEach((ct) -> parallelTimeline((ThreadEvent)ct, modelHandler).play()));
 		
 		return result;
@@ -524,8 +513,8 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	private static void treeSize(Time time, AtomicInteger ai){
-		ai.addAndGet(time.children().size());
 		if(time.hasChildren()){
+			ai.addAndGet(time.children().size());
 			time.children().parallelStream().forEach((child) -> treeSize(child,ai));
 		}
 	}
@@ -569,7 +558,7 @@ public class PuzzleVizApp extends Application {
 		List<ThreadEvent> result = new ArrayList<>();
 		
 		for(ThreadEvent event : layer){
-			result.addAll(event.children().stream().filter(IS_THREADEVENT).map(AS_THREADEVENT).collect(Collectors.toList()));
+			result.addAll(event.children().stream().filter(ThreadEvent.class::isInstance).map(ThreadEvent.class::cast).collect(Collectors.toList()));
 		}
 		
 		return result;
@@ -596,11 +585,11 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	private static List<FalsifiedTime> falsifiedTimeChildren(Time time){
-		return time.children().stream().filter((t)->t instanceof FalsifiedTime).map((t)->(FalsifiedTime)t).collect(Collectors.toList());
+		return time.children().stream().filter(FalsifiedTime.class::isInstance).map(FalsifiedTime.class::cast).collect(Collectors.toList());
 	}
 	
 	private static List<ThreadEvent> threadEventChildren(Time time){
-		return time.children().stream().filter(IS_THREADEVENT).map(AS_THREADEVENT).collect(Collectors.toList());
+		return time.children().stream().filter(ThreadEvent.class::isInstance).map(ThreadEvent.class::cast).collect(Collectors.toList());
 	}
 	
 	/**
@@ -618,7 +607,11 @@ public class PuzzleVizApp extends Application {
 				timeline.getKeyFrames().addAll(vm.falsify( initLength ));
 			}
 		}
-		//falsified.stream().forEach( (c) -> modelHandler.get(c).stream().forEach( (vm) -> timeline.getKeyFrames().addAll(vm.disoccupy(initLength)) ) );
+		/*
+		 * falsified.stream()
+		 * 			.forEach( (c) -> modelHandler.get(c).stream()
+		 * 					.forEach( (vm) -> timeline.getKeyFrames().addAll(vm.disoccupy(initLength)) ) );
+		 */
 		
 		Set<BagModel> affectedBags = affectedBags(falsified, modelHandler);
 		double postDisoccupyLength = timeline.totalDurationProperty().get().toMillis();
@@ -651,8 +644,8 @@ public class PuzzleVizApp extends Application {
 	
 	private static Map<Claim,List<VoxelModel>> genModelHandler(Group voxelModels){
 		return voxelModels.getChildren().stream()
-				.filter((c)->c instanceof VoxelModel).map((v)->(VoxelModel)v)
-				.collect(Collectors.groupingBy((v) -> v.getClaim()));
+				.filter(VoxelModel.class::isInstance).map(VoxelModel.class::cast)
+				.collect(Collectors.groupingBy(VoxelModel::getClaim));
 	}
 	
 	public static final int MODELS_PER_CLAIM = RuleType.values().length;

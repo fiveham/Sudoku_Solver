@@ -39,7 +39,7 @@ public class Initializer extends AbstractTechnique {
 	 */
 	@Override
 	protected TechniqueEvent process(){
-		Optional<NodeSet<?,?>> i = target.nodeStream().filter((e)-> e instanceof Init).findFirst();
+		Optional<NodeSet<?,?>> i = target.nodeStream().filter(Init.class::isInstance).findFirst();
 		if(i.isPresent()){
 			Init init = (Init) i.get();
 			TechniqueEvent result = new Initialization(init);

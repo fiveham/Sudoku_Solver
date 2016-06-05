@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import sudoku.Claim;
 import sudoku.Rule;
+import sudoku.technique.ColorChain;
 
 /**
  * <p>A Time in which some Claims are {@link Claim#setFalse(SolutionEvent) set false}.</p>
@@ -57,13 +58,11 @@ public class FalsifiedTime extends AbstractTime {
 		return skip(time.upTrail().stream(), skip)
 				.filter(FalsifiedTime.class::isInstance)
 				.map(FalsifiedTime.class::cast)
+				.map(FalsifiedTime::falsified)
 				.collect(Collector.of(
 						HashSet::new, 
-						(Set<Claim> r, FalsifiedTime t) -> r.addAll(t.falsified), 
-						(l,r) -> {
-							l.addAll(r); 
-							return l;
-						})); //TODO use a constant "join left and right" lambda for all lambdas like this one
+						Set::addAll, 
+						ColorChain.MERGE_CLAIM_SETS));
 	}
 	
 	private static Stream<Time> skip(Stream<Time> stream, boolean skip){

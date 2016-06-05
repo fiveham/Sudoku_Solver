@@ -342,9 +342,9 @@ public class VoxelModel extends Box{
 	 */
 	private enum Dimension{
 		
-		X(Puzzle.X_DIM, (vm) -> vm.widthProperty(),  (vm) -> vm.translateXProperty()), 
-		Y(Puzzle.Y_DIM, (vm) -> vm.heightProperty(), (vm) -> vm.translateYProperty()), 
-		Z(Puzzle.Z_DIM, (vm) -> vm.depthProperty(),  (vm) -> vm.translateZProperty());
+		X(Puzzle.X_DIM, VoxelModel::widthProperty,  VoxelModel::translateXProperty), 
+		Y(Puzzle.Y_DIM, VoxelModel::heightProperty, VoxelModel::translateYProperty), 
+		Z(Puzzle.Z_DIM, VoxelModel::depthProperty,  VoxelModel::translateZProperty);
 		
 		private final int dimNo;
 		private final Function<VoxelModel,DoubleProperty> thicknessProperty;

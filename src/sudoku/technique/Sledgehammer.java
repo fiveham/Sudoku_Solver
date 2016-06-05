@@ -131,7 +131,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 * <p>The {@code valueMapper} for the {@link Collectors#toMap(Function,Function,BinaryOperator) toMap} 
 	 * calls that define {@link #MAP_SOURCES_BY_SIZE} and {@link #MAP_RULES_BY_SIZE}.</p>
 	 */
-	private static final Function<Rule,List<Rule>> VALUE_MAPPER = (Rule rule) -> {
+	private static final Function<Rule,List<Rule>> LIST_OF_RULE = (Rule rule) -> {
 		List<Rule> result = new ArrayList<>(1); 
 		result.add(rule); 
 		return result;
@@ -153,7 +153,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 */
 	public static final Collector<Rule,?,Map<Integer,List<Rule>>> MAP_SOURCES_BY_SIZE = Collectors.toMap(
 			Sledgehammer::sledgehammerSizeIfSource, 
-			VALUE_MAPPER, 
+			LIST_OF_RULE, 
 			MERGE_LISTS);
 	
 	/**
@@ -163,7 +163,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 */
 	public static final Collector<Rule,?,Map<Integer,List<Rule>>> MAP_RULES_BY_SIZE = Collectors.toMap(
 			Rule::size, 
-			VALUE_MAPPER, 
+			LIST_OF_RULE, 
 			MERGE_LISTS);
 	
 	public static final int MIN_RECIPIENT_COUNT_PER_SOURCE = 2;
@@ -498,8 +498,8 @@ public class Sledgehammer extends AbstractTechnique {
 			Set<Rule> recipientsVisibleToMultipleSources = new HashSet<>();
 			List<Set<Rule>> sourcesSeenByRemainingRecipients = rulesVisibleToConnectedSources.keySet().stream()
 					.filter((r) -> rulesVisibleToConnectedSources.get(r).size() >= MIN_SOURCE_COUNT_PER_RECIPIENT)
-					.peek((r) -> recipientsVisibleToMultipleSources.add(r))
-					.map((r) -> rulesVisibleToConnectedSources.get(r))
+					.peek(recipientsVisibleToMultipleSources::add)
+					.map(rulesVisibleToConnectedSources::get)
 					.collect(Collectors.toList());
 			recipientsVisibleToMultipleSources.retainAll(distinctRulesAtSize(sources.size()));
 			Map<Rule,Integer> sourceCounts = countingUnion(sourcesSeenByRemainingRecipients);
@@ -634,23 +634,18 @@ public class Sledgehammer extends AbstractTechnique {
 		return x/c.getPuzzle().magnitude();
 	}
 	
-	public static final Function<Sudoku,List<Integer>> dimSource = (s) -> IntStream.range(0,s.sideLength()).mapToObj((i)->(Integer)i).collect(Collectors.toList());
-	
-	public static final Predicate<Rule> IS_CELL = (r) -> r.getType() == RuleType.CELL;
-	public static final Predicate<Rule> IS_BOX = (r) -> r.getType() == RuleType.BOX;
-	public static final Predicate<Rule> IS_COLUMN = (r) -> r.getType() == RuleType.COLUMN;
-	public static final Predicate<Rule> IS_ROW = (r) -> r.getType() == RuleType.ROW;
+	public static final Function<Sudoku,List<Integer>> dimSource = (s) -> IntStream.range(0,s.sideLength()).mapToObj(Integer.class::cast).collect(Collectors.toList());
 	
 	public static final Function<Sudoku,NCuboid<Integer>> STD_NCUBOID_SRC = (s)->new NCuboid<>(dimSource.apply(s));
 	public static final Function<Sudoku,NCuboid<Integer>> ALT_NCUBOID_SRC = (s)->new NCuboid<>(dimSource.apply(s), IntStream.range(0,s.magnitude()).mapToObj((i)->(Integer)i).collect(Collectors.toList()));
 	
 	private static enum TypePair{
-		CELL_COL(STD_NCUBOID_SRC, IS_CELL, IS_COLUMN, (r,l) -> l.get(0) == r.stream().findFirst().get().getX()), 
-		CELL_ROW(STD_NCUBOID_SRC, IS_CELL, IS_ROW,    (r,l) -> l.get(0) == r.stream().findFirst().get().getY()), 
-		CELL_BOX(STD_NCUBOID_SRC, IS_CELL, IS_BOX,    (r,l) -> l.get(0).equals(boxIndex(r))), 
-		BOX_ROW (ALT_NCUBOID_SRC, IS_BOX,  IS_ROW,    (r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxY(r)), 
-		BOX_COL (ALT_NCUBOID_SRC, IS_BOX,  IS_COLUMN, (r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxX(r)), 
-		ROW_COL (STD_NCUBOID_SRC, IS_ROW,  IS_COLUMN, (r,l) -> l.get(0) == r.stream().findFirst().get().getZ());
+		CELL_COL(STD_NCUBOID_SRC, RuleType.CELL::isTypeOf, RuleType.COLUMN::isTypeOf, (r,l) -> l.get(0) == r.stream().findFirst().get().getX()), 
+		CELL_ROW(STD_NCUBOID_SRC, RuleType.CELL::isTypeOf, RuleType.ROW::isTypeOf,    (r,l) -> l.get(0) == r.stream().findFirst().get().getY()), 
+		CELL_BOX(STD_NCUBOID_SRC, RuleType.CELL::isTypeOf, RuleType.BOX::isTypeOf,    (r,l) -> l.get(0).equals(boxIndex(r))), 
+		BOX_ROW (ALT_NCUBOID_SRC, RuleType.BOX::isTypeOf,  RuleType.ROW::isTypeOf,    (r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxY(r)), 
+		BOX_COL (ALT_NCUBOID_SRC, RuleType.BOX::isTypeOf,  RuleType.COLUMN::isTypeOf, (r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxX(r)), 
+		ROW_COL (STD_NCUBOID_SRC, RuleType.ROW::isTypeOf,  RuleType.COLUMN::isTypeOf, (r,l) -> l.get(0) == r.stream().findFirst().get().getZ());
 		
 		private Function<Sudoku,NCuboid<Integer>> nCuboidSource;
 		private Predicate<Rule> isTypeA;
@@ -707,9 +702,9 @@ public class Sledgehammer extends AbstractTechnique {
 		ToolSet<T> result = new ToolSet<>();
 		
 		int cumulativeSize = 0;
-		for(Collection<T> redBag : collections){
-			result.addAll(redBag);
-			cumulativeSize += redBag.size();
+		for(Collection<T> collection : collections){
+			result.addAll(collection);
+			cumulativeSize += collection.size();
 		}
 		
 		return !nullIfNotDisjoint || cumulativeSize==result.size() ? result : null;

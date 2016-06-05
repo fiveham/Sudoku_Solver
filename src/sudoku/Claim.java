@@ -105,7 +105,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 		if(!setTrueInProgress){
 			setTrueInProgress = true;
 			
-			s.stream().forEach((c) -> c.setFalse(time)); //NOTE maybe the lazy evaluation of CLAIM_IS_BEING_SET_FALSE causes 
+			s.stream().forEach((c) -> c.setFalse(time));
 			
 			setTrueInProgress = false;
 		} else{

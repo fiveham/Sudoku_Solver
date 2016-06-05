@@ -93,7 +93,7 @@ public class Puzzle extends SudokuNetwork{
 		this.claims = new SpaceMap(this);
 		this.nodes.addAll(genRuleNodes(this, sideLength, claims));
 		this.nodes.ensureCapacity(nodes.size()+sideLength*sideLength*sideLength);
-		StreamSupport.stream(claims.spliterator(), false).forEach((claim)->nodes.add(claim));
+		StreamSupport.stream(claims.spliterator(), false).forEach(nodes::add);
 		
 		for(Claim c : parseText(parser.values())){
 			Init specificValue = new Init(this, c);
@@ -397,7 +397,7 @@ public class Puzzle extends SudokuNetwork{
 		nodeStream()
 				.filter(Rule.class::isInstance)
 				.map(Rule.class::cast)
-				.filter((r)->r.getType()==RuleType.CELL)
+				.filter(RuleType.CELL::isTypeOf)
 				.sorted((cell1, cell2) -> {
 					Claim claim1 = cell1.iterator().next();
 					int snake1 = claim1.getX() + claim1.getY() * sideLength();
@@ -527,10 +527,6 @@ public class Puzzle extends SudokuNetwork{
 	 */
 	public static final int BLANK_CELL = 0;
 	
-	private static final int COLUMN_ORDINAL = 3;
-	private static final int BOX_ORDINAL = 1;
-	private static final int ROW_ORDINAL = 2;
-	
 	/**
 	 * <p>Entries in this enum describe properties of the four types of regions in a sudoku target: 
 	 * <ul><li>box</li><li>row</li><li>column</li><li>cell</li></ul></p>
@@ -545,46 +541,53 @@ public class Puzzle extends SudokuNetwork{
 	public static enum RuleType{
 		
 		/**
-		 * <p>For a cell, the first dimension is {@link Puzzle.DimensionType#Y y}, the 
-		 * second dimension is {@link Puzzle.DimensionType#X x}, and the third dimension 
-		 * is {@link Puzzle.DimensionType#SYMBOL z}.</p>
-		 */
-		CELL	(DimensionType.Y, 	   DimensionType.X,   DimensionType.SYMBOL,			(rt,p) -> "The value in "+rt+" "+p.getB().val.humanReadableIntValue()+","+p.getA().val.humanReadableIntValue()), 
-		
-		/**
 		 * <p>For a box, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the 
 		 * second dimension is {@link Puzzle.DimensionType#BOX box-index}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#CELL_ID_IN_BOX cell-index}.</p>
 		 */
-		BOX		(DimensionType.SYMBOL, DimensionType.BOX, DimensionType.CELL_ID_IN_BOX, (rt,p) -> "The "+p.getA().val.humanReadableIntValue()+" in "+rt+" "+p.getB().val.humanReadableIntValue(), ROW_ORDINAL, COLUMN_ORDINAL), 
+		BOX		(DimensionType.SYMBOL, DimensionType.BOX, DimensionType.CELL_ID_IN_BOX, (rt,p) -> "The "+p.getA().val.humanReadableIntValue()+" in "+rt+" "+p.getB().val.humanReadableIntValue()), 
 		
 		/**
 		 * <p>For a row, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the 
 		 * second dimension is {@link Puzzle.DimensionType#Y y}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#X x}.</p>
 		 */
-		ROW		(DimensionType.SYMBOL, DimensionType.Y,   DimensionType.X, 				(rt,p) -> "The "+p.getA().val.humanReadableIntValue()+" in "+rt+" "+p.getB().val.humanReadableIntValue(), BOX_ORDINAL),
+		ROW		(DimensionType.SYMBOL, DimensionType.Y,   DimensionType.X, 				(rt,p) -> "The "+p.getA().val.humanReadableIntValue()+" in "+rt+" "+p.getB().val.humanReadableIntValue()),
 		
 		/**
 		 * <p>For a box, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the 
 		 * second dimension is {@link Puzzle.DimensionType#X x}, and the third dimension 
 		 * is {@link Puzzle.DimensionType#Y y}.</p>
 		 */
-		COLUMN	(DimensionType.SYMBOL, DimensionType.X,   DimensionType.Y, 				(rt,p) -> "The "+p.getA().val.humanReadableIntValue()+" in "+rt+" "+p.getB().val.humanReadableIntValue(), BOX_ORDINAL);
+		COLUMN	(DimensionType.SYMBOL, DimensionType.X,   DimensionType.Y, 				(rt,p) -> "The "+p.getA().val.humanReadableIntValue()+" in "+rt+" "+p.getB().val.humanReadableIntValue()), 
+		
+		/**
+		 * <p>For a cell, the first dimension is {@link Puzzle.DimensionType#Y y}, the 
+		 * second dimension is {@link Puzzle.DimensionType#X x}, and the third dimension 
+		 * is {@link Puzzle.DimensionType#SYMBOL z}.</p>
+		 */
+		CELL	(DimensionType.Y, 	   DimensionType.X,   DimensionType.SYMBOL,			(rt,p) -> "The value in "+rt+" "+p.getB().val.humanReadableIntValue()+","+p.getA().val.humanReadableIntValue());
+		
+		static{
+			BOX.subsumableTypes    = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ROW, COLUMN)));
+			ROW.subsumableTypes    = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(BOX)));
+			COLUMN.subsumableTypes = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(BOX)));
+			CELL.subsumableTypes   = Collections.emptySet();
+		}
 		
 		private final DimensionType dimAType;
 		private final DimensionType dimBType;
 		private final DimensionType dimCType;
-		private final Set<Integer> indicesOfSubsumableTypes;
 		private final BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> description;
 		
+		private Set<RuleType> subsumableTypes = null;
+		
 		private RuleType(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType, 
-				BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> description, Integer... canSubsume){
+				BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> description){
 			this.dimAType = dimAType;
 			this.dimBType = dimBType;
 			this.dimCType = dimCType;
 			this.description = description;
-			this.indicesOfSubsumableTypes = new HashSet<>(Arrays.asList(canSubsume));
 		}
 		
 		/**
@@ -597,6 +600,10 @@ public class Puzzle extends SudokuNetwork{
 		 */
 		public String descriptionFor(IndexInstance dimA, IndexInstance dimB){
 			return description.apply(this, new Pair<>(dimA,dimB));
+		}
+		
+		public boolean isTypeOf(Rule r){
+			return r.getType()==this;
 		}
 		
 		/**
@@ -648,7 +655,7 @@ public class Puzzle extends SudokuNetwork{
 		}
 		
 		public boolean canClaimValue(RuleType type){
-			return indicesOfSubsumableTypes.contains(type.ordinal());
+			return subsumableTypes.contains(type);
 		}
 	}
 	
