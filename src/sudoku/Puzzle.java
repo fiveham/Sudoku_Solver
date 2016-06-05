@@ -469,7 +469,7 @@ public class Puzzle extends SudokuNetwork{
 	}
 	
 	private static int boxLowX(IndexValue boxIndex, int mag){
-		return mag*X_POS_COMP_CELL.apply(boxIndex, mag);
+		return mag * snakeInSquareX(boxIndex, mag);
 	}
 	
 	/**
@@ -488,7 +488,7 @@ public class Puzzle extends SudokuNetwork{
 	}
 	
 	private static int boxLowY(IndexValue boxIndex, int mag){
-		return mag*Y_POS_COMP_CELL.apply(boxIndex, mag);
+		return mag * snakeInSquareY(boxIndex, mag);
 	}
 	
 	/**
@@ -748,37 +748,21 @@ public class Puzzle extends SudokuNetwork{
 	 * <p>A dimensional component contribution function that provides 
 	 * a contribution of zero regardless of its inputs.</p>
 	 */
-	public static final BiFunction<IndexValue,Integer,Integer> ZERO       = (indx,mag) -> 0;
+	private static final BiFunction<IndexValue,Integer,Integer> ZERO       = (indx,mag) -> 0;
 	
 	/**
 	 * <p>A dimensional component contribution function that produces 
 	 * all the the input dimension value as output.</p>
 	 */
-	public static final BiFunction<IndexValue,Integer,Integer> INT_VALUE  = (indx,mag) -> indx.intValue();
+	private static final BiFunction<IndexValue,Integer,Integer> INT_VALUE  = (indx,mag) -> indx.intValue();
 	
-	/**
-	 * <p>A dimensional component contribution function providing the x-dimensional contribution 
-	 * of a value along the {@link Puzzle.DimensionType#CELL_ID_IN_BOX cell-index-in-box dimension}.</p>
-	 */
-	public static final BiFunction<IndexValue,Integer,Integer> X_POS_COMP_CELL = (indx,mag) -> (indx.intValue()%mag);
+	private static int snakeInSquareX(IndexValue index, int magnitude){
+		return index.intValue() % magnitude;
+	}
 	
-	/**
-	 * <p>A dimensional component contribution function providing the y-dimensional contribution 
-	 * of a value along the {@link Puzzle.DimensionType#CELL_ID_IN_BOX cell-index-in-box dimension}.</p>
-	 */
-	public static final BiFunction<IndexValue,Integer,Integer> Y_POS_COMP_CELL = (indx,mag) -> (indx.intValue()/mag);
-	
-	/**
-	 * <p>A dimensional component contribution function providing the x-dimensional contribution 
-	 * of a value along the {@link Puzzle.DimensionType#BOX box-index dimension}.</p>
-	 */
-	public static final BiFunction<IndexValue,Integer,Integer> X_POS_COMP_BOX = (indx,mag) -> mag*X_POS_COMP_CELL.apply(indx, mag);
-	
-	/**
-	 * <p>A dimensional component contribution function providing the y-dimensional contribution 
-	 * of a value along the {@link Puzzle.DimensionType#BOX box-index dimension}.</p>
-	 */
-	public static final BiFunction<IndexValue,Integer,Integer> Y_POS_COMP_BOX = (indx,mag) -> mag*Y_POS_COMP_CELL.apply(indx, mag);
+	private static int snakeInSquareY(IndexValue index, int magnitude){
+		return index.intValue() / magnitude;
+	}
 	
 	/**
 	 * <p>This enum specifies the properties of the five claim-coordinating 
@@ -793,21 +777,21 @@ public class Puzzle extends SudokuNetwork{
 		 * dimension contributes all of its value to the x dimension 
 		 * and contributes zero to y and z.</p>
 		 */
-		X				(INT_VALUE,       ZERO,            ZERO),
+		X				(INT_VALUE,              ZERO,                   ZERO),
 		
 		/**
 		 * <p>The conventional y dimension. An IndexInstance in this 
 		 * dimension contributes all of its value to the y dimension 
 		 * and contributes zero to x and z.</p>
 		 */
-		Y				(ZERO,            INT_VALUE,       ZERO),
+		Y				(ZERO,                   INT_VALUE,              ZERO),
 		
 		/**
 		 * <p>The conventional z dimension. An IndexInstance in this 
 		 * dimension contributes all of its value to the z dimension 
 		 * and contributes zero to x and y.</p>
 		 */
-		SYMBOL			(ZERO,            ZERO,            INT_VALUE), 
+		SYMBOL			(ZERO,                   ZERO,                   INT_VALUE), 
 		
 		/**
 		 * <p>The dimension for box-index within the target. This dimension 
@@ -816,7 +800,7 @@ public class Puzzle extends SudokuNetwork{
 		 * row once it reaches maximum x, continuing in this fashion until 
 		 * it reaches the lower right corner (high x,y).</p>
 		 */
-		BOX				(X_POS_COMP_BOX,  Y_POS_COMP_BOX,  ZERO), 
+		BOX				(Puzzle::boxLowX,        Puzzle::boxLowY,        ZERO), 
 		
 		/**
 		 * <p>The dimension for cell-index within a box. This dimension 
@@ -825,7 +809,7 @@ public class Puzzle extends SudokuNetwork{
 		 * row once it reaches maximum x within the box, continuing in this fashion until 
 		 * it reaches the lower right corner (high x,y) of the box.</p>
 		 */
-		CELL_ID_IN_BOX	(X_POS_COMP_CELL, Y_POS_COMP_CELL, ZERO);
+		CELL_ID_IN_BOX	(Puzzle::snakeInSquareX, Puzzle::snakeInSquareY, ZERO);
 		
 		private final BiFunction<IndexValue,Integer,Integer> contribX;
 		private final BiFunction<IndexValue,Integer,Integer> contribY;

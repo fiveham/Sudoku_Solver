@@ -101,7 +101,7 @@ public class Pair<T,S> {
 	
 	@Override
 	public boolean equals(Object o){
-		if( o instanceof Pair<?,?>){
+		if(getClass().isInstance(o)){
 			Pair<?,?> p = (Pair<?,?>) o;
 			return a.equals(p.a) ? b.equals(p.b) : a.equals(p.b) && b.equals(p.a);  
 		}

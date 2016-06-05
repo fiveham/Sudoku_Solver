@@ -107,11 +107,14 @@ public class Solver implements Runnable{
 	public Sudoku getPuzzle(){
 		return target;
 	}
+		
+	private Solver childWithInitializers(Sudoku network){
+		return new Solver(network, event, group, lock, initializerSource, processorSource);
+	}
 	
-	public static final BiFunction<Solver,SudokuNetwork,Solver> HAS_NO_INITIALIZERS = 
-			(solver,network) -> new Solver(network, solver.event, solver.group, solver.lock, NO_INITIALIZER_SOURCE, solver.processorSource);
-	public static final BiFunction<Solver,SudokuNetwork,Solver> HAS_INITIALIZERS = 
-			(solver,network) -> new Solver(network, solver.event, solver.group, solver.lock, solver.initializerSource, solver.processorSource);
+	private Solver childWithoutInitializers(Sudoku network){
+		return new Solver(network, event, group, lock, NO_INITIALIZER_SOURCE, processorSource);
+	}
 	
 	/**
 	 * <p>Creates a thread to {@link #run() run} this Solver and creates 
@@ -191,9 +194,9 @@ public class Solver implements Runnable{
 	}
 	
 	/**
-	 * <p>Applies this Solver's initializer and processor Techniques, stores 
-	 * the produced SolutionEvent in {@code event}, and returns the appropriate 
-	 * BiFunction to generate this Solver's children.</p>
+	 * <p>Applies this Solver's initializer and processor Techniques and returns 
+	 * the produced TechniqueEvent paired with the appropriate BiFunction to 
+	 * generate this Solver's children.</p>
 	 * @see #HAS_INITIALIZERS
 	 * @see #HAS_NO_INITIALIZERS
 	 * @return
@@ -241,10 +244,10 @@ public class Solver implements Runnable{
 	private static enum TechniqueInheritance{
 		WITH_INITIALIZERS(
 				Solver::initialize, 
-				HAS_INITIALIZERS), 
+				Solver::childWithInitializers), 
 		WITHOUT_INITIALIZERS(
 				Solver::process, 
-				HAS_NO_INITIALIZERS);
+				Solver::childWithoutInitializers);
 		
 		private final Function<Solver,ThreadEvent> solutionStyle;
 		private final BiFunction<Solver,SudokuNetwork,Solver> initializerInheritance;

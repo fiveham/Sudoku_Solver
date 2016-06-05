@@ -507,16 +507,16 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	private static int treeSize(Time time){ //TODO redo the tree-size calculation thing in a way that makes sense in context
-		AtomicInteger ai = new AtomicInteger(1); //MAGIC
-		treeSize(time, ai);
+		AtomicInteger ai = new AtomicInteger(1);
+		if(time.hasChildren()){
+			treeSize(time, ai);
+		}
 		return ai.get();
 	}
 	
 	private static void treeSize(Time time, AtomicInteger ai){
-		if(time.hasChildren()){
-			ai.addAndGet(time.children().size());
-			time.children().parallelStream().forEach((child) -> treeSize(child,ai));
-		}
+		ai.addAndGet(time.children().size());
+		time.children().parallelStream().filter(Time::hasChildren).forEach((child) -> treeSize(child,ai));
 	}
 	
 	private static List<Timeline> depthFirstRecursion( List<Timeline> timelineList, ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
