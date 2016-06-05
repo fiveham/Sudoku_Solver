@@ -40,9 +40,6 @@ public class Solver implements Runnable{
 		Collections.addAll(DEFAULT_PROCESSOR_SOURCE, ColorChain::new, Sledgehammer::new);
 	}
 	
-	public static final BiFunction<Sudoku, List<Function<Sudoku,Technique>>, List<Technique>> SOURCE_TO_TECHNIQUES = 
-			(sudoku,funcList) -> funcList.stream().map((func)->func.apply(sudoku)).collect(Collectors.toList());
-	
 	public static final List<Function<Sudoku,Technique>> NO_INITIALIZER_SOURCE = new ArrayList<>(0);
 	
 	private final List<Function<Sudoku,Technique>> initializerSource;
@@ -84,8 +81,8 @@ public class Solver implements Runnable{
 		this.initializerSource = initializers;
 		this.processorSource = processors;
 		
-		this.initializers = SOURCE_TO_TECHNIQUES.apply(target, initializers);
-		this.processors = SOURCE_TO_TECHNIQUES.apply(target, processors);
+		this.initializers = generateTechniques(target, initializers);
+		this.processors   = generateTechniques(target, processors);
 		
 		this.eventParent = eventParent;
 		this.group = group;
@@ -94,6 +91,10 @@ public class Solver implements Runnable{
 		}
 		
 		this.lock = waiter;
+	}
+	
+	private static List<Technique> generateTechniques(Sudoku sudoku, List<Function<Sudoku,Technique>> funcList){
+		return funcList.stream().map((func)->func.apply(sudoku)).collect(Collectors.toList());
 	}
 	
 	public ThreadEvent getEvent(){

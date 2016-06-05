@@ -14,7 +14,7 @@ public class Fact extends NodeSet<Claim,Fact>{
 	 * the Claim satisfying the Rule has been completely 
 	 * identified.</p>
 	 */
-	public static final int SIZE_WHEN_SOLVED = 1;
+	protected static final int SIZE_WHEN_SOLVED = 1;
 	
 	/**
 	 * <p>The number ({@value}) of elements (neighbors) of a Rule that 

@@ -679,8 +679,8 @@ public class Sledgehammer extends AbstractTechnique {
 		public Iterable<Pair<Collection<Rule>,Collection<Rule>>> packs(Sudoku s){
 			return StreamSupport.stream(nCuboidSource.apply(s).spliterator(),false)
 					.map((list) -> new Pair<Collection<Rule>,Collection<Rule>>(
-							s.factStream().map((f)->(Rule)f).filter(isTypeA.and((r) -> ruleIsDim.test(r,list))).collect(Collectors.toList()), 
-							s.factStream().map((f)->(Rule)f).filter(isTypeB.and((r) -> ruleIsDim.test(r,list))).collect(Collectors.toList())))
+							s.factStream().map(Rule.class::cast).filter(isTypeA.and((r) -> ruleIsDim.test(r,list))).collect(Collectors.toList()), 
+							s.factStream().map(Rule.class::cast).filter(isTypeB.and((r) -> ruleIsDim.test(r,list))).collect(Collectors.toList())))
 					.collect(Collectors.toList());
 		}
 	}

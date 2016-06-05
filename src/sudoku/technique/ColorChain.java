@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -146,11 +145,11 @@ public class ColorChain extends AbstractTechnique {
 			Fact lane0 = bridge.get(0);
 			Fact lane1 = bridge.get(1);
 			
-			List<ColorClaim> pathC0 = chain0.path(CHAIN_RULE_INTERSECTION.apply(chain0, lane0), CHAIN_RULE_INTERSECTION.apply(chain0, lane1));
+			List<ColorClaim> pathC0 = chain0.path(chainRuleIntersection(chain0, lane0), chainRuleIntersection(chain0, lane1));
 			List<Fact> path0 = IntStream.range(1,pathC0.size())
 					.mapToObj((int i) -> pathC0.get(i-1).wrapped().intersection(pathC0.get(i).wrapped()).iterator().next())
 					.collect(Collectors.toList());
-			List<ColorClaim> pathC1 = chain1.path(CHAIN_RULE_INTERSECTION.apply(chain1, lane0), CHAIN_RULE_INTERSECTION.apply(chain1, lane1));
+			List<ColorClaim> pathC1 = chain1.path(chainRuleIntersection(chain1, lane0), chainRuleIntersection(chain1, lane1));
 			List<Fact> path1 = IntStream.range(1, pathC1.size())
 					.mapToObj((int i) -> pathC1.get(i-1).wrapped().intersection(pathC1.get(i).wrapped()).iterator().next())
 					.collect(Collectors.toList());
@@ -172,8 +171,9 @@ public class ColorChain extends AbstractTechnique {
 		return null;
 	}
 	
-	public static final BiFunction<Graph<ColorClaim>,Set<Claim>,ColorClaim> CHAIN_RULE_INTERSECTION = 
-			(graph, set) -> graph.nodeStream().filter((cc) -> set.contains(cc.wrapped())).findFirst().get();
+	private static ColorClaim chainRuleIntersection(Graph<ColorClaim> graph, Set<Claim> set){
+		return graph.nodeStream().filter((cc) -> set.contains(cc.wrapped())).findFirst().get();
+	}
 	
 	public static class SolveEventBridgeJoin extends TechniqueEvent{
 		private SolveEventBridgeJoin(Set<Claim> falsified, Collection<? extends Fact> src, Collection<? extends Fact> recip){
@@ -217,12 +217,12 @@ public class ColorChain extends AbstractTechnique {
 				.filter((cc) -> cc.color > 0)
 				.map(ColorClaim::wrapped)
 				.map(Claim::visibleClaims)
-				.collect(CLAIMS_TO_VISIBLE_CLAIMS);
+				.collect(MASS_UNION);
 		Set<Claim> visibleToNegatives = concom.nodeStream()
 				.filter((cc) -> cc.color < 0)
 				.map(ColorClaim::wrapped)
 				.map(Claim::visibleClaims)
-				.collect(CLAIMS_TO_VISIBLE_CLAIMS);
+				.collect(MASS_UNION);
 		
 		Set<Claim> claimsToSetFalse = visibleToPositives;
 		claimsToSetFalse.retainAll(visibleToNegatives);
@@ -237,7 +237,7 @@ public class ColorChain extends AbstractTechnique {
 	
 	public static final BinaryOperator<Set<Claim>> MERGE_CLAIM_SETS = (r1,r2) -> {r1.addAll(r2); return r1;};
 	
-	public static final Collector<Set<Claim>,?,Set<Claim>> CLAIMS_TO_VISIBLE_CLAIMS = Collector.of(
+	public static final Collector<Set<Claim>,?,Set<Claim>> MASS_UNION = Collector.of(
 			HashSet::new, 
 			Set::addAll, 
 			MERGE_CLAIM_SETS);
