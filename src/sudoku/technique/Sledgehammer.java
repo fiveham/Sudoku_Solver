@@ -1,7 +1,6 @@
 package sudoku.technique;
 
 import common.ComboGen;
-import common.NCuboid;
 import common.Pair;
 import common.ToolSet;
 import java.util.ArrayList;
@@ -13,23 +12,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiPredicate;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import sudoku.Claim;
 import sudoku.Debug;
 import sudoku.Fact;
-import sudoku.Puzzle;
 import sudoku.Rule;
 import sudoku.Sudoku;
-import sudoku.Puzzle.RuleType;
 import sudoku.time.TechniqueEvent;
 
 //TODO describe sledgehammer solution scenarios and their stipulations in the class javadoc
@@ -549,129 +543,7 @@ public class Sledgehammer extends AbstractTechnique {
 		public TechniqueEvent resolve(Set<Claim> falsified, Collection<? extends Fact> src, Collection<? extends Fact> recip);
 	}
 	
-	/**
-	 * <p>Looks for sledgehammer solution scenarios exclusively as relations between 
-	 * Rules of different {@link Puzzle.RuleType types}. This allows this implementation 
-	 * of the sledgehammer technique to simultaneously generalize X-Wing, Swordfish, 
-	 * Jellyfish, naked pairs, naked triples, naked quadruples, hidden pairs, hidden 
-	 * triples, hidden quadruples, etc. without the overheard incurred by earlier 
-	 * implementations of this class which looked at all combinations of all types of 
-	 * Rules.</p>
-	 * 
-	 * <p>This is a heuristic technique, meant to be used before ColorChain but requiring 
-	 * a complete form of Sledgehammer that does explore all possible valid source combos 
-	 * to be included in the Solver's techniques following ColorChain.</p>
-	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
-	 * if no changes were made
-	 */
-	private TechniqueEvent regionSpeciesPairProcessing(){
-		
-		for(TypePair types : TypePair.values()){
-			for(Pair<Collection<Rule>,Collection<Rule>> pack : types.packs(target)){
-				Collection<Rule> a = pack.getA();
-				Collection<Rule> b = pack.getB();
-				
-				for(int size = MIN_SLEDGEHAMMER_SIZE; size<Math.min(a.size(), b.size()); size++){
-					for(List<Rule> comboA : new ComboGen<>(a, size,size)){
-						for(List<Rule> comboB : new ComboGen<>(b, size,size)){
-							Set<Claim> falsify = falsifiedClaims(comboA, comboB);
-							
-							if(falsify != null){
-								return resolve(falsify, comboA, comboB, SolveEventSledgehammer::new);
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		return null;
-	}
-	
-	private static Set<Claim> falsifiedClaims(Collection<Rule> comboA, Collection<Rule> comboB){
-		Set<Claim> unionA = massUnion(comboA);
-		Set<Claim> unionB = massUnion(comboB);
-		
-		Set<Claim> inters = new HashSet<>(unionA);
-		inters.retainAll(unionB);
-		
-		unionA.removeAll(inters);
-		unionB.removeAll(inters);
-		
-		if(unionA.isEmpty() != unionB.isEmpty()){
-			return unionA.isEmpty() ? unionB : unionA;
-		} else{
-			return null;
-		}
-	}
-	
-	private static int boxIndex(Rule r){
-		int mag = r.iterator().next().getPuzzle().magnitude();
-		return boxY(r)*mag + boxX(r);
-	}
-	
-	private static int boxY(Rule r){
-		Claim c = r.iterator().next();
-		int y = c.getY();
-		return y/c.getPuzzle().magnitude();
-	}
-	
-	private static int boxX(Rule r){
-		Claim c = r.iterator().next();
-		int x = c.getX();
-		return x/c.getPuzzle().magnitude();
-	}
-	
 	public static final Function<Sudoku,List<Integer>> DIMSOURCE = (s) -> IntStream.range(0,s.sideLength()).mapToObj(Integer.class::cast).collect(Collectors.toList());
-	
-	private static final Function<Sudoku,NCuboid<Integer>> STD_NCUBOID_SRC = (s)->new NCuboid<>(DIMSOURCE.apply(s));
-	private static final Function<Sudoku,NCuboid<Integer>> ALT_NCUBOID_SRC = (s)->new NCuboid<>(DIMSOURCE.apply(s), IntStream.range(0,s.magnitude()).mapToObj(Integer.class::cast).collect(Collectors.toList()));
-	
-	private static enum TypePair{
-		CELL_COL(STD_NCUBOID_SRC, RuleType.CELL::isTypeOf, RuleType.COLUMN::isTypeOf, (r,l) -> l.get(0) == r.stream().findFirst().get().getX()), 
-		CELL_ROW(STD_NCUBOID_SRC, RuleType.CELL::isTypeOf, RuleType.ROW::isTypeOf,    (r,l) -> l.get(0) == r.stream().findFirst().get().getY()), 
-		CELL_BOX(STD_NCUBOID_SRC, RuleType.CELL::isTypeOf, RuleType.BOX::isTypeOf,    (r,l) -> l.get(0).equals(boxIndex(r))), 
-		BOX_ROW (ALT_NCUBOID_SRC, RuleType.BOX::isTypeOf,  RuleType.ROW::isTypeOf,    (r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxY(r)), 
-		BOX_COL (ALT_NCUBOID_SRC, RuleType.BOX::isTypeOf,  RuleType.COLUMN::isTypeOf, (r,l) -> l.get(0) == r.stream().findFirst().get().getZ() && l.get(1) == boxX(r)), 
-		ROW_COL (STD_NCUBOID_SRC, RuleType.ROW::isTypeOf,  RuleType.COLUMN::isTypeOf, (r,l) -> l.get(0) == r.stream().findFirst().get().getZ());
-		
-		private Function<Sudoku,NCuboid<Integer>> nCuboidSource;
-		private Predicate<Rule> isTypeA;
-		private Predicate<Rule> isTypeB;
-		private BiPredicate<Rule,List<Integer>> ruleIsDim;
-		
-		private TypePair(Function<Sudoku,NCuboid<Integer>> nCuboidSource, Predicate<Rule> isTypeA, Predicate<Rule> isTypeB, BiPredicate<Rule,List<Integer>> ruleIsDim){
-			this.nCuboidSource = nCuboidSource;
-			this.isTypeA = isTypeA;
-			this.isTypeB = isTypeB;
-			this.ruleIsDim = ruleIsDim;
-		}
-		
-		/**
-		 * <p>Returns an Iterable whose Iterator returns Pairs of Collections such that each 
-		 * Collection in a Pair contains all the Rules of a certain RegionSpecies pertaining 
-		 * to a specific pack. A pack is a geometrically bound subset of the Rules in a Sudoku, 
-		 * each of which unites Rules that can be recipients or sources in certain sledgehammer 
-		 * solution scenarios.</p>
-		 * 
-		 * <p>There exists a pack for each flat layer of the spatial cube of the claims of a 
-		 * Puzzle, one for each box of a printed puzzle, and six more for each unvertical slice 
-		 * of the puzzle cube: three on each layer for each of the two unvertical orientations. 
-		 * Each pack as such pertains 
-		 * to all possible intersections of Rules of two specified RegionSpecies such that all 
-		 * those Rules of either RegionSpecies in that pack share a certain 
-		 * {@link Puzzle#IndexInstance dimensional value} in common.</p>
-		 * @param s
-		 * @return
-		 */
-		public Iterable<Pair<Collection<Rule>,Collection<Rule>>> packs(Sudoku s){
-			return StreamSupport.stream(nCuboidSource.apply(s).spliterator(),false)
-					.map((list) -> new Pair<Collection<Rule>,Collection<Rule>>(
-							s.factStream().map(Rule.class::cast).filter(isTypeA.and((r) -> ruleIsDim.test(r,list))).collect(Collectors.toList()), 
-							s.factStream().map(Rule.class::cast).filter(isTypeB.and((r) -> ruleIsDim.test(r,list))).collect(Collectors.toList())))
-					.collect(Collectors.toList());
-		}
-	}
 	
 	/**
 	 * <p>Unions all the collections in {@code srcCombo} into one set and returns 
