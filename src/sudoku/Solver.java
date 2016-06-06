@@ -45,8 +45,9 @@ public class Solver{
 	private final List<Function<Sudoku,Technique>> initializerSource;
 	private final List<Function<Sudoku,Technique>> processorSource;
 	
-	private final List<Technique> processors;
 	private final List<Technique> initializers;
+	private final List<Technique> processors;
+	
 	private final Sudoku target;
 	
 	private final ThreadEvent eventParent;
@@ -107,6 +108,10 @@ public class Solver{
 	 */
 	public Sudoku getTarget(){
 		return target;
+	}
+	
+	public ThreadGroup getThreadGroup(){
+		return group;
 	}
 		
 	private Solver childWithInitializers(Sudoku network){

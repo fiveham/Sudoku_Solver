@@ -214,12 +214,12 @@ public class ColorChain extends AbstractTechnique {
 		Set<Claim> visibleToPositives = concom.nodeStream()
 				.filter((cc) -> cc.color > 0)
 				.map(ColorClaim::wrapped)
-				.map(Claim::visibleClaims)
+				.map(Claim::visible)
 				.collect(Sledgehammer.massUnionCollector());
 		Set<Claim> visibleToNegatives = concom.nodeStream()
 				.filter((cc) -> cc.color < 0)
 				.map(ColorClaim::wrapped)
-				.map(Claim::visibleClaims)
+				.map(Claim::visible)
 				.collect(Sledgehammer.massUnionCollector());
 		
 		Set<Claim> claimsToSetFalse = visibleToPositives;
@@ -493,17 +493,17 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	private static class ColorClaim implements WrapVertex<Claim,ColorClaim>{
 		private int color = 0;
-		private Claim wrapped;
+		private Claim claim;
 		private final List<ColorClaim> neighbors;
 		
-		ColorClaim(Claim wrapped){
-			this.wrapped = wrapped;
+		ColorClaim(Claim claim){
+			this.claim = claim;
 			this.neighbors = new ArrayList<>();
 		}
 		
 		@Override
 		public Claim wrapped(){
-			return wrapped;
+			return claim;
 		}
 		
 		@Override
@@ -535,14 +535,14 @@ public class ColorChain extends AbstractTechnique {
 		public boolean equals(Object o){
 			if(o instanceof ColorClaim){
 				ColorClaim cc = (ColorClaim) o;
-				return cc.color == this.color && cc.wrapped == this.wrapped;
+				return cc.color == this.color && cc.claim == this.claim;
 			}
 			return false;
 		}
 		
 		@Override
 		public int hashCode(){
-			return wrapped.hashCode();
+			return claim.hashCode();
 		}
 	}
 	

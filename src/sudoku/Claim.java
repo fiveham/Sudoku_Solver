@@ -1,9 +1,7 @@
 package sudoku;
 
-import common.ToolSet;
 import java.util.Set;
 import sudoku.Puzzle.IndexValue;
-import sudoku.technique.Sledgehammer;
 import sudoku.time.FalsifiedTime;
 
 /**
@@ -89,10 +87,10 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * this Claim, false otherwise
 	 */
 	boolean setTrue(FalsifiedTime time){
-		Set<Claim> s = visibleClaims();
+		Set<Claim> s = visible();
 		int init = s.size();
 		s.stream().forEach((c) -> c.setFalse(time));
-		return init != visibleClaims().size();
+		return init != visible().size();
 	}
 	
 	/**
@@ -208,18 +206,5 @@ public class Claim extends NodeSet<Fact,Claim>{
 		result[Puzzle.Y_DIM] = cn.y.intValue() - y.intValue();
 		result[Puzzle.Z_DIM] = cn.symbol.intValue() - symbol.intValue();
 		return result;
-	}
-	
-	/**
-	 * <p>Returns a set of the Claims visible to this Claim. A Claim is 
-	 * visible to this Claim if that Claim and this one share at least 
-	 * one Rule in common as elements.</p>
-	 * @return a set of the Claims that share at least one Claim with 
-	 * this Claim
-	 */
-	public ToolSet<Claim> visibleClaims(){
-		ToolSet<Claim> neighborsOfNeighbors = new ToolSet<>(Sledgehammer.massUnion(this));
-		neighborsOfNeighbors.remove(this);
-		return neighborsOfNeighbors;
 	}
 }

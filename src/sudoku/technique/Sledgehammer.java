@@ -127,9 +127,9 @@ public class Sledgehammer extends AbstractTechnique {
 	
 	private final VisibleCache visibleCache;
 	
-	private final Collection<Rule> distinctRules;
-	private final Map<Integer,List<Rule>> distinctRulesBySledgehammerSize;
-	private final Map<Integer,List<Rule>> distinctSourcesBySledgehammerSize;
+	private final Collection<Fact> distinctRules;
+	private final Map<Integer,List<Fact>> distinctRulesBySledgehammerSize;
+	private final Map<Integer,List<Fact>> distinctSourcesBySledgehammerSize;
 	
 	private boolean builtSrcComboAtLastSize = true;
 	
@@ -149,7 +149,7 @@ public class Sledgehammer extends AbstractTechnique {
 	
 	private static void populateDistinctRules(Sledgehammer sh){
 		sh.distinctRules.addAll(distinctRules(sh.target));
-		sh.distinctRulesBySledgehammerSize.putAll(mapRulesBySize(sh.distinctRules.stream(), Rule::size));
+		sh.distinctRulesBySledgehammerSize.putAll(mapRulesBySize(sh.distinctRules.stream(), Fact::size));
 		sh.distinctSourcesBySledgehammerSize.putAll(mapRulesBySize(sh.distinctRules.stream(), Sledgehammer::sledgehammerSizeIfSource));
 	}
 	
@@ -170,11 +170,11 @@ public class Sledgehammer extends AbstractTechnique {
 	 * size of a sledgehammer solution scenario in which that Rule can serve
 	 * @return
 	 */
-	public static Map<Integer,List<Rule>> mapRulesBySize(Stream<Rule> ruleStream, Function<? super Rule, ? extends Integer> sledgehammerSize){
+	public static Map<Integer,List<Fact>> mapRulesBySize(Stream<Fact> ruleStream, Function<? super Fact, ? extends Integer> sledgehammerSize){
 		return ruleStream.collect(Collectors.toMap(
 				sledgehammerSize, 
 				(r) -> {
-					List<Rule> result = new ArrayList<>(1);
+					List<Fact> result = new ArrayList<>(1);
 					result.add(r);
 					return result;
 				}, 
@@ -199,7 +199,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 * @return the minimum size of a sledgehammer solution scenario for which 
 	 * {@code r} could be a source
 	 */
-	private static int sledgehammerSizeIfSource(Rule r){
+	private static int sledgehammerSizeIfSource(Fact r){
 		
 		//Maximum number of recipient rules attachable to this Rule r: 
 		//Inclusive upper bound on the minimum size of Sledgehammer where r is a source.
@@ -210,13 +210,13 @@ public class Sledgehammer extends AbstractTechnique {
 		int rulesOtherThanR = Claim.INIT_OWNER_COUNT - 1;
 		int noLoopVisibleRuleCount = r.size() * rulesOtherThanR;
 		
-		Set<Rule> visible = r.visibleRules();
+		Set<Fact> visible = r.visible();
 		int actualVisibleCount = visible.size();
 		
 		if(noLoopVisibleRuleCount == actualVisibleCount){
 			return upperBound;
 		} else if(noLoopVisibleRuleCount > actualVisibleCount){
-			for(List<Rule> visibleCombo : new ComboGen<>(visible, MIN_RECIPIENT_COUNT_PER_SOURCE, r.size())){
+			for(List<Fact> visibleCombo : new ComboGen<>(visible, MIN_RECIPIENT_COUNT_PER_SOURCE, r.size())){
 				if(massUnion(visibleCombo).containsAll(r)){
 					return visibleCombo.size();
 				}
@@ -286,13 +286,13 @@ public class Sledgehammer extends AbstractTechnique {
 	 * {@code initialSources} as-is or as a starting population, or {@code null} if no resolvable 
 	 * sledgehammer is found
 	 */
-	private TechniqueEvent exploreSourceCombos(List<Rule> initialSources, int size, Set<Rule> sourceMask){
+	private TechniqueEvent exploreSourceCombos(List<Fact> initialSources, int size, Set<Fact> sourceMask){
 		if(initialSources.size() < size){
-			Set<Rule> localSourceMask = new HashSet<>(sourceMask);
-			for(Rule newSource : sourcePool(initialSources, sourceMask, size)){
+			Set<Fact> localSourceMask = new HashSet<>(sourceMask);
+			for(Fact newSource : sourcePool(initialSources, sourceMask, size)){
 				localSourceMask.remove(newSource);
 				
-				List<Rule> newSources = new ArrayList<>(initialSources.size()+1);
+				List<Fact> newSources = new ArrayList<>(initialSources.size()+1);
 				newSources.addAll(initialSources);
 				newSources.add(newSource);
 				
@@ -311,19 +311,19 @@ public class Sledgehammer extends AbstractTechnique {
 	}
 	
 	//TODO reuse ingredients (visible cloud, visVisible cloud) externally in the calling context
-	private Set<Rule> sourcePool(List<Rule> initialSources, Set<Rule> sourceMask, int size){
+	private Set<Fact> sourcePool(List<Fact> initialSources, Set<Fact> sourceMask, int size){
 		if(initialSources.isEmpty()){
 			return sourceMask;
 		} else{
-			Set<Rule> visibles = new HashSet<>();
-			for(Rule src : initialSources){
+			Set<Fact> visibles = new HashSet<>();
+			for(Fact src : initialSources){
 				visibles.addAll(visibleCache.get(src, size));
 			}
 			visibles.removeAll(initialSources);
 			visibles.retainAll(sourceMask);
 			
-			Set<Rule> visVisibles = new HashSet<>();
-			for(Rule visible : visibles){
+			Set<Fact> visVisibles = new HashSet<>();
+			for(Fact visible : visibles){
 				visVisibles.addAll(visibleCache.get(visible, size));
 			}
 			visVisibles.removeAll(initialSources);
@@ -342,9 +342,9 @@ public class Sledgehammer extends AbstractTechnique {
 	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
 	 */
-	private TechniqueEvent exploreRecipientCombos(List<Rule> srcCombo){
+	private TechniqueEvent exploreRecipientCombos(List<Fact> srcCombo){
 		//For each recipient combo derivable from srcCombo that disjoint, closely connected source combo
-		for(List<Rule> recipientCombo : recipientCombinations(srcCombo)){
+		for(List<Fact> recipientCombo : recipientCombinations(srcCombo)){
 			
 			//If the source and recipient combos make a valid sledgehammer scenario
 			Set<Claim> claimsToSetFalse = areSledgehammerScenario(srcCombo, recipientCombo);
@@ -355,19 +355,19 @@ public class Sledgehammer extends AbstractTechnique {
 		return null;
 	}
 	
-	private final Map<Integer,List<Rule>> distinctRulesAtSizeCache = new HashMap<>();
+	private final Map<Integer,List<Fact>> distinctRulesAtSizeCache = new HashMap<>();
 	
-	private List<Rule> distinctRulesAtSize(int size){
+	private List<Fact> distinctRulesAtSize(int size){
 		return distinctRulesOfTypeAtSize(size, distinctRulesAtSizeCache, distinctRulesBySledgehammerSize, ArrayList::new);
 	}
 	
-	private final Map<Integer,Set<Rule>> distinctSourcesAtSizeCache = new HashMap<>();
+	private final Map<Integer,Set<Fact>> distinctSourcesAtSizeCache = new HashMap<>();
 	
-	private Set<Rule> distinctSourcesAtSize(int size){
+	private Set<Fact> distinctSourcesAtSize(int size){
 		return distinctRulesOfTypeAtSize(size, distinctSourcesAtSizeCache, distinctSourcesBySledgehammerSize, HashSet::new);
 	}
 	
-	private <C extends Collection<Rule>> C distinctRulesOfTypeAtSize(int size, Map<Integer,C> cache, Map<Integer,List<Rule>> rulesOfType, Supplier<C> supplier){
+	private static <C extends Collection<Fact>> C distinctRulesOfTypeAtSize(int size, Map<Integer,C> cache, Map<Integer,List<Fact>> rulesOfType, Supplier<C> supplier){
 		if(cache.containsKey(size)){
 			return cache.get(size);
 		} else{
@@ -445,13 +445,13 @@ public class Sledgehammer extends AbstractTechnique {
 	 * @return a set of all the Rules that intersect any of the Rules 
 	 * in {@code sources}, excluding the Rules in {@code sources}.
 	 */
-	private ComboGen<Rule> recipientCombinations(List<Rule> sources){
+	private ComboGen<Fact> recipientCombinations(List<Fact> sources){
 		
-		List<Rule> unconnectedSources = new ArrayList<>(sources);
+		List<Fact> unconnectedSources = new ArrayList<>(sources);
 		int prevUnconSrcCount = unconnectedSources.size();
 		
 		//seed the "connected" area with a source Rule
-		Map<Rule,Set<Rule>> rulesVisibleToConnectedSources = new HashMap<>();
+		Map<Fact,Set<Fact>> rulesVisibleToConnectedSources = new HashMap<>();
 		addVisibles(rulesVisibleToConnectedSources, unconnectedSources.remove(unconnectedSources.size()-1));
 		
 		//connect as many of the sources together as possible
@@ -459,8 +459,8 @@ public class Sledgehammer extends AbstractTechnique {
 			prevUnconSrcCount = unconnectedSources.size();
 			
 			//try to connect each currently unconnected source to the "connected" area
-			for(Iterator<Rule> iter = unconnectedSources.iterator(); iter.hasNext();){
-				Rule currentUnconnectedSource = iter.next();
+			for(Iterator<Fact> iter = unconnectedSources.iterator(); iter.hasNext();){
+				Fact currentUnconnectedSource = iter.next();
 				
 				//No source Rule can be directly visible to another source Rule
 				if(rulesVisibleToConnectedSources.containsKey(currentUnconnectedSource)){
@@ -468,7 +468,7 @@ public class Sledgehammer extends AbstractTechnique {
 				}
 				
 				//If the current Rule is 4 steps away from at least one other source Rule, 
-				Set<Rule> visibleToCurrentRule = visibleCache.get(currentUnconnectedSource, sources.size());
+				Set<Fact> visibleToCurrentRule = visibleCache.get(currentUnconnectedSource, sources.size());
 				if(!Collections.disjoint(visibleToCurrentRule, rulesVisibleToConnectedSources.keySet())){
 					addVisibles(rulesVisibleToConnectedSources, currentUnconnectedSource);
 					iter.remove();
@@ -477,14 +477,14 @@ public class Sledgehammer extends AbstractTechnique {
 		}
 		
 		if(unconnectedSources.size() == 0){
-			Set<Rule> recipientsVisibleToMultipleSources = new HashSet<>();
-			List<Set<Rule>> sourcesSeenByRemainingRecipients = rulesVisibleToConnectedSources.keySet().stream()
+			Set<Fact> recipientsVisibleToMultipleSources = new HashSet<>();
+			List<Set<Fact>> sourcesSeenByRemainingRecipients = rulesVisibleToConnectedSources.keySet().stream()
 					.filter((r) -> rulesVisibleToConnectedSources.get(r).size() >= MIN_SOURCE_COUNT_PER_RECIPIENT)
 					.peek(recipientsVisibleToMultipleSources::add)
 					.map(rulesVisibleToConnectedSources::get)
 					.collect(Collectors.toList());
 			recipientsVisibleToMultipleSources.retainAll(distinctRulesAtSize(sources.size()));
-			Map<Rule,Integer> sourceCounts = countingUnion(sourcesSeenByRemainingRecipients);
+			Map<Fact,Integer> sourceCounts = countingUnion(sourcesSeenByRemainingRecipients);
 			
 			if(recipientsVisibleToMultipleSources.size() >= sources.size() 
 					&& sourceCounts.size() >= sources.size() 
@@ -495,21 +495,21 @@ public class Sledgehammer extends AbstractTechnique {
 		return NO_COMBOS;
 	}
 	
-	private static final ComboGen<Rule> NO_COMBOS = new ComboGen<>(Collections.emptyList(), 0, 0);
+	private static final ComboGen<Fact> NO_COMBOS = new ComboGen<>(Collections.emptyList(), 0, 0);
 	
-	private void addVisibles(Map<Rule,Set<Rule>> map, Rule seer){
-		for(Rule visible : seer.visibleRules()){
+	private void addVisibles(Map<Fact,Set<Fact>> map, Fact seer){
+		for(Fact visible : seer.visible()){
 			if(map.containsKey(visible)){
 				map.get(visible).add(seer);
 			} else{
-				Set<Rule> value = new HashSet<>();
+				Set<Fact> value = new HashSet<>();
 				value.add(seer);
 				map.put(visible, value);
 			}
 		}
 	}
 	
-	private Set<Claim> areSledgehammerScenario(Collection<Rule> sources, Collection<Rule> recipients){
+	private Set<Claim> areSledgehammerScenario(Collection<Fact> sources, Collection<Fact> recipients){
 		Set<Claim> sourceClaims = massUnion(sources);
 		ToolSet<Claim> recipClaims = new ToolSet<>(massUnion(recipients));
 		
@@ -585,7 +585,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 * @author fiveham
 	 *
 	 */
-	private class VisibleCache extends HashMap<Pair<Rule,Integer>,Set<Rule>>{
+	private class VisibleCache extends HashMap<Pair<Fact,Integer>,Set<Fact>>{
 		
 		/**
 		 * 
@@ -593,18 +593,18 @@ public class Sledgehammer extends AbstractTechnique {
 		private static final long serialVersionUID = -8687502832663252756L;
 		
 		@Override
-		public Set<Rule> get(Object o){
+		public Set<Fact> get(Object o){
 			if(containsKey(o)){
 				return super.get(o);
 			} else if(o instanceof Pair){
 				Pair<?,?> pair = (Pair<?,?>)o;
 				if(pair.getA() instanceof Rule && pair.getB() instanceof Integer){
 					@SuppressWarnings("unchecked")
-					Pair<Rule,Integer> pri = (Pair<Rule,Integer>) pair;
-					Rule r = pri.getA();
+					Pair<Fact,Integer> pri = (Pair<Fact,Integer>) pair;
+					Fact r = pri.getA();
 					Integer i = pri.getB();
 					
-					Set<Rule> result = r.visibleRules();
+					Set<Fact> result = r.visible();
 					result.retainAll(distinctRulesAtSize(i));
 					
 					super.put(pri, result);
@@ -615,12 +615,12 @@ public class Sledgehammer extends AbstractTechnique {
 			throw new IllegalArgumentException("specified key must be a Pair<Rule,Integer>");
 		}
 		
-		public Set<Rule> get(Rule rule, int size){
-			Pair<Rule,Integer> pair = new Pair<>(rule,size);
+		public Set<Fact> get(Fact rule, int size){
+			Pair<Fact,Integer> pair = new Pair<>(rule,size);
 			if(containsKey(pair)){
 				return super.get(pair);
 			} else{
-				Set<Rule> result = pair.getA().visibleRules();
+				Set<Fact> result = pair.getA().visible();
 				result.retainAll(distinctRulesAtSize(pair.getB()));
 				
 				super.put(pair, result);

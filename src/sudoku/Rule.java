@@ -4,9 +4,7 @@ import common.time.Time;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 import sudoku.Puzzle.RuleType;
-import sudoku.technique.Sledgehammer;
 import sudoku.time.FalsifiedTime;
 import sudoku.Puzzle.IndexInstance;
 
@@ -36,15 +34,6 @@ public class Rule extends Fact{
 		this.dimA = dimA;
 		this.dimB = dimB;
 		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
-	}
-	
-	public Set<Rule> visibleRules(){
-		Set<Rule> result = Sledgehammer.massUnion(this).stream()
-				.filter(getClass()::isInstance)
-				.map(getClass()::cast)
-				.collect(Collectors.toSet());
-		result.remove(this);
-		return result;
 	}
 	
 	@Override
@@ -86,7 +75,7 @@ public class Rule extends Fact{
 			
 			FalsifiedTime solve;
 			try{
-				solve = new TimeTotalLocalization(time, c.visibleClaims(), this);
+				solve = new TimeTotalLocalization(time, c.visible(), this);
 			} catch(FalsifiedTime.NoUnaccountedClaims e){
 				return;
 			}
@@ -129,7 +118,9 @@ public class Rule extends Fact{
 	 * of another.</p>
 	 */
 	private void findAndAddressValueClaim(FalsifiedTime time){
-		visibleRules().stream()
+		visible().stream()
+				.filter(Rule.class::isInstance)
+				.map(Rule.class::cast)
 				.filter((r) -> r.type.canClaimValue(type) && r.hasProperSubset(this))
 				.forEach((r) -> {
 					Set<Claim> falsified = new HashSet<>(r);

@@ -62,7 +62,7 @@ public class Initializer extends AbstractTechnique {
 		private final Init src;
 		
 		private Initialization(Init init){
-			super(init.claim().visibleClaims());
+			super(init.claim().visible());
 			this.src = init;
 		}
 		

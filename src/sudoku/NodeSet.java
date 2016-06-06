@@ -280,27 +280,45 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	}
 	
 	/**
+	 * <p>Returns a set of the vertices visible to this vertex. A vertex is 
+	 * visible to this one if that vertex and this one share at least 
+	 * one {@link #neighbors() neighbor} in common.</p>
+	 * @return a set of the vertices that share at least one 
+	 * {@link #neighbors() neighbor} in common with this vertex
+	 */
+	public Set<S> visible(){
+		Set<S> pool = sudoku.technique.Sledgehammer.massUnion(this);
+		pool.remove(this);
+		return new HashSet<>(pool);
+	}
+	
+	/**
 	 * <p>Returns a collection of the nodes visible to this node at a 
 	 * position {@code n} edges away.</p>
 	 * @param n
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public Collection<NodeSet<?,?>> visible(int n){
-		if(n<0){
-			throw new IllegalArgumentException("negative distance: "+n);
-		} else if(n==1){
-			return (Collection<NodeSet<?,?>>) neighbors();
-		} else{
-			Set<NodeSet<?,?>> cuttingEdge = new HashSet<>();
-			cuttingEdge.add(this);
-			if(n==0){
-				return cuttingEdge;
+	public Collection<NodeSet<?,?>> visible(int n){ //TODO redesign this to use ConnectedComponent and a contractEventListener
+		
+		switch(n){
+		case 0: 
+			Collection<NodeSet<?,?>> result = new HashSet<>(1);
+			result.add(this);
+			return result;
+		case 1: 
+			return new HashSet<>(this);
+		case 2: 
+			return new HashSet<>(visible());
+		default:
+			if(n < 0){
+				throw new IllegalArgumentException("negative distance: "+n);
 			} else{
-				Set<NodeSet<?,?>> edge = new HashSet<>(), 
-				core = new HashSet<>();
+				Set<NodeSet<?,?>> core = new HashSet<>();
+				Set<NodeSet<?,?>> edge = new HashSet<>();
+				Set<NodeSet<?,?>> cuttingEdge = new HashSet<>();
+				cuttingEdge.add(this);
 				
-				for(int i=1; i<=n; i++){
+				for(int i = 0; i < n; ++i){
 					
 					//contract
 					core.addAll(edge);
@@ -309,15 +327,12 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 					
 					//grow
 					for(NodeSet<?,?> edgeNode : edge){
-						Collection<NodeSet<?,?>> neighbs = (Collection<NodeSet<?,?>>)edgeNode.neighbors();
-						
-						for(NodeSet<?,?> neighb : neighbs){
-							if(!core.contains(neighb) && !edge.contains(neighb)){
-								cuttingEdge.add(neighb);
-							}
-						}
+						cuttingEdge.addAll(edgeNode);
 					}
+					cuttingEdge.removeAll(core);
+					cuttingEdge.removeAll(edge);
 				}
+				
 				return cuttingEdge;
 			}
 		}

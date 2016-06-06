@@ -40,11 +40,8 @@ public class Init extends Fact {
 	}
 	
 	/**
-	 * <p>Returns the last Claim {@link #add(Claim) added} to this 
-	 * Init. Under ordinary circumstances, the Claim returned is 
-	 * the sole element of this set.</p>
-	 * @return the last Claim {@link #add(Claim) added} to this 
-	 * Init
+	 * <p>Returns the Claim that this Init marks true.</p>
+	 * @return the Claim that this Init marks true
 	 */
 	public Claim claim(){
 		return claim;
@@ -53,7 +50,9 @@ public class Init extends Fact {
 	@Override
 	public void validateState(FalsifiedTime time){
 		Debug.log("Initial-value verifying "+claim);
-		claim.setTrue(time);
+		if(!claim.isKnownTrue()){
+			claim.setTrue(time);
+		}
 	}
 	
 	@Override
