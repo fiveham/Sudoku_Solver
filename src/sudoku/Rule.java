@@ -88,6 +88,18 @@ public class Rule extends Fact{
 			throw new IllegalStateException("A Rule is not allowed to be empty. this.toString(): "+toString());
 		}
 	}
+
+	/**
+	 * <p>A time node denoting an {@link #verifyFinalState automatic collapse} 
+	 * and encapsulating subordinate automatic collapses.</p>
+	 * @author fiveham
+	 *
+	 */
+	public static class AutoResolve extends FalsifiedTime{
+		private AutoResolve(Time parent, Set<Claim> falseClaims){
+			super(parent, falseClaims);
+		}
+	}
 	
 	/**
 	 * <p>A time node denoting the complete collapse of a Rule because 
@@ -136,18 +148,6 @@ public class Rule extends Fact{
 					time.addChild(newTime);
 					falsified.stream().forEach((claim) -> claim.setFalse(newTime));
 				});
-	}
-
-	/**
-	 * <p>A time node denoting an {@link #verifyFinalState automatic collapse} 
-	 * and encapsulating subordinate automatic collapses.</p>
-	 * @author fiveham
-	 *
-	 */
-	public static class AutoResolve extends FalsifiedTime{
-		private AutoResolve(Time parent, Set<Claim> falseClaims){
-			super(parent, falseClaims);
-		}
 	}
 	
 	/**

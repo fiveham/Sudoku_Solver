@@ -170,7 +170,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 * size of a sledgehammer solution scenario in which that Rule can serve
 	 * @return
 	 */
-	public static Map<Integer,List<Fact>> mapRulesBySize(Stream<Fact> ruleStream, Function<? super Fact, ? extends Integer> sledgehammerSize){
+	private static Map<Integer,List<Fact>> mapRulesBySize(Stream<Fact> ruleStream, Function<? super Fact, ? extends Integer> sledgehammerSize){
 		return ruleStream.collect(Collectors.toMap(
 				sledgehammerSize, 
 				(r) -> {

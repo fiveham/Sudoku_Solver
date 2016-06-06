@@ -607,11 +607,6 @@ public class PuzzleVizApp extends Application {
 				timeline.getKeyFrames().addAll(vm.falsify( initLength ));
 			}
 		}
-		/*
-		 * falsified.stream()
-		 * 			.forEach( (c) -> modelHandler.get(c).stream()
-		 * 					.forEach( (vm) -> timeline.getKeyFrames().addAll(vm.disoccupy(initLength)) ) );
-		 */
 		
 		Set<BagModel> affectedBags = affectedBags(falsified, modelHandler);
 		double postDisoccupyLength = timeline.totalDurationProperty().get().toMillis();
