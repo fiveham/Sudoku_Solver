@@ -244,7 +244,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * this Claim
 	 */
 	public ToolSet<Claim> visibleClaims(){
-		ToolSet<Claim> neighborsOfNeighbors = Sledgehammer.sideEffectUnion(this,false);
+		ToolSet<Claim> neighborsOfNeighbors = new ToolSet<>(Sledgehammer.massUnion(this));
 		neighborsOfNeighbors.remove(this);
 		return neighborsOfNeighbors;
 	}

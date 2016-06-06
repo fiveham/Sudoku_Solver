@@ -170,7 +170,7 @@ public class Solver implements Runnable{
 				//DEBUG
 				Debug.log("Have some unsolved networks; splitting thread: " + networks.size() + " children");
 				Debug.log(target.nodeStream().findFirst().get().getPuzzle());
-				Debug.log("SolutionEvent: "+event.wrapped());
+				Debug.log("SolutionEvent: "+event.techniqueEvent());
 				
 				String name = Thread.currentThread().getName();
 				for(int i=0; i<networks.size(); ++i){
@@ -186,7 +186,7 @@ public class Solver implements Runnable{
 					
 					//DEBUG
 					Debug.log("Have no unsolved networks; notifying lock");
-					Debug.log("SolutionEvent: "+event.wrapped());
+					Debug.log("SolutionEvent: "+event.techniqueEvent());
 					
 					lock.notify();
 				}

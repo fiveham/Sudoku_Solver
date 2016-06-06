@@ -10,13 +10,13 @@ import java.util.Scanner;
  * <p>Denotes the termination of a Solver thread because a 
  * change was made to the puzzle being solved. The SolutionEvent 
  * resulting from this change to the puzzle is 
- * {@link #wrapped() wrapped} by this Time.</p>
+ * {@link #techniqueEvent() wrapped} by this Time.</p>
  * @author fiveham
  *
  */
 public class ThreadEvent extends AbstractTime {
 	
-	private final TechniqueEvent wrapped;
+	private final TechniqueEvent techniqueEvent;
 	private final String threadName;
 	
 	/**
@@ -25,12 +25,12 @@ public class ThreadEvent extends AbstractTime {
 	 * @param parent the ThreadEvent marking the change-making termination 
 	 * of the thread that spawned the thread whose change-making 
 	 * termination is represented by this ThreadEvent
-	 * @param wrapped the SolutionEvent that terminated the thread 
+	 * @param techniqueEvent the SolutionEvent that terminated the thread 
 	 * to which this ThreadEvent pertains
 	 */
-	public ThreadEvent(ThreadEvent parent, TechniqueEvent wrapped, String threadName) {
+	public ThreadEvent(ThreadEvent parent, TechniqueEvent techniqueEvent, String threadName) {
 		super(parent);
-		this.wrapped = wrapped;
+		this.techniqueEvent = techniqueEvent;
 		this.threadName = threadName;
 		
 		if(parent != null){
@@ -58,15 +58,15 @@ public class ThreadEvent extends AbstractTime {
 	 * <p>Returns the SolutionEvent wrapped by this ThreadEvent.</p>
 	 * @return the SolutionEvent wrapped by this ThreadEvent
 	 */
-	public TechniqueEvent wrapped(){
-		return wrapped;
+	public TechniqueEvent techniqueEvent(){
+		return techniqueEvent;
 	}
 	
 	@Override
 	public boolean equals(Object o){
 		if(o instanceof ThreadEvent){
 			ThreadEvent te = (ThreadEvent) o;
-			return wrapped.equals(te.wrapped);
+			return techniqueEvent.equals(te.techniqueEvent);
 		}
 		return false;
 	}
@@ -75,10 +75,10 @@ public class ThreadEvent extends AbstractTime {
 	public String toString(){
 		StringBuilder result = new StringBuilder("ThreadEvent terminating ").append(threadName).append(System.lineSeparator());
 		
-		List<Object> things = new ArrayList<>(children().size()+1);
-		things.add(wrapped);
-		things.addAll(children());
-		for(Object o : things){
+		List<Object> subordinateTimes = new ArrayList<>(children().size()+1);
+		subordinateTimes.add(techniqueEvent);
+		subordinateTimes.addAll(children());
+		for(Object o : subordinateTimes){
 			String oString = o.toString();
 			for(Scanner s = new Scanner(oString); s.hasNextLine();){
 				result.append("  ").append(s.nextLine()).append(System.lineSeparator());

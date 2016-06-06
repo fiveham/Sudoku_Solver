@@ -486,7 +486,7 @@ public class PuzzleVizApp extends Application {
 	 * @return
 	 */
 	public static Timeline parallelTimeline(ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
-		Timeline result = solutionEventTimeline(event.wrapped(), modelHandler);
+		Timeline result = solutionEventTimeline(event.techniqueEvent(), modelHandler);
 		
 		result.setOnFinished((ae) -> event.children().parallelStream()
 				.filter(ThreadEvent.class::isInstance)
@@ -497,7 +497,7 @@ public class PuzzleVizApp extends Application {
 	
 	public static Timeline depthFirstLinearTimeline(ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
 		ArrayList<Timeline> timelineList = new ArrayList<>(treeSize(event));
-		timelineList.add(solutionEventTimeline(event.wrapped(), modelHandler));
+		timelineList.add(solutionEventTimeline(event.techniqueEvent(), modelHandler));
 		
 		for(ThreadEvent child : threadEventChildren(event)){
 			depthFirstRecursion(timelineList, child, modelHandler);
@@ -520,7 +520,7 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	private static List<Timeline> depthFirstRecursion( List<Timeline> timelineList, ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
-		timelineList.add(solutionEventTimeline(event.wrapped(), modelHandler));
+		timelineList.add(solutionEventTimeline(event.techniqueEvent(), modelHandler));
 		
 		for(ThreadEvent child : threadEventChildren(event)){
 			timelineList.addAll(depthFirstRecursion(timelineList, child, modelHandler));
@@ -531,11 +531,11 @@ public class PuzzleVizApp extends Application {
 	
 	public static Timeline breadthFirstLinearTimeline(ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
 		Iterator<ThreadEvent> layerIterator = breadthFirstLinearizeTime(event);
-		Timeline result = solutionEventTimeline(layerIterator.next().wrapped(), modelHandler);
+		Timeline result = solutionEventTimeline(layerIterator.next().techniqueEvent(), modelHandler);
 		
 		Timeline earlier = result;
 		while(layerIterator.hasNext()){
-			Timeline later = solutionEventTimeline(layerIterator.next().wrapped(), modelHandler);
+			Timeline later = solutionEventTimeline(layerIterator.next().techniqueEvent(), modelHandler);
 			earlier.setOnFinished((ae) -> later.play());
 			earlier = later;
 		}

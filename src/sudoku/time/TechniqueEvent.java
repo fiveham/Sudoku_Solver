@@ -20,7 +20,7 @@ import java.util.Set;
  * @author fiveham
  *
  */
-public abstract class TechniqueEvent extends FalsifiedTime /*implements TimeBuilder*/ {
+public abstract class TechniqueEvent extends FalsifiedTime{
 	public TechniqueEvent(Set<Claim> falsified){
 		super(null, falsified);
 	}

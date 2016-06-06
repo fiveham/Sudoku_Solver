@@ -89,7 +89,7 @@ public class Rule extends Fact{
 	}
 	
 	public Set<Rule> visibleRules(){
-		Set<Rule> result = Sledgehammer.sideEffectUnion(this, false).stream()
+		Set<Rule> result = Sledgehammer.massUnion(this).stream()
 				.filter(getClass()::isInstance)
 				.map(getClass()::cast)
 				.collect(Collectors.toSet());
@@ -188,12 +188,16 @@ public class Rule extends Fact{
 			if(r.type.canClaimValue(type) && r.hasProperSubset(this)){
 				Set<Claim> falsified = new HashSet<>(r);
 				falsified.removeAll(this);
-				FalsifiedTime.clean(falsified, time);
 				
-				if(!falsified.isEmpty()){
-					time.addChild(new TimeValueClaim(time, falsified, this, r));
-					falsified.stream().forEach((claim) -> claim.setFalse(time));
+				TimeValueClaim newTime;
+				try{
+					newTime = new TimeValueClaim(time, falsified, this, r);
+				} catch(FalsifiedTime.NoUnaccountedClaims e){
+					continue;
 				}
+				
+				time.addChild(newTime);
+				falsified.stream().forEach((claim) -> claim.setFalse(newTime)); //FIXME go through methods that were changed to accept a FalsifiedTime instead of a SolutionEvent and make sure they all actually send whatever new FalsifiedTime they create on to the next method
 			}
 		}
 	}

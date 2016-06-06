@@ -14,10 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import sudoku.Claim;
@@ -120,8 +118,8 @@ public class ColorChain extends AbstractTechnique {
 				Collection<Fact> sources = sledgehammer.getA();
 				Collection<Fact> recipients = sledgehammer.getB();
 				
-				Set<Claim> falsified = Sledgehammer.sideEffectUnion(recipients, false);
-				falsified.removeAll(Sledgehammer.sideEffectUnion(sources, false));
+				Set<Claim> falsified = Sledgehammer.massUnion(recipients);
+				falsified.removeAll(Sledgehammer.massUnion(sources));
 				
 				return Sledgehammer.resolve(falsified, sources, recipients, SolveEventBridgeJoin::new);
 			}
@@ -217,12 +215,12 @@ public class ColorChain extends AbstractTechnique {
 				.filter((cc) -> cc.color > 0)
 				.map(ColorClaim::wrapped)
 				.map(Claim::visibleClaims)
-				.collect(MASS_UNION);
+				.collect(Sledgehammer.massUnionCollector());
 		Set<Claim> visibleToNegatives = concom.nodeStream()
 				.filter((cc) -> cc.color < 0)
 				.map(ColorClaim::wrapped)
 				.map(Claim::visibleClaims)
-				.collect(MASS_UNION);
+				.collect(Sledgehammer.massUnionCollector());
 		
 		Set<Claim> claimsToSetFalse = visibleToPositives;
 		claimsToSetFalse.retainAll(visibleToNegatives);
@@ -234,13 +232,6 @@ public class ColorChain extends AbstractTechnique {
 		
 		return null;
 	}
-	
-	public static final BinaryOperator<Set<Claim>> MERGE_CLAIM_SETS = (r1,r2) -> {r1.addAll(r2); return r1;};
-	
-	public static final Collector<Set<Claim>,?,Set<Claim>> MASS_UNION = Collector.of(
-			HashSet::new, 
-			Set::addAll, 
-			MERGE_CLAIM_SETS);
 	
 	/**
 	 * <p>Isolates those Rules in the target that have two Claims, makes 
@@ -274,7 +265,7 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	private static List<ColorClaim> link(Collection<Fact> xorRules){
 		Map<Claim,ColorClaim> map = new HashMap<>();
-		List<ColorClaim> colorClaims = Sledgehammer.sideEffectUnion(xorRules, false).stream()
+		List<ColorClaim> colorClaims = Sledgehammer.massUnion(xorRules).stream()
 				.map(ColorClaim::new)
 				.peek((colorClaim) -> map.put(colorClaim.wrapped(), colorClaim))
 				.collect(Collectors.toList());
@@ -376,7 +367,7 @@ public class ColorChain extends AbstractTechnique {
 		if(massUnionCache.containsKey(chain)){
 			return massUnionCache.get(chain);
 		} else{
-			Set<Fact> result = Sledgehammer.sideEffectUnion( chain.nodeStream().map(ColorClaim::wrapped).collect(Collectors.toList()), false);
+			Set<Fact> result = Sledgehammer.massUnion(chain.nodeStream().map(ColorClaim::wrapped).collect(Collectors.toList()));
 			massUnionCache.put(chain, result);
 			return result;
 		}
@@ -500,7 +491,7 @@ public class ColorChain extends AbstractTechnique {
 	 * @author fiveham
 	 *
 	 */
-	public static class ColorClaim implements WrapVertex<Claim,ColorClaim>{
+	private static class ColorClaim implements WrapVertex<Claim,ColorClaim>{
 		private int color = 0;
 		private Claim wrapped;
 		private final List<ColorClaim> neighbors;

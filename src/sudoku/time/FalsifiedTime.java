@@ -6,12 +6,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import sudoku.Claim;
 import sudoku.Rule;
-import sudoku.technique.ColorChain;
+import sudoku.technique.Sledgehammer;
 
 /**
  * <p>A Time in which some Claims are {@link Claim#setFalse(SolutionEvent) set false}.</p>
@@ -59,10 +58,7 @@ public class FalsifiedTime extends AbstractTime {
 				.filter(FalsifiedTime.class::isInstance)
 				.map(FalsifiedTime.class::cast)
 				.map(FalsifiedTime::falsified)
-				.collect(Collector.of(
-						HashSet::new, 
-						Set::addAll, 
-						ColorChain.MERGE_CLAIM_SETS));
+				.collect(Sledgehammer.massUnionCollector());
 	}
 	
 	private static Stream<Time> skip(Stream<Time> stream, boolean skip){
@@ -80,10 +76,6 @@ public class FalsifiedTime extends AbstractTime {
 	 */
 	public Set<Claim> falsified(){
 		return falsified;
-	}
-	
-	public static void clean(Set<Claim> falsified, Time parent){
-		falsified.removeAll(upFalsified(parent, false));
 	}
 	
 	@Override
