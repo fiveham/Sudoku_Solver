@@ -28,7 +28,7 @@ import sudoku.parse.Parser;
  * @author fiveham
  *
  */
-public class Solver implements Runnable{
+public class Solver{
 	
 	public static final List<Function<Sudoku,Technique>> DEFAULT_INITIALIZER_SOURCE = new ArrayList<>(1);
 	static {
@@ -105,7 +105,7 @@ public class Solver implements Runnable{
 	 * <p>Returns the Puzzle that this Solver works to solve.</p>
 	 * @return the Puzzle that this Solver works to solve
 	 */
-	public Sudoku getPuzzle(){
+	public Sudoku getTarget(){
 		return target;
 	}
 		
@@ -130,7 +130,7 @@ public class Solver implements Runnable{
 	 */
 	public void solve() throws InterruptedException{
 		
-		Thread operation = new Thread(group, this, "solver_0");
+		Thread operation = new Thread(group, this::run, "solver_0");
 		
 		operation.start(); //calls run()
 		
@@ -143,8 +143,7 @@ public class Solver implements Runnable{
 		}
 	}
 	
-	@Override
-	public void run(){
+	private void run(){ //XXX rename
 		Debug.log("Running a thread: " + Thread.currentThread().getName()); //DEBUG
 		
 		Pair<ThreadEvent,BiFunction<Solver, SudokuNetwork, Solver>> runnableSource = getRunnableSource();
@@ -152,18 +151,10 @@ public class Solver implements Runnable{
 			this.event = runnableSource.getA();
 			BiFunction<Solver, SudokuNetwork, Solver> successorSolver = runnableSource.getB();
 			
-			//DEBUG
-			if(event.equals(eventParent)){
-				//stuff goes here
-				throw new IllegalStateException(Boolean.toString(event==eventParent));
-			}
-			
 			List<SudokuNetwork> networks = target.connectedComponents().stream()
 					.map((component) -> new SudokuNetwork(target.magnitude(), component))
 					.filter((sn) -> !sn.isSolved())
 					.collect(Collectors.toList());
-			
-			//System.exit(0);//DEBUG
 			
 			if( !networks.isEmpty()){
 				
@@ -179,7 +170,7 @@ public class Solver implements Runnable{
 					//DEBUG
 					Debug.log("Start thread for component with "+network.size()+" nodes.");
 					
-					new Thread(group, successorSolver.apply(this, network), name+Integer.toString(i,Parser.MAX_RADIX)).start();
+					new Thread(group, successorSolver.apply(this, network)::run, name+Integer.toString(i,Parser.MAX_RADIX)).start();
 				}
 			} else{
 				synchronized(lock){

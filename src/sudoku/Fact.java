@@ -14,7 +14,7 @@ public class Fact extends NodeSet<Claim,Fact>{
 	 * the Claim satisfying the Rule has been completely 
 	 * identified.</p>
 	 */
-	protected static final int SIZE_WHEN_SOLVED = 1;
+	private static final int SIZE_WHEN_SOLVED = 1;
 	
 	/**
 	 * <p>The number ({@value}) of elements (neighbors) of a Rule that 
@@ -26,20 +26,9 @@ public class Fact extends NodeSet<Claim,Fact>{
 	 */
 	private static final int SIZE_WHEN_XOR = 2;
 	
-	public Fact(Puzzle puzzle){
-		super(puzzle);
-	}
-	
 	public Fact(Puzzle puzzle, Collection<Claim> c) {
-		super(puzzle, c);
-	}
-	
-	public Fact(Puzzle puzzle, int initialCapacity) {
-		super(puzzle, initialCapacity);
-	}
-	
-	public Fact(Puzzle puzzle, int initialCapacity, float loadFactor) {
-		super(puzzle, initialCapacity, loadFactor);
+		super(puzzle);
+		super.addAll(c);
 	}
 	
 	@Override

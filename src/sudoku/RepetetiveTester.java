@@ -23,7 +23,7 @@ public class RepetetiveTester {
 				Solver solver = new Solver(f);
 				System.out.println(f.getName());
 				solver.solve();
-				System.out.println(solver.getPuzzle().toString());
+				System.out.println(solver.getTarget().toString());
 			} catch(FileNotFoundException e){
 				System.out.println("Could not find file "+f.getName());
 			} catch(InterruptedException e){

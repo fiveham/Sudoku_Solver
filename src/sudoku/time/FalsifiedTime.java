@@ -20,7 +20,7 @@ import sudoku.technique.Sledgehammer;
  * in which a Technique changes the puzzle and indirect 
  * {@link AutoResolve AutoResolve} events in which changes made to the puzzle 
  * by some processing event allow a part of the puzzle to 
- * {@link Rule#validateFinalState(SolutionEvent) automatically detect} a 
+ * {@link Rule#validateState(SolutionEvent) automatically detect} a 
  * solving action that it can take locally.</p>
  * @author fiveham
  *

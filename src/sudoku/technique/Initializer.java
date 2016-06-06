@@ -43,7 +43,7 @@ public class Initializer extends AbstractTechnique {
 		if(i.isPresent()){
 			Init init = (Init) i.get();
 			TechniqueEvent result = new Initialization(init);
-			init.validateFinalState(result);
+			init.validateState(result);
 			return result;
 		}
 		

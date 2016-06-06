@@ -109,7 +109,7 @@ import sudoku.time.TechniqueEvent;
  * 
  * <p>A sledgehammer of size 1 is trivial and not accounted for by this implementation. 
  * Since a sledgehammer of size 1 has exactly one source rule, detection and resolution 
- * of size-1 sledgehammers is automated. Rules {@link Rule#validateFinalState(TechniqueEvent) check themselves} 
+ * of size-1 sledgehammers is automated. Rules {@link Rule#validateState(TechniqueEvent) check themselves} 
  * for size-1 sledgehammer actionability every time some Claims are removed from them, 
  * and if that Rule is a proper subset of any of the rules that share any of its Claims, 
  * the superset is collapsed onto the subset before the method that removed some Claims 
@@ -173,18 +173,12 @@ public class Sledgehammer extends AbstractTechnique {
 	public static Map<Integer,List<Rule>> mapRulesBySize(Stream<Rule> ruleStream, Function<? super Rule, ? extends Integer> sledgehammerSize){
 		return ruleStream.collect(Collectors.toMap(
 				sledgehammerSize, 
-				Sledgehammer::singletonList, 
+				(r) -> {
+					List<Rule> result = new ArrayList<>(1);
+					result.add(r);
+					return result;
+				}, 
 				Sledgehammer::mergeCollections));
-	}
-	
-	/**
-	 * <p>The {@code valueMapper} for the {@link Collectors#toMap(Function,Function,BinaryOperator) toMap} 
-	 * calls that define {@link #MAP_SOURCES_BY_SIZE} and {@link #MAP_RULES_BY_SIZE}.</p>
-	 */
-	public static <T> List<T> singletonList(T t){
-		List<T> result = new ArrayList<>(1);
-		result.add(t);
-		return result;
 	}
 	
 	/**

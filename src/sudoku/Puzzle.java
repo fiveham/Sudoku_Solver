@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import sudoku.parse.Parser;
 import sudoku.parse.SadmanParser;
@@ -125,11 +126,11 @@ public class Puzzle extends SudokuNetwork{
 		for(RuleType type : RuleType.values()){
 			for(IndexInstance dimA : type.dimA(p)){
 				for(IndexInstance dimB : type.dimB(p)){
-					Rule newRule = new Rule(p, type, sideLength, dimA, dimB);
-					for(IndexInstance dimC : type.dimInsideRule(p)){
-						newRule.add( claims.get(dimA, dimB, dimC) );
-					}
-					rules.add(newRule);
+					Rule newerRule = new Rule(p, type, type.dimInsideRule(p).stream()
+							.map((dimC) -> claims.get(dimA, dimB, dimC))
+							.collect(Collectors.toList()), 
+							dimA, dimB);
+					rules.add(newerRule);
 				}
 			}
 		}
@@ -406,7 +407,7 @@ public class Puzzle extends SudokuNetwork{
 					return Integer.compare(snake1, snake2);
 				})
 				.forEach((cell) -> result.append(cell.isSolved() 
-						? indexValues().get(cell.iterator().next().getZ()).humanReadableIntValue() 
+						? indices.get(cell.iterator().next().getZ()) 
 						: BLANK_CELL)
 						.append(betweenNumbers.get()));
 		
@@ -429,7 +430,8 @@ public class Puzzle extends SudokuNetwork{
 		for(IndexValue y : indices){
 			for(IndexValue x : indices){
 				for(IndexValue z : indices){
-					result.append(claims.get(x,y,z).possText());
+					Claim claim = claims.get(x, y, z);
+					result.append(claim.isKnownFalse() ? " " : indices.get(claim.getZ()));
 				}
 				result.append("|");
 			}
@@ -899,6 +901,11 @@ public class Puzzle extends SudokuNetwork{
 		 */
 		public String humanReadableSymbol(){
 			return Integer.toString(humanReadableIntValue(), puzzle.sideLength+1);
+		}
+		
+		@Override
+		public String toString(){
+			return Integer.toString(humanReadableIntValue());
 		}
 	}
 }

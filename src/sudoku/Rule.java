@@ -21,21 +21,6 @@ public class Rule extends Fact{
 	private final IndexInstance dimA, dimB;
 	
 	/**
-	 * <p>Constructs a Rule belonging to the specified Puzzle and 
-	 * having only the specified {@code types}.</p>
-	 * @param target the Puzzle to which this Rule belongs
-	 * @param types the single initial {@link #getTypes() types} of 
-	 * this Rule
-	 */
-	public Rule(Puzzle puzzle, RuleType type, IndexInstance dimA, IndexInstance dimB){
-		super(puzzle);
-		this.type = type;
-		this.dimA = dimA;
-		this.dimB = dimB;
-		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
-	}
-	
-	/**
 	 * <p>Constructs a Rule belonging to the specified Puzzle, 
 	 * having only the specified {@code types}, and containing 
 	 * all the elements of {@code c}.</p>
@@ -47,41 +32,6 @@ public class Rule extends Fact{
 	 */
 	public Rule(Puzzle puzzle, RuleType type, Collection<Claim> c, IndexInstance dimA, IndexInstance dimB) {
 		super(puzzle, c);
-		this.type = type;
-		this.dimA = dimA;
-		this.dimB = dimB;
-		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
-	}
-	
-	/**
-	 * <p>Constructs a Rule belonging to the specified Puzzle, 
-	 * having only the specified {@code types}, with the 
-	 * specified initial capacity.</p>
-	 * @param target the Puzzle to which this Rule belongs
-	 * @param types the single initial {@link #getTypes() types} of 
-	 * this Rule
-	 * @param initialCapacity the initial capacity of this Rule
-	 */
-	public Rule(Puzzle puzzle, RuleType type, int initialCapacity, IndexInstance dimA, IndexInstance dimB) {
-		super(puzzle, initialCapacity);
-		this.type = type;
-		this.dimA = dimA;
-		this.dimB = dimB;
-		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
-	}
-	
-	/**
-	 * <p>Constructs a Rule belonging to the specified Puzzle, 
-	 * having only the specified {@code types}, with the 
-	 * specified initial capacity and load factor.</p>
-	 * @param target the Puzzle to which this Rule belongs
-	 * @param types the single initial {@link #getTypes() types} of 
-	 * this Rule
-	 * @param initialCapacity the initial capacity of this Rule
-	 * @param loadFactor the load factor for this Rule
-	 */
-	public Rule(Puzzle puzzle, RuleType type, int initialCapacity, float loadFactor, IndexInstance dimA, IndexInstance dimB) {
-		super(puzzle, initialCapacity, loadFactor);
 		this.type = type;
 		this.dimA = dimA;
 		this.dimB = dimB;
@@ -130,24 +80,19 @@ public class Rule extends Fact{
 	 * @throws IllegalStateException if this Rule is empty
 	 */
 	@Override
-	public void validateFinalState(FalsifiedTime time){
+	public void validateState(FalsifiedTime time){
 		if(isSolved()){
 			Claim c = iterator().next(); //there is only one Claim
-			if( !c.setTrueInProgress() ){
-				Set<Claim> falsify = c.visibleClaims();
-				if(!falsify.isEmpty()){
-					
-					Time solve;
-					try{
-						solve = new TimeTotalLocalization(time, falsify, this);
-					} catch(FalsifiedTime.NoUnaccountedClaims e){
-						return;
-					}
-					
-					time.addChild(solve);
-					c.setTrue(time);
-				}
+			
+			FalsifiedTime solve;
+			try{
+				solve = new TimeTotalLocalization(time, c.visibleClaims(), this);
+			} catch(FalsifiedTime.NoUnaccountedClaims e){
+				return;
 			}
+			
+			time.addChild(solve);
+			c.setTrue(solve);
 		} else if( shouldCheckForValueClaim() ){
 			findAndAddressValueClaim(time);
 		} else if( isEmpty() ){
@@ -184,21 +129,33 @@ public class Rule extends Fact{
 	 * of another.</p>
 	 */
 	private void findAndAddressValueClaim(FalsifiedTime time){
-		for(Rule r : visibleRules()){
-			if(r.type.canClaimValue(type) && r.hasProperSubset(this)){
-				Set<Claim> falsified = new HashSet<>(r);
-				falsified.removeAll(this);
-				
-				TimeValueClaim newTime;
-				try{
-					newTime = new TimeValueClaim(time, falsified, this, r);
-				} catch(FalsifiedTime.NoUnaccountedClaims e){
-					continue;
-				}
-				
-				time.addChild(newTime);
-				falsified.stream().forEach((claim) -> claim.setFalse(newTime)); //FIXME go through methods that were changed to accept a FalsifiedTime instead of a SolutionEvent and make sure they all actually send whatever new FalsifiedTime they create on to the next method
-			}
+		visibleRules().stream()
+				.filter((r) -> r.type.canClaimValue(type) && r.hasProperSubset(this))
+				.forEach((r) -> {
+					Set<Claim> falsified = new HashSet<>(r);
+					falsified.removeAll(this);
+					
+					TimeValueClaim newTime;
+					try{
+						newTime = new TimeValueClaim(time, falsified, this, r);
+					} catch(FalsifiedTime.NoUnaccountedClaims e){
+						return;
+					}
+					
+					time.addChild(newTime);
+					falsified.stream().forEach((claim) -> claim.setFalse(newTime));
+				});
+	}
+
+	/**
+	 * <p>A time node denoting an {@link #verifyFinalState automatic collapse} 
+	 * and encapsulating subordinate automatic collapses.</p>
+	 * @author fiveham
+	 *
+	 */
+	public static class AutoResolve extends FalsifiedTime{
+		private AutoResolve(Time parent, Set<Claim> falseClaims){
+			super(parent, falseClaims);
 		}
 	}
 	
@@ -236,17 +193,5 @@ public class Rule extends Fact{
 		return type == RuleType.CELL 
 				? false 
 				: size() <= puzzle.magnitude();
-	}
-	
-	/**
-	 * <p>A time node denoting an {@link #verifyFinalState automatic collapse} 
-	 * and encapsulating subordinate automatic collapses.</p>
-	 * @author fiveham
-	 *
-	 */
-	public static class AutoResolve extends FalsifiedTime{
-		private AutoResolve(Time parent, Set<Claim> falseClaims){
-			super(parent, falseClaims);
-		}
 	}
 }

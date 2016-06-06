@@ -48,7 +48,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 		this.x = x;
 		this.y = y;
 		this.symbol = symbol;
-		this.hashCode = linearizeCoords(x.intValue() ,y.intValue() ,symbol.intValue() , puzzle.sideLength());
+		this.hashCode = linearizeCoords(x.intValue(), y.intValue(), symbol.intValue(), puzzle.sideLength());
 	}
 	
 	/**
@@ -79,16 +79,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 	}
 	
 	/**
-	 * <p>Returns a single character that represents this Claim in a 
-	 * pedantic description of the state of the target.</p>
-	 * @return a space if this Claim is known false, the human readable 
-	 * text for this Claim's symbol otherwise
-	 */
-	String possText(){
-		return isKnownFalse() ? " " : symbol.humanReadableSymbol();
-	}
-	
-	/**
 	 * <p>Sets this Claim true in its Puzzle. Sets all the Claims 
 	 * visible to this Claim false. Merges all the 
 	 * Rule neighbors of this Claim into one another, removing 
@@ -101,17 +91,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	boolean setTrue(FalsifiedTime time){
 		Set<Claim> s = visibleClaims();
 		int init = s.size();
-		
-		if(!setTrueInProgress){
-			setTrueInProgress = true;
-			
-			s.stream().forEach((c) -> c.setFalse(time));
-			
-			setTrueInProgress = false;
-		} else{
-			throw new IllegalStateException("Cannot set Claim true while setting the same Claim true.");
-		}
-		
+		s.stream().forEach((c) -> c.setFalse(time));
 		return init != visibleClaims().size();
 	}
 	
@@ -133,12 +113,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 	
 	private boolean setFalseInProgress(){
 		return !isEmpty() && size() < INIT_OWNER_COUNT;
-	}
-	
-	private boolean setTrueInProgress = false;
-	
-	public boolean setTrueInProgress(){
-		return setTrueInProgress;
 	}
 	
 	/**

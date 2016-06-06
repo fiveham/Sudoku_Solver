@@ -1,5 +1,6 @@
 package sudoku;
 
+import java.util.Collections;
 import sudoku.time.FalsifiedTime;
 
 /**
@@ -25,6 +26,8 @@ public class Init extends Fact {
 	 * 
 	 */
 	private static final long serialVersionUID = 7730369667106322962L;
+	
+	private final Claim claim;
 
 	/**
 	 * <p>Constructs an Init belonging to the specified {@code puzzle}, 
@@ -32,8 +35,8 @@ public class Init extends Fact {
 	 * @param puzzle
 	 */
 	public Init(Puzzle puzzle, Claim c) {
-		super(puzzle, SIZE_WHEN_SOLVED);
-		add(c);
+		super(puzzle, Collections.singletonList(c));
+		this.claim = c;
 	}
 	
 	/**
@@ -44,16 +47,13 @@ public class Init extends Fact {
 	 * Init
 	 */
 	public Claim claim(){
-		return iterator().next();
+		return claim;
 	}
 	
 	@Override
-	public void validateFinalState(FalsifiedTime time){
-		Claim claim = claim();
-		if( !claim.setTrueInProgress() ){
-			Debug.log("Initial-value verifying "+claim);
-			claim.setTrue(time);
-		}
+	public void validateState(FalsifiedTime time){
+		Debug.log("Initial-value verifying "+claim);
+		claim.setTrue(time);
 	}
 	
 	@Override

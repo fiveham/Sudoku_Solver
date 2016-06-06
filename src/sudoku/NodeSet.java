@@ -45,21 +45,16 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	private static final long serialVersionUID = 6938429068342291749L;
 	
 	protected Puzzle puzzle;
-
+	
 	public NodeSet(Puzzle puzzle){
 		this.puzzle = puzzle;
 	}
-
-	public NodeSet(Puzzle puzzle, Collection<T> c) {
-		super(c);
-		this.puzzle = puzzle;
-	}
-
+	
 	public NodeSet(Puzzle puzzle, int initialCapacity) {
 		super(initialCapacity);
 		this.puzzle = puzzle;
 	}
-
+	
 	public NodeSet(Puzzle puzzle, int initialCapacity, float loadFactor) {
 		super(initialCapacity, loadFactor);
 		this.puzzle = puzzle;
@@ -97,7 +92,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		boolean result = remove_internal(o);
 		
 		if(result){
-			validateFinalState(new DummyTime());
+			validateState(new DummyTime());
 		}
 		return result;
 	}
@@ -106,7 +101,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		boolean result = remove_internal(time, o);
 		
 		if(result){
-			validateFinalState(time);
+			validateState(time);
 		}
 		return result;
 	}
@@ -154,7 +149,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 			result |= remove_internal(o);
 		}
 		if(result){
-			validateFinalState(new DummyTime());
+			validateState(new DummyTime());
 		}
 		return result;
 	}
@@ -166,7 +161,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 			result |= remove_internal(time, o);
 		}
 		if(result){
-			validateFinalState(time);
+			validateState(time);
 		}
 		return result;
 	}
@@ -183,7 +178,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 			}
 		}
 		if(result){
-			validateFinalState(new DummyTime());
+			validateState(new DummyTime());
 		}
 		return result;
 	}
@@ -199,7 +194,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 			}
 		}
 		if(result){
-			validateFinalState(time);
+			validateState(time);
 		}
 		return result;
 	}
@@ -267,7 +262,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	 * class the need to validate the set's final state afterward can call 
 	 * this method while subclasses provide meaningful implementations.</p>
 	 */
-	public void validateFinalState(FalsifiedTime time){
+	public void validateState(FalsifiedTime time){
 		//do nothing
 	}
 	
