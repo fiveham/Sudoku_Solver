@@ -11,7 +11,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import sudoku.technique.ColorChain;
 import sudoku.technique.Initializer;
-import sudoku.technique.Sledgehammer;
+import sudoku.technique.SledgeBrute;
+import sudoku.technique.SledgeHeur;
 import sudoku.technique.Technique;
 import sudoku.time.TechniqueEvent;
 import sudoku.time.ThreadEvent;
@@ -37,7 +38,10 @@ public class Solver implements Runnable{
 	
 	public static final List<Function<Sudoku,Technique>> DEFAULT_PROCESSOR_SOURCE = new ArrayList<>(2);
 	static {
-		Collections.addAll(DEFAULT_PROCESSOR_SOURCE, ColorChain::new, Sledgehammer::new);
+		Collections.addAll(DEFAULT_PROCESSOR_SOURCE, 
+				SledgeHeur::new,
+				ColorChain::new, 
+				SledgeBrute::new);
 	}
 	
 	public static final List<Function<Sudoku,Technique>> NO_INITIALIZER_SOURCE = new ArrayList<>(0);

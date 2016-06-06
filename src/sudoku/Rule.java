@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import sudoku.Puzzle.RuleType;
-import sudoku.technique.Sledgehammer;
+import sudoku.technique.SledgeHeur;
 import sudoku.time.FalsifiedTime;
 import sudoku.Puzzle.IndexInstance;
 
@@ -89,7 +89,7 @@ public class Rule extends Fact{
 	}
 	
 	public Set<Rule> visibleRules(){
-		Set<Rule> result = Sledgehammer.massUnion(this).stream()
+		Set<Rule> result = SledgeHeur.massUnion(this).stream()
 				.filter(getClass()::isInstance)
 				.map(getClass()::cast)
 				.collect(Collectors.toSet());

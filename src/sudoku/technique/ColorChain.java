@@ -118,10 +118,10 @@ public class ColorChain extends AbstractTechnique {
 				Collection<Fact> sources = sledgehammer.getA();
 				Collection<Fact> recipients = sledgehammer.getB();
 				
-				Set<Claim> falsified = Sledgehammer.massUnion(recipients);
-				falsified.removeAll(Sledgehammer.massUnion(sources));
+				Set<Claim> falsified = SledgeHeur.massUnion(recipients);
+				falsified.removeAll(SledgeHeur.massUnion(sources));
 				
-				return Sledgehammer.resolve(falsified, sources, recipients, SolveEventBridgeJoin::new);
+				return SledgeHeur.resolve(falsified, sources, recipients, SolveEventBridgeJoin::new);
 			}
 		}
 		
@@ -215,12 +215,12 @@ public class ColorChain extends AbstractTechnique {
 				.filter((cc) -> cc.color > 0)
 				.map(ColorClaim::wrapped)
 				.map(Claim::visibleClaims)
-				.collect(Sledgehammer.massUnionCollector());
+				.collect(SledgeHeur.massUnionCollector());
 		Set<Claim> visibleToNegatives = concom.nodeStream()
 				.filter((cc) -> cc.color < 0)
 				.map(ColorClaim::wrapped)
 				.map(Claim::visibleClaims)
-				.collect(Sledgehammer.massUnionCollector());
+				.collect(SledgeHeur.massUnionCollector());
 		
 		Set<Claim> claimsToSetFalse = visibleToPositives;
 		claimsToSetFalse.retainAll(visibleToNegatives);
@@ -265,7 +265,7 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	private static List<ColorClaim> link(Collection<Fact> xorRules){
 		Map<Claim,ColorClaim> map = new HashMap<>();
-		List<ColorClaim> colorClaims = Sledgehammer.massUnion(xorRules).stream()
+		List<ColorClaim> colorClaims = SledgeHeur.massUnion(xorRules).stream()
 				.map(ColorClaim::new)
 				.peek((colorClaim) -> map.put(colorClaim.wrapped(), colorClaim))
 				.collect(Collectors.toList());
@@ -367,7 +367,7 @@ public class ColorChain extends AbstractTechnique {
 		if(massUnionCache.containsKey(chain)){
 			return massUnionCache.get(chain);
 		} else{
-			Set<Fact> result = Sledgehammer.massUnion(chain.nodeStream().map(ColorClaim::wrapped).collect(Collectors.toList()));
+			Set<Fact> result = SledgeHeur.massUnion(chain.nodeStream().map(ColorClaim::wrapped).collect(Collectors.toList()));
 			massUnionCache.put(chain, result);
 			return result;
 		}

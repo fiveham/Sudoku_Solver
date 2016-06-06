@@ -3,7 +3,7 @@ package sudoku;
 import common.ToolSet;
 import java.util.Set;
 import sudoku.Puzzle.IndexValue;
-import sudoku.technique.Sledgehammer;
+import sudoku.technique.SledgeHeur;
 import sudoku.time.FalsifiedTime;
 
 /**
@@ -244,7 +244,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * this Claim
 	 */
 	public ToolSet<Claim> visibleClaims(){
-		ToolSet<Claim> neighborsOfNeighbors = new ToolSet<>(Sledgehammer.massUnion(this));
+		ToolSet<Claim> neighborsOfNeighbors = new ToolSet<>(SledgeHeur.massUnion(this));
 		neighborsOfNeighbors.remove(this);
 		return neighborsOfNeighbors;
 	}

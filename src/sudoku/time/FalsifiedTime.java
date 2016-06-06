@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import sudoku.Claim;
 import sudoku.Rule;
-import sudoku.technique.Sledgehammer;
+import sudoku.technique.SledgeHeur;
 
 /**
  * <p>A Time in which some Claims are {@link Claim#setFalse(SolutionEvent) set false}.</p>
@@ -58,7 +58,7 @@ public class FalsifiedTime extends AbstractTime {
 				.filter(FalsifiedTime.class::isInstance)
 				.map(FalsifiedTime.class::cast)
 				.map(FalsifiedTime::falsified)
-				.collect(Sledgehammer.massUnionCollector());
+				.collect(SledgeHeur.massUnionCollector());
 	}
 	
 	private static Stream<Time> skip(Stream<Time> stream, boolean skip){
