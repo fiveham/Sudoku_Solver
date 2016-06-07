@@ -183,6 +183,10 @@ public class Puzzle extends SudokuNetwork{
 		return claims;
 	}
 	
+	public Claim claim(int x, int y, int z){
+		return claims.get(x, y, z);
+	}
+	
 	/**
 	 * <p>Returns a list (sorted) of all the {@link #IndexValue index values} 
 	 * that exist for this Puzzle.</p>
@@ -190,11 +194,11 @@ public class Puzzle extends SudokuNetwork{
 	 * @return a list (sorted) of all the {@link #IndexValue index values} 
 	 * that exist for this Puzzle.
 	 */
-	public List<IndexValue> indexValues(){
+	List<IndexValue> indexValues(){
 		return new ArrayList<>(indices);
 	}
 	
-	public List<IndexInstance> getIndices(DimensionType dim){
+	private List<IndexInstance> indexInstances(DimensionType dim){
 		return dimensions.get(dim.ordinal());
 	}
 	
@@ -204,12 +208,14 @@ public class Puzzle extends SudokuNetwork{
 	 * 
 	 * @param i the int whose equivalent IndexValue will be returned
 	 * @return the IndexValue for this Puzzle equivalent to {@code i}
+	 * @throws IllegalArgumentException if {@code i} is negative or 
+	 * greater than or equal to {@link #sideLength() sideLength}.
 	 */
-	public IndexValue indexFromInt(int i){
+	private IndexValue indexFromInt(int i){
 		try{
 			return indices.get(i);
 		} catch(IndexOutOfBoundsException e){
-			throw new IllegalArgumentException("Specified i="+i+" out of bounds: 0 to "+(indices.size()-1), e);
+			throw new IllegalArgumentException(e);
 		}
 	}
 	
@@ -226,7 +232,7 @@ public class Puzzle extends SudokuNetwork{
 	 * @return a 0-based IndexValue corresponding to the 1-based integer 
 	 * {@code i}.
 	 */
-	public IndexValue indexFromHumanReadableInt(int i){
+	private IndexValue indexFromHumanReadableInt(int i){
 		return indexFromInt(i-1);
 	}
 	
@@ -236,46 +242,6 @@ public class Puzzle extends SudokuNetwork{
 	 */
 	List<IndexValue> getIndices(){
 		return indices;
-	}
-	
-	/**
-	 * <p>Returns the minimum IndexValue in this Puzzle.</p>
-	 * @return the minimum IndexValue in this Puzzle.
-	 */
-	public IndexValue minIndex(){
-		return indices.get(0);
-	}
-	
-	/**
-	 * <p>Returns the maximum IndexValue in this Puzzle.</p>
-	 * @return the maximum IndexValue in this Puzzle.
-	 */
-	public IndexValue maxIndex(){
-		return indices.get(indices.size()-1);
-	}
-	
-	/**
-	 * <p>Returns the Claim whose location in the {@link #claims SpaceMap} 
-	 * corresponds to the specified values of the specified dimensions.</p>
-	 * 
-	 * <p>An IndexInstance pairs an IndexValue with a {@link Puzzle.DimensionType dimension}, 
-	 * enabling rows, cells, columns, and boxes to unambiguously specify 
-	 * coordinates in ways that make sense for those {@link #RegionSpecies region types}.</p>
-	 * 
-	 * @param dim1 the value in the first dimension
-	 * @param dim2 the value in the second dimension
-	 * @param heldConstant the value in the third dimension, which is constant 
-	 * for a given Rule, regardless of type; though the second dimension value 
-	 * is also held constant for non-box Rules.
-	 * @return the Claim whose location in the {@link #claims SpaceMap} 
-	 * corresponds to the specified values of the specified dimensions.
-	 */
-	public Claim getClaimAt(IndexInstance dim1, IndexInstance dim2, IndexInstance heldConstant){
-		IndexValue x = decodeX(dim1, dim2, heldConstant);
-		IndexValue y = decodeY(dim1, dim2, heldConstant);
-		IndexValue s = decodeSymbol(dim1, dim2, heldConstant);
-		
-		return claims.get(x, y, s);
 	}
 	
 	/**
@@ -400,14 +366,12 @@ public class Puzzle extends SudokuNetwork{
 				.map(Rule.class::cast)
 				.filter(RuleType.CELL::isTypeOf)
 				.sorted((cell1, cell2) -> {
-					Claim claim1 = cell1.iterator().next();
-					int snake1 = claim1.getX() + claim1.getY() * sideLength();
-					Claim claim2 = cell2.iterator().next();
-					int snake2 = claim2.getX() + claim2.getY() * sideLength();
+					int snake1 = cell1.dimB().intValue() + cell1.dimA().intValue() * sideLength();
+					int snake2 = cell2.dimB().intValue() + cell2.dimA().intValue() * sideLength();
 					return Integer.compare(snake1, snake2);
 				})
 				.forEach((cell) -> result.append(cell.isSolved() 
-						? indices.get(cell.iterator().next().getZ()) 
+						? cell.iterator().next().getSymbol() 
 						: BLANK_CELL)
 						.append(betweenNumbers.get()));
 		
@@ -424,14 +388,14 @@ public class Puzzle extends SudokuNetwork{
 	 * characters, each {@link Claim#possText() character} 
 	 * pertaining to a possible value of the cell
 	 */
-	public String toStringWithPossibilities(){
+	public String possibilitiesToString(){
 		StringBuilder result = new StringBuilder();
 		
 		for(IndexValue y : indices){
 			for(IndexValue x : indices){
 				for(IndexValue z : indices){
 					Claim claim = claims.get(x, y, z);
-					result.append(claim.isKnownFalse() ? " " : indices.get(claim.getZ()));
+					result.append(claim.isKnownFalse() ? " " : claim.getSymbol());
 				}
 				result.append("|");
 			}
@@ -442,53 +406,33 @@ public class Puzzle extends SudokuNetwork{
 	}
 	
 	/**
-	 * <p>Returns the index of the box that includes the specified 
-	 * x and y coordinates.</p>
-	 * @param x the x-coordinate of a point whose surrounding box's 
-	 * index is returned
-	 * @param y the y-coordinate of a point whose surrounding box's
-	 * index is returned
-	 * @return the index of the box that includes the specified 
-	 * x and y coordinates
-	 */
-	public IndexValue boxIndex(IndexValue x, IndexValue y){
-		return indices.get( x.intValue()/magnitude + y.intValue()/magnitude*magnitude );
-	}
-	
-	/**
-	 * <p>Returns the x-coordinate of the edge of the specified box 
-	 * with the lowest x-coordinate.</p>
+	 * <p>Returns the x-coordinate of the low-X edge of the specified 
+	 * box. The index of a box follows a  snaking pattern from the 
+	 * upper left with box 0, moving rightward and increasing, then 
+	 * wrapping around to the next line of boxes below as needed until 
+	 * the lower right is reached.</p>
 	 * @param boxIndex the index of the box whose lower-x-coordinate 
-	 * edge's x-coordinate is returned. The index of a box follows a 
-	 * snaking pattern from the upper left with box 0, moving rightward 
-	 * and increasing, then wrapping around to the next line of boxes 
-	 * below as needed until the lower right is reached.
-	 * @return the x-coordinate of the lower-x-coordinate edge of 
-	 * the box in this target with the specified index
+	 * edge's x-coordinate is returned.
+	 * @return the x-coordinate of the low-X edge of the box in the 
+	 * {@code boxIndex}-th box of a Puzzle whose 
+	 * {@link Sudoku#magnitude() magnitude} is {@code mag}
 	 */
-	public int boxLowX(IndexValue boxIndex){
-		return boxLowX(boxIndex, magnitude);
-	}
-	
 	private static int boxLowX(IndexValue boxIndex, int mag){
 		return mag * snakeInSquareX(boxIndex, mag);
 	}
 	
 	/**
-	 * <p>Returns the y-coordinate of the edge of the specified box 
-	 * with the lowest y-coordinate.</p>
+	 * <p>Returns the y-coordinate of the low-Y edge of the specified 
+	 * box. The index of a box follows a  snaking pattern from the 
+	 * upper left with box 0, moving rightward and increasing, then 
+	 * wrapping around to the next line of boxes below as needed until 
+	 * the lower right is reached.</p>
 	 * @param boxIndex the index of the box whose lower-y-coordinate 
-	 * edge's y-coordinate is returned. The index of a box follows a 
-	 * snaking pattern from the upper left with box 0, moving rightward 
-	 * and increasing, then wrapping around to the next line of boxes 
-	 * below as needed until the lower right is reached.
-	 * @return the y-coordinate of the lower-y-coordinate edge of 
-	 * the box in this target with the specified index
+	 * edge's y-coordinate is returned.
+	 * @return the y-coordinate of the low-Y edge of the box in the 
+	 * {@code boxIndex}-th box of a Puzzle whose 
+	 * {@link Sudoku#magnitude() magnitude} is {@code mag}
 	 */
-	public int boxLowY(IndexValue boxIndex){
-		return boxLowY(boxIndex, magnitude);
-	}
-	
 	private static int boxLowY(IndexValue boxIndex, int mag){
 		return mag * snakeInSquareY(boxIndex, mag);
 	}
@@ -520,6 +464,7 @@ public class Puzzle extends SudokuNetwork{
 				}
 			}
 		}
+		
 		return knownTrueClaims;
 	}
 	
@@ -619,7 +564,7 @@ public class Puzzle extends SudokuNetwork{
 		 * Puzzle
 		 */
 		public List<IndexInstance> dimA(Puzzle p){
-			return p.dimensions.get(dimAType.ordinal());
+			return p.indexInstances(dimAType);
 		}
 		
 		/**
@@ -633,7 +578,7 @@ public class Puzzle extends SudokuNetwork{
 		 * Puzzle
 		 */
 		public List<IndexInstance> dimB(Puzzle p){
-			return p.dimensions.get(dimBType.ordinal());
+			return p.indexInstances(dimBType);
 		}
 		
 		/**
@@ -647,7 +592,7 @@ public class Puzzle extends SudokuNetwork{
 		 * Puzzle
 		 */
 		public List<IndexInstance> dimInsideRule(Puzzle p){
-			return p.dimensions.get(dimCType.ordinal());
+			return p.indexInstances(dimCType);
 		}
 		
 		public Set<DimensionType> dimsOutsideRule(Puzzle p){

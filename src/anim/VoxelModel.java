@@ -50,7 +50,7 @@ public class VoxelModel extends Box{
 	 * <p>The face-offsets are needed to account for the fact that the portion of a BagModel covering a given Claim 
 	 * (that Claim's VoxelModel) will extend all the way to the face of the Claim's true voxel only in order to meet 
 	 * the face of another VoxelModel belonging to the same BagModel and whose Claim is a 
-	 * {@link Claim#spaceDistTo(Claim) distance} of 1 from the Claim of this VoxelModel. That holds true at the beginning 
+	 * {@link Claim#spaceDist(Claim) distance} of 1 from the Claim of this VoxelModel. That holds true at the beginning 
 	 * of the animation of the target's solution process, but once any Claims in extreme, outer-edge positions in their 
 	 * BagModels are set false, the VoxelModel that is then left exposed on the new outer edge of the BagModel will 
 	 * extend all the way to the face of its true voxel, remaining unchanged by the falsification and collapse of its 
@@ -92,7 +92,7 @@ public class VoxelModel extends Box{
 	 * of the Claim's connected Rules is modeled by this VoxelModel
 	 */
 	public Claim getClaim(){
-		return puzzle.claims().get(x, y, z);
+		return puzzle.claim(x, y, z);
 	}
 	
 	/**
@@ -376,9 +376,9 @@ public class VoxelModel extends Box{
 	 */
 	private int[] vanishSigns(){
 		return new int[]{
-				vanishSign(x, ownerBag, (d)->puzzle.claims().get(d,y,z)),
-				vanishSign(y, ownerBag, (d)->puzzle.claims().get(x,d,z)),
-				vanishSign(z, ownerBag, (d)->puzzle.claims().get(x,y,d))
+				vanishSign(x, ownerBag, (d)->puzzle.claim(d,y,z)),
+				vanishSign(y, ownerBag, (d)->puzzle.claim(x,d,z)),
+				vanishSign(z, ownerBag, (d)->puzzle.claim(x,y,d))
 		};
 	}
 	

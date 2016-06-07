@@ -24,7 +24,7 @@ import sudoku.Puzzle.IndexInstance;
  * @author fiveham
  *
  */
-public class SpaceMap implements Iterable<Claim>{
+class SpaceMap implements Iterable<Claim>{
 	
 	private Claim[][][] stuff;
 	private Puzzle puzzle;
@@ -39,8 +39,8 @@ public class SpaceMap implements Iterable<Claim>{
 		stuff = new Claim[puzzle.sideLength()][puzzle.sideLength()][puzzle.sideLength()];
 		for(IndexValue x : puzzle.indexValues()){
 			for(IndexValue y : puzzle.indexValues()){
-				for(IndexValue s : puzzle.indexValues()){
-					stuff[x.intValue()][y.intValue()][s.intValue()] = new Claim(puzzle, x,y,s);
+				for(IndexValue symbol : puzzle.indexValues()){
+					stuff[x.intValue()][y.intValue()][symbol.intValue()] = new Claim(puzzle, x,y,symbol);
 				}
 			}
 		}

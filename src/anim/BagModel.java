@@ -48,7 +48,7 @@ public class BagModel {
 			int x = vm.getX();
 			int y = vm.getY();
 			int z = vm.getZ();
-			Claim c = p.claims().get(x,y,z);
+			Claim c = p.claim(x,y,z);
 			map.put(c, vm);
 			vm.setOwnerBag(this);
 			vm.setMaterial(bagColor);
@@ -147,7 +147,7 @@ public class BagModel {
 		return toContract.size();
 	}
 	
-	public static final BiPredicate<Claim,Claim> ADJACENT_CLAIMS = (c1,c2) -> c1.spaceDistTo(c2)==1;
+	public static final BiPredicate<Claim,Claim> ADJACENT_CLAIMS = (c1,c2) -> c1.spaceDist(c2)==1;
 	
 	/**
 	 * <p>Returns true if removing {@code emptyVoxel} from {@code markedVoxels} 

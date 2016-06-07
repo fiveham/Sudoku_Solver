@@ -59,6 +59,14 @@ public class Rule extends Fact{
 		return type;
 	}
 	
+	public IndexInstance dimA(){
+		return dimA;
+	}
+	
+	public IndexInstance dimB(){
+		return dimB;
+	}
+	
 	/**
 	 * <p>Detects the need for this Rule to collapse completely and 
 	 * set its sole element true if it has only one element left or 

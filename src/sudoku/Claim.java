@@ -113,28 +113,16 @@ public class Claim extends NodeSet<Fact,Claim>{
 		return !isEmpty() && size() < INIT_OWNER_COUNT;
 	}
 	
-	/**
-	 * <p>Returns the int value of this Claim's x-coordinate.</p>
-	 * @return the int value of this Claim's x-coordinate
-	 */
-	public int getX(){
-		return x.intValue();
+	public IndexValue getX(){
+		return x;
 	}
 	
-	/**
-	 * <p>Returns the int value of this Claim's y-coordinate.</p>
-	 * @return the int value of this Claim's y-coordinate
-	 */
-	public int getY(){
-		return y.intValue();
+	public IndexValue getY(){
+		return y;
 	}
 	
-	/**
-	 * <p>Returns the int value of this Claim's symbol.</p>
-	 * @return the int value of this Claim's symbol
-	 */
-	public int getZ(){
-		return symbol.intValue();
+	public IndexValue getSymbol(){
+		return symbol;
 	}
 	
 	/**
@@ -184,14 +172,11 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * @return the distance between this Claim and {@code otherClaim} 
 	 * in claim-space
 	 */
-	public double spaceDistTo(Claim otherClaim){
-		int x = this.x.intValue();
-		int y = this.y.intValue();
-		int z = this.symbol.intValue();
-		int cx = otherClaim.x.intValue();
-		int cy = otherClaim.y.intValue();
-		int cz = otherClaim.symbol.intValue();
-		return Math.sqrt( (x-cx)*(x-cx) + (y-cy)*(y-cy) + (z-cz)*(z-cz) );
+	public double spaceDist(Claim otherClaim){
+		int dx = this.x.intValue() - otherClaim.x.intValue();
+		int dy = this.y.intValue() - otherClaim.y.intValue();
+		int dz = this.symbol.intValue() - otherClaim.symbol.intValue();
+		return Math.sqrt( dx*dx + dy*dy + dz*dz );
 	}
 	
 	/**
