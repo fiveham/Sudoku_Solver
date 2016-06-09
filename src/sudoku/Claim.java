@@ -1,5 +1,7 @@
 package sudoku;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import sudoku.Puzzle.IndexValue;
 import sudoku.time.FalsifiedTime;
@@ -27,9 +29,9 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 */
 	public static final int INIT_OWNER_COUNT = Puzzle.RuleType.values().length;
 	
-	private IndexValue x;
-	private IndexValue y;
-	private IndexValue symbol;
+	private final IndexValue x;
+	private final IndexValue y;
+	private final IndexValue symbol;
 	
 	/**
 	 * <p>Constructs a Claim at the specified {@code x}, {@code y}, and 
@@ -42,38 +44,33 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * @param symbol the z-coordinate of this Claim in claim-space
 	 */
 	public Claim(Puzzle puzzle, IndexValue x, IndexValue y, IndexValue symbol) {
-		super(puzzle, INIT_OWNER_COUNT);
+		super(puzzle, INIT_OWNER_COUNT, () -> linearizeCoords(x.intValue(), y.intValue(), symbol.intValue(), puzzle.sideLength()));
 		this.x = x;
 		this.y = y;
 		this.symbol = symbol;
-		this.hashCode = linearizeCoords(x.intValue(), y.intValue(), symbol.intValue(), puzzle.sideLength());
 	}
 	
 	/**
-	 * <p>Returns true if this Claim is known to be false, false otherwise. 
-	 * A Claim is known to be false if it has been removed from any of its 
-	 * Rules as a neighbor. Because of the enforced symmetry of connections 
-	 * between NodeSets and their elements/neighbors and because Claims 
-	 * automatically remove all their neighbors when they detect that they've 
-	 * been disconnected by one of their neighbors, a Claim being known false 
-	 * is equivalent to that Claim having no neighbors at all. As such, a 
-	 * call to this method is equivalent to a call to {@link Set#isEmpty() isEmpty()}.</p>
+	 * <p>Returns true if this Claim has been set false and all its internal 
+	 * properties correspond to that fact, false otherwise. No guarantee is 
+	 * made that formerly connected Facts reflect this Claim's falsehood at 
+	 * the time this method is called; they may still contain a reference to 
+	 * this Claim as a {@link #neighbors() neighbor}.</p>
 	 * @return true if this Claim is known to be false, 
 	 * false otherwise
 	 */
-	public boolean isKnownFalse(){
+	public boolean isSetFalse(){
 		return isEmpty();
 	}
 	
 	/**
-	 * <p>Returns true if this Claim is known to be true, false otherwise. 
-	 * If this Claim is known true and there aren't any Rules that still need 
-	 * to {@link Rule#verifyFinalState() collapse automatically} in the target, 
-	 * then all of this Claim's neighbors have only one Claim: {@code this} one.</p>
-	 * @return true if this Claim is known to be true, false otherwise
+	 * <p>Returns true if this Claim has been set true and all its internal 
+	 * properties correspond to that fact, false otherwise.</p>
+	 * @return true if this Claim has been set true and all its internal 
+	 * properties correspond to that fact, false otherwise
 	 */
-	public boolean isKnownTrue(){
-		return stream().anyMatch(Fact::isSolved);
+	public boolean isSetTrue(){
+		return stream().allMatch(Fact::isSolved);
 	}
 	
 	/**
@@ -102,11 +99,38 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * this Claim, false otherwise
 	 */
 	public boolean setFalse(FalsifiedTime time){
+		
+		//DEBUG
+		Debug.log("Falsify "+this);
+		Debug.log(contentString());
+		
 		int initSize = size();
 		if(!setFalseInProgress()){
-			clear(time);
+			Debug.log("not in progress"); //DEBUG
+			
+			//clear(time);
+			/*while(!isEmpty()){
+				remove(iterator().next());
+			}*/
+			List<Fact> remove = new ArrayList<>(this);
+			
+			//DEBUG
+			Debug.log(remove);
+			for(Fact f : remove){
+				Debug.log("contains " + f + "?: " + contains(f));
+				Debug.log("\t" + f.contentString());
+			}
+			
+			removeAll(remove);
 		}
-		return size() != initSize;
+		boolean result = size() != initSize;
+		
+		//DEBUG
+		Debug.log("Result: "+result + ": " + initSize + " : " + size());
+		Debug.log(contentString());
+		Debug.log();
+		
+		return result;
 	}
 	
 	private boolean setFalseInProgress(){
@@ -147,13 +171,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 	@Override
 	public String toString(){
 		return "Claim: cell "+x.humanReadableIntValue()+","+y.humanReadableIntValue()+" is "+symbol.humanReadableIntValue();
-	}
-	
-	private final int hashCode;
-	
-	@Override
-	public int hashCode(){
-		return hashCode;
 	}
 	
 	@Override

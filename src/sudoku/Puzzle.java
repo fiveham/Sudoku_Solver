@@ -198,7 +198,7 @@ public class Puzzle extends SudokuNetwork{
 		return new ArrayList<>(indices);
 	}
 	
-	private List<IndexInstance> indexInstances(DimensionType dim){
+	List<IndexInstance> indexInstances(DimensionType dim){
 		return dimensions.get(dim.ordinal());
 	}
 	
@@ -305,7 +305,7 @@ public class Puzzle extends SudokuNetwork{
 	 * @return the z-component of the point in space specified 
 	 * by {@code dims}
 	 */
-	public IndexValue decodeSymbol(IndexInstance... dims){
+	IndexValue decodeSymbol(IndexInstance... dims){
 		return decodeDim(IndexInstance::contributionZ, dims);
 	}
 	
@@ -395,7 +395,7 @@ public class Puzzle extends SudokuNetwork{
 			for(IndexValue x : indices){
 				for(IndexValue z : indices){
 					Claim claim = claims.get(x, y, z);
-					result.append(claim.isKnownFalse() ? " " : claim.getSymbol());
+					result.append(claim.isSetFalse() ? " " : claim.getSymbol());
 				}
 				result.append("|");
 			}
@@ -851,6 +851,15 @@ public class Puzzle extends SudokuNetwork{
 		@Override
 		public String toString(){
 			return Integer.toString(humanReadableIntValue());
+		}
+		
+		@Override
+		public boolean equals(Object o){
+			if(o instanceof IndexValue){
+				IndexValue iv = (IndexValue) o;
+				return puzzle == iv.puzzle && v == iv.v;
+			}
+			return false;
 		}
 	}
 }

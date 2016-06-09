@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import sudoku.time.FalsifiedTime;
 import sudoku.time.TechniqueEvent;
 
@@ -44,20 +45,18 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	 */
 	private static final long serialVersionUID = 6938429068342291749L;
 	
-	protected Puzzle puzzle;
+	protected final Puzzle puzzle;
+	protected final int hashCode;
 	
-	public NodeSet(Puzzle puzzle){
+	public NodeSet(Puzzle puzzle, Supplier<Integer> hashSource){
 		this.puzzle = puzzle;
+		this.hashCode = hashSource.get();
 	}
 	
-	public NodeSet(Puzzle puzzle, int initialCapacity) {
+	public NodeSet(Puzzle puzzle, int initialCapacity, Supplier<Integer> hashSource) {
 		super(initialCapacity);
 		this.puzzle = puzzle;
-	}
-	
-	public NodeSet(Puzzle puzzle, int initialCapacity, float loadFactor) {
-		super(initialCapacity, loadFactor);
-		this.puzzle = puzzle;
+		this.hashCode = hashSource.get();
 	}
 	
 	/**
@@ -70,7 +69,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public boolean add(T e){
+	public final boolean add(T e){
 		boolean result = super.add(e);
 		if(result){
 			e.add((S)this);
@@ -90,7 +89,6 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	@Override
 	public final boolean remove(Object o){
 		boolean result = remove_internal(o);
-		
 		if(result){
 			validateState(new DummyTime());
 		}
@@ -99,7 +97,6 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	
 	public final boolean remove(FalsifiedTime time, Object o){
 		boolean result = remove_internal(time, o);
-		
 		if(result){
 			validateState(time);
 		}
@@ -123,20 +120,18 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	 * @param o the object being removed
 	 * @return true if this set has been changed by the operation, false otherwise
 	 */
-	@SuppressWarnings("unchecked")
 	private boolean remove_internal(Object o){
 		boolean result = super.remove(o);
 		if(result){
-			((T)o).remove(this);
+			((NodeSet<?,?>)o).remove(this);
 		}
 		return result;
 	}
-
-	@SuppressWarnings("unchecked")
+	
 	private boolean remove_internal(FalsifiedTime time, Object o){
 		boolean result = super.remove(o);
 		if(result){
-			((T)o).remove(time, this);
+			((NodeSet<?,?>)o).remove(time, this);
 		}
 		return result;
 	}
@@ -235,12 +230,27 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		private T lastResult=null;
 		@Override
 		public void remove(){
-			wrapped.remove();
-			lastResult.remove(NodeSet.this);
+			if(lastResult != null){
+				wrapped.remove();
+				lastResult.remove(NodeSet.this);
+				lastResult = null;
+			} else{
+				throw new IllegalStateException("Previous next() element already removed.");
+			}
 		}
 		public void remove(FalsifiedTime time){
-			wrapped.remove();
-			lastResult.remove(time, NodeSet.this);
+			if(lastResult != null){
+				Debug.log(NodeSet.this + " init size: " + size() + "\t" + lastResult + " init size: " + lastResult.size()); //DEBUG
+				
+				wrapped.remove();
+				Debug.log(NodeSet.this + " half-rem size: " + size() + "\t" + lastResult + " half-rem size: " + lastResult.size()); //DEBUG
+				lastResult.remove(time, NodeSet.this);
+				Debug.log(NodeSet.this + " full-rem size: " + size() + "\t" + lastResult + " full-rem size: " + lastResult.size()); //DEBUG
+				lastResult = null;
+				Debug.log(); //DEBUG
+			} else{
+				throw new IllegalStateException("Previous next() element already removed.");
+			}
 		}
 		@Override
 		public T next(){
@@ -455,5 +465,10 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	 */
 	public String contentString(){
 		return super.toString();
+	}
+	
+	@Override
+	public final int hashCode(){
+		return hashCode;
 	}
 }

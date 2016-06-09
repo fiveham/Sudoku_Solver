@@ -148,8 +148,12 @@ public class Solver{
 		}
 	}
 	
+	//TODO store init size and compare to final size after digestion as cheap sanity test
 	private void run(){ //XXX rename
-		Debug.log("Running a thread: " + Thread.currentThread().getName()); //DEBUG
+		
+		//DEBUG
+		Debug.log("Running a thread: " + Thread.currentThread().getName());
+		Debug.log("Current graph size: "+target.size());
 		
 		Pair<ThreadEvent,BiFunction<Solver, SudokuNetwork, Solver>> runnableSource = getRunnableSource();
 		if(runnableSource != null){
@@ -161,6 +165,13 @@ public class Solver{
 					.filter((sn) -> !sn.isSolved())
 					.collect(Collectors.toList());
 			
+			//DEBUG checking connected components
+			Debug.log("Component count: "+networks.size());
+			for(SudokuNetwork component : networks){
+				Debug.log("Component size: "+component.size());
+				Debug.log(component); //TODO implement SudokuNetwork.toString()
+			}
+			
 			if( !networks.isEmpty()){
 				
 				//DEBUG
@@ -168,7 +179,8 @@ public class Solver{
 				Debug.log(target.nodeStream().findFirst().get().getPuzzle());
 				Debug.log("SolutionEvent: "+event.techniqueEvent());
 				
-				String name = Thread.currentThread().getName();
+				//DEBUG RESTORE
+				/*String name = Thread.currentThread().getName();
 				for(int i=0; i<networks.size(); ++i){
 					SudokuNetwork network = networks.get(i);
 					
@@ -176,7 +188,7 @@ public class Solver{
 					Debug.log("Start thread for component with "+network.size()+" nodes.");
 					
 					new Thread(group, successorSolver.apply(this, network)::run, name+Integer.toString(i,Parser.MAX_RADIX)).start();
-				}
+				}*/
 			} else{
 				synchronized(lock){
 					

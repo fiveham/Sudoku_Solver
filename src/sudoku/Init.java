@@ -35,7 +35,7 @@ public class Init extends Fact {
 	 * @param puzzle
 	 */
 	public Init(Puzzle puzzle, Claim c) {
-		super(puzzle, Collections.singletonList(c));
+		super(puzzle, Collections.singletonList(c), () -> c.hashCode());
 		this.claim = c;
 	}
 	
@@ -50,9 +50,7 @@ public class Init extends Fact {
 	@Override
 	public void validateState(FalsifiedTime time){
 		Debug.log("Initial-value verifying "+claim);
-		if(!claim.isKnownTrue()){
-			claim.setTrue(time);
-		}
+		claim.setTrue(time);
 	}
 	
 	@Override
@@ -62,5 +60,14 @@ public class Init extends Fact {
 			sb.append(c);
 		}
 		return sb.toString();
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof Init){
+			Init i = (Init) o;
+			return claim.equals(i.claim);
+		}
+		return false;
 	}
 }

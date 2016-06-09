@@ -29,25 +29,19 @@ public class Rule extends Fact{
 	 * have as elements
 	 */
 	public Rule(Puzzle puzzle, RuleType type, Collection<Claim> c, IndexInstance dimA, IndexInstance dimB) {
-		super(puzzle, c);
+		super(puzzle, c, () -> Claim.linearizeCoords(type.ordinal(), dimA.intValue(), dimB.intValue(), puzzle.sideLength()));
 		this.type = type;
 		this.dimA = dimA;
 		this.dimB = dimB;
-		this.hashCode = genHashCode(puzzle, type, dimA, dimB);
 	}
 	
 	@Override
-	public int hashCode(){
-		return hashCode;
-	}
-	
-	private final int hashCode;
-	
-	private static int genHashCode(Puzzle puzzle, RuleType type, IndexInstance dimA, IndexInstance dimB){
-		Puzzle.IndexValue[] a = puzzle.decodeXYZ(dimA, dimB);
-		return Claim.linearizeCoords(a[Puzzle.X_DIM].intValue(), a[Puzzle.Y_DIM].intValue(), a[Puzzle.Z_DIM].intValue(), puzzle.sideLength()) 
-				+ (int)Math.pow(puzzle.sideLength(), Puzzle.DIMENSION_COUNT) 
-				* type.ordinal() ;
+	public boolean equals(Object o){
+		if(o instanceof Rule){
+			Rule r = (Rule) o;
+			return type == r.type && dimA.equals(r.dimA) && dimB.equals(r.dimB); 
+		}
+		return false;
 	}
 	
 	@Override

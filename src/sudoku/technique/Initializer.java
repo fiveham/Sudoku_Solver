@@ -42,9 +42,11 @@ public class Initializer extends AbstractTechnique {
 		Optional<NodeSet<?,?>> i = target.nodeStream().filter(Init.class::isInstance).findFirst();
 		if(i.isPresent()){
 			Init init = (Init) i.get();
-			TechniqueEvent result = new Initialization(init);
-			init.validateState(result);
-			return result;
+			//if(!init.claim().isSetTrue()){
+				TechniqueEvent result = new Initialization(init);
+				init.validateState(result);
+				return result;
+			//}
 		}
 		
 		return null;
