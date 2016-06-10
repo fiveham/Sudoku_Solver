@@ -411,7 +411,7 @@ public class ColorChain extends AbstractTechnique {
 	 * <p>Identifies the Claim where {@code lane} and {@code chain} intersect.</p>
 	 * @param lane a non-xor Rule that intersects {@code chain}
 	 * @param chain a xor-chain
-	 * @throws IllegalArgumentException if {@code lane} does not interest {@code chain}
+	 * @throws IllegalArgumentException if {@code lane} does not intersect {@code chain}
 	 * @return the vertex from {@code chain} where {@code lane} and {@code chain} 
 	 * intersect
 	 */
