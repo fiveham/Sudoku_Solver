@@ -79,6 +79,11 @@ statement known to be false can be safely removed from all the sets
 of which it is a member, since the true statement in each such set 
 is still present.
 
+Solving with the Sledgehammer technique means we identify some source `Rule`s 
+and some recipient `Rule`s that are interconnected so that no matter what 
+the true solution-state is among the source `Rule`s, all those cell-value 
+statements in the recipients but not in any of the sources must be false.
+
 Implementing the puzzle as a collection of sets of cell-value statements 
 (`Claim`s) is simple, but in order to efficiently remove a statement 
 that has been determined false from all four sets of which it is a member, 
