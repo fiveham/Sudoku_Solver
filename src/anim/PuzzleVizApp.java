@@ -68,9 +68,10 @@ public class PuzzleVizApp extends Application {
 		ThreadEvent timeRoot;
 		{
 			List<String> args = getParameters().getRaw();
-	        puzzle = new Puzzle(new File(args.get(0)));
+			String filename = args.get(0);
+	        puzzle = new Puzzle(new File(filename));
 	        
-	        Solver solver = new Solver(puzzle);
+	        Solver solver = new Solver(puzzle, filename);
 	        solver.solve();
 	        
 			timeRoot = solver.getEvent();

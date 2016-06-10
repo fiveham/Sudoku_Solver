@@ -298,10 +298,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	@Override
 	public List<T> path(T t1, T t2){
-		//grow a tree of connected nodes (using core/edge/cuttingedge)
-		//add to cuttingedge elementwise (elements of edge) instead of in bulk
-		//test new cuttingedge nodes against core, edge, AND cuttingedge
-		//as part of the process of adding new nodes to cuttingedge, add them as path-children of the edge node that got them added to cuttingedge
 		
 		Branch implicitPath = findPath(t2, t1); //reverse args so parent-path goes in order from t1 to t2
 		
@@ -315,13 +311,22 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	private Branch findPath(T to, T from){
 		
-		Set<Branch> edge = new HashSet<>();
+		if( !(nodes.contains(to) && nodes.contains(from)) ){
+			throw new IllegalStateException(to + " and/or " + from + " not present in this graph");
+		}
+		
 		Set<Branch> cuttingEdge = new HashSet<>();
 		
-		Set<T> unassigned = new HashSet<>(nodes);
+		Branch init = new Branch(to, null);
+		if(to.equals(from)){
+			return init;
+		} else{
+			cuttingEdge.add(init);
+		}
 		
+		Set<Branch> edge = new HashSet<>();
+		Set<T> unassigned = new HashSet<>(nodes);
 		unassigned.remove(to);
-		cuttingEdge.add(new Branch(to,null));
 		
 		while(!cuttingEdge.isEmpty()){
 			

@@ -6,6 +6,7 @@ import common.graph.Graph;
 import common.graph.BasicGraph;
 import common.graph.WrapVertex;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,13 +53,12 @@ public class ColorChain extends AbstractTechnique {
 	 * with subtechniques for {@link #visibleColorContradiction(Collection) color-contradiction} 
 	 * and {@link #bridgeCollapse(Collection) chain-chain interaction}. Subtechniques are applied 
 	 * in sequence.</p>
-	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
+	 * @return a TechniqueEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
 	 */
 	@Override
 	protected TechniqueEvent process(){
-		List<Function<Collection<Graph<ColorClaim>>,TechniqueEvent>> actions = new ArrayList<>(SUBTECHNIQUE_COUNT);
-		Collections.addAll(actions, 
+		List<Function<Collection<Graph<ColorClaim>>,TechniqueEvent>> actions = Arrays.asList(
 				this::visibleColorContradiction, 
 				this::bridgeCollapse, 
 				this::bridgeJoin);
@@ -74,8 +74,6 @@ public class ColorChain extends AbstractTechnique {
 		return null;
 	}
 	
-	public static final int SUBTECHNIQUE_COUNT = 3;
-	
 	/**
 	 * <p>Checks pairs of xor-chains for bridge-based interactions that force 
 	 * one of the chains to collapse.</p>
@@ -88,7 +86,7 @@ public class ColorChain extends AbstractTechnique {
 	 * the chain with the even distance can be collapsed, with the Claims having 
 	 * the color of its Claims on the bridge all being false.</p>
 	 * 
-	 * @return a SolutionEvent describing the changes made to the puzzle, or 
+	 * @return a TechniqueEvent describing the changes made to the puzzle, or 
 	 * null if no changes were made
 	 */
 	//TODO create a graph where each xor-chain is a node, connected to each other chain-node with which the chain shares some rules
@@ -96,12 +94,155 @@ public class ColorChain extends AbstractTechnique {
 		for(List<Graph<ColorClaim>> chainPair : new ComboGen<>(chains, CHAINS_FOR_BRIDGE, CHAINS_FOR_BRIDGE)){
 			Pair<Graph<ColorClaim>,Integer> evenSideAndFalseColor = evenSideAndFalseColor(chainPair);
 			if(evenSideAndFalseColor != null){
-				Graph<ColorClaim> falseEvenSideChain = evenSideAndFalseColor.getA();
-				return setChainFalseForColor(falseEvenSideChain, evenSideAndFalseColor.getB());
+				return setChainFalseForColor(evenSideAndFalseColor.getA(), evenSideAndFalseColor.getB());
 			}
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * <p>Returns a Pair containing a chain to be collapsed and the color of the claims in that 
+	 * chain to be set false, or {@code null} if no even bridged chain is found.</p>
+	 * 
+	 * <p>This method tries to find two single-Rule bridges between the two specified chains and 
+	 * determines the step length between the two bridge Rules in either chain. If one 
+	 * chain has an even step-length between bridges while the other chain has an odd step 
+	 * length between the two bridges, then the chain with the even step-length between bridges 
+	 * can be completely collapsed, with the claims from the even-side chain with the color of 
+	 * those even-side chain claims that were on the bridges all being set false.</p>
+	 * 
+	 * @return a Pair containing a chain to be collapsed and the color of the Claims in that 
+	 * chain to be set False, or {@code null} if no even bridged chain is found
+	 */
+	private Pair<Graph<ColorClaim>,Integer> evenSideAndFalseColor(List<Graph<ColorClaim>> chains){
+		Graph<ColorClaim> chain0 = chains.get(0);
+		Graph<ColorClaim> chain1 = chains.get(1);
+		
+		Set<Fact> chainUnion0 = cacheMassUnion(chain0);
+		Set<Fact> chainUnion1 = cacheMassUnion(chain1);
+		
+		Set<Fact> bridges = new HashSet<>(chainUnion0);
+		bridges.retainAll(chainUnion1);
+		
+		for(List<Fact> bridge : new ComboGen<>(bridges, RULES_FOR_BRIDGE, RULES_FOR_BRIDGE)){
+			Fact lane0 = bridge.get(0);
+			Fact lane1 = bridge.get(1);
+			
+			int dist0 = dist(lane0, lane1, chain0);
+			int dist1 = dist(lane0, lane1, chain1);
+			if( dist0%2==0 && dist1%2==1 ){
+				return new Pair<Graph<ColorClaim>,Integer>(chain0, bridgeColor(chain0, lane0, lane1));
+			} else if(dist1%2==0 && dist0%2==1){
+				return new Pair<Graph<ColorClaim>,Integer>(chain1, bridgeColor(chain1, lane0, lane1));
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * <p>Returns the int color of the Claims belonging to {@code chain} 
+	 * that are on the bridge made of {@code lane0} and {@code lane1}.</p>
+	 * @param chain the xor-chain the color of whose Claims on the bridge 
+	 * made of {@code lane0} and {@code lane1} is returned
+	 * @param lane0 one of the lanes of the bridge
+	 * @param lane1 one of the lanes of the bridge
+	 * @throws IllegalStateException if {@code chain} has more than one color 
+	 * on the bridge, which means {@code chain} has an odd step-length between 
+	 * {@code lane0} and {@code lane1}
+	 * @return the int color of the Claims belonging to {@code chain} 
+	 * that are on the bridge made of {@code lane0} and {@code lane1}
+	 */
+	private int bridgeColor(Graph<ColorClaim> chain, Fact lane0, Fact lane1){
+		Map<Claim,ColorClaim> map = claimToColorMap(chain);
+		
+		Set<Claim> allBridgeClaims = new HashSet<>(lane0);
+		allBridgeClaims.addAll(lane1);
+		
+		Set<Integer> colorsOnBridge = new HashSet<>();
+		for(Claim c : allBridgeClaims){
+			if(map.containsKey(c)){
+				colorsOnBridge.add(map.get(c).color());
+			}
+		}
+		
+		if(colorsOnBridge.size() == COLORS_ON_BRIDGE_FOR_COLLAPSEABLE_CHAIN){
+			return colorsOnBridge.iterator().next();
+		}
+		throw new IllegalStateException("Should have one color on bridge, but instead have "+colorsOnBridge.size());
+	}
+	
+	/**
+	 * <p>Returns a {@link Map Map} from the Claims in {@code chain} to those 
+	 * Claims' colors.</p>
+	 * @param chain a xor-chain whose Claims and whose Claims' colors are to 
+	 * be mapped
+	 * @return a {@link Map Map} from the Claims in {@code chain} to those 
+	 * Claims' colors
+	 */
+	private Map<Claim,ColorClaim> claimToColorMap(Graph<ColorClaim> chain){
+		Map<Claim,ColorClaim> result = new HashMap<>(chain.size());
+		
+		for(ColorClaim cc : chain){
+			result.put(cc.wrapped(), cc);
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * <p>Returns the number of steps between {@code lane0} and {@code lane1} 
+	 * in {@code chain}.</p>
+	 * @param lane0 a bridge-lane that intersects {@code chain}
+	 * @param lane1 a bridge-lane that intersects {@code chain}
+	 * @param chain a xor-chain intersecting {@code lane0} and {@code lane1}
+	 * @throws IllegalArgumentException if any of the lanes does not intersect {@code chain}
+	 * @return the number of steps between {@code lane0} and {@code lane1} 
+	 * in {@code chain}
+	 */
+	private int dist(Fact lane0, Fact lane1, Graph<ColorClaim> chain){
+		ColorClaim lane0Intersection = getBridgeIntersection(lane0, chain);
+		ColorClaim lane1Intersection = getBridgeIntersection(lane1, chain);
+		
+		return chain.distance(lane0Intersection, lane1Intersection);
+	}
+	
+	/**
+	 * <p>Sets false all the Claims in this chain decorated with the specified 
+	 * {@code color}.</p>
+	 * @param time the contextual time node which needs to store a collection of 
+	 * the Claims being set false by this method call 
+	 * @param chain a xor-chain of connected two-Claim Rules 
+	 * @param color the color of the Claims being set false
+	 * @return {@code time}, after the Claims of the specified {@code color} from 
+	 * the specified xor-{@code chain} are added to its pool of 
+	 * {@link sudoku.time.FalsifiedTime#falsified() falsified Claims}
+	 */
+	private TechniqueEvent setChainFalseForColor(Graph<ColorClaim> chain, final int color){
+		Set<Claim> setFalse = chain.nodeStream()
+				.filter((cc)->cc.color()==color)
+				.map( ColorClaim::wrapped )
+				.collect(Collectors.toSet());
+		TechniqueEvent time = new SolveEventBridgeCollapse(setFalse);
+		setFalse.stream().forEach((c)->c.setFalse(time));
+		return time;
+	}
+	
+	/**
+	 * <p>A Time node describing two xor-chains' collapse due 
+	 * to {@link #bridgeCollapse(Collection) bridge} interaction.</p>
+	 * @author fiveham
+	 *
+	 */
+	public static class SolveEventBridgeCollapse extends TechniqueEvent{
+		private SolveEventBridgeCollapse(Set<Claim> falsified){
+			super(falsified);
+		}
+		
+		@Override
+		public String toString(){
+			return "Bridge-collapse" + super.toString();
+		}
 	}
 	
 	/**
@@ -177,6 +318,11 @@ public class ColorChain extends AbstractTechnique {
 		private SolveEventBridgeJoin(Set<Claim> falsified, Collection<? extends Fact> src, Collection<? extends Fact> recip){
 			super(falsified);
 		}
+		
+		@Override
+		public String toString(){
+			return "Chain-unification" + super.toString();
+		}
 	}
 	
 	public static final int CHAINS_FOR_BRIDGE = 2;
@@ -185,7 +331,7 @@ public class ColorChain extends AbstractTechnique {
 	 * <p>Any claims in the {@code target} that {@link Claim#visibleClaims() can see} 
 	 * Claims with opposite colors from the same chain must be false, no matter 
 	 * which color from that chain is true and which is false.</p>
-	 * @return a SolutionEvent describing the changes made to the puzzle, or 
+	 * @return a TechniqueEvent describing the changes made to the puzzle, or 
 	 * null if no changes were made
 	 */
 	private TechniqueEvent visibleColorContradiction(Collection<Graph<ColorClaim>> chains){
@@ -207,7 +353,7 @@ public class ColorChain extends AbstractTechnique {
 	 * colored Claims are false and all the negative-colored Claims are 
 	 * true. </p>
 	 * @param concom a xor-chain
-	 * @return a SolutionEvent describing the changes made to the puzzle, or 
+	 * @return a TechniqueEvent describing the changes made to the puzzle, or 
 	 * null if no changes were made
 	 */
 	private TechniqueEvent visibleColorContradiction(Graph<ColorClaim> concom){
@@ -282,83 +428,6 @@ public class ColorChain extends AbstractTechnique {
 		return colorClaims;
 	}
 	
-	/**
-	 * <p>Sets false all the Claims in this chain decorated with the specified 
-	 * {@code color}.</p>
-	 * @param time the contextual time node which needs to store a collection of 
-	 * the Claims being set false by this method call 
-	 * @param chain a xor-chain of connected two-Claim Rules 
-	 * @param color the color of the Claims being set false
-	 * @return {@code time}, after the Claims of the specified {@code color} from 
-	 * the specified xor-{@code chain} are added to its pool of 
-	 * {@link sudoku.time.FalsifiedTime#falsified() falsified Claims}
-	 */
-	private TechniqueEvent setChainFalseForColor(Graph<ColorClaim> chain, final int color){
-		Set<Claim> setFalse = chain.nodeStream()
-				.filter((cc)->cc.color()==color)
-				.map( ColorClaim::wrapped )
-				.collect(Collectors.toSet());
-		TechniqueEvent time = new SolveEventBridgeCollapse(setFalse);
-		setFalse.stream().forEach((c)->c.setFalse(time));
-		return time;
-	}
-	
-	/**
-	 * <p>A Time node describing two xor-chains' collapse due 
-	 * to {@link #bridgeCollapse(Collection) bridge} interaction.</p>
-	 * @author fiveham
-	 *
-	 */
-	public static class SolveEventBridgeCollapse extends TechniqueEvent{
-		private SolveEventBridgeCollapse(Set<Claim> falsified){
-			super(falsified);
-		}
-		
-		@Override
-		public String toString(){
-			return "Color-chain bridge contradiction" + super.toString();
-		}
-	}
-	
-	/**
-	 * <p>Returns a Pair containing a chain to be collapsed and the color of the claims in that 
-	 * chain to be set false, or {@code null} if no even bridged chain is found.</p>
-	 * 
-	 * <p>This method tries to find two single-Rule bridges between the two specified chains and 
-	 * determines the step length between the two bridge Rules in either chain. If one 
-	 * chain has an even step-length between bridges while the other chain has an odd step 
-	 * length between the two bridges, then the chain with the even step-length between bridges 
-	 * can be completely collapsed, with the claims from the even-side chain with the color of 
-	 * those even-side chain claims that were on the bridges all being set false.</p>
-	 * 
-	 * @return a Pair containing a chain to be collapsed and the color of the Claims in that 
-	 * chain to be set False, or {@code null} if no even bridged chain is found
-	 */
-	private Pair<Graph<ColorClaim>,Integer> evenSideAndFalseColor(List<Graph<ColorClaim>> chains){
-		Graph<ColorClaim> chain0 = chains.get(0);
-		Graph<ColorClaim> chain1 = chains.get(1);
-		
-		Set<Fact> chainUnion0 = cacheMassUnion(chain0);
-		Set<Fact> chainUnion1 = cacheMassUnion(chain1);
-		
-		Set<Fact> bridges = new HashSet<>(chainUnion0);
-		bridges.retainAll(chainUnion1);
-		
-		for(List<Fact> bridge : new ComboGen<>(bridges, RULES_FOR_BRIDGE, RULES_FOR_BRIDGE)){
-			Fact lane0 = bridge.get(0);
-			Fact lane1 = bridge.get(1);
-			
-			int dist0 = dist(lane0, lane1, chain0);
-			int dist1 = dist(lane0, lane1, chain1);
-			if( dist0%2==0 && dist1%2==1 ){
-				return new Pair<Graph<ColorClaim>,Integer>(chain0, bridgeColor(chain0, lane0, lane1));
-			} else if(dist1%2==0 && dist0%2==1){
-				return new Pair<Graph<ColorClaim>,Integer>(chain1, bridgeColor(chain0, lane0, lane1));
-			}
-		}
-		return null;
-	}
-	
 	public static final int RULES_FOR_BRIDGE = 2;
 	
 	private final Map<Graph<ColorClaim>, Set<Fact>> massUnionCache = new HashMap<>();
@@ -374,40 +443,6 @@ public class ColorChain extends AbstractTechnique {
 	}
 	
 	/**
-	 * <p>Returns the int color of the Claims belonging to {@code chain} 
-	 * that are on the bridge made of {@code lane0} and {@code lane1}.</p>
-	 * @param chain the xor-chain the color of whose Claims on the bridge 
-	 * made of {@code lane0} and {@code lane1} is returned
-	 * @param lane0 one of the lanes of the bridge
-	 * @param lane1 one of the lanes of the bridge
-	 * @throws IllegalStateException if {@code chain} has more than one color 
-	 * on the bridge, which means {@code chain} has an odd step-length between 
-	 * {@code lane0} and {@code lane1}
-	 * @return the int color of the Claims belonging to {@code chain} 
-	 * that are on the bridge made of {@code lane0} and {@code lane1}
-	 */
-	private int bridgeColor(Graph<ColorClaim> chain, Fact lane0, Fact lane1){
-		Map<Claim,ColorClaim> map = claimToColorMap(chain);
-		
-		Set<Claim> allBridgeClaims = new HashSet<>(lane0);
-		allBridgeClaims.addAll(lane1);
-		
-		Set<Integer> colorsOnBridge = new HashSet<>();
-		for(Claim c : allBridgeClaims){
-			if(map.containsKey(c)){
-				colorsOnBridge.add(map.get(c).color());
-			}
-		}
-		
-		if(colorsOnBridge.size() == COLORS_ON_BRIDGE_FOR_COLLAPSEABLE_CHAIN){
-			for(Integer i : colorsOnBridge){
-				return i;
-			}
-		}
-		throw new IllegalStateException("Should have one color on bridge, but instead have "+colorsOnBridge.size());
-	}
-	
-	/**
 	 * <p>The number ({@value}) of colors that a xor-chain collapseable as the result 
 	 * of chain-chain interaction has on the bridge that mediates that chain-chain 
 	 * interaction.</p>
@@ -416,41 +451,6 @@ public class ColorChain extends AbstractTechnique {
 	 * Rules each of which has a Claim (neighbor) in each of the two bridged chains.</p>
 	 */
 	public static final int COLORS_ON_BRIDGE_FOR_COLLAPSEABLE_CHAIN = 1;
-	
-	/**
-	 * <p>Returns a {@link Map Map} from the Claims in {@code chain} to those 
-	 * Claims' colors.</p>
-	 * @param chain a xor-chain whose Claims and whose Claims' colors are to 
-	 * be mapped
-	 * @return a {@link Map Map} from the Claims in {@code chain} to those 
-	 * Claims' colors
-	 */
-	private Map<Claim,ColorClaim> claimToColorMap(Graph<ColorClaim> chain){
-		Map<Claim,ColorClaim> result = new HashMap<>(chain.size());
-		
-		for(ColorClaim cc : chain){
-			result.put(cc.wrapped(), cc);
-		}
-		
-		return result;
-	}
-	
-	/**
-	 * <p>Returns the number of steps between {@code lane0} and {@code lane1} 
-	 * in {@code chain}.</p>
-	 * @param lane0 a bridge-lane that intersects {@code chain}
-	 * @param lane1 a bridge-lane that intersects {@code chain}
-	 * @param chain a xor-chain intersecting {@code lane0} and {@code lane1}
-	 * @throws IllegalArgumentException if any of the lanes does not intersect {@code chain}
-	 * @return the number of steps between {@code lane0} and {@code lane1} 
-	 * in {@code chain}
-	 */
-	private int dist(Fact lane0, Fact lane1, Graph<ColorClaim> chain){
-		ColorClaim lane0Intersection = getBridgeIntersection(lane0, chain);
-		ColorClaim lane1Intersection = getBridgeIntersection(lane1, chain);
-		
-		return chain.distance(lane0Intersection, lane1Intersection);
-	}
 	
 	/**
 	 * <p>Identifies the Claim where {@code lane} and {@code chain} intersect.</p>
@@ -482,7 +482,7 @@ public class ColorChain extends AbstractTechnique {
 		
 		@Override
 		public String toString(){
-			return "color-chain visibility contradiction " + super.toString();
+			return "Visibile-color contradiction" + super.toString();
 		}
 	}
 	
@@ -543,6 +543,11 @@ public class ColorChain extends AbstractTechnique {
 		@Override
 		public int hashCode(){
 			return claim.hashCode();
+		}
+		
+		@Override
+		public String toString(){
+			return "ColorClaim pairing " + color + " with " + claim;
 		}
 	}
 	

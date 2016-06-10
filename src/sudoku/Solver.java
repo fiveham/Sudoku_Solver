@@ -4,7 +4,7 @@ import common.Pair;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -30,15 +30,12 @@ import sudoku.parse.Parser;
  */
 public class Solver{
 	
-	public static final List<Function<Sudoku,Technique>> DEFAULT_INITIALIZER_SOURCE = new ArrayList<>(1);
-	static {
-		DEFAULT_INITIALIZER_SOURCE.add(Initializer::new);
-	}
+	public static final List<Function<Sudoku,Technique>> DEFAULT_INITIALIZER_SOURCE = Arrays.asList(
+			Initializer::new);
 	
-	public static final List<Function<Sudoku,Technique>> DEFAULT_PROCESSOR_SOURCE = new ArrayList<>(2);
-	static {
-		Collections.addAll(DEFAULT_PROCESSOR_SOURCE, ColorChain::new, Sledgehammer::new);
-	}
+	public static final List<Function<Sudoku,Technique>> DEFAULT_PROCESSOR_SOURCE = Arrays.asList(
+			ColorChain::new, 
+			Sledgehammer::new);
 	
 	public static final List<Function<Sudoku,Technique>> NO_INITIALIZER_SOURCE = new ArrayList<>(0);
 	
@@ -56,6 +53,8 @@ public class Solver{
 	private final SudokuThreadGroup group;
 	private final Object lock;
 	
+	private final String source;
+	
 	/**
 	 * <p>Constructs a Solver that works to solve the target 
 	 * specified by the text at the beginning of {@code f}.</p>
@@ -64,7 +63,7 @@ public class Solver{
 	 * be found
 	 */
 	public Solver(File f) throws FileNotFoundException{
-		this(new Puzzle(f));
+		this(new Puzzle(f), f.getName());
 	}
 	
 	/**
@@ -72,11 +71,11 @@ public class Solver{
 	 * {@code target}.</p>
 	 * @param target the Puzzle to be solved
 	 */
-	public Solver(Sudoku puzzle){
-		this(puzzle, null, new SudokuThreadGroup(), new Object(), DEFAULT_INITIALIZER_SOURCE, DEFAULT_PROCESSOR_SOURCE);
+	public Solver(Sudoku puzzle, String source){
+		this(puzzle, null, new SudokuThreadGroup(source), new Object(), DEFAULT_INITIALIZER_SOURCE, DEFAULT_PROCESSOR_SOURCE, source);
 	}
 	
-	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, List<Function<Sudoku,Technique>> initializers, List<Function<Sudoku,Technique>> processors){
+	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, List<Function<Sudoku,Technique>> initializers, List<Function<Sudoku,Technique>> processors, String source){
 		this.target = target;
 		
 		this.initializerSource = initializers;
@@ -92,6 +91,7 @@ public class Solver{
 		}
 		
 		this.lock = waiter;
+		this.source = source;
 	}
 	
 	private static List<Technique> generateTechniques(Sudoku sudoku, List<Function<Sudoku,Technique>> funcList){
@@ -115,11 +115,11 @@ public class Solver{
 	}
 		
 	private Solver childWithInitializers(Sudoku network){
-		return new Solver(network, event, group, lock, initializerSource, processorSource);
+		return new Solver(network, event, group, lock, initializerSource, processorSource, source);
 	}
 	
 	private Solver childWithoutInitializers(Sudoku network){
-		return new Solver(network, event, group, lock, NO_INITIALIZER_SOURCE, processorSource);
+		return new Solver(network, event, group, lock, NO_INITIALIZER_SOURCE, processorSource, source);
 	}
 	
 	/**
@@ -135,14 +135,14 @@ public class Solver{
 	 */
 	public void solve() throws InterruptedException{
 		
-		Thread operation = new Thread(group, this::run, "solver_0");
+		Thread operation = new Thread(group, this::run, source+"_0");
 		
 		operation.start(); //calls run()
 		
 		while(group.activeCount() > 0){
 			synchronized(lock){
 				//if(group.activeCount() > 0){
-					lock.wait(100);
+					lock.wait(100); //TODO determine whether the if(){wait()} model works 
 				//}
 			}
 		}
@@ -152,8 +152,8 @@ public class Solver{
 	private void run(){ //XXX rename
 		
 		//DEBUG
-		Debug.log("Running a thread: " + Thread.currentThread().getName());
-		Debug.log("Current graph size: "+target.size());
+		/*Debug.log("Running a thread: " + Thread.currentThread().getName());
+		Debug.log("Current graph size: "+target.size());*/
 		
 		Pair<ThreadEvent,BiFunction<Solver, SudokuNetwork, Solver>> runnableSource = getRunnableSource();
 		if(runnableSource != null){
@@ -177,7 +177,7 @@ public class Solver{
 				synchronized(lock){
 					
 					//DEBUG
-					Debug.log("Have no unsolved networks; notifying lock");
+					//Debug.log("Have no unsolved networks; notifying lock");
 					
 					lock.notify();
 				}
@@ -266,9 +266,11 @@ public class Solver{
 		Debug.log("STARTING"); //DEBUG
 		Solver s = new Solver(new File(args[SRC_FILE_ARG_INDEX]));
 		s.solve();
-		Debug.log("Solution process: ");
-		Debug.log(s.event.techniqueEvent()); //DEBUG
 		System.out.println(s.target.toString());
+		
+		//DEBUG
+		Debug.log("Solution process: ");
+		Debug.log(s.event);
 	}
 	
 	public static final int SRC_FILE_ARG_INDEX = 0;
@@ -281,8 +283,8 @@ public class Solver{
 	 *
 	 */
 	private static class SudokuThreadGroup extends ThreadGroup{
-		public SudokuThreadGroup(){
-			super("sudoku");
+		public SudokuThreadGroup(String sourceFile){
+			super(sourceFile);
 		}
 		
 		@Override
