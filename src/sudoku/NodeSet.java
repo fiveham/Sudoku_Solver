@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import sudoku.time.FalsifiedTime;
 import sudoku.time.TechniqueEvent;
 
@@ -48,15 +47,15 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	protected final Puzzle puzzle;
 	protected final int hashCode;
 	
-	public NodeSet(Puzzle puzzle, Supplier<Integer> hashSource){
+	protected NodeSet(Puzzle puzzle, int hash){
 		this.puzzle = puzzle;
-		this.hashCode = hashSource.get();
+		this.hashCode = hash;
 	}
 	
-	public NodeSet(Puzzle puzzle, int initialCapacity, Supplier<Integer> hashSource) {
+	protected NodeSet(Puzzle puzzle, int initialCapacity, int hash) {
 		super(initialCapacity);
 		this.puzzle = puzzle;
-		this.hashCode = hashSource.get();
+		this.hashCode = hash;
 	}
 	
 	/**
@@ -465,5 +464,27 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	@Override
 	public final int hashCode(){
 		return hashCode;
+	}
+	
+	/**
+	 * <p>Returns an int that encodes the specified {@code x}, {@code y}, and {@code z} 
+	 * coordinates as if they belong to a Claim whose {@link #getPuzzle puzzle} has the 
+	 * specified {@code sideLength}.</p>
+	 * 
+	 * <p>The coordinates are concatenated as digits in a number system with a base 
+	 * equal to {@code sideLength + 1}, with the first digit being the x-coordinate, 
+	 * followed by the y-coordinate, followed by the z-coordinate.</p>
+	 * 
+	 * @param x the coordinate given the highest digital significance
+	 * @param y the coordinate given the second-highest digital significance
+	 * @param z the coordinate given the lowest digital significance.
+	 * @param sideLength the side-length of the {@link #getPuzzle puzzle} to which 
+	 * the NodeSet whose coordinates are being linearized belongs.
+	 * @return an int that encodes the specified {@code x}, {@code y}, and {@code z} 
+	 * coordinates as if they belong to a Claim whose {@link #getPuzzle puzzle} has the 
+	 * specified {@code sideLength}
+	 */
+	public static int linearizeCoords(int x, int y, int z, int sideLength){
+		return x*sideLength*sideLength + y*sideLength + z;
 	}
 }

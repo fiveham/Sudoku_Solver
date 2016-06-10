@@ -35,7 +35,7 @@ public class Init extends Fact {
 	 * @param puzzle
 	 */
 	public Init(Puzzle puzzle, Claim c) {
-		super(puzzle, Collections.singletonList(c), () -> c.hashCode());
+		super(puzzle, Collections.singletonList(c), c.hashCode());
 		this.claim = c;
 	}
 	

@@ -12,6 +12,7 @@ import javafx.animation.KeyValue;
 import javafx.animation.KeyFrame;
 import javafx.util.Duration;
 import sudoku.Claim;
+import sudoku.NodeSet;
 import sudoku.Puzzle;
 
 public class VoxelModel extends Box{
@@ -439,7 +440,7 @@ public class VoxelModel extends Box{
 	
 	@Override
 	public int hashCode(){
-		return Claim.linearizeCoords(x, y, z, puzzle.sideLength());
+		return NodeSet.linearizeCoords(x, y, z, puzzle.sideLength());
 	}
 	
 	@Override

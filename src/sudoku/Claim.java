@@ -42,7 +42,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * @param symbol the z-coordinate of this Claim in claim-space
 	 */
 	public Claim(Puzzle puzzle, IndexValue x, IndexValue y, IndexValue symbol) {
-		super(puzzle, INIT_OWNER_COUNT, () -> linearizeCoords(x.intValue(), y.intValue(), symbol.intValue(), puzzle.sideLength()));
+		super(puzzle, INIT_OWNER_COUNT, linearizeCoords(x.intValue(), y.intValue(), symbol.intValue(), puzzle.sideLength()));
 		this.x = x;
 		this.y = y;
 		this.symbol = symbol;
@@ -118,25 +118,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 	
 	public IndexValue getSymbol(){
 		return symbol;
-	}
-	
-	/**
-	 * <p>Returns an int that encodes the specified x, y, and z coordinates as if they 
-	 * belong to a Claim whose target has the specified {@code sideLength}.</p>
-	 * 
-	 * <p>The coordinates are concatenated as digits in a number system with a base 
-	 * equal to the specified {@code sideLength}, with the first digit being the 
-	 * x-coordinate, followed by the y-coordinate, followed by the z-coordinate.</p>
-	 * @param x the coordinate given the highest significance
-	 * @param y the coordinate given the second-highest significance
-	 * @param z the coordinate given the least significance.
-	 * @param sideLength the side-length of the target to which belongs the Claim 
-	 * whose coordinates are being linearized.
-	 * @return an int that encodes the specified x, y, and z coordinates as if they 
-	 * belong to a Claim whose target has the specified {@code sideLength}
-	 */
-	public static int linearizeCoords(int x, int y, int z, int sideLength){
-		return x*sideLength*sideLength + y*sideLength + z;
 	}
 	
 	@Override

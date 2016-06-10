@@ -31,6 +31,7 @@ import javafx.scene.shape.Sphere;
 import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 import sudoku.Claim;
+import sudoku.NodeSet;
 import sudoku.Puzzle;
 import sudoku.Puzzle.IndexInstance;
 import sudoku.time.FalsifiedTime;
@@ -195,7 +196,7 @@ public class PuzzleVizApp extends Application {
 						int x = i[Puzzle.X_DIM].intValue();
 						int y = i[Puzzle.Y_DIM].intValue();
 						int z = i[Puzzle.Z_DIM].intValue();
-						int index = Claim.linearizeCoords(x, y, z, p.sideLength()) + offset;
+						int index = NodeSet.linearizeCoords(x, y, z, p.sideLength()) + offset;
 						vmList.add( (VoxelModel) voxels.get(index) );
 					}
 					new BagModel(p, vmList, reg.bagColor);

@@ -29,7 +29,7 @@ public class Rule extends Fact{
 	 * have as elements
 	 */
 	public Rule(Puzzle puzzle, RuleType type, Collection<Claim> c, IndexInstance dimA, IndexInstance dimB) {
-		super(puzzle, c, () -> Claim.linearizeCoords(type.ordinal(), dimA.intValue(), dimB.intValue(), puzzle.sideLength()));
+		super(puzzle, c, linearizeCoords(type.ordinal(), dimA.intValue(), dimB.intValue(), puzzle.sideLength()));
 		this.type = type;
 		this.dimA = dimA;
 		this.dimB = dimB;

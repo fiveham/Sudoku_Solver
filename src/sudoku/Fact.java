@@ -1,7 +1,6 @@
 package sudoku;
 
 import java.util.Collection;
-import java.util.function.Supplier;
 
 public class Fact extends NodeSet<Claim,Fact>{
 	
@@ -27,8 +26,8 @@ public class Fact extends NodeSet<Claim,Fact>{
 	 */
 	private static final int SIZE_WHEN_XOR = 2;
 	
-	public Fact(Puzzle puzzle, Collection<Claim> c, Supplier<Integer> hashSource) {
-		super(puzzle, hashSource);
+	protected Fact(Puzzle puzzle, Collection<Claim> c, int hash) {
+		super(puzzle, hash);
 		addAll(c);
 	}
 	
