@@ -49,7 +49,6 @@ public class Init extends Fact {
 	
 	@Override
 	public void validateState(FalsifiedTime time){
-		Debug.log("Initial-value verifying "+claim);
 		claim.setTrue(time);
 	}
 	

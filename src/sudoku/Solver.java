@@ -165,36 +165,19 @@ public class Solver{
 					.filter((sn) -> !sn.isSolved())
 					.collect(Collectors.toList());
 			
-			//DEBUG checking connected components
-			Debug.log("Component count: "+networks.size());
-			for(SudokuNetwork component : networks){
-				Debug.log("Component size: "+component.size());
-				Debug.log(component); //TODO implement SudokuNetwork.toString()
-			}
-			
 			if( !networks.isEmpty()){
 				
-				//DEBUG
-				Debug.log("Have some unsolved networks; splitting thread: " + networks.size() + " children");
-				Debug.log(target.nodeStream().findFirst().get().getPuzzle());
-				Debug.log("SolutionEvent: "+event.techniqueEvent());
-				
-				//DEBUG RESTORE
-				/*String name = Thread.currentThread().getName();
+				String name = Thread.currentThread().getName();
 				for(int i=0; i<networks.size(); ++i){
 					SudokuNetwork network = networks.get(i);
 					
-					//DEBUG
-					Debug.log("Start thread for component with "+network.size()+" nodes.");
-					
 					new Thread(group, successorSolver.apply(this, network)::run, name+Integer.toString(i,Parser.MAX_RADIX)).start();
-				}*/
+				}
 			} else{
 				synchronized(lock){
 					
 					//DEBUG
 					Debug.log("Have no unsolved networks; notifying lock");
-					Debug.log("SolutionEvent: "+event.techniqueEvent());
 					
 					lock.notify();
 				}
@@ -239,9 +222,9 @@ public class Solver{
 		return handleTechniques(processors, eventParent);
 	}
 	
-	private static ThreadEvent handleTechniques(List<Technique> abstractTechniques, ThreadEvent eventParent){
-		for(Technique abstractTechnique : abstractTechniques){
-			TechniqueEvent techniqueEvent = abstractTechnique.digest();
+	private static ThreadEvent handleTechniques(List<Technique> techniques, ThreadEvent eventParent){
+		for(Technique technique : techniques){
+			TechniqueEvent techniqueEvent = technique.digest();
 			
 			if(techniqueEvent != null){
 				return new ThreadEvent(eventParent, techniqueEvent, Thread.currentThread().getName());
@@ -283,6 +266,8 @@ public class Solver{
 		Debug.log("STARTING"); //DEBUG
 		Solver s = new Solver(new File(args[SRC_FILE_ARG_INDEX]));
 		s.solve();
+		Debug.log("Solution process: ");
+		Debug.log(s.event.techniqueEvent()); //DEBUG
 		System.out.println(s.target.toString());
 	}
 	
@@ -295,7 +280,7 @@ public class Solver{
 	 * @author fiveham
 	 *
 	 */
-	public static class SudokuThreadGroup extends ThreadGroup{
+	private static class SudokuThreadGroup extends ThreadGroup{
 		public SudokuThreadGroup(){
 			super("sudoku");
 		}

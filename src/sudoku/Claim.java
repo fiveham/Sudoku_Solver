@@ -1,7 +1,5 @@
 package sudoku;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import sudoku.Puzzle.IndexValue;
 import sudoku.time.FalsifiedTime;
@@ -93,44 +91,17 @@ public class Claim extends NodeSet<Fact,Claim>{
 	/**
 	 * <p>Sets this Claim false. Removes all elements from this 
 	 * set, and removes this Claim from all its neighbors.</p>
-	 * @param time the SolutionEvent which precipitated the call 
+	 * @param time the TechniqueEvent which precipitated the call 
 	 * to this method
 	 * @return true if calling this method changed the state of 
 	 * this Claim, false otherwise
 	 */
 	public boolean setFalse(FalsifiedTime time){
-		
-		//DEBUG
-		Debug.log("Falsify "+this);
-		Debug.log(contentString());
-		
 		int initSize = size();
 		if(!setFalseInProgress()){
-			Debug.log("not in progress"); //DEBUG
-			
-			//clear(time);
-			/*while(!isEmpty()){
-				remove(iterator().next());
-			}*/
-			List<Fact> remove = new ArrayList<>(this);
-			
-			//DEBUG
-			Debug.log(remove);
-			for(Fact f : remove){
-				Debug.log("contains " + f + "?: " + contains(f));
-				Debug.log("\t" + f.contentString());
-			}
-			
-			removeAll(remove);
+			clear(time);
 		}
-		boolean result = size() != initSize;
-		
-		//DEBUG
-		Debug.log("Result: "+result + ": " + initSize + " : " + size());
-		Debug.log(contentString());
-		Debug.log();
-		
-		return result;
+		return size() != initSize;
 	}
 	
 	private boolean setFalseInProgress(){

@@ -240,14 +240,9 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		}
 		public void remove(FalsifiedTime time){
 			if(lastResult != null){
-				Debug.log(NodeSet.this + " init size: " + size() + "\t" + lastResult + " init size: " + lastResult.size()); //DEBUG
-				
 				wrapped.remove();
-				Debug.log(NodeSet.this + " half-rem size: " + size() + "\t" + lastResult + " half-rem size: " + lastResult.size()); //DEBUG
 				lastResult.remove(time, NodeSet.this);
-				Debug.log(NodeSet.this + " full-rem size: " + size() + "\t" + lastResult + " full-rem size: " + lastResult.size()); //DEBUG
 				lastResult = null;
-				Debug.log(); //DEBUG
 			} else{
 				throw new IllegalStateException("Previous next() element already removed.");
 			}

@@ -70,4 +70,9 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	public int sideLength(){
 		return sideLength;
 	}
+	
+	@Override
+	public String toString(){ //TODO implement SudokuNetwork.toString()
+		return super.toString();
+	}
 }
