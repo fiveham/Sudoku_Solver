@@ -1,6 +1,9 @@
-#sadman puzzles
-puzzles/sadman
+#scripts
+*.ps1
 
+#puzzle folders
+puzzles/sadman
+puzzles/project_euler
 
 #Eclipse settings folder
 .settings

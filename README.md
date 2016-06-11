@@ -21,7 +21,10 @@ the `Solver` can make it be.
 
 ##Supported Input Formats
 
-Sadman Sudoku format and plaintext are supported. 
+[Sadman Sudoku](https://github.com/fiveham/Sudoku_Solver/blob/master/src/sudoku/parse/SadmanParser.java) 
+format and 
+[plaintext](https://github.com/fiveham/Sudoku_Solver/blob/master/src/sudoku/parse/TxtParser.java) 
+are supported. 
 Sadman Sudoku format files' names must end with `.sdk`. Plaintext 
 files's names must end with `.txt' and those files must contain 
 the 16, 81, 256, etc. `int` tokens that describe the initial state 
@@ -93,23 +96,31 @@ we have to brute-force our way through all the sets to find this statement.
 The transition from being a collection of sets of statements to being a 
 bipartite graph of rules and statements (`Claim`s) comes about because 
 we need to be able to tell how `Rule`s are connected in order to ascertain 
-the validity of a possible sledgehammer scenario designed by brute force. 
+the validity of a possible Sledgehammer scenario designed by brute force. 
 With the sets-of-statements model, it's trivial to determine if two `Rule`s 
 are connected (they intersect), but any more complex connection relationship 
-is difficult (or needlessly verbose) to describe. Of particular importance is 
-the fact that the source `Rule`s of a sledgehammer solution scenario must all 
+is difficult to describe or verbose. Of particular importance is 
+the fact that the source `Rule`s of a Sledgehammer solution scenario must all 
 be disjoint from one another yet they all must be connected together via the 
 recipient `Rule`s.
 
-In order to prove that a possible sledgehammer scenario is valid, `Rule`s 
-must be treated as nodes in a graph and the nodes' connections with the other 
-nodes in the sledgehammer scenario must be analysed. Finding sledgehammer 
-scenarios is mostly brute force; so, having to regenerate (or having to manage 
-a cache of) "node" wrappers around these `Rule` sets is either inefficient or 
-clunky, respectively. Enabling the `Rule`s to *be* their own nodes from the 
-start dodges both of these problems.
+If the source `Rule`s and recipient `Rule`s are not interconnected, appropriately, 
+then either the Sledgehammer scenario is invalid or the Sledgehammer scenario 
+is the union of multiple valid Sledgehammer scenarios each of which has as 
+smaller overall size than that of this Sledgehammer scenario, in which case 
+they must already have been found and resolved, having all non-source recipient 
+`Claim`s falsified. There is no way that a Sledgehammer scenario with multiple 
+connected components can be worthwhile to analyse.
 
-In assessing the validity of a sledgehammer scenario, only `Rule`s need 
+In order to prove that a possible Sledgehammer scenario is valid, `Rule`s 
+must be treated as nodes in a graph and the nodes' connections with the other 
+nodes in the Sledgehammer scenario must be analysed. Finding Sledgehammer 
+scenarios is mostly brute force; so, regenerating (or managing a cache of) 
+"node" wrappers around these `Rule` sets is either inefficient or 
+clunky, respectively. Enabling the `Rule`s to *be* their own nodes from the 
+start dodges both of these issues.
+
+In assessing the validity of a Sledgehammer scenario, only `Rule`s need 
 to be nodes in the puzzle graph: Sources connect to recipients and non-participants; 
 recipients connect to sources and non-participants. However, when it comes time 
 to remove some of those edges because a `Claim` is known false, things are awkward. 
