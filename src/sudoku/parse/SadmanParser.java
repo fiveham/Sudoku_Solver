@@ -21,7 +21,15 @@ import sudoku.Puzzle;
  */
 public class SadmanParser implements Parser{
 	
+	/**
+	 * <p>Content of the line prior to the statement of the initial 
+	 * state of the puzzle.</p>
+	 */
 	public static final String INITIAL_PUZZLE_MARKER = "[Puzzle]";
+	
+	/**
+	 * <p>Indicates an empty cell in the initial puzzle state.</p>
+	 */
 	public static final char EMPTY_CELL = '.';
 	
 	private final int mag;
@@ -36,20 +44,24 @@ public class SadmanParser implements Parser{
 			s = new Scanner(f);
 		}
 		
-		StringBuilder initCells = new StringBuilder(s.nextLine());
-		this.mag = (int)Math.sqrt(initCells.length());
-		for(int i=1; i<mag*mag; ++i){
-			initCells.append(s.nextLine());
+		StringBuilder initCells;
+		try{
+			initCells = new StringBuilder(s.nextLine());
+			this.mag = (int)Math.sqrt(initCells.length());
+			for(int i=1; i<mag*mag; ++i){
+				initCells.append(s.nextLine());
+			}
+		} catch(java.util.NoSuchElementException e){
+			throw new IllegalArgumentException("Could not parse the file as Sadman format", e);
+		} finally{
+			s.close();
 		}
-		s.close();
 		this.values = new ArrayList<>(initCells.length());
 		for(int i=0; i<initCells.length(); ++i){
 			char c = initCells.charAt(i);
-			if(c == EMPTY_CELL){
-				values.add(Puzzle.BLANK_CELL);
-			} else{
-				values.add(Integer.parseInt(Character.toString(c), mag*mag+1));
-			}
+			values.add(c == EMPTY_CELL 
+					? Puzzle.BLANK_CELL 
+					: Integer.parseInt(Character.toString(c), mag*mag+1));
 		}
 	}
 	
