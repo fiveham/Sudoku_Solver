@@ -1,8 +1,12 @@
 package sudoku.parse;
 
+import common.Pair;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.Function;
 import sudoku.Sudoku;
 
 /**
@@ -18,15 +22,7 @@ import sudoku.Sudoku;
  */
 public class TxtParser implements Parser{
 	
-	/**
-	 * <p>The lowest possible magnitude of a sudoku puzzle that anyone 
-	 * would want to subject to an automated solver: {@value}.</p>
-	 * 
-	 * <p>The only smaller size is 1, which has exactly 1 solution.</p>
-	 */
-	public static final int MIN_REASONABLE_SUDOKU_MAGNTITUDE = 2;
-	
-	private int mag = MIN_REASONABLE_SUDOKU_MAGNTITUDE;
+	private int mag;
 	private final List<Integer> values;
 	
 	/**
@@ -35,9 +31,74 @@ public class TxtParser implements Parser{
 	 * @param s the Scanner that sources the text that this 
 	 * Parser analyses. {@code s} is closed by this constructor
 	 */
-	public TxtParser(Scanner s){
-		this.values = parse(s);
-		s.close();
+	public TxtParser(File f) throws FileNotFoundException{
+		Pair<List<Integer>,Integer> pair = null;
+		for(TextFormatStyle style : TextFormatStyle.values()){
+			pair = style.parse.apply(new Scanner(f));
+			if(pair != null){
+				break;
+			}
+		}
+		
+		if(pair == null){
+			throw new IllegalArgumentException("Could not parse specified file as txt.");
+		}
+		this.values = pair.getA();
+		this.mag = pair.getB();
+	}
+	
+	private static enum TextFormatStyle{
+		BLOCK((s) -> {
+			List<String> lines = new ArrayList<>(9); //MAGIC
+			do{
+				if(!s.hasNextLine()){
+					return null;
+				}
+				String line = s.nextLine();
+				lines.add(line);
+				if(line.length() != lines.get(0).length()){
+					return null;
+				}
+			} while(lines.size() < lines.get(0).length());
+			
+			int mag = (int) Math.sqrt(lines.size());
+			if(mag*mag != lines.size()){ //side-length of square is a square number?
+				return null;
+			}
+			
+			List<Integer> result = new ArrayList<>(lines.size() * lines.size());
+			for(String line : lines){
+				for(int i = 0; i<line.length(); ++i){
+					try{
+						result.add(Integer.parseInt(line.substring(i, i+1), lines.size()+1));
+					} catch(NumberFormatException e){
+						return null;
+					}
+				}
+			}
+			
+			return new Pair<>(result,mag);
+		}), 
+		TOKEN((s) -> {
+			List<Integer> val = new ArrayList<>();
+			while(s.hasNextInt()){
+				val.add(s.nextInt());
+			}
+			
+			int mag = (int) Math.sqrt(Math.sqrt(val.size()));
+			if(mag*mag*mag*mag != val.size() 
+					|| val.stream().anyMatch((i) -> i > mag*mag)){
+				return null;
+			}
+			
+			return new Pair<>(val,mag);
+		});
+		
+		private final Function<Scanner,Pair<List<Integer>,Integer>> parse;
+		
+		private TextFormatStyle(Function<Scanner,Pair<List<Integer>,Integer>> parse){
+			this.parse = parse;
+		}
 	}
 	
 	/**
@@ -63,63 +124,5 @@ public class TxtParser implements Parser{
 	@Override
 	public List<Integer> values(){
 		return values;
-	}
-	
-	/**
-	 * <p>Returns the radix to be used for {@link Integer#parseInt(String) parsing} 
-	 * human-readable text integers into {@code int}s for internal use. The value 
-	 * returned depends on the current value of {@link #mag mag}.</p>
-	 * @return the radix to be used for parsing the human-readable values of the 
-	 * cells specified in the text source for this target into {@code int}s for 
-	 * internal use, depending on the current value of {@code mag}
-	 */
-	private int radix(){
-		return mag*mag+1;
-	}
-	
-	/**
-	 * <p>Converts a human-readable integer in an unknown base, from a target of 
-	 * unknown size, into an {@code int} while determining what base is appropriate 
-	 * for parsing the current and remaining text into ints.</p>
-	 * @param token the string to be parsed into an int
-	 * @return the int parsed from the specified token
-	 */
-	private int parseInt(String token){
-		Integer result = null;
-		while( result == null ){
-			try{
-				result = Integer.parseInt(token, radix());
-			} catch(NumberFormatException e){
-				++mag;
-			}
-		}
-		return result;
-	}
-	
-	public static final int MAX_CELL_CONTENT_STRING_LEN = 1;
-	
-	/**
-	 * <p>Gets tokens one-at-a-time from the specified Scanner, and 
-	 * parses them into ints while determining the size of the target 
-	 * represented in the text that the Scanner scans.</p>
-	 * @param s the Scanner used to access the target's source text
-	 * @return a list of integers each of which is the value of a 
-	 * cell in the target; the mapping between cells and the list is 
-	 * a snake starting in the upper left corner (low x,y), moving 
-	 * right (increasing x), then wrapping around to the next y-level 
-	 * until the snake reaches the lower right (high x,y)
-	 */
-	private List<Integer> parse(Scanner s){
-		List<Integer> result = new ArrayList<>();
-		
-		while(s.hasNext() && mag*mag*mag*mag > result.size()){
-			String token = s.next();
-			if(token.length() > MAX_CELL_CONTENT_STRING_LEN){
-				throw new IllegalArgumentException(token+" is more than a single char");
-			}
-			result.add(parseInt(token));
-		}
-		
-		return result;
 	}
 }

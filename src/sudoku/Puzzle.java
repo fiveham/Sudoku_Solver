@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Scanner;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -107,7 +106,7 @@ public class Puzzle extends SudokuNetwork{
 		extension = extension.substring(extension.lastIndexOf("."));
 		
 		switch(extension){
-		case ".txt": return new TxtParser(new Scanner(f));
+		case ".txt": return new TxtParser(f);
 		case ".sdk": return new SadmanParser(f);
 		default: throw new IllegalArgumentException("Illegal file extension "+extension+" only .txt and .sdk allowed.");
 		}
