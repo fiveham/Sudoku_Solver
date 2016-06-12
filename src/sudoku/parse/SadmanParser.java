@@ -2,6 +2,7 @@ package sudoku.parse;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -51,7 +52,7 @@ public class SadmanParser implements Parser{
 			for(int i=1; i<mag*mag; ++i){
 				initCells.append(s.nextLine());
 			}
-		} catch(java.util.NoSuchElementException e){
+		} catch(NoSuchElementException e){
 			throw new IllegalArgumentException("Could not parse the file as Sadman format", e);
 		} finally{
 			s.close();
