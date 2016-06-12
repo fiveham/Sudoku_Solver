@@ -57,14 +57,8 @@ public class XYChain extends AbstractTechnique {
 			List<Wrap<Claim>> unused = chain.nodeStream().filter((w) -> w.neighbors().size() == 1).collect(Collectors.toList());
 			
 			for(List<Wrap<Claim>> pair : new ComboGen<>(unused, Pair.ITEM_COUNT, Pair.ITEM_COUNT)){
-				Wrap<Claim> w0 = pair.get(0);
-				Wrap<Claim> w1 = pair.get(1);
-				
-				Set<Claim> vis0 = w0.wrapped().visible();
-				Set<Claim> vis1 = w1.wrapped().visible();
-				
-				Set<Claim> visBoth = vis0;
-				visBoth.retainAll(vis1);
+				Set<Claim> visBoth = pair.get(0).wrapped().visible();
+				visBoth.retainAll(pair.get(1).wrapped().visible());
 				
 				if(!visBoth.isEmpty()){
 					try{
@@ -84,6 +78,11 @@ public class XYChain extends AbstractTechnique {
 	public class SolveEventXYChain extends TechniqueEvent{
 		private SolveEventXYChain(Set<Claim> falsified){
 			super(falsified);
+		}
+		
+		@Override
+		protected String toStringStart(){
+			return "XYChain scenario";
 		}
 	}
 }
