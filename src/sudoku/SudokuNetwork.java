@@ -1,9 +1,12 @@
 package sudoku;
 
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import common.graph.BasicGraph;
 import common.graph.Graph;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import sudoku.parse.Parser;
 
 /**
  * <p>A bipartite graph of Rules and Claims.</p>
@@ -72,7 +75,42 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	}
 	
 	@Override
-	public String toString(){ //TODO implement SudokuNetwork.toString()
-		return super.toString();
+	public String toString(){
+		Map<Integer,Fact> cells = factStream()
+				.filter(Rule.class::isInstance)
+				.map(Rule.class::cast)
+				.filter(Puzzle.RuleType.CELL::isTypeOf)
+				.collect(Collectors.toMap(
+						(cell) -> NodeSet.linearizeCoords(0, cell.dimA().intValue(), cell.dimB().intValue(), sideLength()), 
+						Function.identity()));
+		
+		StringBuilder result = new StringBuilder();
+		String empty;
+		{
+			StringBuilder empt = new StringBuilder();
+			for(int i=0; i<sideLength(); ++i){
+				empt.append(" ");
+			}
+			empty = empt.toString();
+		}
+		
+		for(int y = 0; y < sideLength(); ++y){
+			for(int x = 0; x < sideLength(); ++x){
+				result.append("|");
+				Fact cell = cells.get(NodeSet.linearizeCoords(0, y, x, sideLength()));
+				if(cell == null){
+					result.append(empty);
+				} else{
+					for(int z=0; z<sideLength(); ++z){
+						int val = cell.contains(cell.getPuzzle().claim(x, y, z)) ? z : 0;
+						String text = val == 0 ? " " : Integer.toString(val,Parser.MAX_RADIX);
+						result.append(text);
+					}
+				}
+			}
+			result.append("|" + System.lineSeparator());
+		}
+		
+		return result.toString();
 	}
 }
