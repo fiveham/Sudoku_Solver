@@ -47,9 +47,11 @@ public class TxtParser implements Parser{
 		this.mag = pair.getB();
 	}
 	
+	public static final int TYPICAL_BLOCK_SIDE_LENGTH = 9;
+	
 	private static enum TextFormatStyle{
 		BLOCK((s) -> {
-			List<String> lines = new ArrayList<>(9); //MAGIC
+			List<String> lines = new ArrayList<>(TYPICAL_BLOCK_SIDE_LENGTH);
 			do{
 				if(!s.hasNextLine()){
 					return null;

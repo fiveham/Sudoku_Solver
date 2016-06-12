@@ -128,9 +128,7 @@ public class Solver{
 	 * @throws InterruptedException
 	 */
 	public void solve() throws InterruptedException{
-		
 		Thread operation = new Thread(group, this::run, source+"_0");
-		
 		operation.start(); //calls run()
 		
 		while(group.activeCount() > 0){
@@ -142,7 +140,7 @@ public class Solver{
 		}
 	}
 	
-	private void run(){ //XXX rename
+	private void run(){
 		
 		//DEBUG
 		/*Debug.log("Running a thread: " + Thread.currentThread().getName());
