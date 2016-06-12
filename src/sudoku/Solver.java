@@ -115,14 +115,6 @@ public class Solver{
 	public ThreadGroup getThreadGroup(){
 		return group;
 	}
-		
-	private Solver childWithInitializers(Sudoku network){
-		return new Solver(network, event, group, lock, initializerSource, processorSource, source);
-	}
-	
-	private Solver childWithoutInitializers(Sudoku network){
-		return new Solver(network, event, group, lock, NO_INITIALIZER_SOURCE, processorSource, source);
-	}
 	
 	/**
 	 * <p>Creates a thread to {@link #run() run} this Solver and creates 
@@ -150,41 +142,30 @@ public class Solver{
 		}
 	}
 	
-	//TODO store init size and compare to final size after digestion as cheap sanity test
 	private void run(){ //XXX rename
 		
 		//DEBUG
 		/*Debug.log("Running a thread: " + Thread.currentThread().getName());
 		Debug.log("Current graph size: "+target.size());*/
 		
-		Pair<ThreadEvent,BiFunction<Solver, SudokuNetwork, Solver>> runnableSource = getRunnableSource();
-		if(runnableSource != null){
-			this.event = runnableSource.getA();
-			BiFunction<Solver, SudokuNetwork, Solver> successorSolver = runnableSource.getB();
-			
-			List<SudokuNetwork> networks = target.connectedComponents().stream()
-					.map((component) -> new SudokuNetwork(target.magnitude(), component))
-					.filter((sn) -> !sn.isSolved())
-					.collect(Collectors.toList());
-			
-			if( !networks.isEmpty()){
-				
-				String name = Thread.currentThread().getName();
-				for(int i=0; i<networks.size(); ++i){
-					SudokuNetwork network = networks.get(i);
-					
-					new Thread(group, successorSolver.apply(this, network)::run, name+Integer.toString(i,Parser.MAX_RADIX)).start();
-				}
-			} else{
-				synchronized(lock){
-					
-					//DEBUG
-					//Debug.log("Have no unsolved networks; notifying lock");
-					
-					lock.notify();
-				}
+		Pair<ThreadEvent, BiFunction<Solver,Sudoku, Solver>> eventAndChildSrc = applyTechniques();
+		List<SudokuNetwork> networks;
+		if(eventAndChildSrc != null 
+				&& !(networks = target.connectedComponents().stream()
+						.map((component) -> new SudokuNetwork(target.magnitude(), component))
+						.filter((sn) -> !sn.isSolved())
+						.collect(Collectors.toList())).isEmpty()){
+			String name = Thread.currentThread().getName();
+			this.event = eventAndChildSrc.getA();
+			for(int i=0; i<networks.size(); ++i){
+				SudokuNetwork network = networks.get(i);
+				new Thread(group, eventAndChildSrc.getB().apply(this, network)::run, name+Integer.toString(i,Parser.MAX_RADIX)).start();
 			}
-		} //TODO should there be something in the case of a null runnableSource?
+		} else{
+			synchronized(lock){
+				lock.notify();
+			}
+		}
 	}
 	
 	/**
@@ -195,7 +176,7 @@ public class Solver{
 	 * @see #HAS_NO_INITIALIZERS
 	 * @return
 	 */
-	private Pair<ThreadEvent,BiFunction<Solver, SudokuNetwork, Solver>> getRunnableSource(){
+	private Pair<ThreadEvent,BiFunction<Solver, Sudoku, Solver>> applyTechniques(){
 		for(TechniqueInheritance ti : TechniqueInheritance.values()){
 			ThreadEvent e = ti.solutionStyle.apply(this);
 			if(e != null){
@@ -203,6 +184,31 @@ public class Solver{
 			}
 		}
 		return null;
+	}
+	
+	private static enum TechniqueInheritance{
+		WITH_INITIALIZERS(
+				Solver::initialize, 
+				Solver::childWithInitializers), 
+		WITHOUT_INITIALIZERS(
+				Solver::process, 
+				Solver::childWithoutInitializers);
+		
+		private final Function<Solver,ThreadEvent> solutionStyle;
+		private final BiFunction<Solver,Sudoku,Solver> initializerInheritance;
+		
+		private TechniqueInheritance(Function<Solver,ThreadEvent> solutionStyle, BiFunction<Solver,Sudoku,Solver> initializerInheritance){
+			this.solutionStyle = solutionStyle;
+			this.initializerInheritance = initializerInheritance;
+		}
+	}
+	
+	private Solver childWithInitializers(Sudoku network){
+		return new Solver(network, event, group, lock, initializerSource, processorSource, source);
+	}
+	
+	private Solver childWithoutInitializers(Sudoku network){
+		return new Solver(network, event, group, lock, NO_INITIALIZER_SOURCE, processorSource, source);
 	}
 	
 	private ThreadEvent initialize(){
@@ -227,29 +233,11 @@ public class Solver{
 	private static ThreadEvent handleTechniques(List<Technique> techniques, ThreadEvent eventParent){
 		for(Technique technique : techniques){
 			TechniqueEvent techniqueEvent = technique.digest();
-			
 			if(techniqueEvent != null){
 				return new ThreadEvent(eventParent, techniqueEvent, Thread.currentThread().getName());
 			}
 		}
 		return null;
-	}
-	
-	private static enum TechniqueInheritance{
-		WITH_INITIALIZERS(
-				Solver::initialize, 
-				Solver::childWithInitializers), 
-		WITHOUT_INITIALIZERS(
-				Solver::process, 
-				Solver::childWithoutInitializers);
-		
-		private final Function<Solver,ThreadEvent> solutionStyle;
-		private final BiFunction<Solver,SudokuNetwork,Solver> initializerInheritance;
-		
-		private TechniqueInheritance(Function<Solver,ThreadEvent> solutionStyle, BiFunction<Solver,SudokuNetwork,Solver> initializerInheritance){
-			this.solutionStyle = solutionStyle;
-			this.initializerInheritance = initializerInheritance;
-		}
 	}
 	
 	/**
