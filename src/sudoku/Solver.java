@@ -13,6 +13,7 @@ import sudoku.technique.ColorChain;
 import sudoku.technique.Initializer;
 import sudoku.technique.Sledgehammer;
 import sudoku.technique.Technique;
+import sudoku.technique.XYChain;
 import sudoku.time.TechniqueEvent;
 import sudoku.time.ThreadEvent;
 import sudoku.parse.Parser;
@@ -35,6 +36,7 @@ public class Solver{
 	
 	public static final List<Function<Sudoku,Technique>> DEFAULT_PROCESSOR_SOURCE = Arrays.asList(
 			ColorChain::new, 
+			XYChain::new, 
 			Sledgehammer::new);
 	
 	public static final List<Function<Sudoku,Technique>> NO_INITIALIZER_SOURCE = new ArrayList<>(0);
