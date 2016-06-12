@@ -650,8 +650,8 @@ public class Sledgehammer extends AbstractTechnique {
 		}
 		
 		@Override
-		public String toString(){
-			return "Sledgehammer scenario: "+src+" ARE "+recip + super.toString();
+		protected String toStringStart(){
+			return "Sledgehammer scenario: "+src+" ARE "+recip;
 		}
 	}
 }

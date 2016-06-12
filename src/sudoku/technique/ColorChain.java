@@ -248,8 +248,8 @@ public class ColorChain extends AbstractTechnique {
 		}
 		
 		@Override
-		public String toString(){
-			return "Visibile-color contradiction" + super.toString();
+		protected String toStringStart(){
+			return "Visibile-color contradiction";
 		}
 	}
 	
@@ -285,8 +285,8 @@ public class ColorChain extends AbstractTechnique {
 		}
 		
 		@Override
-		public String toString(){
-			return "Chain-unification" + super.toString();
+		protected String toStringStart(){
+			return "Chain-unification";
 		}
 	}
 
@@ -544,8 +544,8 @@ public class ColorChain extends AbstractTechnique {
 		}
 		
 		@Override
-		public String toString(){
-			return "Bridge-collapse" + super.toString();
+		protected String toStringStart(){
+			return "Bridge-collapse";
 		}
 	}
 	

@@ -25,7 +25,7 @@ import sudoku.technique.Sledgehammer;
  * @author fiveham
  *
  */
-public class FalsifiedTime extends AbstractTime {
+public abstract class FalsifiedTime extends AbstractTime {
 	
 	private final Set<Claim> falsified;
 	
@@ -80,7 +80,7 @@ public class FalsifiedTime extends AbstractTime {
 	
 	@Override
 	public String toString(){
-		StringBuilder result = new StringBuilder();
+		StringBuilder result = new StringBuilder(toStringStart());
 		result.append(" falsifying ").append(falsified().size())
 				.append(" Claims directly, and ").append(deepFalse())
 				.append(" Claims indirectly.").append(System.lineSeparator())
@@ -95,6 +95,14 @@ public class FalsifiedTime extends AbstractTime {
 		
 		return result.toString();
 	}
+	
+	/**
+	 * <p>A short description of this type of Time. The output of 
+	 * {@code toString()} begins with this. A trailing space should 
+	 * not be included.</p>
+	 * @return
+	 */
+	protected abstract String toStringStart();
 	
 	private int deepFalse(){
 		int count = 0;

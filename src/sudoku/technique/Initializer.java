@@ -78,8 +78,8 @@ public class Initializer extends AbstractTechnique {
 		}
 		
 		@Override
-		public String toString(){
-			return "Initialization from "+src + super.toString();
+		protected String toStringStart(){
+			return "Initialization from "+src;
 		}
 	}
 }

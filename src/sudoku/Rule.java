@@ -97,7 +97,7 @@ public class Rule extends Fact{
 	 * @author fiveham
 	 *
 	 */
-	public static class AutoResolve extends FalsifiedTime{
+	public static abstract class AutoResolve extends FalsifiedTime{
 		private AutoResolve(Time parent, Set<Claim> falseClaims){
 			super(parent, falseClaims);
 		}
@@ -121,8 +121,8 @@ public class Rule extends Fact{
 		}
 		
 		@Override
-		public String toString(){
-			return "Total localization from "+src+src.contentString() + super.toString();
+		protected String toStringStart(){
+			return "Total localization from "+src+src.contentString();
 		}
 	}
 	
@@ -170,8 +170,8 @@ public class Rule extends Fact{
 		}
 		
 		@Override
-		public String toString(){
-			return "Value-claim "+sup+" subsumes "+sub + super.toString();
+		protected String toStringStart(){
+			return "Value-claim "+sup+" subsumes "+sub;
 		}
 	}
 	

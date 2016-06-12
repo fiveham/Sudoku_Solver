@@ -353,6 +353,10 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 		private DummyTime(){
 			super(Collections.emptySet());
 		}
+		@Override
+		protected String toStringStart(){
+			return "DummyTime";
+		}
 		public Set<Claim> falsified(){
 			return new HashSet<Claim>(DUMMY_COLLECTION_SIZE);
 		}
