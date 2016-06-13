@@ -26,7 +26,7 @@ format and
 [plaintext](https://github.com/fiveham/Sudoku_Solver/blob/master/src/sudoku/parse/TxtParser.java) 
 are supported. 
 Sadman Sudoku format files' names must end with `.sdk`. Plaintext 
-files's names must end with `.txt' and those files must contain 
+files's names must end with `.txt` and those files must contain 
 the 16, 81, 256, etc. `int` tokens that describe the initial state 
 of the unsolved puzzle as the first 16, 81, 256, etc. tokens in the 
 file, followed by the end of the file or by any non-`int` token. 

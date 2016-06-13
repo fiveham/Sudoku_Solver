@@ -89,7 +89,6 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	 * @return a List of the elements of {@code c} wrapped via {@code wrapper} 
 	 * and connected according to {@code edgeDetector}
 	 */
-	//TODO move wrap() to WrapVertex
 	public static <T extends WrapVertex<W,T>, W> List<T> wrap(Collection<? extends W> c, BiPredicate<? super W, ? super W> edgeDetector, Function<? super W,T> wrapper){
 		List<T> result = c.stream().map(wrapper).collect(Collectors.toList());
 		connect(result, edgeDetector);
