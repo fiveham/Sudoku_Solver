@@ -319,17 +319,15 @@ public class Sledgehammer extends AbstractTechnique {
 		if(initialSources.isEmpty()){
 			return sourceMask;
 		} else{
-			Set<Fact> visibles = new HashSet<>();
-			for(Fact src : initialSources){
-				visibles.addAll(visibleCache.get(src, size));
-			}
+			Set<Fact> visibles = initialSources.stream()
+					.map((src) -> visibleCache.get(src,size))
+					.collect(massUnionCollector());
 			visibles.removeAll(initialSources);
 			visibles.retainAll(sourceMask);
 			
-			Set<Fact> visVisibles = new HashSet<>();
-			for(Fact visible : visibles){
-				visVisibles.addAll(visibleCache.get(visible, size));
-			}
+			Set<Fact> visVisibles = visibles.stream()
+					.map((visible) -> visibleCache.get(visible, size))
+					.collect(massUnionCollector());
 			visVisibles.removeAll(initialSources);
 			visVisibles.removeAll(visibles);
 			visVisibles.retainAll(sourceMask);
