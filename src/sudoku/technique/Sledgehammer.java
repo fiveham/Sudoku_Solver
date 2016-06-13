@@ -268,7 +268,7 @@ public class Sledgehammer extends AbstractTechnique {
 			Debug.log("At srcCombo size "+size); //DEBUG
 			
 			builtSrcComboAtLastSize = false;
-			TechniqueEvent event = exploreSourceCombos(new ArrayList<>(0), size, distinctSourcesAtSize(size));
+			TechniqueEvent event = exploreSourceCombos(new ArrayList<>(0), new HashSet<>(0), new HashSet<>(0), size, distinctSourcesAtSize(size));
 			if(event != null){
 				return event;
 			}
@@ -279,7 +279,7 @@ public class Sledgehammer extends AbstractTechnique {
 	
 	/**
 	 * <p></p>
-	 * @param initialSources the established sources in the source-combinations being built
+	 * @param oldSrcCombo the established sources in the source-combinations being built
 	 * @param size the number of sources in the source-combinations being built
 	 * @param sourceMask a collection of Rules that are capable of serving (and allowed to serve) 
 	 * as sources in a sledgehammer at this {@code size} and having the construction history of 
@@ -290,49 +290,59 @@ public class Sledgehammer extends AbstractTechnique {
 	 * {@code initialSources} as-is or as a starting population, or {@code null} if no resolvable 
 	 * sledgehammer is found
 	 */
-	private TechniqueEvent exploreSourceCombos(List<Fact> initialSources, int size, Set<Fact> sourceMask){
-		if(initialSources.size() < size){
-			Set<Fact> localSourceMask = new HashSet<>(sourceMask);
-			for(Fact newSource : sourcePool(initialSources, sourceMask, size)){
-				localSourceMask.remove(newSource);
+	private TechniqueEvent exploreSourceCombos(List<Fact> oldSrcCombo, Set<Fact> oldVisCloud, Set<Fact> oldVisVisCloud, int size, Set<Fact> sourceMask){
+		if(oldSrcCombo.size() < size){
+			Set<Fact> localSourceMask = new HashSet<>(sourceMask); //TODO use internally masked views to avoid copying sets
+			for(Fact newSource : sourcePool(oldVisVisCloud, sourceMask, size, oldSrcCombo.isEmpty())){
+				localSourceMask.remove(newSource); //mask for next iteration level
+
+				Set<Fact> newVisVisCloud = null;
+				Set<Fact> newVisCloud = null;
+				List<Fact> newSrcCombo = new ArrayList<>(oldSrcCombo.size()+1);
+				newSrcCombo.addAll(oldSrcCombo);
+				newSrcCombo.add(newSource);
 				
-				List<Fact> newSources = new ArrayList<>(initialSources.size()+1);
-				newSources.addAll(initialSources);
-				newSources.add(newSource);
+				//if newSrcCombo.size() == size, newVisCloud and newVisVisCloud won't get used
+				if(newSrcCombo.size() < size){
+					Set<Fact> visibleToNewSource = visibleCache.get(newSource, size); 
+					
+					newVisCloud = new HashSet<>(oldVisCloud);
+					newVisCloud.addAll(visibleToNewSource);
+					
+					Set<Fact> visVisibleToNewSource = visibleToNewSource.stream()
+							.map((v) -> visibleCache.get(v, size))
+							.collect(massUnionCollector());
+					visVisibleToNewSource.removeAll(newSrcCombo);
+					visVisibleToNewSource.removeAll(newVisCloud);
+					
+					newVisVisCloud = new HashSet<>(oldVisVisCloud);
+					newVisVisCloud.remove(newSource);
+					newVisVisCloud.removeAll(visibleToNewSource);
+					newVisVisCloud.addAll(visVisibleToNewSource);
+				}
 				
-				TechniqueEvent event = exploreSourceCombos(newSources, size, localSourceMask);
+				TechniqueEvent event = exploreSourceCombos(newSrcCombo, newVisCloud, newVisVisCloud, size, localSourceMask);
 				if(event != null){
 					return event;
 				}
 			}
 			return null;
-		} else if(initialSources.size() == size){
+		} else if(oldSrcCombo.size() == size){
 			builtSrcComboAtLastSize = true;
-			return exploreRecipientCombos(initialSources);
+			return exploreRecipientCombos(oldSrcCombo);
 		} else{
-			throw new IllegalStateException("Current source-combination size greater than prescribed sledgehammer size: "+initialSources.size() + " > " + size);
+			throw new IllegalStateException("Current source-combination size greater than prescribed sledgehammer size: "+oldSrcCombo.size() + " > " + size);
 		}
 	}
 	
 	//TODO reuse ingredients (visible cloud, visVisible cloud) externally in the calling context
-	private Set<Fact> sourcePool(List<Fact> initialSources, Set<Fact> sourceMask, int size){
-		if(initialSources.isEmpty()){
+	private Set<Fact> sourcePool(Set<Fact> initVisVisibles, Set<Fact> sourceMask, int size, boolean isEmpty){
+		if(isEmpty){
 			return sourceMask;
 		} else{
-			Set<Fact> visibles = initialSources.stream()
-					.map((src) -> visibleCache.get(src,size))
-					.collect(massUnionCollector());
-			visibles.removeAll(initialSources);
-			visibles.retainAll(sourceMask);
-			
-			Set<Fact> visVisibles = visibles.stream()
-					.map((visible) -> visibleCache.get(visible, size))
-					.collect(massUnionCollector());
-			visVisibles.removeAll(initialSources);
-			visVisibles.removeAll(visibles);
-			visVisibles.retainAll(sourceMask);
-			
-			return new HashSet<>(visVisibles);
+			Set<Fact> result = new HashSet<>(initVisVisibles);
+			result.retainAll(sourceMask);
+			return result;
 		}
 	}
 	
