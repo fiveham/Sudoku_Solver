@@ -2,7 +2,7 @@ package sudoku;
 
 import java.util.Collection;
 
-public class Fact extends NodeSet<Claim,Fact>{
+public abstract class Fact extends NodeSet<Claim,Fact>{
 	
 	/**
 	 * 

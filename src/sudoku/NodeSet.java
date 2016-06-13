@@ -31,7 +31,7 @@ import sudoku.time.TechniqueEvent;
  * @param <S> The type of the Set elements of this Set. This should also be a proxy 
  * for this type itself.
  */
-public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends ToolSet<T> implements Vertex<NodeSet<?,?>>{
+public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends ToolSet<T> implements Vertex<NodeSet<?,?>>{
 	/*
 	 * TODO get a real solution for the lack of a context Time in regular Collection methods
 	 * 
@@ -266,9 +266,7 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	 * class the need to validate the set's final state afterward can call 
 	 * this method while subclasses provide meaningful implementations.</p>
 	 */
-	public void validateState(FalsifiedTime time){
-		//do nothing
-	}
+	public abstract void validateState(FalsifiedTime time);
 	
 	public final int superHashCode(){
 		return super.hashCode();
@@ -299,11 +297,14 @@ public class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends Too
 	/**
 	 * <p>Returns a collection of the nodes visible to this node at a 
 	 * position {@code n} edges away.</p>
-	 * @param n
-	 * @return
+	 * @param n the number of edges to cross to go from this node to 
+	 * the nodes in the returned set
+	 * @return a collection of the nodes visible to this node at a 
+	 * position {@code n} edges away
+	 * @throws IllegalArgumentException if {@code n} is negative
 	 */
-	public Collection<NodeSet<?,?>> visible(int n){ //TODO redesign this to use ConnectedComponent and a contractEventListener
-		
+	//TODO redesign this to use ConnectedComponent and a contractEventListener
+	public Collection<NodeSet<?,?>> visible(int n){
 		switch(n){
 		case 0: 
 			Collection<NodeSet<?,?>> result = new HashSet<>(1);
