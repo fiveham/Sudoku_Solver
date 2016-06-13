@@ -9,5 +9,5 @@ import java.util.Collection;
  */
 public interface Vertex<N> {
 	
-	public Collection<? extends N> neighbors();
+	public Collection<N> neighbors();
 }

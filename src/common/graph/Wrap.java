@@ -76,23 +76,33 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 		return wrap(c, edgeDetector, Wrap<W>::new);
 	}
 	
-	//TODO redesign wrap() so that the returned List can have an arbitrary parameterized type.
+	public static final int VERTICES_PER_EDGE = 2;
+	
+	/**
+	 * 
+	 * @param c a collection of objects to be wrapped and connected
+	 * @param edgeDetector a BiPredicate that tests any and every pair 
+	 * of elements of {@code c} (after they've been wrapped by {@code wrapper}) 
+	 * to see whether they're adjacent, and if so, they are connected
+	 * @param wrapper a Function that accepts an element of {@code c} 
+	 * and wraps it with some type of WrapVertex before outputting it
+	 * @return a List of the elements of {@code c} wrapped via {@code wrapper} 
+	 * and connected according to {@code edgeDetector}
+	 */
 	//TODO move wrap() to WrapVertex
-	public static <T extends Wrap<W>, W> List<T> wrap(Collection<? extends W> c, BiPredicate<? super W, ? super W> edgeDetector, Function<? super W,T> mapper){
-		List<T> result = c.stream().map(mapper).collect(Collectors.toList());
+	public static <T extends WrapVertex<W,T>, W> List<T> wrap(Collection<? extends W> c, BiPredicate<? super W, ? super W> edgeDetector, Function<? super W,T> wrapper){
+		List<T> result = c.stream().map(wrapper).collect(Collectors.toList());
 		connect(result, edgeDetector);
 		return result;
 	}
 	
-	public static final int VERTICES_PER_EDGE = 2;
-	
-	public static <T extends Wrap<W>,W> void connect(Collection<T> result, BiPredicate<? super W, ? super W> edgeDetector){
+	public static <T extends WrapVertex<W,T>, W> void connect(Collection<T> result, BiPredicate<? super W, ? super W> edgeDetector){
 		for(List<T> pair : new ComboGen<>(result, VERTICES_PER_EDGE, VERTICES_PER_EDGE)){
-			Wrap<W> wn1 = pair.get(0);
-			Wrap<W> wn2 = pair.get(1);
-			if(edgeDetector.test(wn1.wrapped, wn2.wrapped)){
-				wn1.neighbors.add(wn2);
-				wn2.neighbors.add(wn1);
+			T wn1 = pair.get(0);
+			T wn2 = pair.get(1);
+			if(edgeDetector.test(wn1.wrapped(), wn2.wrapped())){
+				wn1.neighbors().add(wn2);
+				wn2.neighbors().add(wn1);
 			}
 		}
 	}

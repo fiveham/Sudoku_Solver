@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import sudoku.time.FalsifiedTime;
 import sudoku.time.TechniqueEvent;
 
@@ -277,8 +278,8 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 	}
 	
 	@Override
-	public Collection<T> neighbors(){
-		return this;
+	public final Collection<NodeSet<?,?>> neighbors(){
+		return this.stream().map(NodeSet.class::cast).collect(Collectors.toList());
 	}
 	
 	/**
