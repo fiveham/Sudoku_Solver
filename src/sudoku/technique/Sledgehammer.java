@@ -309,16 +309,12 @@ public class Sledgehammer extends AbstractTechnique {
 					newVisCloud = new HashSet<>(oldVisCloud);
 					newVisCloud.addAll(visibleToNewSource);
 					
-					Set<Fact> visVisibleToNewSource = visibleToNewSource.stream()
-							.map((v) -> visibleCache.get(v, size))
-							.collect(massUnionCollector());
-					visVisibleToNewSource.removeAll(newSrcCombo);
-					visVisibleToNewSource.removeAll(newVisCloud);
-					
 					newVisVisCloud = new HashSet<>(oldVisVisCloud);
-					newVisVisCloud.remove(newSource);
-					newVisVisCloud.removeAll(visibleToNewSource);
-					newVisVisCloud.addAll(visVisibleToNewSource);
+					newVisVisCloud.addAll(visibleToNewSource.stream()
+							.map((v) -> visibleCache.get(v, size))
+							.collect(massUnionCollector()));
+					newVisVisCloud.removeAll(newSrcCombo);
+					newVisVisCloud.removeAll(newVisCloud);
 				}
 				
 				TechniqueEvent event = exploreSourceCombos(newSrcCombo, newVisCloud, newVisVisCloud, size, localSourceMask);
@@ -335,7 +331,6 @@ public class Sledgehammer extends AbstractTechnique {
 		}
 	}
 	
-	//TODO reuse ingredients (visible cloud, visVisible cloud) externally in the calling context
 	private Set<Fact> sourcePool(Set<Fact> initVisVisibles, Set<Fact> sourceMask, int size, boolean isEmpty){
 		if(isEmpty){
 			return sourceMask;
