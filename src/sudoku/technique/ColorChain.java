@@ -15,8 +15,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -47,6 +47,11 @@ public class ColorChain extends AbstractTechnique {
 		super(puzzle);
 	}
 	
+	private static final List<BiFunction<ColorChain,Collection<Graph<ColorClaim>>,TechniqueEvent>> SUBTECHNIQUES = Arrays.asList(
+			ColorChain::visibleColorContradiction, 
+			ColorChain::bridgeCollapse, 
+			ColorChain::bridgeJoin);
+	
 	/**
 	 * <p>Imitates the slide structure of {@link Solver#solve() Solver.solve()}, 
 	 * with subtechniques for {@link #visibleColorContradiction(Collection) color-contradiction} 
@@ -57,14 +62,9 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	@Override
 	protected TechniqueEvent process(){
-		List<Function<Collection<Graph<ColorClaim>>,TechniqueEvent>> actions = Arrays.asList(
-				this::visibleColorContradiction, 
-				this::bridgeCollapse, 
-				this::bridgeJoin);
-		
 		Collection<Graph<ColorClaim>> chains = generateChains();
-		for(Function<Collection<Graph<ColorClaim>>,TechniqueEvent> test : actions){
-			TechniqueEvent result = test.apply(chains);
+		for(BiFunction<ColorChain, Collection<Graph<ColorClaim>>,TechniqueEvent> test : SUBTECHNIQUES){
+			TechniqueEvent result = test.apply(this,chains);
 			if(result != null){
 				return result;
 			}
