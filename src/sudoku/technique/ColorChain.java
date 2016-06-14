@@ -3,6 +3,7 @@ package sudoku.technique;
 import common.ComboGen;
 import common.Pair;
 import common.graph.Graph;
+import common.graph.Wrap;
 import common.graph.BasicGraph;
 import common.graph.WrapVertex;
 import java.util.ArrayList;
@@ -88,7 +89,7 @@ public class ColorChain extends AbstractTechnique {
 				.map(Fact.class::cast)
 				.filter(Fact::isXor)
 				.collect(Collectors.toList());
-		return new BasicGraph<ColorClaim>(link(xorRules))
+		return new BasicGraph<ColorClaim>(Wrap.wrap(xorRules,ColorClaim::new))
 				.addContractEventListenerFactory(colorSource)
 				.connectedComponents();
 	}
@@ -155,33 +156,6 @@ public class ColorChain extends AbstractTechnique {
 			nextColor();
 			return this;
 		}
-	}
-	/**
-	 * <p>Wraps the Claims of the {@code xorRules} in {@code ColorClaim}s and 
-	 * adds bidirectional edges linking those ColorClaims that wrap Claims that 
-	 * are both connected to a common element of {@code xorRules}.</p>
-	 * @param claims a set of Claims to be wrapped by ColorClaims and linked 
-	 * by edges
-	 * @return a list of connected ColorClaim each of which wraps a Claim 
-	 * from {@code claims} and tags that Claim with a color
-	 */
-	private static List<ColorClaim> link(Collection<Fact> xorRules){
-		Map<Claim,ColorClaim> map = new HashMap<>();
-		List<ColorClaim> colorClaims = Sledgehammer.massUnion(xorRules).stream()
-				.map(ColorClaim::new)
-				.peek((colorClaim) -> map.put(colorClaim.wrapped(), colorClaim))
-				.collect(Collectors.toList());
-		
-		xorRules.stream()
-				.map(ArrayList<Claim>::new)
-				.forEach((edge) -> {
-					ColorClaim cc0 = map.get(edge.get(0));
-					ColorClaim cc1 = map.get(edge.get(1));
-					cc0.neighbors().add(cc1);
-					cc1.neighbors().add(cc0);
-				});
-		
-		return colorClaims;
 	}
 	
 	/**
