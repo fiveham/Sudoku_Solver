@@ -385,4 +385,16 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 				.map(Object::hashCode)
 				.reduce(0, Integer::sum);
 	}
+	
+	@Override
+	public String toString(){
+		StringBuilder out = new StringBuilder();
+		out.append(getClass()).append(" size ").append(size()).append(System.lineSeparator()).append(nodes).append(System.lineSeparator());
+		
+		for(T node : nodes){
+			out.append(node).append(": ").append(System.lineSeparator()).append(node.neighbors()).append(System.lineSeparator());
+		}
+		
+		return out.toString();
+	}
 }
