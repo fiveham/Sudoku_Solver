@@ -157,4 +157,23 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 			Function<? super W, T> wrapper){
 		return wrap(edges.stream().map(nodeSource).collect(Collectors.toList()), wrapper);
 	}
+	
+	@Override
+	public String toString(){
+		return "Wrap of " + wrapped;
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof Wrap){
+			Wrap<?> w = (Wrap<?>) o;
+			return wrapped.equals(w.wrapped);
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode(){
+		return wrapped.hashCode();
+	}
 }
