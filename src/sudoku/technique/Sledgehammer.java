@@ -261,7 +261,7 @@ public class Sledgehammer extends AbstractTechnique {
 			populateDistinctRules(this);
 		}
 		
-		Debug.log(target.nodeStream().findFirst().get().getPuzzle()); //DEBUG
+		Debug.log(target.nodeStream().findFirst().get().getPuzzle().possibilitiesToString()); //DEBUG
 		
 		for(int size = MIN_SLEDGEHAMMER_SIZE; size <= target.size()/2 && builtSrcComboAtLastSize; ++size){
 			
