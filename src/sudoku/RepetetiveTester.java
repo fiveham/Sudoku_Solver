@@ -2,6 +2,9 @@ package sudoku;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * <p>Runs {@code Solver} for each of a collection of sudoku 
@@ -12,13 +15,13 @@ import java.io.FileNotFoundException;
 public class RepetetiveTester {
 	
 	public static final String SADMAN_DIRECTORY = "./puzzles/sadman/";
+	public static final String EULER_DIRECTORY = "./puzzles/project_euler/";
 	
 	public static void main(String[] args) {
-		File sadmanDir = new File(SADMAN_DIRECTORY);
+		List<File> puzzles = Stream.of(new File(SADMAN_DIRECTORY).list()).map((s) -> new File(SADMAN_DIRECTORY + s)).collect(Collectors.toList());
+		Stream.of(new File(EULER_DIRECTORY).list()).map((s) -> new File(SADMAN_DIRECTORY + s)).forEach(puzzles::add);;
 		
-		for(String sadman : sadmanDir.list()){
-			File f = new File(SADMAN_DIRECTORY + sadman);
-			
+		for(File f : puzzles){
 			try{
 				Solver solver = new Solver(f);
 				System.out.println(f.getName());
