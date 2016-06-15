@@ -309,12 +309,13 @@ public class Sledgehammer extends AbstractTechnique {
 					newVisCloud = new HashSet<>(oldVisCloud);
 					newVisCloud.addAll(visibleToNewSource);
 					
-					newVisVisCloud = new HashSet<>(oldVisVisCloud);
-					newVisVisCloud.addAll(visibleToNewSource.stream()
+					Set<Fact> visVis = new HashSet<>(oldVisVisCloud);
+					visibleToNewSource.stream()
 							.map((v) -> visibleCache.get(v, size))
-							.collect(massUnionCollector()));
-					newVisVisCloud.removeAll(newSrcCombo);
-					newVisVisCloud.removeAll(newVisCloud);
+							.forEach(visVis::addAll);
+					visVis.removeAll(newSrcCombo);
+					visVis.removeAll(newVisCloud);
+					newVisVisCloud = visVis;
 				}
 				
 				TechniqueEvent event = exploreSourceCombos(newSrcCombo, newVisCloud, newVisVisCloud, size, localSourceMask);
