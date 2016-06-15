@@ -33,12 +33,6 @@ import sudoku.time.TechniqueEvent;
  * for this type itself.
  */
 public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends ToolSet<T> implements Vertex<NodeSet<?,?>>{
-	/*
-	 * TODO get a real solution for the lack of a context Time in regular Collection methods
-	 * 
-	 * Idea: Include a (real) Time stack in each NodeSet, and require external use of the time 
-	 * stack by the calling context before and after calls to the standard Collection methods
-	 */
 	
 	/**
 	 * 
