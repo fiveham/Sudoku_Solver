@@ -1,5 +1,6 @@
 package sudoku.technique;
 
+import common.Pair;
 import common.graph.BasicGraph;
 import common.graph.Graph;
 import common.graph.Wrap;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import sudoku.Claim;
 import sudoku.Fact;
@@ -54,42 +56,46 @@ public class XYChain extends AbstractTechnique {
 	protected TechniqueEvent process() {
 		
 		/*
-		 * "False push" refers to a Claim, if true, forcing its neighbors to be false 
+		 * "False push" refers to a Claim, if true, forcing its visibles to be false 
 		 * (pushing falseness to them). All Claims that can see each other have this 
 		 * relationship.
-		 * "True push" refers to a Claim, if false, forcing its neighbors to be true 
+		 * "True push" refers to a Claim, if false, forcing its visibles to be true 
 		 * (pushing trueness to them). Claims have this relationship with Claims that 
 		 * they can see through a xor Fact.
 		 */
 		
-		List<Fact> xorFacts = target.factStream().filter(Fact::isXor).collect(Collectors.toList());
-		Set<Claim> xorClaims = xorFacts.stream().collect(Sledgehammer.massUnionCollector());
+		Set<Claim> xorClaims = target.factStream()
+				.filter(Fact::isXor)
+				.collect(Sledgehammer.massUnionCollector());
 		
 		Graph<ColorClaim> allFalsePushes = new BasicGraph<>(Wrap.wrap(xorClaims, (c1,c2) -> !Collections.disjoint(c1, c2), ColorClaim::new));
 		
 		for(Graph<ColorClaim> falsePush : allFalsePushes.connectedComponents()){
 			
-			Collection<Fact> xorFactsForChain;
-			{
-				Collection<Claim> chainClaims = falsePush.nodeStream().map(WrapVertex::wrapped).collect(Collectors.toList());
-				xorFactsForChain = xorFacts.stream()
-						.filter((x) -> !Collections.disjoint(x, chainClaims))
-						.collect(Collectors.toList());
-			}
-
+			Collection<Fact> xorFactsForChain = falsePush.nodeStream()
+					.map(WrapVertex::wrapped)
+					.collect(Sledgehammer.massUnionCollector()).stream()
+					.filter(Fact::isXor)
+					.collect(Collectors.toList());
+			
 			Map<Claim,ColorClaim> falseMap = Wrap.rawToWrap(falsePush);
+			Map<Claim,ColorClaim> trueMap = Wrap.rawToWrap(truePush(falseMap, xorFactsForChain));
 			
-			Graph<ColorClaim> truePush = truePush(falseMap, xorFactsForChain);
-			
-			Map<Claim,ColorClaim> trueMap = Wrap.rawToWrap(truePush);
+			List<Pair<Predicate<ColorClaim>,Graph<ColorClaim>>> mixPushes = ColorClaim.SIGNS.stream()
+					.map((sign) -> new Pair<>(sign,pushGraph(falsePush, sign, falseMap, trueMap)))
+					.collect(Collectors.toList());
 			
 			for(Fact xor : xorFactsForChain){
 				
-				Set<Claim> falseA = consequences(falsePush, State.POS_FALSE, xor, falseMap, trueMap);
-				Set<Claim> falseB = consequences(falsePush, State.NEG_FALSE, xor, falseMap, trueMap);
-				
-				Set<Claim> and = falseA;
-				and.retainAll(falseB);
+				Set<Claim> and = mixPushes.stream()
+						.map((pair) -> consequences(falsePush, pair.getA(), xor, falseMap, trueMap, pushGraph(falsePush, pair.getA(), falseMap, trueMap)))
+						.collect(Collector.of(
+								HashSet::new, 
+								Set::addAll, 
+								(HashSet<Claim> left, HashSet<Claim> right) -> {
+									left.retainAll(right);
+									return left;
+								}));
 				
 				if(!and.isEmpty()){
 					try{
@@ -118,17 +124,29 @@ public class XYChain extends AbstractTechnique {
 		return null;
 	}
 	
-	private static Set<Claim> consequences(Graph<ColorClaim> falsePush, State state, Fact xor, Map<Claim,ColorClaim> falseMap, Map<Claim,ColorClaim> trueMap){
+	private static Set<Claim> consequences(
+			Graph<ColorClaim> falsePush, 
+			Predicate<ColorClaim> state, 
+			Fact xor, 
+			Map<Claim,ColorClaim> falseMap, 
+			Map<Claim,ColorClaim> trueMap, 
+			Graph<ColorClaim> mixPush){
 		Set<Claim> falsified = new HashSet<>();
 		
-		Graph<ColorClaim> mixPush = pushGraph(falsePush, state, falseMap, trueMap);
+		Claim xorElement = xor.iterator().next();
+		ColorClaim seed = mixPush.nodeStream().filter((cc) -> cc.wrapped().equals(xorElement)).findFirst().get();
 		
-		mixPush.nodeStream()
-		.filter(state.colorPushesFalse)
-		.forEach((c) -> falsified.addAll(c.wrapped().visible()));
+		Graph<ColorClaim> component = mixPush.component(
+				mixPush.nodeStream().collect(Collectors.toList()), 
+				(list) -> seed, 
+				Collections.emptyList());
+		
+		component.nodeStream()
+				.filter(state)
+				.forEach((c) -> falsified.addAll(c.wrapped().visible()));
 		
 		return falsified;
-	}
+	} //TODO for each falsePush/state pair, generate the mixPush graph, then do analysis for each concom of the mixPush graph
 	
 	/*
 	 * TODO cook up alternating-push graphs for each connected component of the falsePush graph.
@@ -139,7 +157,7 @@ public class XYChain extends AbstractTechnique {
 	 *         if there's a falsification overlap, make changes and return to context
 	 */
 	
-	private static Graph<ColorClaim> pushGraph(Graph<ColorClaim> falsePush, State state, Map<Claim,ColorClaim> falseMap, Map<Claim,ColorClaim> trueMap){
+	private static Graph<ColorClaim> pushGraph(Graph<ColorClaim> falsePush, Predicate<ColorClaim> state, Map<Claim,ColorClaim> falseMap, Map<Claim,ColorClaim> trueMap){
 		List<ColorClaim> pushGraphNodes = falsePush.nodeStream()
 				.map((cc) -> {
 					ColorClaim lambdaResult = new ColorClaim(cc.wrapped());
@@ -152,7 +170,7 @@ public class XYChain extends AbstractTechnique {
 		
 		//connect elements of pushGraphNodes to one another
 		for(ColorClaim cc : pushGraphNodes){
-			Map<Claim,ColorClaim> structureMap = state.colorPushesFalse.test(cc) ? falseMap : trueMap;
+			Map<Claim,ColorClaim> structureMap = state.test(cc) ? falseMap : trueMap;
 			List<ColorClaim> neighbors = structureMap.get(cc.wrapped()).neighbors().stream()
 					.map(ColorClaim::wrapped)
 					.map(pushGraphNodeMap::get)
@@ -163,41 +181,11 @@ public class XYChain extends AbstractTechnique {
 		return new BasicGraph<>(pushGraphNodes);
 	}
 	
-	private static enum State{
-		
-		/**
-		 * <p>Positive-color claims in a graph push false and negative-color claims 
-		 * push true.</p>
-		 */
-		POS_FALSE(ColorClaim::posColor), 
-		
-		/**
-		 * <p>Negative-color claims in a graph push false and positive-color claims 
-		 * push true.</p>
-		 */
-		NEG_FALSE(ColorClaim::negColor);
-		
-		private final Predicate<ColorClaim> colorPushesFalse;
-		
-		private State(Predicate<ColorClaim> colorFilter){
-			this.colorPushesFalse = colorFilter;
-		}
-		
-		public Claim seedPushesFalse(Fact xor, Map<Claim,ColorClaim> falseMap){
-			return xor.stream()
-					.map(falseMap::get)
-					.filter(colorPushesFalse)
-					.findFirst().get().wrapped();
-		}
-	}
-	
 	private static Graph<ColorClaim> truePush(Map<Claim,ColorClaim> falseMap, Collection<Fact> xorFactsForChain){
 		List<ColorClaim> truePushW = Wrap.wrap(xorFactsForChain, ColorClaim::new);
 		truePushW.stream().forEach((cc) -> cc.setColor(falseMap.get(cc.wrapped()).getColor()));
 		return new BasicGraph<>(truePushW);
 	}
-	
-	//TODO replace Map-Function lambdas that have a -> with :: lambdas: mapName::get
 	
 	public class SolveEventXYChain extends TechniqueEvent{
 		private SolveEventXYChain(Set<Claim> falsified){
