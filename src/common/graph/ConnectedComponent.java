@@ -32,11 +32,11 @@ class ConnectedComponent<T extends Vertex<T>> {
 		this.core = new HashSet<>(size);
 	}
 	
-	public boolean cuttingEdgeIsEmpty(){
+	boolean cuttingEdgeIsEmpty(){
 		return cuttingEdge.isEmpty();
 	}
 	
-	public void grow(){
+	void grow(){
 		for(T edgeNode : edge){
 			addAll(edgeNode.neighbors());
 		}
@@ -56,7 +56,7 @@ class ConnectedComponent<T extends Vertex<T>> {
 	}
 	
 	private void triggerContractEventListeners(){
-		contractEventListeners.parallelStream().forEach( (c)->c.accept(cuttingEdge) );
+		contractEventListeners.stream().forEach( (c)->c.accept(cuttingEdge) );
 	}
 	
 	void add(T vertex){
