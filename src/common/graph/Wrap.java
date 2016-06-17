@@ -226,6 +226,17 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 		return wrap(edges.stream().map(nodeSource).collect(Collectors.toList()), wrapper);
 	}
 	
+	/**
+	 * <p>Returns a Map from {@code graph}'s {@link WrapVertex#wrapped() raw nodes} to 
+	 * its wrapped nodes.</p>
+	 * @param graph a graph of wrapped nodes
+	 * @return a Map from {@code graph}'s {@link WrapVertex#wrapped() raw nodes} to 
+	 * its wrapped nodes
+	 */
+	public static <T extends WrapVertex<W,T>,W> Map<W,T> rawToWrap(Graph<T> graph){
+		return graph.nodeStream().collect(Collectors.toMap(WrapVertex::wrapped, Function.identity()));
+	}
+	
 	@Override
 	public String toString(){
 		return "Wrap of " + wrapped;
