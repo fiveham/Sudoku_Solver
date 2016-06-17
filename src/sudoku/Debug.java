@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Scanner;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -51,6 +52,54 @@ public class Debug {
 	 */
 	public static void log(Object s){
 		state.log(log,s);
+	}
+	
+	public static void log(boolean wrap, Object s){
+		state.log(log, wrap?wrap(s.toString()):s);
+	}
+	
+	private static final int WRAP_LEN = 2+"[Rule: The 1 in BOX 1, Rule: The 1 in BOX 2, Rule: The 1 in BOX 3, Rule: The 1 in BOX 8, Rule: The 1 in BOX 9, Rule: The 2 in BOX 6, Rule: The 2 in BOX 7, Rule: The 3 in BOX 2, Ru".length();
+	
+	private static String wrap(String s){
+		StringBuilder out = new StringBuilder();
+		Scanner scanner = new Scanner(s);
+		while(scanner.hasNextLine()){
+			List<String> newLines = wrapLine(scanner.nextLine());
+			for(String newLine : newLines){
+				out.append(newLine).append(System.lineSeparator());
+			}
+			
+		}
+		scanner.close();
+		return out.toString();
+	}
+	
+	private static List<String> wrapLine(String line){
+		List<String> result = new java.util.ArrayList<>();
+		
+		for(int breakIndex, pointer = 0; pointer < line.length(); pointer = breakIndex){
+			breakIndex = breakIndex(line);
+			result.add(line.substring(pointer, breakIndex));
+		}
+		
+		return result;
+	}
+	
+	private static int breakIndex(String line){
+		int i = WRAP_LEN;
+		for(; i>0; --i){
+			char c = line.charAt(i);
+			if(Character.isWhitespace(c)){
+				return i;
+			}
+		}
+		for(i=WRAP_LEN+1; i<line.length(); ++i){
+			char c = line.charAt(i);
+			if(Character.isWhitespace(c)){
+				return i;
+			}
+		}
+		return i;
 	}
 	
 	/**
