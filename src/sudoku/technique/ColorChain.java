@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -107,7 +108,7 @@ public class ColorChain extends AbstractTechnique {
 	 * @author fiveham
 	 *
 	 */
-	private static class ColorSource implements Consumer<Set<ColorClaim>>, Supplier<Consumer<Set<ColorClaim>>>{
+	static class ColorSource implements Consumer<Set<ColorClaim>>, Supplier<Consumer<Set<ColorClaim>>>{
 		
 		public static final int INIT_COLOR = 1;
 		
@@ -144,13 +145,13 @@ public class ColorChain extends AbstractTechnique {
 			++color;
 			positive = true;
 		}
-
+		
 		@Override
 		public void accept(Set<ColorClaim> cuttingEdge) {
 			cuttingEdge.stream().forEach((e)->e.setColor(getColor()));
 			invertColor();
 		}
-
+		
 		@Override
 		public Consumer<Set<ColorClaim>> get() {
 			nextColor();
@@ -189,12 +190,12 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	private TechniqueEvent visibleColorContradiction(Graph<ColorClaim> concom){
 		Set<Claim> visibleToPositives = concom.nodeStream()
-				.filter((cc) -> cc.color > 0)
+				.filter(ColorClaim::posColor)
 				.map(ColorClaim::wrapped)
 				.map(Claim::visible)
 				.collect(Sledgehammer.massUnionCollector());
 		Set<Claim> visibleToNegatives = concom.nodeStream()
-				.filter((cc) -> cc.color < 0)
+				.filter(ColorClaim::negColor)
 				.map(ColorClaim::wrapped)
 				.map(Claim::visible)
 				.collect(Sledgehammer.massUnionCollector());
@@ -430,7 +431,7 @@ public class ColorChain extends AbstractTechnique {
 		Set<Integer> colorsOnBridge = new HashSet<>();
 		for(Claim c : allBridgeClaims){
 			if(map.containsKey(c)){
-				colorsOnBridge.add(map.get(c).color());
+				colorsOnBridge.add(map.get(c).getColor());
 			}
 		}
 		
@@ -498,7 +499,7 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	private TechniqueEvent setChainFalseForColor(Graph<ColorClaim> chain, final int color){
 		Set<Claim> setFalse = chain.nodeStream()
-				.filter((cc)->cc.color()==color)
+				.filter((cc)->cc.getColor()==color)
 				.map(ColorClaim::wrapped)
 				.collect(Collectors.toSet());
 		TechniqueEvent time = new SolveEventBridgeCollapse(setFalse);
@@ -528,7 +529,12 @@ public class ColorChain extends AbstractTechnique {
 	 * @author fiveham
 	 *
 	 */
-	private static class ColorClaim implements WrapVertex<Claim,ColorClaim>{
+	static class ColorClaim implements WrapVertex<Claim,ColorClaim>{
+		
+		public static final List<Predicate<ColorClaim>> SIGNS = Arrays.asList(
+				ColorClaim::posColor, 
+				ColorClaim::negColor);
+		
 		private int color = 0;
 		private Claim claim;
 		private final List<ColorClaim> neighbors;
@@ -552,8 +558,16 @@ public class ColorChain extends AbstractTechnique {
 		 * <p>Returns the color of the wrapped Claim.</p>
 		 * @return the color of the wrapped Claim
 		 */
-		int color(){
+		int getColor(){
 			return color;
+		}
+		
+		public boolean posColor(){
+			return color > 0;
+		}
+		
+		public boolean negColor(){
+			return color < 0;
 		}
 		
 		/**
