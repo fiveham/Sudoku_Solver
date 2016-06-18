@@ -153,16 +153,6 @@ public class XYChain extends AbstractTechnique {
 		return falsified;
 	}
 	
-	/*
-	 * TO DO cook up alternating-push graphs for each connected component of the falsePush graph.
-	 * Then, 
-	 * for each concom of that alterna-push graph, 
-	 *     for each xor Fact that pertains to that alterna-push concom, 
-	 *         try both states
-	 *         if there's a falsification overlap, make changes and return to context
-	 * alterna-push (mix-push) graph, regardless which color pushes which state, always 1 connected component 
-	 */
-	
 	private static Graph<ColorClaim> pushGraph(
 			Graph<ColorClaim> falsePush, 
 			Predicate<ColorClaim> state, 
