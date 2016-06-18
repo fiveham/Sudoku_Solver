@@ -36,13 +36,13 @@ public class SadmanParser implements Parser{
 	private final int mag;
 	private final List<Integer> values;
 	
-	public SadmanParser(File f) throws FileNotFoundException{
-		Scanner s = new Scanner(f);
+	public SadmanParser(File f, String charset) throws FileNotFoundException{
+		Scanner s = new Scanner(f, charset);
 		while(s.hasNext() && !INITIAL_PUZZLE_MARKER.equals(s.nextLine()));
 		
 		if(!s.hasNext()){
 			s.close();
-			s = new Scanner(f);
+			s = new Scanner(f, charset);
 		}
 		
 		StringBuilder initCells;

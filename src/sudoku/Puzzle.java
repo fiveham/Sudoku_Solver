@@ -80,8 +80,8 @@ public class Puzzle extends SudokuNetwork{
 	 * 
 	 * @throws FileNotFoundException if {@code f} cannot be found or read
 	 */
-	public Puzzle(File f) throws FileNotFoundException{
-		this(chooseParser(f));
+	public Puzzle(File f, String charset) throws FileNotFoundException{
+		this(chooseParser(f,charset));
 	}
 	
 	public Puzzle(Parser parser){
@@ -101,13 +101,13 @@ public class Puzzle extends SudokuNetwork{
 		}
 	}
 	
-	private static Parser chooseParser(File f) throws FileNotFoundException{
+	private static Parser chooseParser(File f, String charset) throws FileNotFoundException{
 		String extension = f.getName();
 		extension = extension.substring(extension.lastIndexOf("."));
 		
 		switch(extension){
-		case ".txt": return new TxtParser(f);
-		case ".sdk": return new SadmanParser(f);
+		case ".txt": return new TxtParser(f, charset);
+		case ".sdk": return new SadmanParser(f, charset);
 		default: throw new IllegalArgumentException("Illegal file extension "+extension+" only .txt and .sdk allowed.");
 		}
 	}

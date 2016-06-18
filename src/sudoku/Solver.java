@@ -59,22 +59,37 @@ public class Solver{
 	
 	/**
 	 * <p>Constructs a Solver that works to solve the target 
-	 * specified by the text at the beginning of {@code f}.</p>
+	 * specified by the text in {@code f}. The file is read 
+	 * using the system's default encoding.</p>
+	 * @param f the file containing a puzzle to be solved
+	 * @throws FileNotFoundException if {@code f} could not 
+	 * be found or read
+	 */
+	public Solver(File f) throws FileNotFoundException{
+		this(f, System.getProperty("file.encoding"));
+	}
+	
+	/**
+	 * <p>Constructs a Solver that works to solve the puzzle 
+	 * specified by the text in {@code f}. The file is read 
+	 * using the specified charset encoding.</p>
 	 * @param f the file containing a target to be solved
+	 * @param charset the charset encoding to be used in reading 
+	 * {@code f}
 	 * @throws FileNotFoundException if {@code f} could not 
 	 * be found
 	 */
-	public Solver(File f) throws FileNotFoundException{
-		this(new Puzzle(f), f.getName());
+	public Solver(File f, String charset) throws FileNotFoundException{
+		this(new Puzzle(f, charset), f.getName());
 	}
 	
 	/**
 	 * <p>Constructs a Solver that works to solve the specified 
-	 * {@code target}.</p>
+	 * {@code puzzle}.</p>
 	 * @param target the Puzzle to be solved
 	 */
-	public Solver(Sudoku puzzle, String source){
-		this(puzzle, null, new SudokuThreadGroup(source), new Object(), DEFAULT_INITIALIZER_SOURCE, DEFAULT_PROCESSOR_SOURCE, source);
+	public Solver(Sudoku puzzle, String filename){
+		this(puzzle, null, new SudokuThreadGroup(filename), new Object(), DEFAULT_INITIALIZER_SOURCE, DEFAULT_PROCESSOR_SOURCE, filename);
 	}
 	
 	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, List<Function<Sudoku,Technique>> initializers, List<Function<Sudoku,Technique>> processors, String source){
@@ -252,13 +267,35 @@ public class Solver{
 	 */
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException{
 		Debug.log("STARTING"); //DEBUG
-		Solver s = new Solver(new File(args[SRC_FILE_ARG_INDEX]));
+		Solver s = solver(args);//new Solver(new File(args[SRC_FILE_ARG_INDEX]));
 		s.solve();
 		System.out.println(s.target.toString());
 		
 		//DEBUG
 		Debug.log("Solution process: ");
 		Debug.log(s.event);
+	}
+	
+	private static Solver solver(String[] args) throws FileNotFoundException{
+		String charset = null;
+		if(args.length >= 2){
+			charset = args[1];
+		}
+		if(args.length < 1){
+			errorExit();
+		}
+		
+		File file = new File(args[0]);
+		if(charset == null){
+			return new Solver(file);
+		} else{
+			return new Solver(file, charset);
+		}
+	}
+	
+	private static void errorExit(){
+		System.err.println("Usage: java Solver puzzle-file character-encoding");
+		System.exit(0);
 	}
 	
 	public static final int SRC_FILE_ARG_INDEX = 0;

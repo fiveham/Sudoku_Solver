@@ -31,10 +31,10 @@ public class TxtParser implements Parser{
 	 * @param s the Scanner that sources the text that this 
 	 * Parser analyses. {@code s} is closed by this constructor
 	 */
-	public TxtParser(File f) throws FileNotFoundException{
+	public TxtParser(File f, String charset) throws FileNotFoundException{
 		Pair<List<Integer>,Integer> pair = null;
 		for(TextFormatStyle style : TextFormatStyle.values()){
-			pair = style.parse.apply(new Scanner(f));
+			pair = style.parse.apply(new Scanner(f, charset));
 			if(pair != null){
 				break;
 			}
