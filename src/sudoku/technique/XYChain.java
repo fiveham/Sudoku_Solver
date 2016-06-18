@@ -18,6 +18,7 @@ import sudoku.Claim;
 import sudoku.Fact;
 import sudoku.Sudoku;
 import sudoku.technique.ColorChain.ColorClaim;
+import sudoku.technique.ColorChain.ColorSource;
 import sudoku.time.FalsifiedTime;
 import sudoku.time.TechniqueEvent;
 
@@ -59,16 +60,23 @@ public class XYChain extends AbstractTechnique {
 		 * "False push" refers to a Claim, if true, forcing its visibles to be false 
 		 * (pushing falseness to them). All Claims that can see each other have this 
 		 * relationship.
+		 * 
 		 * "True push" refers to a Claim, if false, forcing its visibles to be true 
 		 * (pushing trueness to them). Claims have this relationship with Claims that 
 		 * they can see through a xor Fact.
+		 * 
+		 * "Mix push" refers to a push graph (a directed graph) such that nodes of one 
+		 * color point to the nodes onto which they push state A (false or true) and 
+		 * the nodes of the opposite color point to the nodes onto which they push 
+		 * state B (true or false, respectively).
 		 */
 		
 		Set<Claim> xorClaims = target.factStream()
 				.filter(Fact::isXor)
 				.collect(Sledgehammer.massUnionCollector());
 		
-		Graph<ColorClaim> allFalsePushes = new BasicGraph<>(Wrap.wrap(xorClaims, (c1,c2) -> !Collections.disjoint(c1, c2), ColorClaim::new));
+		Graph<ColorClaim> allFalsePushes = new BasicGraph<>(Wrap.wrap(xorClaims, (c1,c2) -> !Collections.disjoint(c1, c2), ColorClaim::new))
+				.addContractEventListenerFactory(new ColorSource());
 		
 		for(Graph<ColorClaim> falsePush : allFalsePushes.connectedComponents()){
 			
@@ -81,14 +89,14 @@ public class XYChain extends AbstractTechnique {
 			Map<Claim,ColorClaim> falseMap = Wrap.rawToWrap(falsePush);
 			Map<Claim,ColorClaim> trueMap = Wrap.rawToWrap(truePush(falseMap, xorFactsForChain));
 			
-			List<Pair<Predicate<ColorClaim>,Graph<ColorClaim>>> mixPushes = ColorClaim.SIGNS.stream()
-					.map((sign) -> new Pair<>(sign,pushGraph(falsePush, sign, falseMap, trueMap)))
+			List<Pair<Predicate<ColorClaim>, Graph<ColorClaim>>> mixPushes = ColorClaim.SIGNS.stream()
+					.map((sign) -> new Pair<>(sign, pushGraph(falsePush, sign, falseMap, trueMap)))
 					.collect(Collectors.toList());
 			
 			for(Fact xor : xorFactsForChain){
 				
 				Set<Claim> and = mixPushes.stream()
-						.map((pair) -> consequences(falsePush, pair.getA(), xor, falseMap, trueMap, pushGraph(falsePush, pair.getA(), falseMap, trueMap)))
+						.map((pair) -> consequences(pair.getA(), xor, pair.getB()))
 						.collect(Collector.of(
 								HashSet::new, 
 								Set::addAll, 
@@ -125,11 +133,8 @@ public class XYChain extends AbstractTechnique {
 	}
 	
 	private static Set<Claim> consequences(
-			Graph<ColorClaim> falsePush, 
 			Predicate<ColorClaim> state, 
 			Fact xor, 
-			Map<Claim,ColorClaim> falseMap, 
-			Map<Claim,ColorClaim> trueMap, 
 			Graph<ColorClaim> mixPush){
 		Set<Claim> falsified = new HashSet<>();
 		
@@ -146,18 +151,23 @@ public class XYChain extends AbstractTechnique {
 				.forEach((c) -> falsified.addAll(c.wrapped().visible()));
 		
 		return falsified;
-	} //TODO for each falsePush/state pair, generate the mixPush graph, then do analysis for each concom of the mixPush graph
+	}
 	
 	/*
-	 * TODO cook up alternating-push graphs for each connected component of the falsePush graph.
+	 * TO DO cook up alternating-push graphs for each connected component of the falsePush graph.
 	 * Then, 
 	 * for each concom of that alterna-push graph, 
 	 *     for each xor Fact that pertains to that alterna-push concom, 
 	 *         try both states
 	 *         if there's a falsification overlap, make changes and return to context
+	 * alterna-push (mix-push) graph, regardless which color pushes which state, always 1 connected component 
 	 */
 	
-	private static Graph<ColorClaim> pushGraph(Graph<ColorClaim> falsePush, Predicate<ColorClaim> state, Map<Claim,ColorClaim> falseMap, Map<Claim,ColorClaim> trueMap){
+	private static Graph<ColorClaim> pushGraph(
+			Graph<ColorClaim> falsePush, 
+			Predicate<ColorClaim> state, 
+			Map<Claim,ColorClaim> falseMap, 
+			Map<Claim,ColorClaim> trueMap){
 		List<ColorClaim> pushGraphNodes = falsePush.nodeStream()
 				.map((cc) -> {
 					ColorClaim lambdaResult = new ColorClaim(cc.wrapped());
