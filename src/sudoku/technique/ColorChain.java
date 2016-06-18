@@ -203,7 +203,7 @@ public class ColorChain extends AbstractTechnique {
 		Set<Claim> claimsToSetFalse = visibleToPositives;
 		claimsToSetFalse.retainAll(visibleToNegatives);
 		if(!claimsToSetFalse.isEmpty()){
-			TechniqueEvent result = new SolveEventColorContradiction(claimsToSetFalse);  //TODO incorporate setFalse() calls into FalsifiedTime constructor
+			TechniqueEvent result = new SolveEventColorContradiction(claimsToSetFalse);
 			claimsToSetFalse.stream().forEach((c)->c.setFalse(result));
 			return result;
 		}
@@ -377,7 +377,7 @@ public class ColorChain extends AbstractTechnique {
 	 * @return the number of steps between {@code lane0} and {@code lane1} 
 	 * in {@code chain}
 	 */
-	private boolean evenDist(Fact lane0, Fact lane1, Graph<ColorClaim> chain){ //TODO replace use of this method visavis bridge lanes with references to the colors on the bridged chains
+	private boolean evenDist(Fact lane0, Fact lane1, Graph<ColorClaim> chain){
 		int intersection0 = getBridgeIntersection(lane0, chain).color;
 		return intersection0 == getBridgeIntersection(lane1, chain).color;
 	}
@@ -474,7 +474,6 @@ public class ColorChain extends AbstractTechnique {
 	 * @return a TechniqueEvent describing the changes made to the puzzle, or 
 	 * null if no changes were made
 	 */
-	//TODO create a graph where each xor-chain is a node, connected to each other chain-node with which the chain shares some rules
 	private TechniqueEvent bridgeCollapse(Collection<Graph<ColorClaim>> chains){
 		for(List<Graph<ColorClaim>> chainPair : new ComboGen<>(chains, CHAINS_FOR_BRIDGE, CHAINS_FOR_BRIDGE)){
 			Pair<Graph<ColorClaim>,Integer> evenSideAndFalseColor = evenSideAndFalseColor(chainPair);

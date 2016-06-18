@@ -168,7 +168,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	@Override
 	public int distance(T v1, T v2){
 		
-		//TODO cache these values
 		int index1 = nodes.indexOf(v1);
 		int index2 = nodes.indexOf(v2);
 		

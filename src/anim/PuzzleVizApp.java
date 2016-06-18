@@ -508,7 +508,7 @@ public class PuzzleVizApp extends Application {
 		return stitch(timelineList);
 	}
 	
-	private static int treeSize(Time time){ //TODO redo the tree-size calculation thing in a way that makes sense in context
+	private static int treeSize(Time time){
 		AtomicInteger ai = new AtomicInteger(1);
 		if(time.hasChildren()){
 			treeSize(time, ai);

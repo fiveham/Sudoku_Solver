@@ -292,7 +292,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 */
 	private TechniqueEvent exploreSourceCombos(List<Fact> oldSrcCombo, Set<Fact> oldVisCloud, Set<Fact> oldVisVisCloud, int size, Set<Fact> sourceMask){
 		if(oldSrcCombo.size() < size){
-			Set<Fact> localSourceMask = new HashSet<>(sourceMask); //TODO use internally masked views to avoid copying sets
+			Set<Fact> localSourceMask = new HashSet<>(sourceMask);
 			for(Fact newSource : sourcePool(oldVisVisCloud, sourceMask, size, oldSrcCombo.isEmpty())){
 				localSourceMask.remove(newSource); //mask for next iteration level
 

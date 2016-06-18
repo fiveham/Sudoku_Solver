@@ -134,7 +134,7 @@ public class Solver{
 		while(group.activeCount() > 0){
 			synchronized(lock){
 				//if(group.activeCount() > 0){
-					lock.wait(100); //TODO determine whether the if(){wait()} model works 
+					lock.wait(100); 
 				//}
 			}
 		}

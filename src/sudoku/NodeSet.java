@@ -298,7 +298,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 	 * position {@code n} edges away
 	 * @throws IllegalArgumentException if {@code n} is negative
 	 */
-	//TODO redesign this to use ConnectedComponent and a contractEventListener
 	public Collection<NodeSet<?,?>> visible(int n){
 		switch(n){
 		case 0: 
