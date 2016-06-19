@@ -4,7 +4,6 @@ import common.Pair;
 import common.graph.BasicGraph;
 import common.graph.Graph;
 import common.graph.Wrap;
-import common.graph.WrapVertex;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -71,29 +70,31 @@ public class XYChain extends AbstractTechnique {
 		 * state B (true or false, respectively).
 		 */
 		
-		Set<Claim> xorClaims = target.factStream()
+		//Isolate all xor Rules and pack their Claims in one set
+		List<Fact> xorFacts = target.factStream()
 				.filter(Fact::isXor)
-				.collect(Sledgehammer.massUnionCollector());
+				.collect(Collectors.toList());
+		Set<Claim> xorClaims = Sledgehammer.massUnion(xorFacts);
 		
+		//connect those Claims together based on their sharing a Rule
 		Graph<ColorClaim> allFalsePushes = new BasicGraph<>(Wrap.wrap(xorClaims, (c1,c2) -> !Collections.disjoint(c1, c2), ColorClaim::new))
 				.addContractEventListenerFactory(new ColorSource());
 		
+		//reversed relationships from Claim to ColorClaim 
+		Map<Claim,ColorClaim> falseMap = Wrap.rawToWrap(allFalsePushes);
+		Map<Claim,ColorClaim> trueMap = trueMap(falseMap, xorFacts);
+		
 		for(Graph<ColorClaim> falsePush : allFalsePushes.connectedComponents()){
-			
-			Collection<Fact> xorFactsForChain = falsePush.nodeStream()
-					.map(WrapVertex::wrapped)
-					.collect(Sledgehammer.massUnionCollector()).stream()
-					.filter(Fact::isXor)
-					.collect(Collectors.toList());
-			
-			Map<Claim,ColorClaim> falseMap = Wrap.rawToWrap(falsePush);
-			Map<Claim,ColorClaim> trueMap = Wrap.rawToWrap(truePush(falseMap, xorFactsForChain));
 			
 			List<Pair<Predicate<ColorClaim>, Graph<ColorClaim>>> mixPushes = ColorClaim.SIGNS.stream()
 					.map((sign) -> new Pair<>(sign, pushGraph(falsePush, sign, falseMap, trueMap)))
 					.collect(Collectors.toList());
+
+			List<Fact> xorChainsInXYChain = target.factStream()
+					.filter(Fact::isXor)
+					.collect(Collectors.toList());
 			
-			for(Fact xor : xorFactsForChain){
+			for(Fact xor : xorChainsInXYChain){
 				
 				Set<Claim> and = mixPushes.stream()
 						.map((pair) -> consequences(pair.getA(), xor.iterator().next(), pair.getB()))
@@ -180,10 +181,10 @@ public class XYChain extends AbstractTechnique {
 		return new BasicGraph<>(pushGraphNodes);
 	}
 	
-	private static Graph<ColorClaim> truePush(Map<Claim,ColorClaim> falseMap, Collection<Fact> xorFactsForChain){
-		List<ColorClaim> truePushW = Wrap.wrap(xorFactsForChain, ColorClaim::new);
+	private static Map<Claim,ColorClaim> trueMap(Map<Claim,ColorClaim> falseMap, Collection<Fact> xorFacts){
+		List<ColorClaim> truePushW = Wrap.wrap(xorFacts, ColorClaim::new);
 		truePushW.stream().forEach((cc) -> cc.setColor(falseMap.get(cc.wrapped()).getColor()));
-		return new BasicGraph<>(truePushW);
+		return Wrap.rawToWrap(truePushW);
 	}
 	
 	public class SolveEventXYChain extends TechniqueEvent{
