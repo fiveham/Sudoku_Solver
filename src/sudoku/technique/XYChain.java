@@ -96,7 +96,7 @@ public class XYChain extends AbstractTechnique {
 			for(Fact xor : xorFactsForChain){
 				
 				Set<Claim> and = mixPushes.stream()
-						.map((pair) -> consequences(pair.getA(), xor, pair.getB()))
+						.map((pair) -> consequences(pair.getA(), xor.iterator().next(), pair.getB()))
 						.collect(Collector.of(
 								HashSet::new, 
 								Set::addAll, 
@@ -134,11 +134,10 @@ public class XYChain extends AbstractTechnique {
 	
 	private static Set<Claim> consequences(
 			Predicate<ColorClaim> state, 
-			Fact xor, 
+			Claim xorElement, 
 			Graph<ColorClaim> mixPush){
 		Set<Claim> falsified = new HashSet<>();
 		
-		Claim xorElement = xor.iterator().next();
 		ColorClaim seed = mixPush.nodeStream().filter((cc) -> cc.wrapped().equals(xorElement)).findFirst().get();
 		
 		Graph<ColorClaim> component = mixPush.component(
