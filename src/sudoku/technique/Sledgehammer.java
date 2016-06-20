@@ -357,7 +357,7 @@ public class Sledgehammer extends AbstractTechnique {
 			//If the source and recipient combos make a valid sledgehammer scenario
 			Set<Claim> claimsToSetFalse = areSledgehammerScenario(srcCombo, recipientCombo);
 			if(claimsToSetFalse != null && !claimsToSetFalse.isEmpty()){
-				return resolve(claimsToSetFalse, srcCombo, recipientCombo, SolveEventSledgehammer::new);
+				return resolve(claimsToSetFalse, srcCombo, recipientCombo);
 			}
 		}
 		return null;
@@ -535,14 +535,8 @@ public class Sledgehammer extends AbstractTechnique {
 	 * @return a SolutionEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
 	 */
-	static TechniqueEvent resolve(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip, Resolve res){
-		TechniqueEvent time = res.resolve(claimsToSetFalse, src, recip);
-		time.falsified().stream().forEach((c)->c.setFalse(time));
-		return time;
-	}
-	
-	static interface Resolve{
-		public TechniqueEvent resolve(Set<Claim> falsified, Collection<? extends Fact> src, Collection<? extends Fact> recip);
+	private static TechniqueEvent resolve(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip){
+		return new SolveEventSledgehammer(claimsToSetFalse, src, recip).falsify();
 	}
 	
 	public static final Function<Sudoku,List<Integer>> DIMSOURCE = (s) -> IntStream.range(0,s.sideLength()).mapToObj(Integer.class::cast).collect(Collectors.toList());

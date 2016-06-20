@@ -87,6 +87,35 @@ public abstract class FalsifiedTime extends AbstractTime {
 		return falsified;
 	}
 	
+	/**
+	 * <p>The first time this method is called, 
+	 * {@link Claim#setFalse() falsifies} the Claims specified to be 
+	 * {@link #falsified() falsified} by the event represented by this 
+	 * object. Subsequent calls do nothing.</p>
+	 * 
+	 * <p>This method allows duplicated Claim-falsification code to be 
+	 * centralized and unified. Performing this falsification inside the 
+	 * FalsifiedTime constructor is not safe, since the members of this 
+	 * object's subclasses, if any, have not been assigned, meaning those 
+	 * classes' methods, if called upon before a call to setFalse returns, 
+	 * may not work as intended. By separating the mass-falsification 
+	 * process into a method like this, subclass instances can finish 
+	 * constructing before their methods may be needed.</p>
+	 * 
+	 * <p>This method is best used at the time when this object is 
+	 * constructed.</p>
+	 * @return this FalsifiedTime
+	 */
+	public FalsifiedTime falsify(){
+		falsify.run();
+		falsify = DO_NOTHING;
+		return this;
+	}
+	
+	private static final Runnable DO_NOTHING = () -> {};
+	
+	private Runnable falsify = () -> falsified().stream().forEach((c) -> c.setFalse(this));
+	
 	@Override
 	public String toString(){
 		StringBuilder result = new StringBuilder(toStringStart())
@@ -108,6 +137,15 @@ public abstract class FalsifiedTime extends AbstractTime {
 		}
 		
 		return result.toString();
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof FalsifiedTime){
+			FalsifiedTime ft = (FalsifiedTime) o;
+			return falsified().equals(ft.falsified());
+		}
+		return false;
 	}
 	
 	/**

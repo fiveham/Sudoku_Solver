@@ -1,7 +1,6 @@
 package sudoku;
 
 import java.util.Collections;
-import sudoku.time.FalsifiedTime;
 
 /**
  * <p>An expression of a specific value of a cell in a sudoku 
@@ -45,11 +44,6 @@ public class Init extends Fact {
 	 */
 	public Claim claim(){
 		return claim;
-	}
-	
-	@Override
-	public void validateState(FalsifiedTime time){
-		time.falsified().stream().forEach((c) -> c.setFalse(time));
 	}
 	
 	@Override

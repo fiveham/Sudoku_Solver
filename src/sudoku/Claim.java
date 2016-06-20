@@ -143,8 +143,4 @@ public class Claim extends NodeSet<Fact,Claim>{
 		result[Puzzle.Z_DIM] = cn.symbol.intValue() - symbol.intValue();
 		return result;
 	}
-	
-	public void validateState(FalsifiedTime time){
-		//do nothing
-	}
 }

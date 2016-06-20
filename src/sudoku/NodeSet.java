@@ -261,7 +261,9 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 	 * class the need to validate the set's final state afterward can call 
 	 * this method while subclasses provide meaningful implementations.</p>
 	 */
-	public abstract void validateState(FalsifiedTime time);
+	protected void validateState(FalsifiedTime time){
+		//do nothing
+	}
 	
 	public final int superHashCode(){
 		return super.hashCode();

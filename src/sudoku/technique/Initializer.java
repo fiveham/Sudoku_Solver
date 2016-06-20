@@ -1,7 +1,6 @@
 package sudoku.technique;
 
 import sudoku.Init;
-import sudoku.NodeSet;
 import sudoku.Sudoku;
 import sudoku.time.TechniqueEvent;
 
@@ -39,14 +38,12 @@ public class Initializer extends AbstractTechnique {
 	 */
 	@Override
 	protected TechniqueEvent process(){
-		Optional<NodeSet<?,?>> i = target.nodeStream().filter(Init.class::isInstance).findFirst();
+		Optional<Init> i = target.nodeStream()
+				.filter(Init.class::isInstance)
+				.map(Init.class::cast)
+				.findFirst();
 		if(i.isPresent()){
-			Init init = (Init) i.get();
-			//if(!init.claim().isSetTrue()){
-				TechniqueEvent result = new Initialization(init);
-				init.validateState(result);
-				return result;
-			//}
+			return new Initialization(i.get()).falsify();
 		}
 		
 		return null;
@@ -72,7 +69,7 @@ public class Initializer extends AbstractTechnique {
 		public boolean equals(Object o){
 			if(o instanceof Initialization){
 				Initialization se = (Initialization) o;
-				return falsified().equals(se.falsified());
+				return super.equals(se) && (src == null ? se.src == null : src.equals(se.src));
 			}
 			return false;
 		}

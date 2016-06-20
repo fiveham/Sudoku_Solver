@@ -204,9 +204,7 @@ public class ColorChain extends AbstractTechnique {
 		Set<Claim> claimsToSetFalse = visibleToPositives;
 		claimsToSetFalse.retainAll(visibleToNegatives);
 		if(!claimsToSetFalse.isEmpty()){
-			TechniqueEvent result = new SolveEventColorContradiction(claimsToSetFalse);
-			result.falsified().forEach((c)->c.setFalse(result));
-			return result;
+			return new SolveEventColorContradiction(claimsToSetFalse).falsify();
 		}
 		
 		return null;
@@ -422,9 +420,7 @@ public class ColorChain extends AbstractTechnique {
 				.filter((cc)->cc.getColor()==color)
 				.map(ColorClaim::wrapped)
 				.collect(Collectors.toSet());
-		TechniqueEvent time = new SolveEventBridgeCollapse(setFalse);
-		time.falsified().stream().forEach((c)->c.setFalse(time));
-		return time;
+		return new SolveEventBridgeCollapse(setFalse).falsify();
 	}
 	
 	/**
@@ -574,9 +570,7 @@ public class ColorChain extends AbstractTechnique {
 				
 				if(!and.isEmpty()){
 					try{
-						TechniqueEvent time = new SolveEventXYChain(and);
-						time.falsified().stream().forEach((c) -> c.setFalse(time));
-						return time;
+						return new SolveEventXYChain(and).falsify();
 					} catch(FalsifiedTime.NoUnaccountedClaims e){
 						//do nothing
 					}
@@ -754,7 +748,7 @@ public class ColorChain extends AbstractTechnique {
 		return Wrap.rawToWrap(truePushW);
 	}
 	
-	public class SolveEventXYChain extends TechniqueEvent{
+	public static class SolveEventXYChain extends TechniqueEvent{
 		private SolveEventXYChain(Set<Claim> falsified){
 			super(falsified);
 		}

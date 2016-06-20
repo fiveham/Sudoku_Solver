@@ -71,20 +71,14 @@ public class Rule extends Fact{
 	 * @throws IllegalStateException if this Rule is empty
 	 */
 	@Override
-	public void validateState(FalsifiedTime time){
+	protected void validateState(FalsifiedTime time){
 		if(isSolved()){
 			Claim c = iterator().next(); //there is only one Claim
-			
-			FalsifiedTime solve;
 			try{
-				solve = new TimeTotalLocalization(time, c.visible(), this);
+				time.addChild(new TimeTotalLocalization(time, c.visible(), this).falsify());
 			} catch(FalsifiedTime.NoUnaccountedClaims e){
 				return;
 			}
-			
-			time.addChild(solve);
-			solve.falsified().stream()
-					.forEach((falsifiedClaim) -> falsifiedClaim.setFalse(solve));
 		} else if( shouldCheckForValueClaim() ){
 			findAndAddressValueClaim(time);
 		} else if( isEmpty() ){
@@ -140,16 +134,11 @@ public class Rule extends Fact{
 				.forEach((r) -> {
 					Set<Claim> falsified = new HashSet<>(r);
 					falsified.removeAll(this);
-					
-					TimeValueClaim newTime;
 					try{
-						newTime = new TimeValueClaim(time, falsified, this, r);
+						time.addChild(new TimeValueClaim(time, falsified, this, r).falsify());
 					} catch(FalsifiedTime.NoUnaccountedClaims e){
 						return;
 					}
-					
-					time.addChild(newTime);
-					newTime.falsified().stream().forEach((claim) -> claim.setFalse(newTime));
 				});
 	}
 	
