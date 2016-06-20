@@ -75,7 +75,7 @@ public class Rule extends Fact{
 		if(isSolved()){
 			Claim c = iterator().next(); //there is only one Claim
 			try{
-				time.addChild(new TimeTotalLocalization(time, c.visible(), this).falsify());
+				new TimeTotalLocalization(time, c.visible(), this).falsify();
 			} catch(FalsifiedTime.NoUnaccountedClaims e){
 				return;
 			}
@@ -135,7 +135,7 @@ public class Rule extends Fact{
 					Set<Claim> falsified = new HashSet<>(r);
 					falsified.removeAll(this);
 					try{
-						time.addChild(new TimeValueClaim(time, falsified, this, r).falsify());
+						new TimeValueClaim(time, falsified, this, r).falsify();
 					} catch(FalsifiedTime.NoUnaccountedClaims e){
 						return;
 					}

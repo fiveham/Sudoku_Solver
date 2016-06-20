@@ -17,6 +17,9 @@ public abstract class AbstractTime implements Time{
 		this.parent = parent;
 		this.children = new ArrayList<>();
 		this.focus = this;
+		if(hasParent()){
+			parent().addChild(this);
+		}
 	}
 	
 	@Override
