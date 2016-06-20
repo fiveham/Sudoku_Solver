@@ -104,9 +104,9 @@ the fact that the source `Rule`s of a Sledgehammer solution scenario must all
 be disjoint from one another yet they all must be connected together via the 
 recipient `Rule`s.
 
-If the source `Rule`s and recipient `Rule`s are not interconnected, appropriately, 
+If the source `Rule`s and recipient `Rule`s are not interconnected appropriately, 
 then either the Sledgehammer scenario is invalid or the Sledgehammer scenario 
-is the union of multiple valid Sledgehammer scenarios each of which has as 
+is the union of multiple valid Sledgehammer scenarios each of which has a 
 smaller overall size than that of this Sledgehammer scenario, in which case 
 they must already have been found and resolved, having all non-source recipient 
 `Claim`s falsified. There is no way that a Sledgehammer scenario with multiple 
