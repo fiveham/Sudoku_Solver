@@ -46,8 +46,6 @@ class SpaceMap implements Iterable<Claim>{
 		}
 	}
 	
-	public static final String UNSOLVED_CELL_TEXT = "0";
-	
 	/**
 	 * <p>Returns the Claim in this SpaceMap's target having the 
 	 * specified spatial coordinates.</p>
@@ -101,7 +99,9 @@ class SpaceMap implements Iterable<Claim>{
 	
 	private List<Integer> ints(){
 		if(ints == null){
-			ints = puzzle.getIndices().stream().map(IndexValue::intValue).collect(Collectors.toList());
+			ints = puzzle.getIndices().stream()
+					.map(IndexValue::intValue)
+					.collect(Collectors.toList());
 		}
 		return ints;
 	}
@@ -117,7 +117,6 @@ class SpaceMap implements Iterable<Claim>{
 		private final Iterator<List<Integer>> cubeIterator;
 		
 		private ClaimIterator(){
-			//List<Integer> ints = puzzle.getIndices().stream().map(IndexValue::intValue).collect(Collectors.toList());
 			this.cubeIterator =  new NCuboid<Integer>(ints(), ints(), ints()).iterator();
 		}
 		
