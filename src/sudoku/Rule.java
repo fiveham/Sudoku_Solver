@@ -83,7 +83,8 @@ public class Rule extends Fact{
 			}
 			
 			time.addChild(solve);
-			c.setTrue(solve);
+			solve.falsified().stream()
+					.forEach((falsifiedClaim) -> falsifiedClaim.setFalse(solve));
 		} else if( shouldCheckForValueClaim() ){
 			findAndAddressValueClaim(time);
 		} else if( isEmpty() ){
@@ -148,7 +149,7 @@ public class Rule extends Fact{
 					}
 					
 					time.addChild(newTime);
-					falsified.stream().forEach((claim) -> claim.setFalse(newTime));
+					newTime.falsified().stream().forEach((claim) -> claim.setFalse(newTime));
 				});
 	}
 	

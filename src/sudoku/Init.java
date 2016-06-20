@@ -49,7 +49,7 @@ public class Init extends Fact {
 	
 	@Override
 	public void validateState(FalsifiedTime time){
-		claim.setTrue(time);
+		time.falsified().stream().forEach((c) -> c.setFalse(time));
 	}
 	
 	@Override

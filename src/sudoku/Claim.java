@@ -1,6 +1,5 @@
 package sudoku;
 
-import java.util.Set;
 import sudoku.Puzzle.IndexValue;
 import sudoku.time.FalsifiedTime;
 
@@ -19,7 +18,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 * 
 	 */
 	private static final long serialVersionUID = -2402719833037606449L;
-
+	
 	/**
 	 * <p>The initial number of {@link #neighbors() Rules to which this Claim belongs}. 
 	 * It is the count of the kinds of FactBags that can hold the same 
@@ -69,23 +68,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 */
 	public boolean isSetTrue(){
 		return stream().allMatch(Fact::isSolved);
-	}
-	
-	/**
-	 * <p>Sets this Claim true in its Puzzle. Sets all the Claims 
-	 * visible to this Claim false. Merges all the 
-	 * Rule neighbors of this Claim into one another, removing 
-	 * three of those Rules from the target as objects. Adds a 
-	 * TimeSetTrue onto the target's time stack.</p>
-	 * 
-	 * @return true if calling this method changed the state of 
-	 * this Claim, false otherwise
-	 */
-	boolean setTrue(FalsifiedTime time){
-		Set<Claim> s = visible();
-		int init = s.size();
-		s.stream().forEach((c) -> c.setFalse(time));
-		return init != visible().size();
 	}
 	
 	/**

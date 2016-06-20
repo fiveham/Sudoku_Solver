@@ -537,7 +537,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 */
 	static TechniqueEvent resolve(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip, Resolve res){
 		TechniqueEvent time = res.resolve(claimsToSetFalse, src, recip);
-		claimsToSetFalse.stream().forEach((c)->c.setFalse(time));
+		time.falsified().stream().forEach((c)->c.setFalse(time));
 		return time;
 	}
 	
