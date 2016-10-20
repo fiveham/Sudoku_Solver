@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 import sudoku.Claim;
 import sudoku.Fact;
 import sudoku.Sudoku;
-import sudoku.time.FalsifiedTime;
 import sudoku.time.TechniqueEvent;
 
 /**
@@ -55,9 +54,9 @@ public class ColorChain extends AbstractTechnique {
 			ColorChain::xyChain);
 	
 	/**
-	 * <p>Imitates the slide structure of {@link Solver#solve() Solver.solve()}, 
-	 * with subtechniques for {@link #visibleColorContradiction(Collection) color-contradiction} 
-	 * and {@link #bridgeCollapse(Collection) chain-chain interaction}. Subtechniques are applied 
+	 * <p>Applies {@link #SUBTECHNIQUES sub-techniques} for 
+	 * {@link #visibleColorContradiction(Collection) color-contradiction} 
+	 * and {@link #bridgeCollapse(Collection) chain-chain interaction} 
 	 * in sequence.</p>
 	 * @return a TechniqueEvent describing the changes made to the puzzle, or null 
 	 * if no changes were made
@@ -440,6 +439,127 @@ public class ColorChain extends AbstractTechnique {
 		}
 	}
 	
+	private TechniqueEvent xyChain(Collection<Graph<ColorClaim>> chains){ //FIXME make sure that chains of single binary Rules are included
+		
+		for(Graph<ColorClaim> chain : chains){
+			
+			Set<Claim> falseIntersection = ColorClaim.COLOR_SIGNS.stream()
+					.map((test) -> getFalsifiedClaimsForTrueColor(
+							chain.nodeStream()
+									.filter(test)
+									.map(ColorClaim::wrapped)
+									.collect(Collectors.toSet())))
+					.collect(Collector.of(
+							HashSet<Claim>::new, 
+							Set::addAll, 
+							(a,b) -> {
+								a.retainAll(b); 
+								return a;
+							}, 
+							Collector.Characteristics.IDENTITY_FINISH, Collector.Characteristics.UNORDERED));
+			
+			if(!falseIntersection.isEmpty()){
+				return new SolveEventXYChain(
+						falseIntersection, 
+						chain.nodeStream()
+								.map(ColorClaim::wrapped)
+								.collect(Sledgehammer.massUnionCollector())
+								.stream()
+								.filter(Fact::isXor)
+								.collect(Collectors.toList()))
+				.falsifyClaims();
+			}
+		}
+		
+		return null;
+	}  //TODO roll bridge-collapse into xyChain
+	
+	private static Set<Claim> getFalsifiedClaimsForTrueColor(Set<Claim> initialTrue){
+		
+		Set<Claim> trueClaims = new HashSet<>();
+		Set<Claim> falseClaims = new HashSet<>();
+		
+		Set<Claim> newTrue = new HashSet<>(initialTrue);
+		
+		while(!newTrue.isEmpty()){
+			Set<Claim> newFalse = newFalse(newTrue, falseClaims);
+			
+			trueClaims.addAll(newTrue);
+			falseClaims.addAll(newFalse);
+			
+			newTrue = newTrue(falseClaims, trueClaims, newFalse);
+		}
+		
+		return falseClaims;
+	}
+	
+	/**
+	 * <p.Determines which Claims, in addition to those already known to 
+	 * be conditionally false, must be conditionally false.</p>
+	 * <p>A Claim is conditionally false if it would have to be false 
+	 * given that the Claim currently {@code assertedTrue} in 
+	 * {@code getFalsifiedClaims} is asserted to be true.</p>
+	 * @param newTrue
+	 * @param f
+	 * @return
+	 */
+	private static Set<Claim> newFalse(Set<Claim> newTrue, Set<Claim> f){
+		Set<Claim> result = new HashSet<>();
+		for(Claim newlyVerified : newTrue){
+			result.addAll(newlyVerified.visible());
+		}
+		result.removeAll(f);
+		return result;
+	}
+	
+	/**
+	 * <p>Returns a set of the Claims that must be true because all other Claims of some 
+	 * Rule have already been determined to be false.</p>
+	 * @param newFalse
+	 * @return
+	 */
+	private static Set<Claim> newTrue(Set<Claim> falseClaims, Set<Claim> trueClaims, Set<Claim> newFalse){
+		
+		Set<Fact> visibleRules = visibleRules(newFalse);
+		Set<Claim> result = new HashSet<>(visibleRules.size());
+		for(Fact rvisibleRule : visibleRules){
+			Set<Claim> copyOfVisibleRule = new HashSet<>(rvisibleRule);
+			copyOfVisibleRule.removeAll(falseClaims);
+			if(copyOfVisibleRule.size() == Fact.SIZE_WHEN_SOLVED){
+				result.add(rvisibleRule.iterator().next());
+			}
+		}
+		
+		result.removeAll(trueClaims);
+		
+		return result;
+	}
+	
+	/**
+	 * <p>Returns a set of the Facts visible (adjacent) to at least one of 
+	 * the Claims in {@code newFalse}.</p>
+	 * @param newFalse
+	 * @return
+	 */
+	private static Set<Fact> visibleRules(Set<Claim> newFalse){
+		return Sledgehammer.massUnion(newFalse);
+	}
+	
+	public class SolveEventXYChain extends TechniqueEvent{
+		
+		private final Collection<Fact> xorEntity;
+		
+		public SolveEventXYChain(Set<Claim> falsified, Collection<Fact> xorEntity) {
+			super(falsified);
+			this.xorEntity = xorEntity;
+		}
+		
+		@Override
+		protected String toStringStart() {
+			return "XYChain based on the xor-entity "+xorEntity.toString();
+		}
+	}
+	
 	/**
 	 * <p>Wraps a Claim and decorates it with an int color.</p>
 	 * @author fiveham
@@ -447,9 +567,12 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	private static class ColorClaim implements WrapVertex<Claim,ColorClaim>{
 		
-		public static final List<Predicate<ColorClaim>> SIGNS = Arrays.asList(
-				ColorClaim::posColor, 
-				ColorClaim::negColor);
+		public static final List<Predicate<ColorClaim>> COLOR_SIGNS;
+		static{
+			COLOR_SIGNS = new ArrayList<>(2); //MAGIC
+			COLOR_SIGNS.add(ColorClaim::posColor);
+			COLOR_SIGNS.add(ColorClaim::negColor);
+		}
 		
 		private int color = 0;
 		private Claim claim;
@@ -515,247 +638,6 @@ public class ColorChain extends AbstractTechnique {
 		@Override
 		public String toString(){
 			return "ColorClaim pairing " + color + " with " + claim;
-		}
-	}
-	
-	private TechniqueEvent xyChain(Collection<Graph<ColorClaim>> chains){
-		
-		/*
-		 * "False push" refers to a Claim, if true, forcing its visibles to be false 
-		 * (pushing falseness to them). All Claims that can see each other have this 
-		 * relationship.
-		 * 
-		 * "True push" refers to a Claim, if false, forcing its visibles to be true 
-		 * (pushing trueness to them). Claims have this relationship with Claims that 
-		 * they can see through a xor Fact.
-		 * 
-		 * "Mix push" refers to a push graph (a directed graph) such that nodes of one 
-		 * color point to the nodes onto which they push state A (false or true) and 
-		 * the nodes of the opposite color point to the nodes onto which they push 
-		 * state B (true or false, respectively).
-		 */
-		
-		//Isolate all xor Rules and pack their Claims in one set
-		List<Fact> xorFacts = target.factStream()
-				.filter(Fact::isXor)
-				.collect(Collectors.toList());
-		Set<Claim> xorClaims = Sledgehammer.massUnion(xorFacts);
-		
-		//connect those Claims together based on their sharing a Rule
-		Graph<ColorClaim> allFalsePushes = new BasicGraph<>(Wrap.wrap(xorClaims, (c1,c2) -> !Collections.disjoint(c1, c2), ColorClaim::new))
-				.addContractEventListenerFactory(new ColorSource());
-		
-		//reversed relationships from Claim to ColorClaim 
-		Map<Claim,ColorClaim> falseMap = Wrap.rawToWrap(allFalsePushes);
-		Map<Claim,ColorClaim> trueMap = trueMap(falseMap, xorFacts);
-		
-		for(Graph<ColorClaim> falsePush : allFalsePushes.connectedComponents()){
-			
-			List<Pair<Predicate<ColorClaim>, Pair<Graph<ColorClaim>, Map<Claim,ColorClaim>>>> mixPushes = ColorClaim.SIGNS.stream()
-					.map((sign) -> new Pair<>(sign, mixPushGraphAndMap(falsePush, sign, falseMap, trueMap)))
-					.collect(Collectors.toList());
-			
-			for(Set<Claim> xorChain : xorChainsInXYChain(falsePush, trueMap)){
-				Claim representative = xorChain.iterator().next();
-				
-				Set<Claim> and = mixPushes.stream()
-						.map((pair) -> consequences(pair.getA(), representative, pair.getB().getA(), pair.getB().getB()))
-						.collect(Collector.of(
-								HashSet::new, 
-								Set::addAll, 
-								(left, right) -> {
-									left.retainAll(right);
-									return left;
-								}));
-				
-				if(!and.isEmpty()){
-					try{
-						return new SolveEventXYChain(and).falsifyClaims();
-					} catch(FalsifiedTime.NoUnaccountedClaims e){
-						//do nothing
-					}
-				}
-				
-				/*
-				 * Choosing which one is true first in each scenario just means choosing which 
-				 * color performs which kind of push.
-				 * 
-				 * option-specific directed graphs can be constructed:
-				 * If red is true, then reds get their neighbors from the pushFalse graph 
-				 * and blues get their neighbors from the pushTrue graph
-				 * 
-				 * If blue is true, then blues get their neighbors form the pushFalse graph 
-				 * and reds their their neighbors from the pushTrue graph
-				 */
-			}
-		}
-		
-		return null;
-	}
-	
-	/**
-	 * <p>Identifies all the xor-chains (like those analysed in 
-	 * {@link ColorChain}) that exist within the specified connected 
-	 * component, {@code falsePush}, of the overall false-push graph, 
-	 * represents each xor-chain as a set of its Claims, and returns 
-	 * a list of those sets.</p>
-	 * 
-	 * <p>Most xor-chain sets will be two-element sets, but there can
-	 * exist some more complex xor-chains as part of an XYChain 
-	 * system. Any connected network of xor Facts has two solution 
-	 * states; so, identifying all the xor-chains in an XYChain and 
-	 * examining the consequences of the states of only one Claim 
-	 * from each chain allows a full exploration of the implications 
-	 * of the XYChain using the smallest number of iterations of the 
-	 * second nested for-loop in {@link process()}.</p>
-	 * 
-	 * @param falsePush the connected component of the overall false-
-	 * push graph that is being analysed
-	 * @param trueMap the map from Claims to the ColorClaims that 
-	 * @return a list of sets of the Claims belonging to the xor-
-	 * chains found in {@code falsePush}
-	 */
-	private static List<Set<Claim>> xorChainsInXYChain(Graph<ColorClaim> falsePush, Map<Claim,ColorClaim> trueMap){
-		return new BasicGraph<ColorClaim>(falsePush.nodeStream()
-				.map(ColorClaim::wrapped)
-				.map(trueMap::get)
-				.collect(Collectors.toList()))
-		.connectedComponents().stream()
-				.map((graph) -> graph.nodeStream()
-						.map(ColorClaim::wrapped)
-						.collect(Collectors.toSet()))
-				.collect(Collectors.toList());
-	}
-	
-	/**
-	 * <p>Returns a set of the Claims falsified if {@code xorElement} takes 
-	 * on the state (true or false) that {@code state} outputs when given 
-	 * as input the {@code ColorClaim} in {@code mixPush} that wraps 
-	 * {@code xorElement}.</p>
-	 * @param state indicates whether {@code xorElement} is to be treated as 
-	 * true or false
-	 * @param xorElement a claim from a xor-chain subgraph of {@code mixPush}
-	 * @param mixPush a directed graph where one claim points to another claim 
-	 * if the first claim, by having a certain state, forces the other claim 
-	 * to have the opposite state. The forcing relationship only works for one 
-	 * of the two possible states of the first claim; if the first claim has 
-	 * the wrong state, it does not force the other claim's state.
-	 * @return a set of the Claims falsified if {@code xorElement} takes 
-	 * on the state (true or false) that {@code state} outputs when given 
-	 * as input the {@code ColorClaim} in {@code mixPush} that wraps 
-	 * {@code xorElement}
-	 */
-	private static Set<Claim> consequences(
-			Predicate<ColorClaim> state, 
-			Claim xorElement, 
-			Graph<ColorClaim> mixPush,
-			Map<Claim,ColorClaim> mixPushMap){
-		ColorClaim seed = mixPushMap.get(xorElement);
-		
-		Graph<ColorClaim> component = mixPush.component(
-				mixPush.nodeStream().collect(Collectors.toList()), 
-				(list) -> seed, 
-				Collections.emptyList());
-		
-		return component.nodeStream()
-				.filter(state) //these ones falsify Claims visible() to them
-				.map(ColorClaim::wrapped)
-				.map(Claim::visible)
-				.collect(Sledgehammer.massUnionCollector());
-	}
-	
-	/**
-	 * <p>Returns a Pair containing the mix-push graph for the specified 
-	 * connected component, {@code falsePush}, of the overall false-push 
-	 * graph and a map from the Claims of that graph to that graph's 
-	 * ColorClaims.</p>
-	 * 
-	 * <p>A mix-push graph is a mixture of a false-push graph and a true-
-	 * push graph such that Claims of one color point to the Claims they 
-	 * falsify (neighbors analogous to that Claim's neighbors in the 
-	 * false-push graph) and Claims of the other color point to the Claims 
-	 * they verify (neighbors analogous to that Claim's neighbors in the 
-	 * true-push graph). As such, there are two mix-push graphs: one where 
-	 * positive colors push false and negatives push true, and; one where 
-	 * negative colors push false and positives push true.</p>
-	 * 
-	 * <p>In these mix-push graphs, xor-chains are islands on which 
-	 * traversal from one Claim to any other in the xor-chain is possible, 
-	 * since Claims in xor-chains push true as well as false, causing 
-	 * forcing links within any xor to be bidirectional. Links between such 
-	 * islands are one-directional.</p>
-	 * @param falsePush a connected component of the overal false-push graph
-	 * @param state outputs true if an applied ColorClaim has a color with 
-	 * the appropriate sign
-	 * @param falseMap a map from the Claims of {@code falsePush} to its 
-	 * ColorClaims
-	 * @param trueMap a map from the Claims to {@code falsePush} to the 
-	 * ColorClaims of its corresponding true-push graph
-	 * @return a Pair containing the mix-push graph for the specified 
-	 * connected component, {@code falsePush}, of the overall false-push 
-	 * graph and a map from the Claims of that graph to that graph's 
-	 * ColorClaims
-	 */
-	private static Pair<Graph<ColorClaim>, Map<Claim,ColorClaim>> mixPushGraphAndMap(
-			Graph<ColorClaim> falsePush, 
-			Predicate<ColorClaim> state, 
-			Map<Claim,ColorClaim> falseMap, 
-			Map<Claim,ColorClaim> trueMap){
-		List<ColorClaim> pushGraphNodes = falsePush.nodeStream()
-				.map((cc) -> {
-					ColorClaim lambdaResult = new ColorClaim(cc.wrapped());
-					lambdaResult.setColor(cc.getColor());
-					return lambdaResult;
-				})
-				.collect(Collectors.toList());
-		
-		Map<Claim,ColorClaim> pushGraphNodeMap = Wrap.rawToWrap(pushGraphNodes);
-		
-		//connect elements of pushGraphNodes to one another
-		for(ColorClaim cc : pushGraphNodes){
-			Map<Claim,ColorClaim> structureMap = state.test(cc) ? falseMap : trueMap;
-			List<ColorClaim> neighbors = structureMap.get(cc.wrapped()).neighbors().stream()
-					.map(ColorClaim::wrapped)
-					.map(pushGraphNodeMap::get)
-					.collect(Collectors.toList());
-			cc.neighbors().addAll(neighbors);
-		}
-		
-		return new Pair<>(
-				new BasicGraph<>(pushGraphNodes), 
-				Wrap.rawToWrap(pushGraphNodes));
-	}
-	
-	/**
-	 * <p>Returns a map from the Claims in the Facts of {@code xorFacts} to 
-	 * those Claims' ColorClaims in a graph (which is temporarily created 
-	 * in implicit form within this method) in which Claims are linked if 
-	 * one, by being false, forces the other to be true.</p>
-	 * @param falseMap a Map from the Claims in the Facts of 
-	 * {@code xorFacts} to their ColorClaims in a graph of 
-	 * false-push relationships. Used for those ColorClaims' color data
-	 * @param xorFacts edges linking Claims in the true-push graph
-	 * @return a map from the Claims in the Facts of {@code xorFacts} to 
-	 * those Claims' ColorClaims in a graph (which is temporarily created 
-	 * in implicit form within this method) in which Claims are linked if 
-	 * one, by being false, forces the other to be true
-	 */
-	private static Map<Claim,ColorClaim> trueMap(
-			Map<Claim,ColorClaim> falseMap, 
-			Collection<Fact> xorFacts){
-		List<ColorClaim> truePushW = Wrap.wrap(xorFacts, ColorClaim::new);
-		truePushW.stream().forEach((cc) -> cc.setColor(falseMap.get(cc.wrapped()).getColor()));
-		return Wrap.rawToWrap(truePushW);
-	}
-	
-	public static class SolveEventXYChain extends TechniqueEvent{
-		private SolveEventXYChain(Set<Claim> falsified){
-			super(falsified);
-		}
-		
-		@Override
-		protected String toStringStart(){
-			return "XYChain scenario";
 		}
 	}
 }
