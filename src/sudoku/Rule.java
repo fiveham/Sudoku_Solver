@@ -75,7 +75,7 @@ public class Rule extends Fact{
 		if(isSolved()){
 			Claim c = iterator().next(); //there is only one Claim
 			try{
-				new TimeTotalLocalization(time, c.visible(), this).falsify();
+				new TimeTotalLocalization(time, c.visible(), this).falsifyClaims();
 			} catch(FalsifiedTime.NoUnaccountedClaims e){
 				return;
 			}
@@ -117,7 +117,14 @@ public class Rule extends Fact{
 		
 		@Override
 		protected String toStringStart(){
-			return "Total localization from "+src+src.contentString();
+			
+			//DEBUG
+			if(src==null){
+				System.out.println("WAT; it's null");
+			}
+			
+			//return "Total localization from "+src+src.contentString(); //DEBUG
+			return "Total localization from " + src + "[CONTENT STRING ABSENT FOR DEBUGGING]";
 		}
 	}
 	
@@ -135,7 +142,7 @@ public class Rule extends Fact{
 					Set<Claim> falsified = new HashSet<>(r);
 					falsified.removeAll(this);
 					try{
-						new TimeValueClaim(time, falsified, this, r).falsify();
+						new TimeValueClaim(time, falsified, this, r).falsifyClaims();
 					} catch(FalsifiedTime.NoUnaccountedClaims e){
 						return;
 					}

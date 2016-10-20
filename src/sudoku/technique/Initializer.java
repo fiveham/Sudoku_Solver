@@ -43,7 +43,7 @@ public class Initializer extends AbstractTechnique {
 				.map(Init.class::cast)
 				.findFirst();
 		if(i.isPresent()){
-			return new Initialization(i.get()).falsify();
+			return new Initialization(i.get()).falsifyClaims();
 		}
 		
 		return null;

@@ -536,10 +536,11 @@ public class Sledgehammer extends AbstractTechnique {
 	 * if no changes were made
 	 */
 	private static TechniqueEvent resolve(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip){
-		return new SolveEventSledgehammer(claimsToSetFalse, src, recip).falsify();
+		return new SolveEventSledgehammer(claimsToSetFalse, src, recip).falsifyClaims();
 	}
 	
-	public static final Function<Sudoku,List<Integer>> DIMSOURCE = (s) -> IntStream.range(0,s.sideLength()).mapToObj(Integer.class::cast).collect(Collectors.toList());
+	public static final Function<Sudoku,List<Integer>> DIMSOURCE = 
+			(s) -> IntStream.range(0,s.sideLength()).mapToObj(Integer.class::cast).collect(Collectors.toList());
 	
 	/**
 	 * <p>Unions all the collections in {@code srcCombo} into one set and returns 

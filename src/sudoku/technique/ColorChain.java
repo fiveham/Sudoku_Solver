@@ -204,7 +204,7 @@ public class ColorChain extends AbstractTechnique {
 		Set<Claim> claimsToSetFalse = visibleToPositives;
 		claimsToSetFalse.retainAll(visibleToNegatives);
 		if(!claimsToSetFalse.isEmpty()){
-			return new SolveEventColorContradiction(claimsToSetFalse).falsify();
+			return new SolveEventColorContradiction(claimsToSetFalse).falsifyClaims();
 		}
 		
 		return null;
@@ -420,7 +420,7 @@ public class ColorChain extends AbstractTechnique {
 				.filter((cc)->cc.getColor()==color)
 				.map(ColorClaim::wrapped)
 				.collect(Collectors.toSet());
-		return new SolveEventBridgeCollapse(setFalse).falsify();
+		return new SolveEventBridgeCollapse(setFalse).falsifyClaims();
 	}
 	
 	/**
@@ -570,7 +570,7 @@ public class ColorChain extends AbstractTechnique {
 				
 				if(!and.isEmpty()){
 					try{
-						return new SolveEventXYChain(and).falsify();
+						return new SolveEventXYChain(and).falsifyClaims();
 					} catch(FalsifiedTime.NoUnaccountedClaims e){
 						//do nothing
 					}

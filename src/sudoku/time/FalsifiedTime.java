@@ -2,11 +2,9 @@ package sudoku.time;
 
 import common.time.AbstractTime;
 import common.time.Time;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import sudoku.Claim;
 import sudoku.Rule;
@@ -43,8 +41,8 @@ public abstract class FalsifiedTime extends AbstractTime {
 	 */
 	public FalsifiedTime(Time parent, Set<Claim> falsified){
 		super(parent);
-		Set<Claim> upFalsified = upFalsified(this, true);
-		this.falsified = Collections.unmodifiableSet(falsified.stream().filter((fc) -> !upFalsified.contains(fc)).collect(Collectors.toSet()));
+		this.falsified = new HashSet<>(falsified);
+		this.falsified.removeAll(upFalsified(this, true));
 		if(this.falsified.isEmpty()){
 			throw new NoUnaccountedClaims("No unaccounted-for Claims specified.");
 		}
@@ -106,7 +104,7 @@ public abstract class FalsifiedTime extends AbstractTime {
 	 * constructed.</p>
 	 * @return this FalsifiedTime
 	 */
-	public FalsifiedTime falsify(){
+	public FalsifiedTime falsifyClaims(){
 		falsify.run();
 		falsify = DO_NOTHING;
 		return this;

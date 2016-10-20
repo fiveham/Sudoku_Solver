@@ -14,7 +14,7 @@ public abstract class Fact extends NodeSet<Claim,Fact>{
 	 * the Claim satisfying the Rule has been completely 
 	 * identified.</p>
 	 */
-	private static final int SIZE_WHEN_SOLVED = 1;
+	public static final int SIZE_WHEN_SOLVED = 1;
 	
 	/**
 	 * <p>The number ({@value}) of elements (neighbors) of a Rule that 
@@ -24,7 +24,7 @@ public abstract class Fact extends NodeSet<Claim,Fact>{
 	 * as inputs to the Rule, make such a Rule a {@code xor} operation on 
 	 * its neighbors.</p>
 	 */
-	private static final int SIZE_WHEN_XOR = 2;
+	public static final int SIZE_WHEN_XOR = 2;
 	
 	protected Fact(Puzzle puzzle, Collection<Claim> c, int hash) {
 		super(puzzle, hash);
