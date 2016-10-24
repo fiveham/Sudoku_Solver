@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
+import java.util.stream.Collector.Characteristics;
 import java.util.stream.Collectors;
 import sudoku.Claim;
 import sudoku.Fact;
@@ -79,9 +80,7 @@ public class ColorChain extends AbstractTechnique {
 	 * at the time when this method is called
 	 */
 	private Collection<Graph<ColorClaim>> generateChains(){
-		List<Fact> xorRules = target.nodeStream()
-				.filter(Fact.class::isInstance)
-				.map(Fact.class::cast)
+		List<Fact> xorRules = target.factStream()
 				.filter(Fact::isXor)
 				.collect(Collectors.toList());
 		return new BasicGraph<ColorClaim>(Wrap.wrap(xorRules,ColorClaim::new))
@@ -183,19 +182,15 @@ public class ColorChain extends AbstractTechnique {
 	 * null if no changes were made
 	 */
 	private TechniqueEvent visibleColorContradiction(Graph<ColorClaim> concom){
-		Set<Claim> visibleToPositives = concom.nodeStream()
-				.filter(ColorClaim::posColor)
-				.map(ColorClaim::wrapped)
-				.map(Claim::visible)
-				.collect(Sledgehammer.massUnionCollector());
-		Set<Claim> visibleToNegatives = concom.nodeStream()
-				.filter(ColorClaim::negColor)
-				.map(ColorClaim::wrapped)
-				.map(Claim::visible)
-				.collect(Sledgehammer.massUnionCollector());
 		
-		Set<Claim> claimsToSetFalse = visibleToPositives;
-		claimsToSetFalse.retainAll(visibleToNegatives);
+		Set<Claim> claimsToSetFalse = ColorClaim.COLOR_SIGNS.stream()
+				.map((test) -> concom.nodeStream()
+						.filter(test)
+						.map(ColorClaim::wrapped)
+						.map(Claim::visible)
+						.collect(Sledgehammer.massUnionCollector()))
+				.collect(massIntersectionCollector());
+		
 		if(!claimsToSetFalse.isEmpty()){
 			return new SolveEventColorContradiction(claimsToSetFalse).falsifyClaims();
 		}
@@ -237,7 +232,45 @@ public class ColorChain extends AbstractTechnique {
 		}
 	}
 	
-	private TechniqueEvent xyChain(Collection<Graph<ColorClaim>> chains){ //FIXME make sure that chains of single binary Rules are included
+	public static <T extends Collection<E>, E> Collector<T,?,Set<E>> massIntersectionCollector(){
+		
+		class Intersection<Z> extends HashSet<Z>{
+			
+			/**
+			 * 
+			 */
+			private static final long serialVersionUID = -1768519565525064860L;
+			
+			private boolean used = false;
+			
+			public Intersection(){
+				super();
+			}
+			
+			public Intersection(Collection<? extends Z> coll){
+				super(coll);
+			}
+			
+			public Intersection<Z> intersect(Collection<? extends Z> coll){
+				if(used){
+					retainAll(coll);
+				}else{
+					addAll(coll);
+					used = true;
+				}
+				return this;
+			}
+		}
+		
+		return Collector.of(
+				Intersection<E>::new, 
+				Intersection::intersect, 
+				Intersection::intersect, 
+				Intersection<E>::new, 
+				Characteristics.UNORDERED, Characteristics.IDENTITY_FINISH);
+	}
+	
+	private TechniqueEvent xyChain(Collection<Graph<ColorClaim>> chains){
 		
 		for(Graph<ColorClaim> chain : chains){
 			
@@ -247,14 +280,7 @@ public class ColorChain extends AbstractTechnique {
 									.filter(test)
 									.map(ColorClaim::wrapped)
 									.collect(Collectors.toSet())))
-					.collect(Collector.of(
-							HashSet<Claim>::new, 
-							Set::addAll, 
-							(a,b) -> {
-								a.retainAll(b); 
-								return a;
-							}, 
-							Collector.Characteristics.IDENTITY_FINISH, Collector.Characteristics.UNORDERED));
+					.collect(massIntersectionCollector());
 			
 			if(!falseIntersection.isEmpty()){
 				return new SolveEventXYChain(
@@ -404,7 +430,7 @@ public class ColorChain extends AbstractTechnique {
 		 * @param color the new color
 		 */
 		void setColor(int color){
-			if(this.color==0){
+			if(this.color == 0){
 				this.color = color;
 			} else{
 				throw new IllegalStateException("Cannot change color to "+color+" because color has already been set to "+this.color);				
