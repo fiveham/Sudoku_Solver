@@ -5,12 +5,10 @@ import common.graph.Wrap;
 import common.graph.BasicGraph;
 import common.graph.WrapVertex;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -42,31 +40,6 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	public ColorChain(Sudoku puzzle) {
 		super(puzzle);
-	}
-	
-	private static final List<BiFunction<ColorChain,Collection<Graph<ColorClaim>>,TechniqueEvent>> SUBTECHNIQUES = Arrays.asList(
-			ColorChain::visibleColorContradiction, 
-			ColorChain::xyChain);
-	
-	/**
-	 * <p>Applies {@link #SUBTECHNIQUES sub-techniques} for 
-	 * {@link #visibleColorContradiction(Collection) color-contradiction} 
-	 * and {@link #bridgeCollapse(Collection) chain-chain interaction} 
-	 * in sequence.</p>
-	 * @return a TechniqueEvent describing the changes made to the puzzle, or null 
-	 * if no changes were made
-	 */
-	@Override
-	protected TechniqueEvent process(){
-		Collection<Graph<ColorClaim>> chains = generateChains();
-		for(BiFunction<ColorChain, Collection<Graph<ColorClaim>>,TechniqueEvent> test : SUBTECHNIQUES){
-			TechniqueEvent result = test.apply(this,chains);
-			if(result != null){
-				return result;
-			}
-		}
-		
-		return null;
 	}
 	
 	/**
@@ -152,48 +125,6 @@ public class ColorChain extends AbstractTechnique {
 		}
 	}
 	
-	/**
-	 * <p>Any claims in the {@code target} that {@link Claim#visibleClaims() can see} 
-	 * Claims with opposite colors from the same chain must be false, no matter 
-	 * which color from that chain is true and which is false.</p>
-	 * @return a TechniqueEvent describing the changes made to the puzzle, or 
-	 * null if no changes were made
-	 */
-	private TechniqueEvent visibleColorContradiction(Collection<Graph<ColorClaim>> chains){
-		for(Graph<ColorClaim> chain : chains){
-			
-			Set<Claim> claimsToSetFalse = ColorClaim.COLOR_SIGNS.stream()
-					.map((test) -> chain.nodeStream()
-							.filter(test)
-							.map(ColorClaim::wrapped)
-							.map(Claim::visible)
-							.collect(Sledgehammer.massUnionCollector()))
-					.collect(massIntersectionCollector());
-			
-			if(!claimsToSetFalse.isEmpty()){
-				return new SolveEventColorContradiction(claimsToSetFalse).falsifyClaims();
-			}
-		}
-		return null;
-	}
-
-	/**
-	 * <p>A time node encapsulating the events that occur in searching 
-	 * for and falsifying Claims that see both colors of a xor-chain.</p>
-	 * @author fiveham
-	 *
-	 */
-	public static class SolveEventColorContradiction extends TechniqueEvent{
-		private SolveEventColorContradiction(Set<Claim> falseClaims){
-			super(falseClaims);
-		}
-		
-		@Override
-		protected String toStringStart(){
-			return "Visibile-color contradiction";
-		}
-	}
-	
 	public static <T extends Collection<E>, E> Collector<T,?,Set<E>> massIntersectionCollector(){
 		
 		class Intersection<Z> extends HashSet<Z>{
@@ -232,9 +163,10 @@ public class ColorChain extends AbstractTechnique {
 				Characteristics.UNORDERED, Characteristics.IDENTITY_FINISH);
 	}
 	
-	private TechniqueEvent xyChain(Collection<Graph<ColorClaim>> chains){
+	@Override
+	public TechniqueEvent process(){
 		
-		for(Graph<ColorClaim> chain : chains){
+		for(Graph<ColorClaim> chain : generateChains()){
 			
 			Set<Claim> falseIntersection = ColorClaim.COLOR_SIGNS.stream()
 					.map((test) -> chain.nodeStream()
