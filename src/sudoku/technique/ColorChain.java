@@ -161,39 +161,20 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	private TechniqueEvent visibleColorContradiction(Collection<Graph<ColorClaim>> chains){
 		for(Graph<ColorClaim> chain : chains){
-			TechniqueEvent result = visibleColorContradiction(chain);
-			if( result != null ){
-				return result;
+			
+			Set<Claim> claimsToSetFalse = ColorClaim.COLOR_SIGNS.stream()
+					.map((test) -> chain.nodeStream()
+							.filter(test)
+							.map(ColorClaim::wrapped)
+							.map(Claim::visible)
+							.collect(Sledgehammer.massUnionCollector()))
+					.collect(massIntersectionCollector());
+			
+			if(!claimsToSetFalse.isEmpty()){
+				return new SolveEventColorContradiction(claimsToSetFalse).falsifyClaims();
 			}
 		}
 		return null;
-	}
-	
-	/**
-	 * <p>Detects and {@link Claim#setFalse() sets false} Claims that 
-	 * can see both of the colors in {@code concom}.</p>
-	 * 
-	 * <p>In a xor-chain, either all the positive-colored Claims are true 
-	 * and all the negative-colored Claims are false or all the positive-
-	 * colored Claims are false and all the negative-colored Claims are 
-	 * true. </p>
-	 * @param concom a xor-chain
-	 * @return a TechniqueEvent describing the changes made to the puzzle, or 
-	 * null if no changes were made
-	 */
-	private TechniqueEvent visibleColorContradiction(Graph<ColorClaim> concom){
-		
-		Set<Claim> claimsToSetFalse = ColorClaim.COLOR_SIGNS.stream()
-				.map((test) -> concom.nodeStream()
-						.filter(test)
-						.map(ColorClaim::wrapped)
-						.map(Claim::visible)
-						.collect(Sledgehammer.massUnionCollector()))
-				.collect(massIntersectionCollector());
-		
-		return claimsToSetFalse.isEmpty()
-				? null
-				: new SolveEventColorContradiction(claimsToSetFalse).falsifyClaims();
 	}
 
 	/**
