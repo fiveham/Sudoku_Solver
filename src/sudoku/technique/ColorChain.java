@@ -194,23 +194,6 @@ public class ColorChain extends AbstractTechnique {
 		}
 	}
 	
-	/**
-	 * <p>A Time node describing two xor-chains' collapse due 
-	 * to {@link #bridgeCollapse(Collection) bridge} interaction.</p>
-	 * @author fiveham
-	 *
-	 */
-	public static class SolveEventBridgeCollapse extends TechniqueEvent{
-		private SolveEventBridgeCollapse(Set<Claim> falsified){
-			super(falsified);
-		}
-		
-		@Override
-		protected String toStringStart(){
-			return "Bridge-collapse";
-		}
-	}
-	
 	public static <T extends Collection<E>, E> Collector<T,?,Set<E>> massIntersectionCollector(){
 		
 		class Intersection<Z> extends HashSet<Z>{
