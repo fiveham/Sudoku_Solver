@@ -275,11 +275,11 @@ public class ColorChain extends AbstractTechnique {
 		for(Graph<ColorClaim> chain : chains){
 			
 			Set<Claim> falseIntersection = ColorClaim.COLOR_SIGNS.stream()
-					.map((test) -> getFalsifiedClaimsForTrueColor(
-							chain.nodeStream()
-									.filter(test)
-									.map(ColorClaim::wrapped)
-									.collect(Collectors.toSet())))
+					.map((test) -> chain.nodeStream()
+							.filter(test)
+							.map(ColorClaim::wrapped)
+							.collect(Collectors.toSet()))
+					.map(ColorChain::getFalsifiedClaimsForTrueColor)
 					.collect(massIntersectionCollector());
 			
 			if(!falseIntersection.isEmpty()){
