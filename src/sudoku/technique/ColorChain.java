@@ -191,11 +191,9 @@ public class ColorChain extends AbstractTechnique {
 						.collect(Sledgehammer.massUnionCollector()))
 				.collect(massIntersectionCollector());
 		
-		if(!claimsToSetFalse.isEmpty()){
-			return new SolveEventColorContradiction(claimsToSetFalse).falsifyClaims();
-		}
-		
-		return null;
+		return claimsToSetFalse.isEmpty()
+				? null
+				: new SolveEventColorContradiction(claimsToSetFalse).falsifyClaims();
 	}
 
 	/**
