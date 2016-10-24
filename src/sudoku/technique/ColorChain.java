@@ -173,11 +173,11 @@ public class ColorChain extends AbstractTechnique {
 							.filter(test)
 							.map(ColorClaim::wrapped)
 							.collect(Collectors.toSet()))
-					.map(ColorChain::getFalsifiedClaimsForTrueColor)
+					.map(ColorChain::getFalsifiedClaims)
 					.collect(massIntersectionCollector());
 			
 			if(!falseIntersection.isEmpty()){
-				return new SolveEventXYChain(
+				return new SolveEventColorChain(
 						falseIntersection, 
 						chain.nodeStream()
 								.map(ColorClaim::wrapped)
@@ -192,7 +192,7 @@ public class ColorChain extends AbstractTechnique {
 		return null;
 	}
 	
-	private static Set<Claim> getFalsifiedClaimsForTrueColor(Set<Claim> initialTrue){
+	private static Set<Claim> getFalsifiedClaims(Set<Claim> initialTrue){
 		
 		Set<Claim> trueClaims = new HashSet<>();
 		Set<Claim> falseClaims = new HashSet<>();
@@ -263,18 +263,18 @@ public class ColorChain extends AbstractTechnique {
 		return Sledgehammer.massUnion(newFalse);
 	}
 	
-	public class SolveEventXYChain extends TechniqueEvent{
+	public class SolveEventColorChain extends TechniqueEvent{
 		
 		private final Collection<Fact> xorEntity;
 		
-		public SolveEventXYChain(Set<Claim> falsified, Collection<Fact> xorEntity) {
+		public SolveEventColorChain(Set<Claim> falsified, Collection<Fact> xorEntity) {
 			super(falsified);
 			this.xorEntity = xorEntity;
 		}
 		
 		@Override
 		protected String toStringStart() {
-			return "XYChain based on the xor-entity "+xorEntity.toString();
+			return "Either-solution propagation from the xor-chain "+xorEntity.toString();
 		}
 	}
 	
@@ -293,7 +293,7 @@ public class ColorChain extends AbstractTechnique {
 		}
 		
 		private int color = 0;
-		private Claim claim;
+		private final Claim claim;
 		private final List<ColorClaim> neighbors;
 		
 		ColorClaim(Claim claim){

@@ -105,14 +105,14 @@ public abstract class FalsifiedTime extends AbstractTime {
 	 * @return this FalsifiedTime
 	 */
 	public FalsifiedTime falsifyClaims(){
-		falsify.run();
-		falsify = DO_NOTHING;
+		falsifyClaims.run();
+		falsifyClaims = DO_NOTHING;
 		return this;
 	}
 	
 	private static final Runnable DO_NOTHING = () -> {};
 	
-	private Runnable falsify = () -> falsified().stream().forEach((c) -> c.setFalse(this));
+	private Runnable falsifyClaims = () -> falsified().stream().forEach((c) -> c.setFalse(this));
 	
 	@Override
 	public String toString(){
@@ -149,7 +149,8 @@ public abstract class FalsifiedTime extends AbstractTime {
 	/**
 	 * <p>A short description of this type of Time. The output of 
 	 * {@code toString()} begins with this. A trailing space should 
-	 * not be included.</p>
+	 * not be included. The description should take the form of a 
+	 * noun phrase.</p>
 	 * @return a short description of this type of Time
 	 */
 	protected abstract String toStringStart();
