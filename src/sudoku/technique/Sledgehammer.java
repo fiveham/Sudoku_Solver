@@ -492,7 +492,7 @@ public class Sledgehammer extends AbstractTechnique {
 					.map(rulesVisibleToConnectedSources::get)
 					.collect(Collectors.toList());
 			recipientsVisibleToMultipleSources.retainAll(distinctRulesAtSize(sources.size()));
-			Map<Fact,Integer> sourceCounts = countingUnion(sourcesSeenByRemainingRecipients); //TODO move countingUnion to common.Sets
+			Map<Fact,Integer> sourceCounts = Sets.countingUnion(sourcesSeenByRemainingRecipients);
 			
 			if(recipientsVisibleToMultipleSources.size() >= sources.size() 
 					&& sourceCounts.size() >= sources.size() 
@@ -541,20 +541,6 @@ public class Sledgehammer extends AbstractTechnique {
 	
 	public static final Function<Sudoku,List<Integer>> DIMSOURCE = 
 			(s) -> IntStream.range(0,s.sideLength()).mapToObj(Integer.class::cast).collect(Collectors.toList());
-	
-	private static <T> Map<T,Integer> countingUnion(Collection<? extends Collection<T>> collections){
-		Map<T,Integer> result = new HashMap<>();
-		
-		for(Collection<T> collection : collections){
-			for(T t : collection){
-				result.put(t, result.containsKey(t) 
-						? 1+result.get(t) 
-						: 1 );
-			}
-		}
-		
-		return result;
-	}
 	
 	/**
 	 * <p>A {@link java.util.HashMap HashMap} whose {@link HashMap#get(Object) get} method 

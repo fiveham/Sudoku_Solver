@@ -1,7 +1,9 @@
 package common;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collector;
 import java.util.stream.Collector.Characteristics;
@@ -71,5 +73,19 @@ public class Sets {
 				HashSet<S>::new, 
 				Set::addAll, 
 				Sledgehammer::mergeCollections);
+	}
+	
+	public static <T> Map<T,Integer> countingUnion(Collection<? extends Collection<T>> collections){
+		Map<T,Integer> result = new HashMap<>();
+		
+		for(Collection<T> collection : collections){
+			for(T t : collection){
+				result.put(t, result.containsKey(t) 
+						? 1+result.get(t) 
+						: 1 );
+			}
+		}
+		
+		return result;
 	}
 }
