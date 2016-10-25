@@ -8,8 +8,6 @@ import java.util.Set;
 import java.util.stream.Collector;
 import java.util.stream.Collector.Characteristics;
 
-import sudoku.technique.Sledgehammer;
-
 public class Sets {
 	
 	public static <T extends Collection<E>, E> Collector<T,?,Set<E>> massIntersectionCollector(){
@@ -72,7 +70,18 @@ public class Sets {
 		return Collector.of(
 				HashSet<S>::new, 
 				Set::addAll, 
-				Sledgehammer::mergeCollections);
+				Sets::mergeCollections);
+	}
+	
+	/**
+	 * <p>Adds {@code c1} to {@code c2} and returns {@code c1}. This is intended to 
+	 * be used as a {@link java.util.stream.Collector#combiner() combiner} for a 
+	 * {@link java.util.stream.Collector Collector}.</p>
+	 * @return {@code c1} after the contents of {@code c2} are added to it
+	 */
+	public static <E, C extends Collection<E>> C mergeCollections(C c1, C c2){
+		c1.addAll(c2);
+		return c1;
 	}
 	
 	public static <T> Map<T,Integer> countingUnion(Collection<? extends Collection<T>> collections){

@@ -13,7 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -123,7 +122,13 @@ public class Sledgehammer extends AbstractTechnique {
 	public static final int MIN_RECIPIENT_COUNT_PER_SOURCE = 2;
 	public static final int MIN_SOURCE_COUNT_PER_RECIPIENT = 2;
 	
-	private static final int MIN_SLEDGEHAMMER_SIZE = 2;
+	/**
+	 * <p>The subset-based principle of Sledgehammer scenarios can apply to 
+	 * source Rules of sizes 1 and 2, but those sizes are accounted for fully 
+	 * by {@link Rule#validateState automatic resolution} and 
+	 * {@link ColorChain xy-chain analysis} respectively.</p>
+	 */
+	private static final int MIN_SLEDGEHAMMER_SIZE = 3;
 	
 	private final VisibleCache visibleCache;
 	
@@ -154,15 +159,6 @@ public class Sledgehammer extends AbstractTechnique {
 	}
 	
 	/**
-	 * <p>The {@code mergeFunction} for the {@link Collectors#toMap(Function,Function,BinaryOperator) toMap} 
-	 * calls that define {@link #MAP_SOURCES_BY_SIZE} and {@link #MAP_RULES_BY_SIZE}.</p>
-	 */
-	public static <E, C extends Collection<E>> C mergeCollections(C c1, C c2){
-		c1.addAll(c2);
-		return c1;
-	}
-	
-	/**
 	 * <p>Collects a list of distinct Rules from a Sudoku into a Map partitioning them 
 	 * according to the minimum size of a sledgehammer in which those Rules can serve.</p>
 	 * @param ruleStream
@@ -178,7 +174,7 @@ public class Sledgehammer extends AbstractTechnique {
 					result.add(r);
 					return result;
 				}, 
-				Sledgehammer::mergeCollections));
+				Sets::mergeCollections));
 	}
 	
 	/**
@@ -268,7 +264,12 @@ public class Sledgehammer extends AbstractTechnique {
 			Debug.log("At srcCombo size "+size); //DEBUG
 			
 			builtSrcComboAtLastSize = false;
-			TechniqueEvent event = exploreSourceCombos(new ArrayList<>(0), new HashSet<>(0), new HashSet<>(0), size, distinctSourcesAtSize(size));
+			TechniqueEvent event = exploreSourceCombos(
+					new ArrayList<>(0), 
+					new HashSet<>(0), 
+					new HashSet<>(0), 
+					size, 
+					distinctSourcesAtSize(size));
 			if(event != null){
 				return event;
 			}
@@ -318,7 +319,12 @@ public class Sledgehammer extends AbstractTechnique {
 					newVisVisCloud = visVis;
 				}
 				
-				TechniqueEvent event = exploreSourceCombos(newSrcCombo, newVisCloud, newVisVisCloud, size, localSourceMask);
+				TechniqueEvent event = exploreSourceCombos(
+						newSrcCombo, 
+						newVisCloud, 
+						newVisVisCloud, 
+						size, 
+						localSourceMask);
 				if(event != null){
 					return event;
 				}
