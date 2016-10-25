@@ -1,5 +1,6 @@
 package sudoku.technique;
 
+import common.Sets;
 import common.graph.Graph;
 import common.graph.Wrap;
 import common.graph.BasicGraph;
@@ -12,8 +13,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collector;
-import java.util.stream.Collector.Characteristics;
 import java.util.stream.Collectors;
 import sudoku.Claim;
 import sudoku.Fact;
@@ -125,43 +124,7 @@ public class ColorChain extends AbstractTechnique {
 		}
 	}
 	
-	public static <T extends Collection<E>, E> Collector<T,?,Set<E>> massIntersectionCollector(){
-		
-		class Intersection<Z> extends HashSet<Z>{
-			
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = -1768519565525064860L;
-			
-			private boolean used = false;
-			
-			public Intersection(){
-				super();
-			}
-			
-			public Intersection(Collection<? extends Z> coll){
-				super(coll);
-			}
-			
-			public Intersection<Z> intersect(Collection<? extends Z> coll){
-				if(used){
-					retainAll(coll);
-				}else{
-					addAll(coll);
-					used = true;
-				}
-				return this;
-			}
-		}
-		
-		return Collector.of(
-				Intersection<E>::new, 
-				Intersection::intersect, 
-				Intersection::intersect, 
-				Intersection<E>::new, 
-				Characteristics.UNORDERED, Characteristics.IDENTITY_FINISH);
-	}
+	
 	
 	@Override
 	public TechniqueEvent process(){
@@ -174,14 +137,14 @@ public class ColorChain extends AbstractTechnique {
 							.map(ColorClaim::wrapped)
 							.collect(Collectors.toSet()))
 					.map(ColorChain::getFalsifiedClaims)
-					.collect(massIntersectionCollector());
+					.collect(Sets.massIntersectionCollector());
 			
 			if(!falseIntersection.isEmpty()){
 				return new SolveEventColorChain(
 						falseIntersection, 
 						chain.nodeStream()
 								.map(ColorClaim::wrapped)
-								.collect(Sledgehammer.massUnionCollector())
+								.collect(Sets.massUnionCollector())
 								.stream()
 								.filter(Fact::isXor)
 								.collect(Collectors.toList()))
@@ -260,7 +223,7 @@ public class ColorChain extends AbstractTechnique {
 	 * @return
 	 */
 	private static Set<Fact> visibleRules(Set<Claim> newFalse){
-		return Sledgehammer.massUnion(newFalse);
+		return Sets.massUnion(newFalse);
 	}
 	
 	public class SolveEventColorChain extends TechniqueEvent{

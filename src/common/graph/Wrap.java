@@ -1,5 +1,6 @@
 package common.graph;
 
+import common.Sets;
 import common.ComboGen;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,7 +10,6 @@ import java.util.Map;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import sudoku.technique.Sledgehammer;
 
 /**
  * <p>This class wraps a non-Vertex object so that a network of those non-Vertex 
@@ -162,7 +162,7 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	public static <T extends WrapVertex<W,T>, E extends Collection<W>, W> List<T> wrap(
 			Collection<E> edges, 
 			Function<? super W, T> wrapper){
-		List<T> wrappedNodes = Sledgehammer.massUnion(edges).stream()
+		List<T> wrappedNodes = Sets.massUnion(edges).stream()
 				.map(wrapper)
 				.collect(Collectors.toList());
 		addNodes(edges, wrappedNodes);

@@ -1,5 +1,6 @@
 package sudoku.technique;
 
+import common.Sets;
 import common.ComboGen;
 import common.Pair;
 import common.ToolSet;
@@ -15,7 +16,6 @@ import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -217,7 +217,7 @@ public class Sledgehammer extends AbstractTechnique {
 			return upperBound;
 		} else if(noLoopVisibleRuleCount > actualVisibleCount){
 			for(List<Fact> visibleCombo : new ComboGen<>(visible, MIN_RECIPIENT_COUNT_PER_SOURCE, r.size())){
-				if(massUnion(visibleCombo).containsAll(r)){
+				if(Sets.massUnion(visibleCombo).containsAll(r)){
 					return visibleCombo.size();
 				}
 			}
@@ -492,7 +492,7 @@ public class Sledgehammer extends AbstractTechnique {
 					.map(rulesVisibleToConnectedSources::get)
 					.collect(Collectors.toList());
 			recipientsVisibleToMultipleSources.retainAll(distinctRulesAtSize(sources.size()));
-			Map<Fact,Integer> sourceCounts = countingUnion(sourcesSeenByRemainingRecipients);
+			Map<Fact,Integer> sourceCounts = countingUnion(sourcesSeenByRemainingRecipients); //TODO move countingUnion to common.Sets
 			
 			if(recipientsVisibleToMultipleSources.size() >= sources.size() 
 					&& sourceCounts.size() >= sources.size() 
@@ -518,8 +518,8 @@ public class Sledgehammer extends AbstractTechnique {
 	}
 	
 	private Set<Claim> areSledgehammerScenario(Collection<Fact> sources, Collection<Fact> recipients){
-		Set<Claim> sourceClaims = massUnion(sources);
-		ToolSet<Claim> recipClaims = new ToolSet<>(massUnion(recipients));
+		Set<Claim> sourceClaims = Sets.massUnion(sources);
+		ToolSet<Claim> recipClaims = new ToolSet<>(Sets.massUnion(recipients));
 		
 		if(recipClaims.hasProperSubset(sourceClaims)){
 			recipClaims.removeAll(sourceClaims);
@@ -542,23 +542,6 @@ public class Sledgehammer extends AbstractTechnique {
 	public static final Function<Sudoku,List<Integer>> DIMSOURCE = 
 			(s) -> IntStream.range(0,s.sideLength()).mapToObj(Integer.class::cast).collect(Collectors.toList());
 	
-	/**
-	 * <p>Unions all the collections in {@code srcCombo} into one set and returns 
-	 * that set, unless some elements are shared among the collections in 
-	 * srcCombo, in which case, if {@code nullIfNotDisjoint} is true, null is 
-	 * returned instead.</p>
-	 * @param collections a collection of collections whose elements are combined 
-	 * into one set and returned.
-	 * @param nullIfNotDisjoint controls whether an intersection among the elements 
-	 * of {@code srcCombo} results in {@code null} being returned.
-	 * @return {@code null} if {@code nullIfNotDisjoint} is {@code true} and 
-	 * some of the elements of {@code srcCombo} intersect each other, or otherwise 
-	 * the mass-union of all the elements of {@code srcCombo}.
-	 */
-	public static <E, C extends Collection<E>> Set<E> massUnion(Collection<C> collections){
-		return collections.stream().collect(massUnionCollector());
-	}
-	
 	private static <T> Map<T,Integer> countingUnion(Collection<? extends Collection<T>> collections){
 		Map<T,Integer> result = new HashMap<>();
 		
@@ -571,13 +554,6 @@ public class Sledgehammer extends AbstractTechnique {
 		}
 		
 		return result;
-	}
-	
-	public static <S, T extends Collection<S>> Collector<T,?,Set<S>> massUnionCollector(){
-		return Collector.of(
-				HashSet<S>::new, 
-				Set::addAll, 
-				Sledgehammer::mergeCollections);
 	}
 	
 	/**

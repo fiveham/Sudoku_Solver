@@ -1,5 +1,6 @@
 package sudoku;
 
+import common.Sets;
 import common.ToolSet;
 import common.graph.Vertex;
 import common.time.Time;
@@ -286,7 +287,7 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 	 * {@link #neighbors() neighbor} in common with this vertex
 	 */
 	public Set<S> visible(){
-		Set<S> pool = sudoku.technique.Sledgehammer.massUnion(this);
+		Set<S> pool = Sets.massUnion(this);
 		pool.remove(this);
 		return new HashSet<>(pool);
 	}

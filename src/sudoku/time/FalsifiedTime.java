@@ -1,5 +1,6 @@
 package sudoku.time;
 
+import common.Sets;
 import common.time.AbstractTime;
 import common.time.Time;
 import java.util.HashSet;
@@ -8,7 +9,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 import sudoku.Claim;
 import sudoku.Rule;
-import sudoku.technique.Sledgehammer;
 
 /**
  * <p>A Time in which some Claims are 
@@ -59,7 +59,7 @@ public abstract class FalsifiedTime extends AbstractTime {
 				.filter(FalsifiedTime.class::isInstance)
 				.map(FalsifiedTime.class::cast)
 				.map(FalsifiedTime::falsified)
-				.collect(Sledgehammer.massUnionCollector());
+				.collect(Sets.massUnionCollector());
 	}
 	
 	/**
