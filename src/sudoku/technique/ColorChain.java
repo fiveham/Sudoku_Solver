@@ -124,13 +124,9 @@ public class ColorChain extends AbstractTechnique {
 		}
 	}
 	
-	
-	
 	@Override
 	public TechniqueEvent process(){
-		
 		for(Graph<ColorClaim> chain : generateChains()){
-			
 			Set<Claim> falseIntersection = ColorClaim.COLOR_SIGNS.stream()
 					.map((test) -> chain.nodeStream()
 							.filter(test)
@@ -140,15 +136,14 @@ public class ColorChain extends AbstractTechnique {
 					.collect(Sets.massIntersectionCollector());
 			
 			if(!falseIntersection.isEmpty()){
-				return new SolveEventColorChain(
-						falseIntersection, 
-						chain.nodeStream()
-								.map(ColorClaim::wrapped)
-								.collect(Sets.massUnionCollector())
-								.stream()
-								.filter(Fact::isXor)
-								.collect(Collectors.toList()))
-				.falsifyClaims();
+				List<Fact> xorChain = chain.nodeStream()
+						.map(ColorClaim::wrapped)
+						.collect(Sets.massUnionCollector())
+						.stream()
+						.filter(Fact::isXor)
+						.collect(Collectors.toList());
+				return new SolveEventColorChain(falseIntersection, xorChain)
+						.falsifyClaims();
 			}
 		}
 		
@@ -237,7 +232,7 @@ public class ColorChain extends AbstractTechnique {
 		
 		@Override
 		protected String toStringStart() {
-			return "Either-solution propagation from the xor-chain "+xorEntity.toString();
+			return "Either-solution propagation from the "+xorEntity.size()+"-Rule xor-chain "+xorEntity.toString();
 		}
 	}
 	
