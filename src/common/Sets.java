@@ -48,12 +48,14 @@ public class Sets {
 				Characteristics.UNORDERED, Characteristics.IDENTITY_FINISH);
 	}
 	
-	
 	/**
 	 * <p>Unions all the collections in {@code srcCombo} into one set and returns 
 	 * that set, unless some elements are shared among the collections in 
 	 * srcCombo, in which case, if {@code nullIfNotDisjoint} is true, null is 
 	 * returned instead.</p>
+	 * @param <E> The type of the elements of the Set produced
+	 * @param <C> The type of the elements of {@code collections} which contain 
+	 * elements of type {@code E}.
 	 * @param collections a collection of collections whose elements are combined 
 	 * into one set and returned.
 	 * @param nullIfNotDisjoint controls whether an intersection among the elements 
