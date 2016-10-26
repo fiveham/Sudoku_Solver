@@ -353,8 +353,8 @@ public class ColorChain extends AbstractTechnique {
 		public static final List<Predicate<ColorClaim>> COLOR_SIGNS;
 		static{
 			COLOR_SIGNS = new ArrayList<>(2); //MAGIC
-			COLOR_SIGNS.add(ColorClaim::posColor);
-			COLOR_SIGNS.add(ColorClaim::negColor);
+			COLOR_SIGNS.add((colorClaim) -> colorClaim.color > 0);
+			COLOR_SIGNS.add((colorClaim) -> colorClaim.color < 0);
 		}
 		
 		private int color = 0;
@@ -374,14 +374,6 @@ public class ColorChain extends AbstractTechnique {
 		@Override
 		public List<ColorClaim> neighbors(){
 			return neighbors;
-		}
-		
-		public boolean posColor(){
-			return color > 0;
-		}
-		
-		public boolean negColor(){
-			return color < 0;
 		}
 		
 		/**
