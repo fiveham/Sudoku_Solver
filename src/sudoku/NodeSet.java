@@ -289,7 +289,7 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 	public Set<S> visible(){
 		Set<S> pool = Sets.massUnion(this);
 		pool.remove(this);
-		return new HashSet<>(pool);
+		return pool;
 	}
 	
 	/**
