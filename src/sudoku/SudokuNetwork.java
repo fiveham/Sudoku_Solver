@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 import sudoku.parse.Parser;
 
 /**
- * <p>A bipartite graph of Rules and Claims.</p>
+ * <p>A bipartite graph of Facts and Claims.</p>
  * @author fiveham
  *
  */
