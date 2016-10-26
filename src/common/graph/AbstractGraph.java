@@ -82,7 +82,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	 * @return this Graph
 	 */
 	@Override
-	public Graph<T> addContractEventListenerFactory(Supplier<Consumer<Set<T>>> newEL){
+	public Graph<T> addGrowthListenerFactory(Supplier<Consumer<Set<T>>> newEL){
 		contractEventListenerFactories.add(newEL);
 		return this;
 	}
@@ -106,7 +106,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	@Override
 	public Collection<Graph<T>> connectedComponents(){
-		return connectedComponents(contractEventListeners(), STD_CONCOM_SEED_SRC);
+		return connectedComponents(growthListeners(), STD_CONCOM_SEED_SRC);
 	}
 	
 	@Override
@@ -155,7 +155,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	 * @return
 	 */
 	@Override
-	public List<Consumer<Set<T>>> contractEventListeners(){
+	public List<Consumer<Set<T>>> growthListeners(){
 		List<Consumer<Set<T>>> result = new ArrayList<>();
 		
 		for(Supplier<Consumer<Set<T>>> contractEventListenerFactory : contractEventListenerFactories){

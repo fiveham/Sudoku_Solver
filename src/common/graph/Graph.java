@@ -49,7 +49,7 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	 * @param newEL an event-listener-supplier to be added
 	 * @return this Graph
 	 */
-	public Graph<T> addContractEventListenerFactory(Supplier<Consumer<Set<T>>> newEL);
+	public Graph<T> addGrowthListenerFactory(Supplier<Consumer<Set<T>>> newEL);
 	
 	/**
 	 * <p>Returns a list of all the registered event-listeners for a 
@@ -57,7 +57,7 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	 * @return a list of all the registered event-listeners for a 
 	 * contraction event during the construction of connected components
 	 */
-	public List<Consumer<Set<T>>> contractEventListeners();
+	public List<Consumer<Set<T>>> growthListeners();
 	
 	/**
 	 * <p>Returns a collection of all the connected components of this Graph.</p>
