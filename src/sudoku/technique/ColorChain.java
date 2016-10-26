@@ -77,67 +77,60 @@ public class ColorChain extends AbstractTechnique {
 	 * @author fiveham
 	 *
 	 */
-	private static class ColorSource implements Consumer<Set<ColorClaim>>, Supplier<Consumer<Set<ColorClaim>>>{
+	private static class ColorSource implements Supplier<Consumer<Set<ColorClaim>>>{
 		
 		public static final int INIT_COLOR = 1;
 		
-		private boolean positive;
 		private int color;
+		
 		ColorSource(){
 			this.color = INIT_COLOR;
-			this.positive = true;
 		}
 		
-		/**
-		 * <p>Changes this ColorSource's color sign so that 
-		 * subsequent calls to {@code get()} return a color 
-		 * with the sign opposite of the sign returned by 
-		 * previous calls to {@code get()}.</p>
-		 */
-		private void invertColor(){
-			positive = !positive;
-		}
-		
-		/**
-		 * <p>Returns the current color with the current sign.</p>
-		 * @return the current color with the current sign
-		 */
-		private int getColor(){
-			return positive ? color : -color;
-		}
-		
-		/**
-		 * <p>Increments the internal unsigned color and resets 
-		 * the internal color-sign to positive.</p>
-		 */
-		private void nextColor(){
-			++color;
-			positive = true;
-		}
-		
-		@Override
-		public void accept(Set<ColorClaim> cuttingEdge) {
-			cuttingEdge.stream().forEach((e)->e.setColor(getColor()));
-			invertColor();
-		}
-		
-		/*
-		 * TODO Return an object of another class that implements Consumer<Set<ColorClaim>> 
-		 * so that those objects can be used concurrently without getting erroneous 
-		 * results (the same color-magnitude in multiple xor-chains) due to the 
-		 * "color" variable in this class instance getting changed.
-		 */
 		@Override
 		public Consumer<Set<ColorClaim>> get() {
-			nextColor();
-			return this;
+			return new Colorizer(color++);
+		}
+		
+		class Colorizer implements Consumer<Set<ColorClaim>>{
+			
+			private final int col;
+			private boolean positive;
+			
+			Colorizer(int col){
+				this.col = col;
+				this.positive = true;
+			}
+			
+			@Override
+			public void accept(Set<ColorClaim> cuttingEdge) {
+				cuttingEdge.stream().forEach((e)->e.setColor(getColor()));
+				invertColor();
+			}
+			
+			/**
+			 * <p>Changes this Colorizer's color sign so that 
+			 * subsequent calls to {@code getColor()} return a color 
+			 * with the sign opposite of the sign returned by 
+			 * previous calls to {@code getColor()}.</p>
+			 */
+			private void invertColor(){
+				positive = !positive;
+			}
+			
+			/**
+			 * <p>Returns the current color with the current sign.</p>
+			 * @return the current color with the current sign
+			 */
+			private int getColor(){
+				return positive ? col : -col;
+			}
 		}
 	}
 	
 	private static final List<Function<ColorChain,TechniqueEvent>> SUBTECHNIQUES = Arrays.asList(
 			ColorChain::xyChain, 
 			ColorChain::implicationIntersection);
-	
 	
 	@Override
 	public TechniqueEvent process(){
