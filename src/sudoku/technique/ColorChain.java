@@ -6,11 +6,15 @@ import common.graph.Wrap;
 import common.graph.BasicGraph;
 import common.graph.WrapVertex;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -51,12 +55,12 @@ public class ColorChain extends AbstractTechnique {
 	 * @return a collection of the xor-chains that exist in the target 
 	 * at the time when this method is called
 	 */
-	private Collection<Graph<ColorClaim>> generateChains(){
+	private static Collection<Graph<ColorClaim>> generateChains(Sudoku target, ColorSource colorSource){
 		List<Fact> xorRules = target.factStream()
 				.filter(Fact::isXor)
 				.collect(Collectors.toList());
 		return new BasicGraph<ColorClaim>(Wrap.wrap(xorRules,ColorClaim::new))
-				.addContractEventListenerFactory(colorSource)
+				.addGrowthListenerFactory(colorSource)
 				.connectedComponents();
 	}
 
@@ -90,7 +94,7 @@ public class ColorChain extends AbstractTechnique {
 		 * with the sign opposite of the sign returned by 
 		 * previous calls to {@code get()}.</p>
 		 */
-		void invertColor(){
+		private void invertColor(){
 			positive = !positive;
 		}
 		
@@ -98,7 +102,7 @@ public class ColorChain extends AbstractTechnique {
 		 * <p>Returns the current color with the current sign.</p>
 		 * @return the current color with the current sign
 		 */
-		int getColor(){
+		private int getColor(){
 			return positive ? color : -color;
 		}
 		
@@ -106,7 +110,7 @@ public class ColorChain extends AbstractTechnique {
 		 * <p>Increments the internal unsigned color and resets 
 		 * the internal color-sign to positive.</p>
 		 */
-		void nextColor(){
+		private void nextColor(){
 			++color;
 			positive = true;
 		}
@@ -117,6 +121,12 @@ public class ColorChain extends AbstractTechnique {
 			invertColor();
 		}
 		
+		/*
+		 * TODO Return an object of another class that implements Consumer<Set<ColorClaim>> 
+		 * so that those objects can be used concurrently without getting erroneous 
+		 * results (the same color-magnitude in multiple xor-chains) due to the 
+		 * "color" variable in this class instance getting changed.
+		 */
 		@Override
 		public Consumer<Set<ColorClaim>> get() {
 			nextColor();
@@ -124,9 +134,100 @@ public class ColorChain extends AbstractTechnique {
 		}
 	}
 	
+	private static final List<Function<ColorChain,TechniqueEvent>> SUBTECHNIQUES = Arrays.asList(
+			ColorChain::xyChain, 
+			ColorChain::implicationIntersection);
+	
+	
 	@Override
 	public TechniqueEvent process(){
-		for(Graph<ColorClaim> chain : generateChains()){
+		try{
+			return SUBTECHNIQUES.stream()
+					.map((st) -> st.apply(this))
+					.filter((result) -> result != null)
+					.findFirst().get();
+		} catch(NoSuchElementException e){
+			return null;
+		}
+	}
+	
+	private static final int MIN_IMPLICATION_INTERSECTION_SIZE = 3;
+	
+	/**
+	 * <p>Explores the consequences of each individual Claim of a 
+	 * given Rule (for each Rule of each size greater than 2) being 
+	 * true and falsifies those Claims that would have to be false 
+	 * regardless of which Claim of the Rule currently in focus is 
+	 * true.</p>
+	 * @return
+	 */
+	private TechniqueEvent implicationIntersection(){
+		for(int size = MIN_IMPLICATION_INTERSECTION_SIZE; size <= target.sideLength(); ++size){
+			
+			Collection<Fact> rules;
+			{
+				final int size2 = size;
+				rules = target.factStream()
+						.filter((f) -> f.size() == size2)
+						.collect(Collectors.toList());
+			}
+			
+			for(Fact rule : rules){
+				
+				Set<Claim> externalFalseIntersection = getFalseIntersection(rule, size);
+				
+				if(!externalFalseIntersection.isEmpty()){
+					return new SolveEventImplicationIntersection(
+							externalFalseIntersection, 
+							rule)
+							.falsifyClaims();
+				}
+			}
+		}
+		
+		return null;
+	}
+	
+	public static class SolveEventImplicationIntersection extends TechniqueEvent{
+		
+		private final Fact rule;
+		
+		SolveEventImplicationIntersection(Set<Claim> falsifiedClaims, Fact rule){
+			super(falsifiedClaims);
+			this.rule = rule;
+		}
+		
+		@Override
+		protected String toStringStart() {
+			return "An intersection of the Claims that would be falsified by the verification of any of the Claims of "+rule;
+		}
+	}
+	
+	private static Set<Claim> getFalseIntersection(Fact rule, int size){
+		
+		Iterator<Claim> claimAsserter = rule.iterator();
+		
+		if(!claimAsserter.hasNext()){
+			StringBuilder sb = new StringBuilder("This Iterator doesn't have a first element. ");
+			sb.append("Size: ").append(rule.size());
+			sb.append("Intended size: ").append(size);
+			throw new IllegalStateException(sb.toString());
+		}
+		
+		Set<Claim> falseIntersection = getFalsifiedClaims(claimAsserter.next());
+		
+		while(claimAsserter.hasNext() && !rule.containsAll(falseIntersection)){
+			falseIntersection.retainAll(
+					getFalsifiedClaims(
+							claimAsserter.next()));
+		}
+		
+		falseIntersection.removeAll(rule);
+		return falseIntersection;
+	}
+	
+	private TechniqueEvent xyChain(){
+		for(Graph<ColorClaim> chain : generateChains(target, colorSource)){
 			Set<Claim> falseIntersection = ColorClaim.COLOR_SIGNS.stream()
 					.map((test) -> chain.nodeStream()
 							.filter(test)
@@ -148,6 +249,12 @@ public class ColorChain extends AbstractTechnique {
 		}
 		
 		return null;
+	}
+	
+	private static Set<Claim> getFalsifiedClaims(Claim... initialTrue){
+		return getFalsifiedClaims(
+				Arrays.stream(initialTrue)
+				.collect(Collectors.toSet()));
 	}
 	
 	private static Set<Claim> getFalsifiedClaims(Set<Claim> initialTrue){
