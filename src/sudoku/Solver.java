@@ -1,16 +1,12 @@
 package sudoku;
 
-import common.Pair;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import sudoku.technique.ColorChain;
-import sudoku.technique.Initializer;
 import sudoku.technique.Sledgehammer;
 import sudoku.technique.Technique;
 import sudoku.time.TechniqueEvent;
@@ -30,19 +26,12 @@ import sudoku.parse.Parser;
  */
 public class Solver{
 	
-	public static final List<Function<Sudoku,Technique>> DEFAULT_INITIALIZER_SOURCE = Arrays.asList(
-			Initializer::new);
-	
 	public static final List<Function<Sudoku,Technique>> DEFAULT_PROCESSOR_SOURCE = Arrays.asList(
 			ColorChain::new, 
 			Sledgehammer::new);
 	
-	public static final List<Function<Sudoku,Technique>> NO_INITIALIZER_SOURCE = new ArrayList<>(0);
-	
-	private final List<Function<Sudoku,Technique>> initializerSource;
 	private final List<Function<Sudoku,Technique>> processorSource;
 	
-	private final List<Technique> initializers;
 	private final List<Technique> processors;
 	
 	private final Sudoku target;
@@ -87,16 +76,14 @@ public class Solver{
 	 * @param target the Puzzle to be solved
 	 */
 	public Solver(Sudoku puzzle, String filename){
-		this(puzzle, null, new SudokuThreadGroup(filename), new Object(), DEFAULT_INITIALIZER_SOURCE, DEFAULT_PROCESSOR_SOURCE, filename);
+		this(puzzle, null, new SudokuThreadGroup(filename), new Object(), DEFAULT_PROCESSOR_SOURCE, filename);
 	}
 	
-	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, List<Function<Sudoku,Technique>> initializers, List<Function<Sudoku,Technique>> processors, String source){
+	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, List<Function<Sudoku,Technique>> processors, String source){
 		this.target = target;
 		
-		this.initializerSource = initializers;
 		this.processorSource = processors;
 		
-		this.initializers = generateTechniques(target, initializers);
 		this.processors   = generateTechniques(target, processors);
 		
 		this.eventParent = eventParent;
@@ -159,7 +146,7 @@ public class Solver{
 		/*Debug.log("Running a thread: " + Thread.currentThread().getName());
 		Debug.log("Current graph size: "+target.size());*/
 		
-		Pair<ThreadEvent, BiFunction<Solver,Sudoku, Solver>> eventAndChildSrc = applyTechniques();
+		ThreadEvent eventAndChildSrc = process();
 		List<SudokuNetwork> networks;
 		if(eventAndChildSrc != null 
 				&& !(networks = target.connectedComponents().stream()
@@ -167,63 +154,20 @@ public class Solver{
 						.filter((sn) -> !sn.isSolved())
 						.collect(Collectors.toList())).isEmpty()){
 			String name = Thread.currentThread().getName();
-			this.event = eventAndChildSrc.getA();
+			this.event = eventAndChildSrc;
 			for(int i=0; i<networks.size(); ++i){
 				SudokuNetwork network = networks.get(i);
-				new Thread(group, eventAndChildSrc.getB().apply(this, network)::run, name+Integer.toString(i,Parser.MAX_RADIX)).start();
+				new Thread(
+						group, 
+						new Solver(network, event, group, lock, processorSource, source)::run, 
+						name+Integer.toString(i,Parser.MAX_RADIX))
+						.start();
 			}
 		} else{
 			synchronized(lock){
 				lock.notify();
 			}
 		}
-	}
-	
-	/**
-	 * <p>Applies this Solver's initializer and processor Techniques and returns 
-	 * the produced TechniqueEvent paired with the appropriate BiFunction to 
-	 * generate this Solver's children.</p>
-	 * @see #HAS_INITIALIZERS
-	 * @see #HAS_NO_INITIALIZERS
-	 * @return
-	 */
-	private Pair<ThreadEvent,BiFunction<Solver, Sudoku, Solver>> applyTechniques(){
-		for(TechniqueInheritance ti : TechniqueInheritance.values()){
-			ThreadEvent e = ti.solutionStyle.apply(this);
-			if(e != null){
-				return new Pair<>(e,ti.initializerInheritance);
-			}
-		}
-		return null;
-	}
-	
-	private static enum TechniqueInheritance{
-		WITH_INITIALIZERS(
-				Solver::initialize, 
-				Solver::childWithInitializers), 
-		WITHOUT_INITIALIZERS(
-				Solver::process, 
-				Solver::childWithoutInitializers);
-		
-		private final Function<Solver,ThreadEvent> solutionStyle;
-		private final BiFunction<Solver,Sudoku,Solver> initializerInheritance;
-		
-		private TechniqueInheritance(Function<Solver,ThreadEvent> solutionStyle, BiFunction<Solver,Sudoku,Solver> initializerInheritance){
-			this.solutionStyle = solutionStyle;
-			this.initializerInheritance = initializerInheritance;
-		}
-	}
-	
-	private Solver childWithInitializers(Sudoku network){
-		return new Solver(network, event, group, lock, initializerSource, processorSource, source);
-	}
-	
-	private Solver childWithoutInitializers(Sudoku network){
-		return new Solver(network, event, group, lock, NO_INITIALIZER_SOURCE, processorSource, source);
-	}
-	
-	private ThreadEvent initialize(){
-		return handleTechniques(initializers, eventParent);
 	}
 	
 	/**
@@ -238,11 +182,7 @@ public class Solver{
 	 * @return true if the target is solved, false otherwise
 	 */
 	private ThreadEvent process(){
-		return handleTechniques(processors, eventParent);
-	}
-	
-	private static ThreadEvent handleTechniques(List<Technique> techniques, ThreadEvent eventParent){
-		for(Technique technique : techniques){
+		for(Technique technique : processors){
 			TechniqueEvent techniqueEvent = technique.digest();
 			if(techniqueEvent != null){
 				return new ThreadEvent(eventParent, techniqueEvent, Thread.currentThread().getName());
