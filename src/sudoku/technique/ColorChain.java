@@ -130,6 +130,18 @@ public class ColorChain extends AbstractTechnique {
 		}
 	}
 	
+	/*
+	 * TODO incorporate use of subsumedFacts via its method into xyChain's analysis
+	 * and incorporate xyChain and subsumedFacts into implicationIntersection.
+	 * 
+	 * Currently, SubsumedFacts analysis (in the form of checks for fully localized 
+	 * Facts, not including partially localized facts) is implicitly incorporated into 
+	 * xyChain analysis.  I'd like to incorporate it in an explicit, formal manner, 
+	 * in order to add the partial-overlap functionality and also to avoid code duplication.
+	 * 
+	 * Additionally, I'd like to incorporate subsumedFacts and xyChain into 
+	 * implicationIntersection in order to begin unifying ColorChain and Sledgehammer.
+	 */
 	private static final List<Function<ColorChain,TechniqueEvent>> SUBTECHNIQUES = Arrays.asList(
 			ColorChain::subsumedFacts,
 			ColorChain::xyChain, 
