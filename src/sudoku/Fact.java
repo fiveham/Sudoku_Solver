@@ -40,6 +40,10 @@ public abstract class Fact extends NodeSet<Claim,Fact>{
 		return false;
 	}
 	
+	public boolean insideVisible(){
+		return visible().stream().anyMatch((v) -> v.containsAll(this));
+	}
+	
 	public boolean isSolved(){
 		return size() == SIZE_WHEN_SOLVED;
 	}
