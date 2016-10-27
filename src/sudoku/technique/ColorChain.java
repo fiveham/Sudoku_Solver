@@ -1,5 +1,6 @@
 package sudoku.technique;
 
+import common.Pair;
 import common.Sets;
 import common.graph.Graph;
 import common.graph.Wrap;
@@ -130,7 +131,7 @@ public class ColorChain extends AbstractTechnique {
 	}
 	
 	private static final List<Function<ColorChain,TechniqueEvent>> SUBTECHNIQUES = Arrays.asList(
-			ColorChain::unaryFacts,
+			ColorChain::subsumedFacts,
 			ColorChain::xyChain, 
 			ColorChain::implicationIntersection);
 	
@@ -415,12 +416,18 @@ public class ColorChain extends AbstractTechnique {
 	 * an Init's sole Claim neighbor and any and all resulting 
 	 * automatic resolution events, or null if no Init is found
 	 */
-	private TechniqueEvent unaryFacts(){
-		Optional<Fact> i = target.factStream()
-				.filter(Fact::isSolved)
+	private TechniqueEvent subsumedFacts(){
+		Optional<Pair<Fact,Set<Fact>>> i = target.factStream()
+				.map((fact) -> new Pair<Fact,Set<Fact>>(
+						fact, 
+						fact.visible().stream()
+								.filter((vis) -> vis.containsAll(fact))
+								.collect(Collectors.toSet())))
+				.filter((pair) -> !pair.getB().isEmpty())
 				.findFirst();
 		if(i.isPresent()){
-			return new UnaryFact(i.get()).falsifyClaims();
+			Pair<Fact,Set<Fact>> p = i.get();
+			return new SubsumedFact(p.getA(), p.getB()).falsifyClaims();
 		}
 		
 		return null;
@@ -433,19 +440,21 @@ public class ColorChain extends AbstractTechnique {
 	 * @author fiveham
 	 *
 	 */
-	public static class UnaryFact extends TechniqueEvent{
+	public static class SubsumedFact extends TechniqueEvent{
 		
 		private final Fact src;
+		private final Set<Fact> supersets;
 		
-		private UnaryFact(Fact solved){
+		private SubsumedFact(Fact solved, Set<Fact> supersets){
 			super(solved.iterator().next().visible());
 			this.src = solved;
+			this.supersets = supersets;
 		}
 		
 		@Override
 		public boolean equals(Object o){
-			if(o instanceof UnaryFact){
-				UnaryFact se = (UnaryFact) o;
+			if(o instanceof SubsumedFact){
+				SubsumedFact se = (SubsumedFact) o;
 				return super.equals(se) && (src == null ? se.src == null : src.equals(se.src));
 			}
 			return false;
@@ -453,7 +462,9 @@ public class ColorChain extends AbstractTechnique {
 		
 		@Override
 		protected String toStringStart(){
-			return "Unary Fact "+src;
+			return src+"is subsumed by "+supersets.stream()
+					.map(Object::toString)
+					.collect(Collectors.joining(", "));
 		}
 	}
 }
