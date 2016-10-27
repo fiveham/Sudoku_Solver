@@ -3,17 +3,12 @@ package sudoku;
 import common.Sets;
 import common.ToolSet;
 import common.graph.Vertex;
-import common.time.Time;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import sudoku.time.FalsifiedTime;
-import sudoku.time.TechniqueEvent;
 
 /**
  * <p>A set that's a node in {@link Puzzle a graph representation of a sudoku target}, 
@@ -83,18 +78,11 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 	
 	@Override
 	public final boolean remove(Object o){
-		boolean result = remove_internal(o);
-		if(result){
-			validateState(new DummyTime());
-		}
-		return result;
+		return remove_internal(o);
 	}
 	
 	public final boolean remove(FalsifiedTime time, Object o){
 		boolean result = remove_internal(time, o);
-		if(result){
-			validateState(time);
-		}
 		return result;
 	}
 	
@@ -138,9 +126,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		for(Object o : c){
 			result |= remove_internal(o);
 		}
-		if(result){
-			validateState(new DummyTime());
-		}
 		return result;
 	}
 	
@@ -149,9 +134,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		
 		for(Object o : c){
 			result |= remove_internal(time, o);
-		}
-		if(result){
-			validateState(time);
 		}
 		return result;
 	}
@@ -167,9 +149,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 				result = true;
 			}
 		}
-		if(result){
-			validateState(new DummyTime());
-		}
 		return result;
 	}
 	
@@ -182,9 +161,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 				remove_internal(time, t);
 				result = true;
 			}
-		}
-		if(result){
-			validateState(time);
 		}
 		return result;
 	}
@@ -250,20 +226,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		public boolean hasNext(){
 			return wrapped.hasNext();
 		}
-	}
-	
-	/**
-	 * <p>Checks if this NodeSet obeys its own rules after some modification 
-	 * operation has been performed on it, and enforces the consequences of 
-	 * consequence-bearing states, including throwing an exception under 
-	 * certain circumstances.</p>
-	 * 
-	 * <p>An empty method is provided here so that methods defined in this 
-	 * class the need to validate the set's final state afterward can call 
-	 * this method while subclasses provide meaningful implementations.</p>
-	 */
-	protected void validateState(FalsifiedTime time){
-		//do nothing
 	}
 	
 	public final int superHashCode(){
@@ -337,120 +299,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 				
 				return cuttingEdge;
 			}
-		}
-	}
-	
-	/**
-	 * <p>A dummy Time class to be sent to this class's Time-using versions of the 
-	 * Collection methods.</p>
-	 * @author fiveham
-	 *
-	 */
-	private class DummyTime extends TechniqueEvent{
-		public static final int DUMMY_COLLECTION_SIZE = 0;
-		private DummyTime(){
-			super(Collections.emptySet());
-		}
-		@Override
-		protected String toStringStart(){
-			return "DummyTime";
-		}
-		public Set<Claim> falsified(){
-			return new HashSet<Claim>(DUMMY_COLLECTION_SIZE);
-		}
-		public List<Time> children(){
-			return new ArrayList<Time>(DUMMY_COLLECTION_SIZE);
-		}
-		public boolean addChild(Time child){
-			return false;
-		}
-		@Override
-		public boolean defers() {
-			return false;
-		}
-		@Override
-		public Time focus() {
-			return this;
-		}
-		@Override
-		public boolean hasChildren() {
-			return false;
-		}
-		@Override
-		public Time parent() {
-			return null;
-		}
-		@Override
-		public boolean hasParent() {
-			return false;
-		}
-		@Override
-		public Time currentTime() {
-			return this;
-		}
-		@Override
-		public List<Time> currentTrail() {
-			return Collections.singletonList(this);
-		}
-		@Override
-		public Time nextTime() {
-			return this;
-		}
-		@Override
-		public boolean hasNextTime() {
-			return false;
-		}
-		@Override
-		public boolean hasPrevTime() {
-			return false;
-		}
-		@Override
-		public Time prevTime() {
-			return this;
-		}
-		@Override
-		public Time nextChild() {
-			return this;
-		}
-		@Override
-		public boolean hasNextChild() {
-			return false;
-		}
-		@Override
-		public boolean hasPrevChild() {
-			return false;
-		}
-		@Override
-		public Time prevChild() {
-			return this;
-		}
-		@Override
-		public Time successor() {
-			return this;
-		}
-		@Override
-		public boolean hasSuccessor() {
-			return false;
-		}
-		@Override
-		public boolean hasPredecessor() {
-			return false;
-		}
-		@Override
-		public Time predecessor() {
-			return this;
-		}
-		@Override
-		public void toStart() {
-			//do nothing
-		}
-		@Override
-		public void toEnd() {
-			//do nothing
-		}
-		@Override
-		public Iterator<Time> iterator() {
-			return currentTrail().iterator();
 		}
 	}
 	

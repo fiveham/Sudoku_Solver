@@ -2,7 +2,6 @@ package sudoku;
 
 import common.time.Time;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Set;
 import sudoku.Puzzle.RuleType;
 import sudoku.time.FalsifiedTime;
@@ -60,31 +59,6 @@ public class Rule extends Fact{
 	public IndexInstance dimB(){
 		return dimB;
 	}
-	
-	/**
-	 * <p>Detects the need for this Rule to collapse completely and 
-	 * set its sole element true if it has only one element left or 
-	 * the need for this Rule to collapse partially onto one of the 
-	 * Rules it intersects if that rule is a subset of this one, or 
-	 * throws an exception if this Rule is empty.</p>
-	 * 
-	 * @throws IllegalStateException if this Rule is empty
-	 */
-	@Override
-	protected void validateState(FalsifiedTime time){
-		if(isSolved()){
-			Claim c = iterator().next(); //there is only one Claim
-			try{
-				new TimeTotalLocalization(time, c.visible(), this).falsifyClaims();
-			} catch(FalsifiedTime.NoUnaccountedClaims e){
-				return;
-			}
-		} else if( shouldCheckForValueClaim() ){
-			findAndAddressValueClaim(time);
-		} else if( isEmpty() ){
-			throw new IllegalStateException("A Rule is not allowed to be empty. this.toString(): "+toString());
-		}
-	}
 
 	/**
 	 * <p>A time node denoting an {@link #verifyFinalState automatic collapse} 
@@ -129,27 +103,6 @@ public class Rule extends Fact{
 	}
 	
 	/**
-	 * <p>Finds value-claim collapse scenarios and resolves them 
-	 * if found. These are scenarios where one Rule is a subset 
-	 * of another.</p>
-	 */
-	private void findAndAddressValueClaim(FalsifiedTime time){
-		visible().stream()
-				.filter(Rule.class::isInstance)
-				.map(Rule.class::cast)
-				.filter((r) -> r.type.canClaimValue(type) && r.hasProperSubset(this))
-				.forEach((r) -> {
-					Set<Claim> falsified = new HashSet<>(r);
-					falsified.removeAll(this);
-					try{
-						new TimeValueClaim(time, falsified, this, r).falsifyClaims();
-					} catch(FalsifiedTime.NoUnaccountedClaims e){
-						return;
-					}
-				});
-	}
-	
-	/**
 	 * <p>A time node denoting a value-claim event where one Rule 
 	 * is a subset of another and the superset collapses onto the 
 	 * subset.</p>
@@ -170,18 +123,5 @@ public class Rule extends Fact{
 		protected String toStringStart(){
 			return "Value-claim "+sup+" subsumes "+sub;
 		}
-	}
-	
-	/**
-	 * <p>Returns true if this Rule is possibly contained in another 
-	 * Rule as a subset of the other bag in a manner compatible with 
-	 * the deprecated solution technique known as ValueClaim.</p>
-	 * @return true if this Rule is not a {@link Puzzle.RuleType#CELL cell Rule} 
-	 * and has {@code size() <= target.magnitude()}
-	 */
-	private boolean shouldCheckForValueClaim(){
-		return type == RuleType.CELL 
-				? false 
-				: size() <= puzzle.magnitude();
 	}
 }
