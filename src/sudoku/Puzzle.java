@@ -125,10 +125,14 @@ public class Puzzle extends SudokuNetwork{
 		for(RuleType type : RuleType.values()){
 			for(IndexInstance dimA : type.dimA(p)){
 				for(IndexInstance dimB : type.dimB(p)){
-					Rule newerRule = new Rule(p, type, type.dimInsideRule(p).stream()
-							.map((dimC) -> claims.get(dimA, dimB, dimC))
-							.collect(Collectors.toList()), 
-							dimA, dimB);
+					Rule newerRule = new Rule(
+							p, 
+							type, 
+							type.dimInsideRule(p).stream()
+									.map((dimC) -> claims.get(dimA, dimB, dimC))
+									.collect(Collectors.toList()), 
+							dimA, 
+							dimB);
 					rules.add(newerRule);
 				}
 			}
