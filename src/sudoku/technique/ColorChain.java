@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -129,6 +130,7 @@ public class ColorChain extends AbstractTechnique {
 	}
 	
 	private static final List<Function<ColorChain,TechniqueEvent>> SUBTECHNIQUES = Arrays.asList(
+			ColorChain::unaryFacts,
 			ColorChain::xyChain, 
 			ColorChain::implicationIntersection);
 	
@@ -404,5 +406,54 @@ public class ColorChain extends AbstractTechnique {
 	@Override
 	public ColorChain apply(Sudoku sudoku){
 		return new ColorChain(sudoku);
+	}
+	
+	/**
+	 * <p>Finds a unary Fact in {@code target} and sets that Fact's 
+	 * one Claim neighbor true.</p>
+	 * @return an Initialization describing the verification of 
+	 * an Init's sole Claim neighbor and any and all resulting 
+	 * automatic resolution events, or null if no Init is found
+	 */
+	private TechniqueEvent unaryFacts(){
+		Optional<Fact> i = target.factStream()
+				.filter(Fact::isSolved)
+				.findFirst();
+		if(i.isPresent()){
+			return new UnaryFact(i.get()).falsifyClaims();
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * <p>Describes the verification of a Claim known to be true 
+	 * because one or more of its Fact neighbors contains only that 
+	 * Claim as an element..</p>
+	 * @author fiveham
+	 *
+	 */
+	public static class UnaryFact extends TechniqueEvent{
+		
+		private final Fact src;
+		
+		private UnaryFact(Fact solved){
+			super(solved.iterator().next().visible());
+			this.src = solved;
+		}
+		
+		@Override
+		public boolean equals(Object o){
+			if(o instanceof UnaryFact){
+				UnaryFact se = (UnaryFact) o;
+				return super.equals(se) && (src == null ? se.src == null : src.equals(se.src));
+			}
+			return false;
+		}
+		
+		@Override
+		protected String toStringStart(){
+			return "Unary Fact "+src;
+		}
 	}
 }
