@@ -45,6 +45,8 @@ public abstract class AbstractTechnique implements Technique{
 	 * scenarios, or returns null of no changes were made
 	 */
 	protected abstract TechniqueEvent process();
+	
+	public abstract Technique apply(Sudoku sudoku);
 }
 
 

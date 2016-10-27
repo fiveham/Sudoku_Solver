@@ -1,9 +1,11 @@
 package sudoku.technique;
 
+import java.util.function.Function;
 import sudoku.Rule;
+import sudoku.Sudoku;
 import sudoku.time.TechniqueEvent;
 
-public interface Technique{
+public interface Technique extends Function<Sudoku,Technique>{
 	
 	/**
 	 * <p>Performs this technique's analysis on the underlying sudoku graph.</p>

@@ -621,4 +621,9 @@ public class Sledgehammer extends AbstractTechnique {
 			return "Sledgehammer scenario: "+src+" ARE "+recip;
 		}
 	}
+	
+	@Override
+	public Sledgehammer apply(Sudoku sudoku){
+		return new Sledgehammer(sudoku);
+	}
 }

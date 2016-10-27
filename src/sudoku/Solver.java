@@ -30,8 +30,6 @@ public class Solver{
 			ColorChain::new, 
 			Sledgehammer::new);
 	
-	private final List<Function<Sudoku,Technique>> processorSource;
-	
 	private final List<Technique> processors;
 	
 	private final Sudoku target;
@@ -79,12 +77,10 @@ public class Solver{
 		this(puzzle, null, new SudokuThreadGroup(filename), new Object(), DEFAULT_PROCESSOR_SOURCE, filename);
 	}
 	
-	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, List<Function<Sudoku,Technique>> processors, String source){
+	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, List<? extends Function<Sudoku,Technique>> processorSource, String source){
 		this.target = target;
 		
-		this.processorSource = processors;
-		
-		this.processors   = generateTechniques(target, processors);
+		this.processors   = generateTechniques(target, processorSource);
 		
 		this.eventParent = eventParent;
 		this.group = group;
@@ -96,8 +92,10 @@ public class Solver{
 		this.source = source;
 	}
 	
-	private static List<Technique> generateTechniques(Sudoku sudoku, List<Function<Sudoku,Technique>> funcList){
-		return funcList.stream().map((func)->func.apply(sudoku)).collect(Collectors.toList());
+	private static List<Technique> generateTechniques(Sudoku sudoku, List<? extends Function<Sudoku,Technique>> processorSource){
+		return processorSource.stream()
+				.map((func)->func.apply(sudoku))
+				.collect(Collectors.toList());
 	}
 	
 	public ThreadEvent getEvent(){
@@ -159,7 +157,7 @@ public class Solver{
 				SudokuNetwork network = networks.get(i);
 				new Thread(
 						group, 
-						new Solver(network, event, group, lock, processorSource, source)::run, 
+						new Solver(network, event, group, lock, processors, source)::run, 
 						name+Integer.toString(i,Parser.MAX_RADIX))
 						.start();
 			}

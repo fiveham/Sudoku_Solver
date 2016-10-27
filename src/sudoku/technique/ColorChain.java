@@ -400,4 +400,9 @@ public class ColorChain extends AbstractTechnique {
 			return "ColorClaim pairing " + color + " with " + claim;
 		}
 	}
+	
+	@Override
+	public ColorChain apply(Sudoku sudoku){
+		return new ColorChain(sudoku);
+	}
 }
