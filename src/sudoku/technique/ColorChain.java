@@ -130,18 +130,6 @@ public class ColorChain extends AbstractTechnique {
 		}
 	}
 	
-	/*
-	 * TODO incorporate use of subsumedFacts via its method into xyChain's analysis
-	 * and incorporate xyChain and subsumedFacts into implicationIntersection.
-	 * 
-	 * Currently, SubsumedFacts analysis (in the form of checks for fully localized 
-	 * Facts, not including partially localized facts) is implicitly incorporated into 
-	 * xyChain analysis.  I'd like to incorporate it in an explicit, formal manner, 
-	 * in order to add the partial-overlap functionality and also to avoid code duplication.
-	 * 
-	 * Additionally, I'd like to incorporate subsumedFacts and xyChain into 
-	 * implicationIntersection in order to begin unifying ColorChain and Sledgehammer.
-	 */
 	private static final List<Function<ColorChain,TechniqueEvent>> SUBTECHNIQUES = Arrays.asList(
 			ColorChain::subsumedFacts,
 			ColorChain::xyChain, 
@@ -235,14 +223,14 @@ public class ColorChain extends AbstractTechnique {
 	}
 	
 	private TechniqueEvent xyChain(){
-		for(Graph<ColorClaim> chain : generateChains(target, colorSource)){
+		for(Graph<ColorClaim> chain : generateChains(target, colorSource)){ //for each chain
 			Set<Claim> falseIntersection = ColorClaim.COLOR_SIGNS.stream()
 					.map((test) -> chain.nodeStream()
 							.filter(test)
 							.map(ColorClaim::wrapped)
 							.collect(Collectors.toSet()))
 					.map(ColorChain::getFalsifiedClaims)
-					.collect(Sets.massIntersectionCollector());
+					.collect(Sets.massIntersectionCollector()); //get the overlap of the implied falsifications of both solutions
 			
 			if(!falseIntersection.isEmpty()){
 				List<Fact> xorChain = chain.nodeStream()
@@ -477,6 +465,79 @@ public class ColorChain extends AbstractTechnique {
 			return src+"is subsumed by "+supersets.stream()
 					.map(Object::toString)
 					.collect(Collectors.joining(", "));
+		}
+	}
+	
+	/*
+	 * TODO incorporate use of subsumedFacts via its method into xyChain's analysis
+	 * and incorporate xyChain and subsumedFacts into implicationIntersection.
+	 * 
+	 * Currently, SubsumedFacts analysis (in the form of checks for fully localized 
+	 * Facts, not including partially localized facts) is implicitly incorporated into 
+	 * xyChain analysis.  I'd like to incorporate it in an explicit, formal manner, 
+	 * in order to add the partial-overlap functionality and also to avoid code duplication.
+	 * 
+	 * Additionally, I'd like to incorporate subsumedFacts and xyChain into 
+	 * implicationIntersection in order to begin unifying ColorChain and Sledgehammer.
+	 * 
+	 * There should be a method that accepts an arbitrary int between 1 and sideLength 
+	 * along with a trueMask and a falseMask--sets that describe modifications to the 
+	 * Puzzle--and output some results describing the discoveries it has made w/r/t the 
+	 * implications of the state of the puzzle described by the passed parameters in 
+	 * concert with the established existing state of the Puzzle.
+	 * 
+	 * Using it should be equivalent to asking the question "Given the puzzle as it is, 
+	 * except that these Claims are true and these Claims are false, what can we 
+	 * say about the truth or falsehood of other Claims?" and getting back an answer 
+	 * like "These other Claims would be false and these other Claims would be true."
+	 * 
+	 * Such a method is now defined, but not yet implemented: implications()
+	 */
+	
+	/**
+	 * <p></p>
+	 * @param size
+	 * @param trueMask
+	 * @param falseMask
+	 * @return a list whose first element is the set of Claims made true and 
+	 * whose second element is the set of Claims made false
+	 */
+	private List<Set<Claim>> implications(int size, Set<Claim> trueMask, Set<Claim> falseMask){
+		/*
+		 * TODO add tests in the .filter() call to check that a Rule that passes the 
+		 * filter has a remaining size of `size` after its masked true and false Claims 
+		 * are ignored.  That is that you could test that 
+		 * `size` == rule.size() - rule.intersection(trueMask).size() - rule.intersection(falseMask).size()
+		 * Like so:
+		 * .filter((f) -> {
+		 * 	Set<Claim> copy = new HashSet<>(rule);
+		 * 	copy.removeAll(trueMask);
+		 * 	copy.removeAll(falseMask);
+		 * 	return copy.size();
+		 * })
+		 * But that could be horribly inefficient given that that test must be run on 
+		 * every single Rule in the Puzzle.
+		 * 
+		 * TODO implement BackedSet where a fixed backing list or array backs a set and 
+		 * that set's contents are limited to a subset of that list/array's contents, 
+		 * masked in or out via a BigInteger.
+		 */
+		for(Fact rule : target.factStream().filter((f) -> f.size()==size).collect(Collectors.toList())){
+			
+			for(Claim c : rule){
+				
+				Set<Claim> localTrueMask = new HashSet<>();
+				localTrueMask.add(c);
+				
+				Set<Claim> localFalseMask = new HashSet<>(c.visible());
+				
+				
+				
+			}
+			
+			
+			
+			
 		}
 	}
 }
