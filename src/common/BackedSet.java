@@ -6,6 +6,11 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import java.math.BigInteger;
 
 /**
@@ -57,17 +62,17 @@ public class BackedSet<E> implements Set<E> {
 		
 		class BSIterator implements Iterator<E>{
 			
-			final BigInteger originalMask;
+			BigInteger comparisonMask;
 			int pointer = 0;
 			
 			BSIterator(){
-				originalMask = BackedSet.this.mask;
+				comparisonMask = BackedSet.this.mask;
 				updatePointer();
 			}
 			
 			private void updatePointer(){
 				while(pointer<universe.size()){
-					if(originalMask.testBit(pointer)){
+					if(comparisonMask.testBit(pointer)){
 						return;
 					}
 					pointer++;
@@ -75,7 +80,7 @@ public class BackedSet<E> implements Set<E> {
 			}
 			
 			private void concurrentModificationCheck(){
-				if(!originalMask.equals(mask)){
+				if(!comparisonMask.equals(mask)){
 					throw new ConcurrentModificationException();
 				}
 			}
@@ -83,16 +88,25 @@ public class BackedSet<E> implements Set<E> {
 			@Override
 			public boolean hasNext() {
 				concurrentModificationCheck();
-				return originalMask.testBit(pointer);
+				return comparisonMask.testBit(pointer);
 			}
 			
 			@Override
 			public E next() {
 				concurrentModificationCheck();
-				E result = universe.get(pointer);
+				lastResult = universe.get(pointer);
 				pointer++;
 				updatePointer();
-				return result;
+				return lastResult;
+			}
+			
+			private E lastResult = null;
+			
+			@Override
+			public void remove(){
+				concurrentModificationCheck();
+				BackedSet.this.remove(lastResult);
+				comparisonMask = mask;
 			}
 		}
 		
@@ -131,73 +145,6 @@ public class BackedSet<E> implements Set<E> {
 		}
 	}
 	
-	@Override
-	public boolean remove(Object o) {
-		if(universe.contains(o)){
-			@SuppressWarnings("unchecked")
-			int index = universe.index((E)o);
-			boolean old = mask.testBit(index);
-			mask = mask.clearBit(index);
-			return old != mask.testBit(index);
-		} else{
-			throw new OutOfUniverseException("The object is not in this set's universe.");
-		}
-	}
-	
-	@Override
-	public boolean containsAll(Collection<?> c) {
-		if(sharesUniverse(c)){
-			BackedSet<?> bs = (BackedSet<?>) c;
-			return bs.mask.andNot(mask).equals(BigInteger.ZERO);
-		} else{
-			throw new UniverseMismatchException("The collection does not share this set's universe.");
-		}
-	}
-	
-	@Override
-	public boolean addAll(Collection<? extends E> c) {
-		if(sharesUniverse(c)){
-			BackedSet<?> bs = (BackedSet<?>) c;
-			BigInteger oldMask = mask;
-			mask = mask.or(bs.mask);
-			return !oldMask.equals(mask);
-		} else{
-			throw new UniverseMismatchException("The collection does not share this set's universe.");
-		}
-	}
-	
-	@Override
-	public boolean retainAll(Collection<?> c) {
-		if(sharesUniverse(c)){ //FIXME constructor from Collection relies on bulkop methods, which rely on Collection already being a BackedSet
-			BackedSet<?> bs = (BackedSet<?>) c;
-			BigInteger oldMask = mask;
-			mask = mask.and(bs.mask);
-			return !oldMask.equals(mask);
-		} else{
-			throw new UniverseMismatchException("The collection does not share this set's universe.");
-		}
-	}
-	
-	@Override
-	public boolean removeAll(Collection<?> c) {
-		if(sharesUniverse(c)){
-			BackedSet<?> bs = (BackedSet<?>) c;
-			BigInteger oldMask = mask;
-			mask = mask.andNot(bs.mask);
-			return !oldMask.equals(mask);
-		} else{
-			throw new UniverseMismatchException("The collection does not share this set's universe.");
-		}
-	}
-	
-	private boolean sharesUniverse(Collection<?> c){
-		if(c instanceof BackedSet){
-			BackedSet<?> bs = (BackedSet<?>) c;
-			return universe.equals(bs.universe);
-		}
-		return false;
-	}
-	
 	public static class OutOfUniverseException extends RuntimeException{
 		/**
 		 * 
@@ -209,15 +156,87 @@ public class BackedSet<E> implements Set<E> {
 		}
 	}
 	
-	public static class UniverseMismatchException extends RuntimeException{
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 5875338960922977561L;
-
-		UniverseMismatchException(String s){
-			super(s);
+	@Override
+	public boolean remove(Object o) {
+		if(universe.contains(o)){
+			@SuppressWarnings("unchecked")
+			int index = universe.index((E)o);
+			boolean old = mask.testBit(index);
+			mask = mask.clearBit(index);
+			return old != mask.testBit(index);
 		}
+		return false;
+	}
+	
+	@Override
+	public boolean containsAll(Collection<?> c) {
+		if(c instanceof BackedSet<?>){
+			BackedSet<?> b = (BackedSet<?>) c;
+			if(universe.equals(b.universe)){
+				return this.mask.or(b.mask).equals(this.mask); 
+			}
+		}
+		return c.stream().allMatch((e) -> contains(e));
+	}
+	
+	public Stream<E> stream(){
+		return StreamSupport.stream(spliterator(), false);
+	}
+	
+	@Override
+	public boolean addAll(Collection<? extends E> c) { //TODO unify addAll, containsAll and other methods with this internal structure
+		if(c instanceof BackedSet<?>){
+			BackedSet<?> b = (BackedSet<?>) c;
+			if(universe.equals(b.universe)){
+				BigInteger oldMask = mask;
+				mask = mask.or(b.mask);
+				return !oldMask.equals(mask);
+			}
+		}
+		return c.stream()
+				.map((e) -> add(e))
+				.collect(MASS_OR);
+	}
+	
+	@Override
+	public boolean retainAll(Collection<?> c) {
+		if(c instanceof BackedSet<?>){
+			BackedSet<?> b = (BackedSet<?>) c;
+			if(universe.equals(b.universe)){
+				BigInteger oldMask = mask;
+				mask = mask.and(b.mask);
+				return !oldMask.equals(mask);
+			}
+		}
+		
+		boolean result = false;
+		for(Iterator<E> iter = iterator(); iter.hasNext();){
+			E e = iter.next();
+			if(!c.contains(e)){
+				iter.remove();
+				result = true;
+			}
+		}
+		return result;
+	}
+	
+	private static final BinaryOperator<Boolean> OR = (a,b) -> a || b;
+	private static final Collector<Boolean,?,Boolean> MASS_OR = Collectors.reducing(false, OR);
+	
+	@Override
+	public boolean removeAll(Collection<?> c) {
+		if(c instanceof BackedSet<?>){
+			BackedSet<?> b = (BackedSet<?>) c;
+			if(universe.equals(b.universe)){
+				BigInteger oldMask = mask;
+				mask = mask.andNot(b.mask);
+				return !mask.equals(oldMask);
+			}
+		}
+		
+		return c.stream()
+				.map((o) -> remove(o))
+				.collect(MASS_OR);
 	}
 	
 	public Universe<E> universe(){

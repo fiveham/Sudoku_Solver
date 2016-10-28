@@ -34,4 +34,12 @@ public class Universe<E> {
 	public BackedSet<E> set(Collection<? extends E> c){
 		return new BackedSet<E>(this,c);
 	}
+	
+	public boolean equals(Object o){
+		if(o instanceof Universe<?>){
+			Universe<?> u = (Universe<?>) o;
+			return ie.equals(u.ie) && ei.equals(u.ei); 
+		}
+		return false;
+	}
 }
