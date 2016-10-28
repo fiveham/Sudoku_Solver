@@ -6,11 +6,9 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import java.math.BigInteger;
 
 /**
@@ -168,6 +166,16 @@ public class BackedSet<E> implements Set<E> {
 		return false;
 	}
 	
+	private boolean bulkOp(Collection<?> c, Supplier<Boolean> x, Supplier<Boolean> y){
+		if(c instanceof BackedSet<?>){
+			BackedSet<?> b = (BackedSet<?>) c;
+			if(universe.equals(b.universe)){
+				return x.get(); 
+			}
+		}
+		return y.get();
+	}
+	
 	@Override
 	public boolean containsAll(Collection<?> c) {
 		if(c instanceof BackedSet<?>){
@@ -177,10 +185,6 @@ public class BackedSet<E> implements Set<E> {
 			}
 		}
 		return c.stream().allMatch((e) -> contains(e));
-	}
-	
-	public Stream<E> stream(){
-		return StreamSupport.stream(spliterator(), false);
 	}
 	
 	@Override
@@ -220,8 +224,7 @@ public class BackedSet<E> implements Set<E> {
 		return result;
 	}
 	
-	private static final BinaryOperator<Boolean> OR = (a,b) -> a || b;
-	private static final Collector<Boolean,?,Boolean> MASS_OR = Collectors.reducing(false, OR);
+	private static final Collector<Boolean,?,Boolean> MASS_OR = Collectors.reducing(false, (a,b) -> a || b);
 	
 	@Override
 	public boolean removeAll(Collection<?> c) {
