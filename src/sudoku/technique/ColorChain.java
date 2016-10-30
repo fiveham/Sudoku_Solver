@@ -513,25 +513,32 @@ public class ColorChain extends AbstractTechnique {
 		 * 	Set<Claim> copy = new HashSet<>(rule);
 		 * 	copy.removeAll(trueMask);
 		 * 	copy.removeAll(falseMask);
-		 * 	return copy.size();
+		 * 	return copy.size() == size;
 		 * })
 		 * But that could be horribly inefficient given that that test must be run on 
 		 * every single Rule in the Puzzle.
-		 * 
-		 * TODO implement BackedSet where a fixed backing list or array backs a set and 
-		 * that set's contents are limited to a subset of that list/array's contents, 
-		 * masked in or out via a BigInteger.
 		 */
-		for(Fact rule : target.factStream().filter((f) -> f.size()==size).collect(Collectors.toList())){
+		for(Fact rule : target.factStream()
+				.filter((f) -> f.size() > size) //TODO need to test based on size at previous "if then" state rather than on true size
+				.filter((f) -> {
+					Set<Claim> copy = new HashSet<>(f);
+					copy.removeAll(trueMask);
+					copy.removeAll(falseMask);
+					return copy.size() == size;
+				})
+				.collect(Collectors.toList())){
 			
 			for(Claim c : rule){
 				
-				Set<Claim> localTrueMask = new HashSet<>();
+				Set<Claim> localTrueMask = new HashSet<>(trueMask);
 				localTrueMask.add(c);
 				
-				Set<Claim> localFalseMask = new HashSet<>(c.visible());
+				Set<Claim> localFalseMask = new HashSet<>(falseMask);
+				localFalseMask.addAll(c.visible());
 				
-				
+				/*for(int i=1; i<=size; ++i){
+					implications(i, localTrueMask, localFalseMask);
+				}*/
 				
 			}
 			
@@ -539,5 +546,26 @@ public class ColorChain extends AbstractTechnique {
 			
 			
 		}
+	}
+	
+	/**
+	 * <p>Identifies those Facts in this ColorChain's puzzle that have a {@link Collection#size() size} equal to {@code size} 
+	 * given that all the Claims in {@code oldFalseMask} and {@code newFalseMask} are false and all the Claims in 
+	 * {@code oldTrueMask} and {@code newTrueMask} are true but which have a {@link Collection#size() size} greater than 
+	 * {@code size} given that all the Claims in {@code oldFalseMask} are false and all the Claims in {@code oldTrueMask} 
+	 * are true.</p>
+	 * <p>For clarity, the Facts identified take on a size of {@code size} only when the new masks are incorporated.</p>
+	 * @param size
+	 * @param oldFalseMask
+	 * @param oldTrueMask
+	 * @param newFalseMask
+	 * @param newTrueMask
+	 * @return
+	 */
+	/*
+	 * All mask sets should be disjoint from one another.
+	 */
+	private Collection<Fact> reducedToSize(int size, Set<Claim> oldFalseMask, Set<Claim> oldTrueMask, Set<Claim> newFalseMask, Set<Claim> newTrueMask){
+		
 	}
 }
