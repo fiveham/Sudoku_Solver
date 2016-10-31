@@ -112,7 +112,7 @@ public abstract class FalsifiedTime extends AbstractTime {
 	
 	private static final Runnable DO_NOTHING = () -> {};
 	
-	private Runnable falsifyClaims = () -> falsified().stream().forEach((c) -> c.setFalse(this));
+	private Runnable falsifyClaims = () -> falsified().stream().forEach(Claim::setFalse);
 	
 	@Override
 	public String toString(){

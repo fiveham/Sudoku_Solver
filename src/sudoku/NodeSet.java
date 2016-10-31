@@ -165,14 +165,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		return result;
 	}
 	
-	public final void clear(FalsifiedTime time){
-		SafeRemovingIterator iter = new SafeRemovingIterator();
-		while(iter.hasNext()){
-			iter.next();
-			iter.remove(time);
-		}
-	}
-	
 	@Override
 	public final void clear(){
 		Iterator<T> iter = iterator();
@@ -204,15 +196,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 			if(lastResult != null){
 				wrapped.remove();
 				lastResult.remove(NodeSet.this);
-				lastResult = null;
-			} else{
-				throw new IllegalStateException("Previous next() element already removed.");
-			}
-		}
-		public void remove(FalsifiedTime time){
-			if(lastResult != null){
-				wrapped.remove();
-				lastResult.remove(time, NodeSet.this);
 				lastResult = null;
 			} else{
 				throw new IllegalStateException("Previous next() element already removed.");
