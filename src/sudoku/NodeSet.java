@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.stream.Collectors;
-import sudoku.time.FalsifiedTime;
 
 /**
  * <p>A set that's a node in {@link Puzzle a graph representation of a sudoku target}, 
@@ -81,11 +80,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		return remove_internal(o);
 	}
 	
-	public final boolean remove(FalsifiedTime time, Object o){
-		boolean result = remove_internal(time, o);
-		return result;
-	}
-	
 	/**
 	 * <p>Removes {@code o} and removes {@code this} from {@code o} 
 	 * without {@link #validateFinalState() validating the set afterwards}.</p>
@@ -111,29 +105,12 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		return result;
 	}
 	
-	private boolean remove_internal(FalsifiedTime time, Object o){
-		boolean result = super.remove(o);
-		if(result){
-			((NodeSet<?,?>)o).remove(time, this);
-		}
-		return result;
-	}
-	
 	@Override
 	public final boolean removeAll(Collection<?> c){
 		boolean result = false;
 		
 		for(Object o : c){
 			result |= remove_internal(o);
-		}
-		return result;
-	}
-	
-	public final boolean removeAll(FalsifiedTime time, Collection<?> c){
-		boolean result = false;
-		
-		for(Object o : c){
-			result |= remove_internal(time, o);
 		}
 		return result;
 	}
@@ -146,19 +123,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		for(T t; iter.hasNext();){
 			if(!c.contains(t = iter.next())){
 				remove_internal(t);
-				result = true;
-			}
-		}
-		return result;
-	}
-	
-	public final boolean retainAll(FalsifiedTime time, Collection<?> c){
-		boolean result = false;
-		
-		Iterator<T> iter = super.iterator();
-		for(T t; iter.hasNext();){
-			if(!c.contains(t = iter.next())){
-				remove_internal(time, t);
 				result = true;
 			}
 		}
