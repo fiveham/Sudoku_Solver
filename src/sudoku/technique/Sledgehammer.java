@@ -1,9 +1,11 @@
 package sudoku.technique;
 
 import common.Sets;
+import common.BackedSet;
 import common.ComboGen;
 import common.Pair;
 import common.ToolSet;
+import common.Universe;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -150,6 +152,9 @@ public class Sledgehammer extends AbstractTechnique {
 		this.distinctRules = new ArrayList<>();
 		this.distinctRulesBySledgehammerSize = new HashMap<>();
 		this.distinctSourcesBySledgehammerSize = new HashMap<>();
+		
+		this.factUniverse = new Universe<>(target.factStream().collect(Collectors.toList()));
+		this.claimUniverse = new Universe<>(target.claimStream().collect(Collectors.toList()));
 	}
 	
 	private static void populateDistinctRules(Sledgehammer sh){
@@ -278,6 +283,17 @@ public class Sledgehammer extends AbstractTechnique {
 		return null;
 	}
 	
+	private Universe<Fact> factUniverse(){
+		return factUniverse;
+	}
+	
+	private final Universe<Fact> factUniverse;
+	private final Universe<Claim> claimUniverse;
+	
+	private Universe<Claim> claimUniverse(){
+		return claimUniverse;
+	}
+	
 	/**
 	 * <p></p>
 	 * @param oldSrcCombo the established sources in the source-combinations being built
@@ -293,24 +309,27 @@ public class Sledgehammer extends AbstractTechnique {
 	 */
 	private TechniqueEvent exploreSourceCombos(List<Fact> oldSrcCombo, Set<Fact> oldVisCloud, Set<Fact> oldVisVisCloud, int size, Set<Fact> sourceMask){
 		if(oldSrcCombo.size() < size){
-			Set<Fact> localSourceMask = new HashSet<>(sourceMask);
+			Set<Fact> localSourceMask = new BackedSet<>(factUniverse(), sourceMask);
 			for(Fact newSource : sourcePool(oldVisVisCloud, sourceMask, size, oldSrcCombo.isEmpty())){
 				localSourceMask.remove(newSource); //mask for next iteration level
 
 				Set<Fact> newVisVisCloud = null;
 				Set<Fact> newVisCloud = null;
-				List<Fact> newSrcCombo = new ArrayList<>(oldSrcCombo.size()+1);
-				newSrcCombo.addAll(oldSrcCombo);
-				newSrcCombo.add(newSource);
+				List<Fact> newSrcCombo;
+				{
+					newSrcCombo = new ArrayList<>(oldSrcCombo.size()+1);
+					newSrcCombo.addAll(oldSrcCombo);
+					newSrcCombo.add(newSource);
+				}
 				
 				//if newSrcCombo.size() == size, newVisCloud and newVisVisCloud won't get used
 				if(newSrcCombo.size() < size){
 					Set<Fact> visibleToNewSource = visibleCache.get(newSource, size); 
 					
-					newVisCloud = new HashSet<>(oldVisCloud);
+					newVisCloud = new BackedSet<>(factUniverse(), oldVisCloud);
 					newVisCloud.addAll(visibleToNewSource);
 					
-					Set<Fact> visVis = new HashSet<>(oldVisVisCloud);
+					Set<Fact> visVis = new BackedSet<>(factUniverse(), oldVisVisCloud);
 					visibleToNewSource.stream()
 							.map((v) -> visibleCache.get(v, size))
 							.forEach(visVis::addAll);
@@ -342,7 +361,7 @@ public class Sledgehammer extends AbstractTechnique {
 		if(isEmpty){
 			return sourceMask;
 		} else{
-			Set<Fact> result = new HashSet<>(initVisVisibles);
+			Set<Fact> result = new BackedSet<>(factUniverse(), initVisVisibles);
 			result.retainAll(sourceMask);
 			return result;
 		}
@@ -378,7 +397,7 @@ public class Sledgehammer extends AbstractTechnique {
 	private final Map<Integer,Set<Fact>> distinctSourcesAtSizeCache = new HashMap<>();
 	
 	private Set<Fact> distinctSourcesAtSize(int size){
-		return distinctRulesOfTypeAtSize(size, distinctSourcesAtSizeCache, distinctSourcesBySledgehammerSize, HashSet::new);
+		return distinctRulesOfTypeAtSize(size, distinctSourcesAtSizeCache, distinctSourcesBySledgehammerSize, factUniverse::back);
 	}
 	
 	private static <C extends Collection<Fact>> C distinctRulesOfTypeAtSize(int size, Map<Integer,C> cache, Map<Integer,List<Fact>> rulesOfType, Supplier<C> supplier){

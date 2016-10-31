@@ -42,4 +42,8 @@ public class Universe<E> {
 		}
 		return false;
 	}
+	
+	public BackedSet<E> back(){
+		return new BackedSet<>(this);
+	}
 }
