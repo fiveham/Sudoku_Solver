@@ -54,8 +54,8 @@ public class Universe<E> {
 	
 	/**
 	 * <p>A convenience method returning a BackedSet backed by this 
-	 * Universe. containing the contents of {@code c}.</p>
-	 * @return BackedSet backed by this Universe. containing the 
+	 * Universe, containing the contents of {@code c}.</p>
+	 * @return a BackedSet backed by this Universe, containing the 
 	 * contents of {@code c}
 	 */
 	public BackedSet<E> back(Collection<? extends E> c){
