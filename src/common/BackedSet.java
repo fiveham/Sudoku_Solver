@@ -60,11 +60,11 @@ public class BackedSet<E> implements Set<E> {
 		class BSIterator implements Iterator<E>{
 			
 			BigInteger comparisonMask;
-			int pointer = 0;
+			int pointer;
 			
 			BSIterator(){
 				comparisonMask = BackedSet.this.mask;
-				updatePointer();
+				pointer = comparisonMask.getLowestSetBit();
 			}
 			
 			private void updatePointer(){
@@ -238,5 +238,19 @@ public class BackedSet<E> implements Set<E> {
 	@Override
 	public void clear() {
 		mask = BigInteger.ZERO;
+	}
+	
+	@Override
+	public boolean equals(Object o){
+		if(o instanceof BackedSet){
+			BackedSet<?> b = (BackedSet<?>) o;
+			return b.mask.equals(mask) && b.universe.equals(universe);
+		}
+		return false;
+	}
+	
+	@Override
+	public int hashCode(){
+		return universe.hashCode() + mask.hashCode();
 	}
 }

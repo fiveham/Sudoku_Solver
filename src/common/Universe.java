@@ -35,6 +35,17 @@ public class Universe<E> {
 		return new BackedSet<E>(this,c);
 	}
 	
+	@Override
+	public int hashCode(){
+		if(hash==null){
+			hash = ie.hashCode();
+		}
+		return hash;
+	}
+	
+	private Integer hash = null;
+	
+	@Override
 	public boolean equals(Object o){
 		if(o instanceof Universe<?>){
 			Universe<?> u = (Universe<?>) o;
