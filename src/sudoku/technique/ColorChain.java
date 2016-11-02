@@ -496,20 +496,21 @@ public class ColorChain extends AbstractTechnique {
 	 * like "These other Claims would be false and these other Claims would be true."
 	 */
 	
+	
 	private TechniqueEvent implications(){
-		for(int i = 1; i <= target.sideLength(); ++i){
-			final int i_final = i;
-			for(Fact f : target.factStream().filter((f) -> f.size() == i_final).collect(Collectors.toList())){
-				Implications implications = new Implications(f);
-				
-				while(implications.intersection().isEmpty() ){ //TODO while (that && the implications can be explored deeper)
-					//add depth to implications
-				}
-				
-				Consequences con = implications.intersection();
-				if(!con.isEmpty()){
-					return new SolveEventImplications(f, con.falseMask()).falsifyClaims();
-				}
+		
+		for(Fact f : target.factStream()
+				.sorted((small,large) -> Integer.compare(large.size(), small.size()))
+				.collect(Collectors.toList())){
+			Implications implications = new Implications(f);
+			
+			while(implications.intersection().isEmpty() ){ //TODO while (that && the implications can be explored deeper)
+				//add depth to implications
+			}
+			
+			Consequences con = implications.intersection();
+			if(!con.isEmpty()){
+				return new SolveEventImplications(f, con.falseMask()).falsifyClaims();
 			}
 		}
 		return null;
