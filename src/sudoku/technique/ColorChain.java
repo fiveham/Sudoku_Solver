@@ -531,7 +531,7 @@ public class ColorChain extends AbstractTechnique {
 	private TechniqueEvent implications(Fact f){
 		Implications implications = new Implications(f);
 		
-		while(implications.intersection().isEmpty() && implications.isDepthAvailable()){ //TODO while (that && the implications can be explored deeper)
+		while(implications.intersection().isEmpty() && implications.isDepthAvailable()){
 			implications.enhance();
 		}
 		
@@ -591,6 +591,18 @@ public class ColorChain extends AbstractTechnique {
 		 * hypothetically true, false otherwise
 		 */
 		boolean isDepthAvailable(){
+			return keySet().stream().allMatch(this::isDepthAvailable);
+		}
+		
+		/**
+		 * <p>Return true if further implications can be explored given the known 
+		 * implications of {@code c} hypothetically being true, false otherwise</p>
+		 * @param c the Claim whose hypothetical truth's known implications are 
+		 * checked for the existence of further implications
+		 * @return true if further implications can be explored given the known 
+		 * implications of {@code c} hypothetically being true, false otherwise
+		 */
+		private boolean isDepthAvailable(Claim c){
 			//TODO stub
 			return false;
 		}
@@ -605,7 +617,6 @@ public class ColorChain extends AbstractTechnique {
 					.collect(Sets.massIntersectionCollector()));
 			return intersection;
 		}
-		
 	}
 	
 	private final Universe<Claim> claimUniverse;
