@@ -138,6 +138,8 @@ public class Sledgehammer extends AbstractTechnique {
 	private final Map<Integer,List<Fact>> distinctRulesBySledgehammerSize;
 	private final Map<Integer,List<Fact>> distinctSourcesBySledgehammerSize;
 	
+	private final Universe<Fact> factUniverse;
+	
 	private boolean builtSrcComboAtLastSize = true;
 	
 	/**
@@ -281,8 +283,6 @@ public class Sledgehammer extends AbstractTechnique {
 		
 		return null;
 	}
-	
-	private final Universe<Fact> factUniverse;
 	
 	/**
 	 * <p></p>
