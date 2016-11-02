@@ -49,6 +49,40 @@ public class Sets {
 				Characteristics.UNORDERED, Characteristics.IDENTITY_FINISH);
 	}
 	
+	public static <T extends Collection<E>, E, Z extends Set<E>> Collector<T,?,Z> massIntersectionCollector(Supplier<Z> supplier){
+		
+		class Intersection{
+			
+			private boolean used = false;
+			private Z set = supplier.get();
+			
+			public void intersect(Collection<E> coll){
+				if(used){
+					set.retainAll(coll);
+				}else{
+					set.addAll(coll);
+					used = true;
+				}
+			}
+			
+			public Intersection combineWith(Intersection other){
+				intersect(other.set);
+				return this;
+			}
+			
+			public Z unpack(){
+				return set;
+			}
+		}
+		
+		return Collector.of(
+				Intersection::new, 
+				Intersection::intersect, 
+				Intersection::combineWith, 
+				Intersection::unpack, 
+				Characteristics.UNORDERED);
+	}
+	
 	/**
 	 * <p>Unions all the collections in {@code srcCombo} into one set and returns 
 	 * that set, unless some elements are shared among the collections in 
