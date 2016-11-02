@@ -1,7 +1,9 @@
 package sudoku.technique;
 
+import common.BackedSet;
 import common.Pair;
 import common.Sets;
+import common.Universe;
 import common.graph.Graph;
 import common.graph.Wrap;
 import common.graph.BasicGraph;
@@ -9,9 +11,12 @@ import common.graph.WrapVertex;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
@@ -45,6 +50,7 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	public ColorChain(Sudoku puzzle) {
 		super(puzzle);
+		this.claimUniverse = new Universe<>(target.claimStream().collect(Collectors.toList()));
 	}
 	
 	/**
@@ -490,82 +496,115 @@ public class ColorChain extends AbstractTechnique {
 	 * except that these Claims are true and these Claims are false, what can we 
 	 * say about the truth or falsehood of other Claims?" and getting back an answer 
 	 * like "These other Claims would be false and these other Claims would be true."
-	 * 
-	 * Such a method is now defined, but not yet implemented: implications()
 	 */
 	
-	/**
-	 * <p></p>
-	 * @param size
-	 * @param trueMask
-	 * @param falseMask
-	 * @return a list whose first element is the set of Claims made true and 
-	 * whose second element is the set of Claims made false
-	 */
-	private List<Set<Claim>> implications(int size, Set<Claim> trueMask, Set<Claim> falseMask){
-		/*
-		 * TODO add tests in the .filter() call to check that a Rule that passes the 
-		 * filter has a remaining size of `size` after its masked true and false Claims 
-		 * are ignored.  That is that you could test that 
-		 * `size` == rule.size() - rule.intersection(trueMask).size() - rule.intersection(falseMask).size()
-		 * Like so:
-		 * .filter((f) -> {
-		 * 	Set<Claim> copy = new HashSet<>(rule);
-		 * 	copy.removeAll(trueMask);
-		 * 	copy.removeAll(falseMask);
-		 * 	return copy.size() == size;
-		 * })
-		 * But that could be horribly inefficient given that that test must be run on 
-		 * every single Rule in the Puzzle.
-		 */
-		for(Fact rule : target.factStream()
-				.filter((f) -> f.size() > size) //TODO need to test based on size at previous "if then" state rather than on true size
-				.filter((f) -> {
-					Set<Claim> copy = new HashSet<>(f);
-					copy.removeAll(trueMask);
-					copy.removeAll(falseMask);
-					return copy.size() == size;
-				})
-				.collect(Collectors.toList())){
-			
-			for(Claim c : rule){
+	private TechniqueEvent implications(){
+		for(int i = 1; i <= target.sideLength(); ++i){
+			final int i_final = i;
+			for(Fact f : target.factStream().filter((f) -> f.size() == i_final).collect(Collectors.toList())){
+				Implications implications = new Implications(f);
 				
-				Set<Claim> localTrueMask = new HashSet<>(trueMask);
-				localTrueMask.add(c);
+				while(implications.intersection().isEmpty() ){ //TODO while (that && the implications can be explored deeper)
+					//add depth to implications
+				}
 				
-				Set<Claim> localFalseMask = new HashSet<>(falseMask);
-				localFalseMask.addAll(c.visible());
-				
-				/*for(int i=1; i<=size; ++i){
-					implications(i, localTrueMask, localFalseMask);
-				}*/
-				
+				Consequences con = implications.intersection();
+				if(!con.isEmpty()){
+					return new SolveEventImplications(f, con.falseMask()).falsifyClaims();
+				}
 			}
-			
-			
-			
-			
+		}
+		return null;
+	}
+	
+	public static class SolveEventImplications extends TechniqueEvent{
+		
+		private final Fact initFact;
+		
+		SolveEventImplications(Fact f, Set<Claim> falsifiedClaims){
+			super(falsifiedClaims);
+			this.initFact = f;
+		}
+
+		@Override
+		protected String toStringStart() {
+			return "Exploration of the consequences of the possible solutions of " + initFact;
 		}
 	}
 	
 	/**
-	 * <p>Identifies those Facts in this ColorChain's puzzle that have a {@link Collection#size() size} equal to {@code size} 
-	 * given that all the Claims in {@code oldFalseMask} and {@code newFalseMask} are false and all the Claims in 
-	 * {@code oldTrueMask} and {@code newTrueMask} are true but which have a {@link Collection#size() size} greater than 
-	 * {@code size} given that all the Claims in {@code oldFalseMask} are false and all the Claims in {@code oldTrueMask} 
-	 * are true.</p>
-	 * <p>For clarity, the Facts identified take on a size of {@code size} only when the new masks are incorporated.</p>
-	 * @param size
-	 * @param oldFalseMask
-	 * @param oldTrueMask
-	 * @param newFalseMask
-	 * @param newTrueMask
-	 * @return
+	 * <p>A map from a Claim to some consequences that follow logically if 
+	 * that Claim is true.</p>
+	 * @author fiveham
+	 *
 	 */
-	/*
-	 * All mask sets should be disjoint from one another.
-	 */
-	private Collection<Fact> reducedToSize(int size, Set<Claim> oldFalseMask, Set<Claim> oldTrueMask, Set<Claim> newFalseMask, Set<Claim> newTrueMask){
+	private class Implications extends HashMap<Claim,Consequences>{
 		
+		Implications(Fact f){
+			super();
+			for(Claim c : f){
+				Consequences con = new Consequences();
+				con.addTrue(c);
+				con.addFalse(c.visible());
+				put(c, con);
+			}
+		}
+		
+		Consequences intersection(){
+			Consequences intersection = new Consequences();
+			intersection.addTrue(values().stream()
+					.map(Consequences::trueMask)
+					.collect(Sets.massIntersectionCollector()));
+			intersection.addFalse(values().stream()
+					.map(Consequences::falseMask)
+					.collect(Sets.massIntersectionCollector()));
+			return intersection;
+		}
+		
+	}
+	
+	private final Universe<Claim> claimUniverse;
+	
+	private class Consequences{
+		
+		private final Set<Claim> trueMask;
+		private final Set<Claim> falseMask;
+		
+		Consequences(){
+			trueMask = new BackedSet<>(claimUniverse);
+			falseMask = new BackedSet<>(claimUniverse);
+		}
+		
+		Set<Claim> trueMask(){
+			return trueMask;
+		}
+		
+		Set<Claim> falseMask(){
+			return falseMask;
+		}
+		
+		boolean addTrue(Collection<? extends Claim> c){
+			return trueMask.addAll(c);
+		}
+		
+		boolean addFalse(Collection<? extends Claim> c){
+			return falseMask.addAll(c);
+		}
+		
+		boolean addTrue(Claim c){
+			return trueMask.add(c);
+		}
+		
+		boolean addFalse(Claim c){
+			return falseMask.add(c);
+		}
+		
+		boolean addAll(Consequences c){
+			return addTrue(c.trueMask) || addFalse(c.falseMask); 
+		}
+		
+		boolean isEmpty(){
+			return trueMask.isEmpty() && falseMask.isEmpty();
+		}
 	}
 }
