@@ -496,22 +496,48 @@ public class ColorChain extends AbstractTechnique {
 	 * like "These other Claims would be false and these other Claims would be true."
 	 */
 	
-	
+	/**
+	 * <p>Tries to find an overlap among the consequences of each 
+	 * of the Claims of a given Fact in the puzzle hypothetically 
+	 * being true, starting from the smallest Facts in the puzzle
+	 * and increasing in Fact size from there.</p>
+	 * @return a TechniqueEvent describing the Fact whose Claims' 
+	 * consequences led to progress in solving the puzzle and the 
+	 * Claims that were falsified in that step of progress, or 
+	 * {@code null} if no progress was made
+	 */
 	private TechniqueEvent implications(){
 		
 		for(Fact f : target.factStream()
 				.sorted((small,large) -> Integer.compare(large.size(), small.size()))
 				.collect(Collectors.toList())){
-			Implications implications = new Implications(f);
-			
-			while(implications.intersection().isEmpty() ){ //TODO while (that && the implications can be explored deeper)
-				//add depth to implications
+			TechniqueEvent result = implications(f);
+			if(result != null){
+				return result;
 			}
-			
-			Consequences con = implications.intersection();
-			if(!con.isEmpty()){
-				return new SolveEventImplications(f, con.falseMask()).falsifyClaims();
-			}
+		}
+		return null;
+	}
+	
+	/**
+	 * <p>Tries to find an overlap among the consequences of each 
+	 * of the Claims of {@code f} in the puzzle hypothetically 
+	 * being true.</p>
+	 * @return a TechniqueEvent describing the Fact whose Claims' 
+	 * consequences led to progress in solving the puzzle and the 
+	 * Claims that were falsified in that step of progress, or 
+	 * {@code null} if no progress was made
+	 */
+	private TechniqueEvent implications(Fact f){
+		Implications implications = new Implications(f);
+		
+		while(implications.intersection().isEmpty() && implications.isDepthAvailable()){ //TODO while (that && the implications can be explored deeper)
+			implications.enhance();
+		}
+		
+		Consequences con = implications.intersection();
+		if(!con.isEmpty()){
+			return new SolveEventImplications(f, con.falseMask()).falsifyClaims();
 		}
 		return null;
 	}
@@ -547,6 +573,26 @@ public class ColorChain extends AbstractTechnique {
 				con.addFalse(c.visible());
 				put(c, con);
 			}
+		}
+		
+		/**
+		 * <p>Explores further implications and incorporates their consequences.</p>
+		 */
+		void enhance(){
+			//TODO stub
+		}
+		
+		/**
+		 * <p>Return true if there are implications that have yet to be explored 
+		 * and accounted for as a result of the Claims this obect tracks being 
+		 * hypothetically true, false otherwise.</p>
+		 * @return true if there are implications that have yet to be explored 
+		 * and accounted for as a result of the Claims this obect tracks being 
+		 * hypothetically true, false otherwise
+		 */
+		boolean isDepthAvailable(){
+			//TODO stub
+			return false;
 		}
 		
 		Consequences intersection(){
