@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collector.Characteristics;
 
@@ -75,8 +76,15 @@ public class Sets {
 				Sets::mergeCollections);
 	}
 	
+	public static <S, T extends Collection<S>> Collector<T,?,Set<S>> massUnionCollector(Supplier<Set<S>> supplier){
+		return Collector.of(
+				supplier, 
+				Set::addAll, 
+				Sets::mergeCollections);
+	}
+	
 	/**
-	 * <p>Adds {@code c1} to {@code c2} and returns {@code c1}. This is intended to 
+	 * <p>Adds {@code c2} to {@code c1} and returns {@code c1}. This is intended to 
 	 * be used as a {@link java.util.stream.Collector#combiner() combiner} for a 
 	 * {@link java.util.stream.Collector Collector}.</p>
 	 * @return {@code c1} after the contents of {@code c2} are added to it
