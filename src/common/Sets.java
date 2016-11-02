@@ -12,75 +12,44 @@ import java.util.stream.Collector.Characteristics;
 public class Sets {
 	
 	public static <T extends Collection<E>, E> Collector<T,?,Set<E>> massIntersectionCollector(){
-		
-		class Intersection<Z> extends HashSet<Z>{
-			
-			/**
-			 * 
-			 */
-			private static final long serialVersionUID = -1768519565525064860L;
-			
-			private boolean used = false;
-			
-			public Intersection(){
-				super();
-			}
-			
-			public Intersection(Collection<? extends Z> coll){
-				super(coll);
-			}
-			
-			public Intersection<Z> intersect(Collection<? extends Z> coll){
-				if(used){
-					retainAll(coll);
-				}else{
-					addAll(coll);
-					used = true;
-				}
-				return this;
-			}
-		}
-		
-		return Collector.of(
-				Intersection<E>::new, 
-				Intersection::intersect, 
-				Intersection::intersect, 
-				Intersection<E>::new, 
-				Characteristics.UNORDERED, Characteristics.IDENTITY_FINISH);
+		return massIntersectionCollector(HashSet<E>::new);
 	}
 	
 	public static <T extends Collection<E>, E, Z extends Set<E>> Collector<T,?,Z> massIntersectionCollector(Supplier<Z> supplier){
-		
-		class Intersection{
-			
-			private boolean used = false;
-			private Z set = supplier.get();
-			
-			public void intersect(Collection<E> coll){
-				if(used){
-					set.retainAll(coll);
-				}else{
-					set.addAll(coll);
-					used = true;
-				}
-			}
-			
-			public Intersection combineWith(Intersection other){
-				intersect(other.set);
-				return this;
-			}
-			
-			public Z unpack(){
-				return set;
-			}
-		}
-		
 		return Collector.of(
-				Intersection::new, 
+				() -> new Intersection<Z,E>(supplier), 
 				Intersection::intersect, 
 				Intersection::combineWith, 
 				Intersection::unpack, 
 				Characteristics.UNORDERED);
+	}
+	
+	private static class Intersection<X extends Set<E>, E>{
+		
+		private boolean used = false;
+		private final X set;
+		
+		public Intersection(Supplier<X> supplier){
+			set = supplier.get();
+		}
+		
+		public void intersect(Collection<E> coll){
+			if(used){
+				set.retainAll(coll);
+			}else{
+				set.addAll(coll);
+				used = true;
+			}
+		}
+		
+		public Intersection<X,E> combineWith(Intersection<X,E> other){
+			intersect(other.set);
+			return this;
+		}
+		
+		public X unpack(){
+			return set;
+		}
 	}
 	
 	/**
