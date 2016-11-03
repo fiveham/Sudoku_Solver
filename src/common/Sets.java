@@ -11,6 +11,14 @@ import java.util.stream.Collector.Characteristics;
 
 public class Sets {
 	
+	/**
+	 * <p>The factor by which the expected size of a {@link java.util.HashSet HashSet} 
+	 * should be multiplied went sent to HashSet's constructor as the initial 
+	 * capacity, if using the default load factor.</p>
+	 * @see http://docs.oracle.com/javase/tutorial/collections/implementations/set.html
+	 */
+	public static final int JAVA_UTIL_HASHSET_SIZE_FACTOR = 2;
+	
 	public static <T extends Collection<E>, E> Collector<T,?,Set<E>> massIntersectionCollector(){
 		return massIntersectionCollector(HashSet<E>::new);
 	}

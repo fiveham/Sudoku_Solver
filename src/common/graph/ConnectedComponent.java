@@ -1,5 +1,6 @@
 package common.graph;
 
+import common.Sets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,7 +51,7 @@ class ConnectedComponent<T extends Vertex<T>> {
 		
 		core.addAll(edge);
 		edge = cuttingEdge;
-		cuttingEdge = new HashSet<>(size - core.size() - edge.size());
+		cuttingEdge = new HashSet<>((size - core.size() - edge.size()) * Sets.JAVA_UTIL_HASHSET_SIZE_FACTOR);
 		
 		return core;
 	}
