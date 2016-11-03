@@ -79,14 +79,8 @@ public class Claim extends NodeSet<Fact,Claim>{
 	 */
 	public boolean setFalse(){
 		int initSize = size();
-		if(!setFalseInProgress()){
-			clear();
-		}
+		clear();
 		return size() != initSize;
-	}
-	
-	private boolean setFalseInProgress(){
-		return !isEmpty() && size() < INIT_OWNER_COUNT;
 	}
 	
 	public IndexValue getX(){
