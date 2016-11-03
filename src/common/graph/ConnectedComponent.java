@@ -23,7 +23,7 @@ class ConnectedComponent<T extends Vertex<T>> {
 	
 	ConnectedComponent(int size, List<T> unassignedNodes, Collection<Consumer<Set<T>>> contractEvents) {
 		this.size = size;
-		this.contractEventListeners = new ArrayList<>(contractEvents);
+		this.growthListeners = new ArrayList<>(contractEvents);
 		
 		this.unassignedNodes = unassignedNodes;
 		
@@ -43,10 +43,10 @@ class ConnectedComponent<T extends Vertex<T>> {
 		unassignedNodes.removeAll(cuttingEdge);
 	}
 	
-	private final List<Consumer<Set<T>>> contractEventListeners;
+	private final List<Consumer<Set<T>>> growthListeners;
 	
 	Set<T> contract(){
-		triggerContractEventListeners();
+		triggerGrowthListeners();
 		
 		core.addAll(edge);
 		edge = cuttingEdge;
@@ -55,8 +55,8 @@ class ConnectedComponent<T extends Vertex<T>> {
 		return core;
 	}
 	
-	private void triggerContractEventListeners(){
-		contractEventListeners.stream().forEach( (c)->c.accept(cuttingEdge) );
+	private void triggerGrowthListeners(){
+		growthListeners.stream().forEach( (c)->c.accept(cuttingEdge) );
 	}
 	
 	void add(T vertex){
