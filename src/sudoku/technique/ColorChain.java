@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
@@ -531,7 +532,7 @@ public class ColorChain extends AbstractTechnique {
 	private TechniqueEvent implications(Fact f){
 		Implications implications = new Implications(f);
 		
-		while(implications.intersection().isEmpty() && implications.isDepthAvailable()){
+		while(implications.intersection().isEmpty() && implications.isDepthAvailable(f)){
 			implications.enhance();
 		}
 		
@@ -563,7 +564,7 @@ public class ColorChain extends AbstractTechnique {
 	 * @author fiveham
 	 *
 	 */
-	private class Implications extends HashMap<Claim,Consequences>{
+	private class Implications extends HashMap<Claim,List<Consequences>>{
 		
 		Implications(Fact f){
 			super();
@@ -571,7 +572,9 @@ public class ColorChain extends AbstractTechnique {
 				Consequences con = new Consequences();
 				con.addTrue(c);
 				con.addFalse(c.visible());
-				put(c, con);
+				List<Consequences> list = new ArrayList<>();
+				list.add(con);
+				put(c, list);
 			}
 		}
 		
@@ -590,8 +593,8 @@ public class ColorChain extends AbstractTechnique {
 		 * and accounted for as a result of the Claims this obect tracks being 
 		 * hypothetically true, false otherwise
 		 */
-		boolean isDepthAvailable(){
-			return keySet().stream().allMatch(this::isDepthAvailable);
+		boolean isDepthAvailable(Fact f){
+			return keySet().stream().allMatch((c) -> isDepthAvailable(f,c));
 		}
 		
 		/**
@@ -602,18 +605,60 @@ public class ColorChain extends AbstractTechnique {
 		 * @return true if further implications can be explored given the known 
 		 * implications of {@code c} hypothetically being true, false otherwise
 		 */
-		private boolean isDepthAvailable(Claim c){
-			//TODO stub
-			return false;
+		private boolean isDepthAvailable(Fact fact, Claim c){
+			
+			Set<Claim> lastTrueMask, 
+			lastFalseMask, 
+			prevTrueMask, 
+			prevFalseMask;
+			{
+				List<Consequences> list = get(c);
+				Consequences lastCon = list.get(list.size()-1);
+				List<Consequences> prevCon = list.subList(0, list.size()-1);
+				
+				lastTrueMask = lastCon.trueMask();
+				lastFalseMask = lastCon.falseMask();
+				prevTrueMask = trueMaskUnion(prevCon);
+				prevFalseMask = falseMaskUnion(prevCon);
+			}
+			
+			Map<Fact,Integer> prevSizes = new HashMap<>();
+			Map<Fact,Integer> lastSizes = new HashMap<>();
+			return target.factStream()
+					.peek((f) -> {
+						Set<Claim> bs = new BackedSet<>(claimUniverse, f);
+						bs.removeAll(prevTrueMask);
+						bs.removeAll(prevFalseMask);
+						
+						prevSizes.put(f, bs.size());
+						
+						bs.removeAll(lastTrueMask);
+						bs.removeAll(lastFalseMask);
+						
+						lastSizes.put(f, bs.size());
+					})
+					.anyMatch((f) -> 0 < lastSizes.get(f) && lastSizes.get(f) < prevSizes.get(f));
+		}
+		
+		private Set<Claim> trueMaskUnion(List<Consequences> list){
+			return list.stream()
+					.map(Consequences::trueMask)
+					.collect(Sets.massUnionCollector(claimUniverse::back));
+		}
+		
+		private Set<Claim> falseMaskUnion(List<Consequences> list){
+			return list.stream()
+					.map(Consequences::falseMask)
+					.collect(Sets.massUnionCollector(claimUniverse::back));
 		}
 		
 		Consequences intersection(){
 			Consequences intersection = new Consequences();
 			intersection.addTrue(values().stream()
-					.map(Consequences::trueMask)
+					.map(this::trueMaskUnion)
 					.collect(Sets.massIntersectionCollector()));
 			intersection.addFalse(values().stream()
-					.map(Consequences::falseMask)
+					.map(this::falseMaskUnion)
 					.collect(Sets.massIntersectionCollector()));
 			return intersection;
 		}
