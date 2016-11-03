@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.function.Supplier;
 import java.io.File;
 import java.io.FileNotFoundException;
 import sudoku.Puzzle;
@@ -36,13 +37,42 @@ public class SadmanParser implements Parser{
 	private final int mag;
 	private final List<Integer> values;
 	
+	/**
+	 * <p>Constructs a Parser that interprets the contents of the file {@code f} 
+	 * as a Sadman-format sudoku puzzle, using the specified {@code charset} to 
+	 * read the file.</p>
+	 * @param f the file to be interpreted
+	 * @param charset the name of the charset to be used in reading the file. 
+	 * If the 
+	 * @throws FileNotFoundException
+	 */
 	public SadmanParser(File f, String charset) throws FileNotFoundException{
-		Scanner s = new Scanner(f, charset);
+		this(() -> {
+			try{
+				return new Scanner(f, charset);
+			} catch(FileNotFoundException e){
+				throw new IllegalArgumentException(e);
+			}
+		});
+	}
+	
+	public SadmanParser(File f) throws FileNotFoundException{
+		this(() -> {
+			try{
+				return new Scanner(f);
+			} catch(FileNotFoundException e){
+				throw new IllegalArgumentException(e);
+			}
+		});
+	}
+	
+	private SadmanParser(Supplier<Scanner> supplier) throws FileNotFoundException{
+		Scanner s = supplier.get();
 		while(s.hasNext() && !INITIAL_PUZZLE_MARKER.equals(s.nextLine()));
 		
 		if(!s.hasNext()){
 			s.close();
-			s = new Scanner(f, charset);
+			s = supplier.get();
 		}
 		
 		StringBuilder initCells;
