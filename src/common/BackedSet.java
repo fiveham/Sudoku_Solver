@@ -130,6 +130,16 @@ public class BackedSet<E> implements Set<E> {
 		return asList;
 	}
 	
+	/**
+	 * <p>Adds the specified object to this set as long as it is 
+	 * in this set's universe; otherwise, throws an 
+	 * OutOfUniverseException.</p>
+	 * @param e the element to be added to this BackedSet
+	 * @return true if this set was modified by this operation, 
+	 * false otherwise
+	 * @throws OutOfUniverseException if {@code e} is not in this 
+	 * BackedSet's backing Universe.
+	 */
 	@Override
 	public boolean add(E e) {
 		if(universe.contains(e)){
