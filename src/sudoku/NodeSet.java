@@ -43,7 +43,7 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 	}
 	
 	protected NodeSet(Puzzle puzzle, int initialCapacity, int hash) {
-		super(initialCapacity);
+		super(initialCapacity * Sets.JAVA_UTIL_HASHSET_SIZE_FACTOR);
 		this.puzzle = puzzle;
 		this.hashCode = hash;
 	}
