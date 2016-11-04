@@ -1,6 +1,12 @@
 package common;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Universe<E> {
 	
@@ -10,7 +16,15 @@ public class Universe<E> {
 	public Universe(Collection<? extends E> c){
 		this.ie = new ArrayList<E>(c);
 		this.ei = new HashMap<>();
-		for(int i=0; i<ei.size(); ++i){
+		for(int i=0; i<ie.size(); ++i){
+			ei.put(ie.get(i), i);
+		}
+	}
+	
+	public Universe(Stream<? extends E> s){
+		this.ie = s.collect(Collectors.toList());
+		this.ei = new HashMap<>();
+		for(int i=0; i<ie.size(); ++i){
 			ei.put(ie.get(i), i);
 		}
 	}
