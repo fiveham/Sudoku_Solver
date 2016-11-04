@@ -113,4 +113,19 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 		
 		return result.toString();
 	}
+	
+	/**
+	 * <p>Returns true if {@code graph}, were it a SudokuNetwork, meets the 
+	 * criteria for a SudokuNetwork to be solved, false otherwise.</p>
+	 * @param graph a graph to be interpreted as a SudokuNetwork and tested 
+	 * for being in a solved state
+	 * @return true if {@code graph}, were it a SudokuNetwork, meets the 
+	 * criteria for a SudokuNetwork to be solved, false otherwise
+	 */
+	public static boolean isSolved(Graph<NodeSet<?,?>> graph){
+		return graph.nodeStream()
+				.filter(Fact.class::isInstance)
+				.map(Fact.class::cast)
+				.allMatch(Fact::isSolved);
+	}
 }

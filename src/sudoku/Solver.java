@@ -148,8 +148,8 @@ public class Solver{
 		List<SudokuNetwork> networks;
 		if(eventAndChildSrc != null 
 				&& !(networks = target.connectedComponents().stream()
+						.filter((component) -> SudokuNetwork.isSolved(component))
 						.map((component) -> new SudokuNetwork(target.magnitude(), component))
-						.filter((sn) -> !sn.isSolved())
 						.collect(Collectors.toList())).isEmpty()){
 			String name = Thread.currentThread().getName();
 			this.event = eventAndChildSrc;
