@@ -1,6 +1,7 @@
 package sudoku;
 
 import common.Pair;
+import common.Universe;
 import common.time.TimeBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -73,6 +74,9 @@ public class Puzzle extends SudokuNetwork{
 	 */
 	private List<List<IndexInstance>> dimensions;
 	
+	private final Universe<Fact> factUniverse;
+	private final Universe<Claim> claimUniverse;
+	
 	/**
 	 * <p>Constructs a Puzzle using the text in the specified file {@code f}.</p>
 	 * 
@@ -99,6 +103,9 @@ public class Puzzle extends SudokuNetwork{
 			Init specificValue = new Init(this, c);
 			nodes.add(specificValue);
 		}
+		
+		this.claimUniverse = new Universe<>(claimStream());
+		this.factUniverse = new Universe<>(factStream());
 	}
 	
 	private static Parser chooseParser(File f, String charset) throws FileNotFoundException{
@@ -188,6 +195,14 @@ public class Puzzle extends SudokuNetwork{
 	
 	public Claim claim(int x, int y, int z){
 		return claims.get(x, y, z);
+	}
+	
+	public Universe<Fact> factUniverse(){
+		return factUniverse;
+	}
+	
+	public Universe<Claim> claimUniverse(){
+		return claimUniverse;
 	}
 	
 	/**
