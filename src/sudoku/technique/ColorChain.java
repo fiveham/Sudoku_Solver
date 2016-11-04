@@ -530,15 +530,15 @@ public class ColorChain extends AbstractTechnique {
 	 * {@code null} if no progress was made
 	 */
 	private TechniqueEvent implications(Fact f){
-		Implications implications = new Implications(f);
+		Logic logic = new Logic(f, target);
 		
-		while(implications.intersection().isEmpty() && implications.isDepthAvailable(f)){
-			implications.enhance();
+		while(logic.consequenceIntersection().isEmpty() && logic.isDepthAvailable(f)){
+			logic.exploreDepth();
 		}
 		
-		Consequences con = implications.intersection();
+		Set<Claim> con = logic.consequenceIntersection();
 		if(!con.isEmpty()){
-			return new SolveEventImplications(f, con.falseMask()).falsifyClaims();
+			return new SolveEventImplications(f, con).falsifyClaims();
 		}
 		return null;
 	}
@@ -593,8 +593,8 @@ public class ColorChain extends AbstractTechnique {
 		 * and accounted for as a result of the Claims this obect tracks being 
 		 * hypothetically true, false otherwise
 		 */
-		boolean isDepthAvailable(Fact f){
-			return keySet().stream().allMatch((c) -> isDepthAvailable(f,c));
+		boolean isDepthAvailable(){
+			return keySet().stream().allMatch((c) -> isDepthAvailable(c));
 		}
 		
 		/**
@@ -605,7 +605,7 @@ public class ColorChain extends AbstractTechnique {
 		 * @return true if further implications can be explored given the known 
 		 * implications of {@code c} hypothetically being true, false otherwise
 		 */
-		private boolean isDepthAvailable(Fact fact, Claim c){
+		private boolean isDepthAvailable(Claim c){
 			
 			Set<Claim> lastTrueMask, 
 			lastFalseMask, 
