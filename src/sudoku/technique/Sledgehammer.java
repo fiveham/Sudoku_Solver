@@ -138,8 +138,6 @@ public class Sledgehammer extends AbstractTechnique {
 	private final Map<Integer,List<Fact>> distinctRulesBySledgehammerSize;
 	private final Map<Integer,List<Fact>> distinctSourcesBySledgehammerSize;
 	
-	private final Universe<Fact> factUniverse;
-	
 	private boolean builtSrcComboAtLastSize = true;
 	
 	/**
@@ -154,8 +152,6 @@ public class Sledgehammer extends AbstractTechnique {
 		this.distinctRules = new ArrayList<>();
 		this.distinctRulesBySledgehammerSize = new HashMap<>();
 		this.distinctSourcesBySledgehammerSize = new HashMap<>();
-		
-		this.factUniverse = new Universe<>(target.factStream().collect(Collectors.toList()));
 	}
 	
 	private static void populateDistinctRules(Sledgehammer sh){
@@ -284,6 +280,10 @@ public class Sledgehammer extends AbstractTechnique {
 		return null;
 	}
 	
+	private Universe<Fact> factUniverse(){
+		return target.nodeStream().findFirst().get().getPuzzle().factUniverse();
+	}
+	
 	/**
 	 * <p></p>
 	 * @param oldSrcCombo the established sources in the source-combinations being built
@@ -299,7 +299,7 @@ public class Sledgehammer extends AbstractTechnique {
 	 */
 	private TechniqueEvent exploreSourceCombos(List<Fact> oldSrcCombo, Set<Fact> oldVisCloud, Set<Fact> oldVisVisCloud, int size, Set<Fact> sourceMask){
 		if(oldSrcCombo.size() < size){
-			Set<Fact> localSourceMask = new BackedSet<>(factUniverse, sourceMask);
+			Set<Fact> localSourceMask = new BackedSet<>(factUniverse(), sourceMask);
 			for(Fact newSource : sourcePool(oldVisVisCloud, sourceMask, size, oldSrcCombo.isEmpty())){
 				localSourceMask.remove(newSource); //mask for next iteration level
 
@@ -316,10 +316,10 @@ public class Sledgehammer extends AbstractTechnique {
 				if(newSrcCombo.size() < size){
 					Set<Fact> visibleToNewSource = visibleCache.get(newSource, size); 
 					
-					newVisCloud = new BackedSet<>(factUniverse, oldVisCloud);
+					newVisCloud = new BackedSet<>(factUniverse(), oldVisCloud);
 					newVisCloud.addAll(visibleToNewSource);
 					
-					Set<Fact> visVis = new BackedSet<>(factUniverse, oldVisVisCloud);
+					Set<Fact> visVis = new BackedSet<>(factUniverse(), oldVisVisCloud);
 					visibleToNewSource.stream()
 							.map((v) -> visibleCache.get(v, size))
 							.forEach(visVis::addAll);
@@ -351,7 +351,7 @@ public class Sledgehammer extends AbstractTechnique {
 		if(isEmpty){
 			return sourceMask;
 		} else{
-			Set<Fact> result = new BackedSet<>(factUniverse, initVisVisibles);
+			Set<Fact> result = new BackedSet<>(factUniverse(), initVisVisibles);
 			result.retainAll(sourceMask);
 			return result;
 		}
@@ -387,7 +387,7 @@ public class Sledgehammer extends AbstractTechnique {
 	private final Map<Integer,Set<Fact>> distinctSourcesAtSizeCache = new HashMap<>();
 	
 	private Set<Fact> distinctSourcesAtSize(int size){
-		return distinctRulesOfTypeAtSize(size, distinctSourcesAtSizeCache, distinctSourcesBySledgehammerSize, factUniverse::back);
+		return distinctRulesOfTypeAtSize(size, distinctSourcesAtSizeCache, distinctSourcesBySledgehammerSize, factUniverse()::back);
 	}
 	
 	private static <C extends Collection<Fact>> C distinctRulesOfTypeAtSize(int size, Map<Integer,C> cache, Map<Integer,List<Fact>> rulesOfType, Supplier<C> supplier){
