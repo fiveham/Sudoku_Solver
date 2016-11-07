@@ -187,7 +187,7 @@ public class BackedSet<E> implements Set<E> {
 	}
 	
 	@Override
-	public boolean addAll(Collection<? extends E> c) { //TODO unify addAll, containsAll and other methods with this internal structure
+	public boolean addAll(Collection<? extends E> c) {
 		if(c instanceof BackedSet<?>){
 			BackedSet<?> b = (BackedSet<?>) c;
 			if(universe.equals(b.universe)){
