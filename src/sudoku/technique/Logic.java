@@ -25,6 +25,11 @@ public class Logic {
 				.collect(Sets.massIntersectionCollector());
 	}
 	
+	/*
+	 * TODO use allMatch instead. If any WhatIf has no depth available 
+	 * and is preventing the intersection from being non-empty, then 
+	 * that intersection will never be useful and analysis should short-circuit
+	 */
 	public boolean isDepthAvailable(){
 		return whatIf.stream().anyMatch(WhatIf::isDepthAvailable);
 	}

@@ -45,14 +45,6 @@ public class WhatIf implements Cloneable{
 		this.sudoku = sudoku;
 	}
 	
-	/*
-	 * TODO redesign WhatIf's allocation of true and false Claims to prevent contradictions
-	 * caused by assuming true a Claim visible to another assumed-true Claim
-	 * This will also help develop a system to account for contradictory assumptions whose 
-	 * contradictory natures aren't immediately obvious.
-	 * TODO throw an exception when new assumptions and consequences cause a Fact to contain only 
-	 * false Claims.
-	 */
 	public boolean assumeTrue(Claim c){
 		return assumptions.add(c) | consequences.addAll(c.visible());
 	}
@@ -89,7 +81,6 @@ public class WhatIf implements Cloneable{
 				.findFirst().get();
 	}
 	
-	//TODO track a list of partially affected facts, and enhance it when needed.
 	private Stream<Fact> partiallyAccountedFacts(){
 		Map<Fact,Integer> lastSizes = new HashMap<>();
 		return sudoku.factStream()

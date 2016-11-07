@@ -347,12 +347,9 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	private static class ColorClaim implements WrapVertex<Claim,ColorClaim>{
 		
-		public static final List<Predicate<ColorClaim>> COLOR_SIGNS;
-		static{
-			COLOR_SIGNS = new ArrayList<>(2); //MAGIC
-			COLOR_SIGNS.add((colorClaim) -> colorClaim.color > 0);
-			COLOR_SIGNS.add((colorClaim) -> colorClaim.color < 0);
-		}
+		public static final List<Predicate<ColorClaim>> COLOR_SIGNS = Arrays.asList(
+				(colorClaim) -> colorClaim.color > 0, 
+				(colorClaim) -> colorClaim.color < 0);
 		
 		private int color = 0;
 		private final Claim claim;
@@ -468,30 +465,6 @@ public class ColorChain extends AbstractTechnique {
 					.collect(Collectors.joining(", "));
 		}
 	}
-	
-	/*
-	 * TODO incorporate use of subsumedFacts via its method into xyChain's analysis
-	 * and incorporate xyChain and subsumedFacts into implicationIntersection.
-	 * 
-	 * Currently, SubsumedFacts analysis (in the form of checks for fully localized 
-	 * Facts, not including partially localized facts) is implicitly incorporated into 
-	 * xyChain analysis.  I'd like to incorporate it in an explicit, formal manner, 
-	 * in order to add the partial-overlap functionality and also to avoid code duplication.
-	 * 
-	 * Additionally, I'd like to incorporate subsumedFacts and xyChain into 
-	 * implicationIntersection in order to begin unifying ColorChain and Sledgehammer.
-	 * 
-	 * There should be a method that accepts an arbitrary int between 1 and sideLength 
-	 * along with a trueMask and a falseMask--sets that describe modifications to the 
-	 * Puzzle--and output some results describing the discoveries it has made w/r/t the 
-	 * implications of the state of the puzzle described by the passed parameters in 
-	 * concert with the established existing state of the Puzzle.
-	 * 
-	 * Using it should be equivalent to asking the question "Given the puzzle as it is, 
-	 * except that these Claims are true and these Claims are false, what can we 
-	 * say about the truth or falsehood of other Claims?" and getting back an answer 
-	 * like "These other Claims would be false and these other Claims would be true."
-	 */
 	
 	/**
 	 * <p>Tries to find an overlap among the consequences of each 
