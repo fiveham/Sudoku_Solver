@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -498,7 +497,7 @@ public class PuzzleVizApp extends Application {
 	}
 	
 	public static Timeline depthFirstLinearTimeline(ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
-		ArrayList<Timeline> timelineList = new ArrayList<>(treeSize(event));
+		ArrayList<Timeline> timelineList = new ArrayList<>();
 		timelineList.add(solutionEventTimeline(event.techniqueEvent(), modelHandler));
 		
 		for(ThreadEvent child : threadEventChildren(event)){
@@ -506,19 +505,6 @@ public class PuzzleVizApp extends Application {
 		}
 		
 		return stitch(timelineList);
-	}
-	
-	private static int treeSize(Time time){
-		AtomicInteger ai = new AtomicInteger(1);
-		if(time.hasChildren()){
-			treeSize(time, ai);
-		}
-		return ai.get();
-	}
-	
-	private static void treeSize(Time time, AtomicInteger ai){
-		ai.addAndGet(time.children().size());
-		time.children().parallelStream().filter(Time::hasChildren).forEach((child) -> treeSize(child,ai));
 	}
 	
 	private static List<Timeline> depthFirstRecursion( List<Timeline> timelineList, ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
