@@ -1,5 +1,6 @@
 package sudoku.technique;
 
+import common.BackedSet;
 import common.Pair;
 import common.Sets;
 import common.graph.Graph;
@@ -10,9 +11,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
@@ -21,8 +24,10 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import sudoku.Claim;
 import sudoku.Fact;
+import sudoku.Puzzle;
 import sudoku.Sudoku;
 import sudoku.time.TechniqueEvent;
 
@@ -502,7 +507,7 @@ public class ColorChain extends AbstractTechnique {
 	 * {@code null} if no progress was made
 	 */
 	private TechniqueEvent implications(Fact f){
-		Logic logic = new Logic(f, target);
+		Logic logic = new Logic(f);
 		
 		while(logic.consequenceIntersection().isEmpty() && logic.isDepthAvailable()){
 			logic.exploreDepth();
@@ -513,6 +518,135 @@ public class ColorChain extends AbstractTechnique {
 			return new SolveEventImplications(f, con).falsifyClaims();
 		}
 		return null;
+	}
+	
+	private class Logic {
+		
+		private Collection<WhatIf> whatIf;
+		
+		public Logic(Set<? extends Claim> claims){
+			whatIf = claims.stream()
+					.map((c) -> new WhatIf(c))
+					.collect(Collectors.toList());
+		}
+		
+		public Set<Claim> consequenceIntersection(){
+			return whatIf.stream()
+					.map(WhatIf::consequences)
+					.collect(Sets.massIntersectionCollector());
+		}
+		
+		/*
+		 * TODO use allMatch instead. If any WhatIf has no depth available 
+		 * and is preventing the intersection from being non-empty, then 
+		 * that intersection will never be useful and analysis should short-circuit
+		 */
+		public boolean isDepthAvailable(){
+			return whatIf.stream().anyMatch(WhatIf::isDepthAvailable);
+		}
+		
+		public void exploreDepth(){
+			whatIf = whatIf.stream()
+					.map(WhatIf::exploreDepth)
+					.collect(Sets.massUnionCollector());
+		}
+		
+		private class WhatIf implements Cloneable{
+			
+			private final Set<Claim> assumptions;
+			private final Set<Claim> consequences;
+			private final Puzzle puzzle;
+			
+			public WhatIf(Claim c){
+				assumptions = new HashSet<>();
+				assumptions.add(c);
+				consequences = new HashSet<>(c.visible());
+				this.puzzle = c.getPuzzle();
+			}
+			
+			/**
+			 * <p>Constructs a WhatIf having the specified {@code assumptions}, 
+			 * {@code consequences}, and {@code puzzle}. Used to {@link #clone() clone} 
+			 * a WhatIf.</p>
+			 * @param assumptions
+			 * @param consequences
+			 * @param puzzle
+			 * @see #clone()
+			 */
+			private WhatIf(Set<Claim> assumptions, Set<Claim> consequences, Puzzle puzzle){
+				this.assumptions = new HashSet<>(assumptions);
+				this.consequences = new HashSet<>(consequences);
+				this.puzzle = puzzle;
+			}
+			
+			public boolean assumeTrue(Claim c){
+				return assumptions.add(c) | consequences.addAll(c.visible());
+			}
+			
+			public Collection<Claim> consequences(){
+				return consequences;
+			}
+			
+			public boolean isDepthAvailable(){
+				return partiallyAccountedFacts()
+						.findFirst().isPresent();
+			}
+			
+			public Collection<WhatIf> exploreDepth(){
+				return smallestAffectedFact().stream()
+						.map(this::explore)
+						.collect(Collectors.toList());
+			}
+			
+			private WhatIf explore(Claim c){
+				WhatIf out = clone();
+				out.assumeTrue(c);
+				return out;
+			}
+			
+			@Override
+			public WhatIf clone(){
+				return new WhatIf(assumptions, consequences, puzzle);
+			}
+			
+			private Fact smallestAffectedFact(){
+				return partiallyAccountedFacts()
+						.sorted(ColorChain.SMALL_TO_LARGE)
+						.findFirst().get();
+			}
+			
+			private Stream<Fact> partiallyAccountedFacts(){
+				Map<Fact,Integer> lastSizes = new HashMap<>();
+				return target.factStream()
+						.peek((f) -> {
+							Set<Claim> bs = new BackedSet<>(puzzle.claimUniverse(), f);
+							bs.removeAll(assumptions);
+							bs.removeAll(consequences);
+							lastSizes.put(f, bs.size());
+						})
+						.filter(factPartiallyAccounted(lastSizes));
+			}
+			
+			private Predicate<Fact> factPartiallyAccounted(Map<Fact,Integer> lastSizes){
+				return (f) -> 0 < lastSizes.get(f) && lastSizes.get(f) < f.size();
+			}
+			
+			@Override
+			public boolean equals(Object o){
+				if(o instanceof WhatIf){
+					WhatIf that = (WhatIf) o;
+					return this.puzzle == that.puzzle
+							&& this.assumptions.equals(that.assumptions) 
+							&& this.consequences.equals(that.consequences);
+				}
+				return false;
+			}
+			
+			@Override
+			public int hashCode(){
+				return assumptions.hashCode() + consequences.hashCode();
+			}
+		}
 	}
 	
 	public static class SolveEventImplications extends TechniqueEvent{
