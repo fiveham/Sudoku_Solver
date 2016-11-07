@@ -16,16 +16,17 @@ import sudoku.Sudoku;
 
 public class WhatIf implements Cloneable{
 	
-	private Set<Claim> assumptions;
-	private Set<Claim> consequences;
-	private Puzzle puzzle;
-	private Sudoku sudoku;
+	private final Set<Claim> assumptions;
+	private final Set<Claim> consequences;
+	private final Puzzle puzzle;
+	private final Sudoku sudoku;
 	
 	public WhatIf(Sudoku sudoku, Claim c){
 		assumptions = new HashSet<>();
 		assumptions.add(c);
 		consequences = new HashSet<>(c.visible());
 		this.puzzle = c.getPuzzle();
+		this.sudoku = sudoku;
 	}
 	
 	/**
