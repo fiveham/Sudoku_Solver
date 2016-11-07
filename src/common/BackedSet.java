@@ -183,7 +183,7 @@ public class BackedSet<E> implements Set<E> {
 				return this.mask.or(b.mask).equals(this.mask); 
 			}
 		}
-		return c.stream().allMatch((e) -> contains(e));
+		return c.stream().allMatch(this::contains);
 	}
 	
 	@Override
@@ -197,7 +197,7 @@ public class BackedSet<E> implements Set<E> {
 			}
 		}
 		return c.stream()
-				.map((e) -> add(e))
+				.map(this::add)
 				.collect(MASS_OR);
 	}
 	
@@ -237,7 +237,7 @@ public class BackedSet<E> implements Set<E> {
 		}
 		
 		return c.stream()
-				.map((o) -> remove(o))
+				.map(this::remove)
 				.collect(MASS_OR);
 	}
 	
