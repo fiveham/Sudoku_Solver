@@ -1,9 +1,7 @@
 package sudoku.technique;
 
-import common.BackedSet;
 import common.Pair;
 import common.Sets;
-import common.Universe;
 import common.graph.Graph;
 import common.graph.Wrap;
 import common.graph.BasicGraph;
@@ -11,11 +9,10 @@ import common.graph.WrapVertex;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
@@ -49,7 +46,6 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	public ColorChain(Sudoku puzzle) {
 		super(puzzle);
-		this.claimUniverse = new Universe<>(target.claimStream().collect(Collectors.toList()));
 	}
 	
 	/**
@@ -510,7 +506,7 @@ public class ColorChain extends AbstractTechnique {
 	private TechniqueEvent implications(){
 		
 		for(Fact f : target.factStream()
-				.sorted((small,large) -> Integer.compare(large.size(), small.size()))
+				.sorted(SMALL_TO_LARGE)
 				.collect(Collectors.toList())){
 			TechniqueEvent result = implications(f);
 			if(result != null){
@@ -519,6 +515,9 @@ public class ColorChain extends AbstractTechnique {
 		}
 		return null;
 	}
+	
+	public static final Comparator<Collection<?>> SMALL_TO_LARGE = 
+			(small,large) -> Integer.compare(large.size(), small.size());
 	
 	/**
 	 * <p>Tries to find an overlap among the consequences of each 
@@ -532,7 +531,7 @@ public class ColorChain extends AbstractTechnique {
 	private TechniqueEvent implications(Fact f){
 		Logic logic = new Logic(f, target);
 		
-		while(logic.consequenceIntersection().isEmpty() && logic.isDepthAvailable(f)){
+		while(logic.consequenceIntersection().isEmpty() && logic.isDepthAvailable()){
 			logic.exploreDepth();
 		}
 		
@@ -555,157 +554,6 @@ public class ColorChain extends AbstractTechnique {
 		@Override
 		protected String toStringStart() {
 			return "Exploration of the consequences of the possible solutions of " + initFact;
-		}
-	}
-	
-	/**
-	 * <p>A map from a Claim to some consequences that follow logically if 
-	 * that Claim is true.</p>
-	 * @author fiveham
-	 *
-	 */
-	private class Implications extends HashMap<Claim,List<Consequences>>{
-		
-		Implications(Fact f){
-			super();
-			for(Claim c : f){
-				Consequences con = new Consequences();
-				con.addTrue(c);
-				con.addFalse(c.visible());
-				List<Consequences> list = new ArrayList<>();
-				list.add(con);
-				put(c, list);
-			}
-		}
-		
-		/**
-		 * <p>Explores further implications and incorporates their consequences.</p>
-		 */
-		void enhance(){
-			//TODO stub
-		}
-		
-		/**
-		 * <p>Return true if there are implications that have yet to be explored 
-		 * and accounted for as a result of the Claims this obect tracks being 
-		 * hypothetically true, false otherwise.</p>
-		 * @return true if there are implications that have yet to be explored 
-		 * and accounted for as a result of the Claims this obect tracks being 
-		 * hypothetically true, false otherwise
-		 */
-		boolean isDepthAvailable(){
-			return keySet().stream().allMatch((c) -> isDepthAvailable(c));
-		}
-		
-		/**
-		 * <p>Return true if further implications can be explored given the known 
-		 * implications of {@code c} hypothetically being true, false otherwise</p>
-		 * @param c the Claim whose hypothetical truth's known implications are 
-		 * checked for the existence of further implications
-		 * @return true if further implications can be explored given the known 
-		 * implications of {@code c} hypothetically being true, false otherwise
-		 */
-		private boolean isDepthAvailable(Claim c){
-			
-			Set<Claim> lastTrueMask, 
-			lastFalseMask, 
-			prevTrueMask, 
-			prevFalseMask;
-			{
-				List<Consequences> list = get(c);
-				Consequences lastCon = list.get(list.size()-1);
-				List<Consequences> prevCon = list.subList(0, list.size()-1);
-				
-				lastTrueMask = lastCon.trueMask();
-				lastFalseMask = lastCon.falseMask();
-				prevTrueMask = trueMaskUnion(prevCon);
-				prevFalseMask = falseMaskUnion(prevCon);
-			}
-			
-			Map<Fact,Integer> prevSizes = new HashMap<>();
-			Map<Fact,Integer> lastSizes = new HashMap<>();
-			return target.factStream()
-					.peek((f) -> {
-						Set<Claim> bs = new BackedSet<>(claimUniverse, f);
-						bs.removeAll(prevTrueMask);
-						bs.removeAll(prevFalseMask);
-						
-						prevSizes.put(f, bs.size());
-						
-						bs.removeAll(lastTrueMask);
-						bs.removeAll(lastFalseMask);
-						
-						lastSizes.put(f, bs.size());
-					})
-					.anyMatch((f) -> 0 < lastSizes.get(f) && lastSizes.get(f) < prevSizes.get(f));
-		}
-		
-		private Set<Claim> trueMaskUnion(List<Consequences> list){
-			return list.stream()
-					.map(Consequences::trueMask)
-					.collect(Sets.massUnionCollector(claimUniverse::back));
-		}
-		
-		private Set<Claim> falseMaskUnion(List<Consequences> list){
-			return list.stream()
-					.map(Consequences::falseMask)
-					.collect(Sets.massUnionCollector(claimUniverse::back));
-		}
-		
-		Consequences intersection(){
-			Consequences intersection = new Consequences();
-			intersection.addTrue(values().stream()
-					.map(this::trueMaskUnion)
-					.collect(Sets.massIntersectionCollector()));
-			intersection.addFalse(values().stream()
-					.map(this::falseMaskUnion)
-					.collect(Sets.massIntersectionCollector()));
-			return intersection;
-		}
-	}
-	
-	private final Universe<Claim> claimUniverse;
-	
-	private class Consequences{
-		
-		private final Set<Claim> trueMask;
-		private final Set<Claim> falseMask;
-		
-		Consequences(){
-			trueMask = new BackedSet<>(claimUniverse);
-			falseMask = new BackedSet<>(claimUniverse);
-		}
-		
-		Set<Claim> trueMask(){
-			return trueMask;
-		}
-		
-		Set<Claim> falseMask(){
-			return falseMask;
-		}
-		
-		boolean addTrue(Collection<? extends Claim> c){
-			return trueMask.addAll(c);
-		}
-		
-		boolean addFalse(Collection<? extends Claim> c){
-			return falseMask.addAll(c);
-		}
-		
-		boolean addTrue(Claim c){
-			return trueMask.add(c);
-		}
-		
-		boolean addFalse(Claim c){
-			return falseMask.add(c);
-		}
-		
-		boolean addAll(Consequences c){
-			return addTrue(c.trueMask) || addFalse(c.falseMask); 
-		}
-		
-		boolean isEmpty(){
-			return trueMask.isEmpty() && falseMask.isEmpty();
 		}
 	}
 }

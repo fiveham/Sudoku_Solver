@@ -5,17 +5,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import common.Sets;
 import sudoku.Claim;
-import sudoku.Fact;
 import sudoku.Sudoku;
 
 public class Logic {
 	
-	private final Collection<WhatIf> whatIf;
+	private Collection<WhatIf> whatIf;
 	private final Sudoku sudoku;
 	
 	public Logic(Set<? extends Claim> claims, Sudoku sudoku){
 		whatIf = claims.stream()
-				.map((c) -> new WhatIf(this,c))
+				.map((c) -> new WhatIf(sudoku, c))
 				.collect(Collectors.toList());
 		this.sudoku = sudoku;
 	}
@@ -26,15 +25,21 @@ public class Logic {
 				.collect(Sets.massIntersectionCollector());
 	}
 	
-	public boolean isDepthAvailable(Fact f){
+	public boolean isDepthAvailable(){
 		return whatIf.stream().anyMatch(WhatIf::isDepthAvailable);
 	}
 	
 	public void exploreDepth(){
-		//TODO stub
+		whatIf = whatIf.stream()
+				.map(WhatIf::exploreDepth)
+				.collect(Sets.massUnionCollector());
 	}
 	
 	public Sudoku getSudoku(){
 		return sudoku;
+	}
+	
+	public void add(WhatIf wi){
+		whatIf.add(wi);
 	}
 }
