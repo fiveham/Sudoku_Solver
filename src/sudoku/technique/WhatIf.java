@@ -37,10 +37,11 @@ public class WhatIf implements Cloneable{
 	 * @param puzzle
 	 * @see #clone()
 	 */
-	private WhatIf(Set<Claim> assumptions, Set<Claim> consequences, Puzzle puzzle){
+	private WhatIf(Set<Claim> assumptions, Set<Claim> consequences, Puzzle puzzle, Sudoku sudoku){
 		this.assumptions = new HashSet<>(assumptions);
 		this.consequences = new HashSet<>(consequences);
 		this.puzzle = puzzle;
+		this.sudoku = sudoku;
 	}
 	
 	/*
@@ -78,7 +79,7 @@ public class WhatIf implements Cloneable{
 	
 	@Override
 	public WhatIf clone(){
-		return new WhatIf(assumptions, consequences, puzzle);
+		return new WhatIf(assumptions, consequences, puzzle, sudoku);
 	}
 	
 	private Fact smallestAffectedFact(){
