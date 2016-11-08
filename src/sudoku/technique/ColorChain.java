@@ -164,16 +164,16 @@ public class ColorChain extends AbstractTechnique {
 	
 	private class Logic {
 		
-		private Collection<WhatIf> whatIf;
+		private Collection<WhatIf> whatIfs;
 		
 		public Logic(Set<? extends Claim> claims){
-			whatIf = claims.stream()
+			whatIfs = claims.stream()
 					.map((c) -> new WhatIf(c))
 					.collect(Collectors.toList());
 		}
 		
 		public Set<Claim> consequenceIntersection(){
-			return whatIf.stream()
+			return whatIfs.stream()
 					.map(WhatIf::consequences)
 					.collect(Sets.massIntersectionCollector());
 		}
@@ -184,11 +184,11 @@ public class ColorChain extends AbstractTechnique {
 		 * that intersection will never be useful and analysis should short-circuit
 		 */
 		public boolean isDepthAvailable(){
-			return whatIf.stream().anyMatch(WhatIf::isDepthAvailable);
+			return whatIfs.stream().anyMatch(WhatIf::isDepthAvailable);
 		}
 		
 		public void exploreDepth(){
-			whatIf = whatIf.stream()
+			whatIfs = whatIfs.stream()
 					.map(WhatIf::exploreDepth)
 					.collect(Sets.massUnionCollector());
 		}
