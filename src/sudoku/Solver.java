@@ -26,11 +26,11 @@ import sudoku.parse.Parser;
  */
 public class Solver{
 	
-	public static final List<Function<Sudoku,Technique>> DEFAULT_PROCESSOR_SOURCE = Arrays.asList(
+	public static final List<Function<Sudoku,Technique>> DEFAULT_TECHNIQUE_SOURCE = Arrays.asList(
 			ColorChain::new, 
 			Sledgehammer::new);
 	
-	private final List<Technique> processors;
+	private final List<Technique> techniques;
 	
 	private final Sudoku target;
 	
@@ -74,13 +74,13 @@ public class Solver{
 	 * @param target the Puzzle to be solved
 	 */
 	public Solver(Sudoku puzzle, String filename){
-		this(puzzle, null, new SudokuThreadGroup(filename), new Object(), DEFAULT_PROCESSOR_SOURCE, filename);
+		this(puzzle, null, new SudokuThreadGroup(filename), new Object(), DEFAULT_TECHNIQUE_SOURCE, filename);
 	}
 	
 	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, List<? extends Function<Sudoku,Technique>> processorSource, String source){
 		this.target = target;
 		
-		this.processors   = generateTechniques(target, processorSource);
+		this.techniques   = generateTechniques(target, processorSource);
 		
 		this.eventParent = eventParent;
 		this.group = group;
@@ -157,7 +157,7 @@ public class Solver{
 				SudokuNetwork network = networks.get(i);
 				new Thread(
 						group, 
-						new Solver(network, event, group, lock, processors, source)::run, 
+						new Solver(network, event, group, lock, techniques, source)::run, 
 						name+Integer.toString(i,Parser.MAX_RADIX))
 						.start();
 			}
@@ -180,7 +180,7 @@ public class Solver{
 	 * @return true if the target is solved, false otherwise
 	 */
 	private ThreadEvent process(){
-		for(Technique technique : processors){
+		for(Technique technique : techniques){
 			TechniqueEvent techniqueEvent = technique.digest();
 			if(techniqueEvent != null){
 				return new ThreadEvent(eventParent, techniqueEvent, Thread.currentThread().getName());
