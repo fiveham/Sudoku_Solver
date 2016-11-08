@@ -44,74 +44,9 @@ public class ColorChain extends AbstractTechnique {
 		return implications();
 	}
 	
-	public static class SolveEventImplicationIntersection extends TechniqueEvent{
-		
-		private final Fact rule;
-		
-		SolveEventImplicationIntersection(Set<Claim> falsifiedClaims, Fact rule){
-			super(falsifiedClaims);
-			this.rule = rule;
-		}
-		
-		@Override
-		protected String toStringStart() {
-			return "An intersection of the Claims that would be falsified by the verification of any of the Claims of "+rule;
-		}
-	}
-	
-	public class SolveEventColorChain extends TechniqueEvent{
-		
-		private final Collection<Fact> xorEntity;
-		
-		public SolveEventColorChain(Set<Claim> falsified, Collection<Fact> xorEntity) {
-			super(falsified);
-			this.xorEntity = xorEntity;
-		}
-		
-		@Override
-		protected String toStringStart() {
-			return "Either-solution propagation from the "+xorEntity.size()+"-Rule xor-chain "+xorEntity.toString();
-		}
-	}
-	
 	@Override
 	public ColorChain apply(Sudoku sudoku){
 		return new ColorChain(sudoku);
-	}
-	
-	/**
-	 * <p>Describes the verification of a Claim known to be true 
-	 * because one or more of its Fact neighbors contains only that 
-	 * Claim as an element..</p>
-	 * @author fiveham
-	 *
-	 */
-	public static class SubsumedFact extends TechniqueEvent{
-		
-		private final Fact src;
-		private final Set<Fact> supersets;
-		
-		private SubsumedFact(Fact solved, Set<Fact> supersets){
-			super(solved.iterator().next().visible());
-			this.src = solved;
-			this.supersets = supersets;
-		}
-		
-		@Override
-		public boolean equals(Object o){
-			if(o instanceof SubsumedFact){
-				SubsumedFact se = (SubsumedFact) o;
-				return super.equals(se) && (src == null ? se.src == null : src.equals(se.src));
-			}
-			return false;
-		}
-		
-		@Override
-		protected String toStringStart(){
-			return src+"is subsumed by "+supersets.stream()
-					.map(Object::toString)
-					.collect(Collectors.joining(", "));
-		}
 	}
 	
 	/**
