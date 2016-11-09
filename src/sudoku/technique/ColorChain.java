@@ -3,10 +3,11 @@ package sudoku.technique;
 import common.BackedSet;
 import common.Sets;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -98,13 +99,24 @@ public class ColorChain extends AbstractTechnique {
 	}
 	
 	private class Logic {
-		
+
+		private final Puzzle puzzle;
 		private Collection<WhatIf> whatIfs;
 		
+		/**
+		 * 
+		 * @param claims
+		 * @throws IllegalArgumentException if {@code claims} is empty.
+		 */
 		public Logic(Set<? extends Claim> claims){
 			whatIfs = claims.stream()
 					.map((c) -> new WhatIf(c))
 					.collect(Collectors.toList());
+			try{
+				this.puzzle = claims.iterator().next().getPuzzle();
+			} catch(NoSuchElementException e){
+				throw new IllegalArgumentException("Could not get any Claims from the specified set.");
+			}
 		}
 		
 		public Set<Claim> consequenceIntersection(){
@@ -132,13 +144,11 @@ public class ColorChain extends AbstractTechnique {
 			
 			private final Set<Claim> assumptions;
 			private final Set<Claim> consequences;
-			private final Puzzle puzzle;
 			
 			public WhatIf(Claim c){
-				assumptions = new HashSet<>();
+				assumptions = puzzle.claimUniverse().back();
 				assumptions.add(c);
-				consequences = new HashSet<>(c.visible());
-				this.puzzle = c.getPuzzle();
+				consequences = puzzle.claimUniverse().back(c.visible());
 			}
 			
 			/**
@@ -151,16 +161,32 @@ public class ColorChain extends AbstractTechnique {
 			 * @see #clone()
 			 */
 			private WhatIf(Set<Claim> assumptions, Set<Claim> consequences, Puzzle puzzle){
-				this.assumptions = new HashSet<>(assumptions);
-				this.consequences = new HashSet<>(consequences);
-				this.puzzle = puzzle;
+				this.assumptions = puzzle.claimUniverse().back(assumptions);
+				this.consequences = puzzle.claimUniverse().back(consequences);
 			}
 			
+			/**
+			 * <p>Adds {@code c} to this WhatIf as a Claim assumed to be true, and 
+			 * adds the Claims {@link sudoku.NodeSet#visible() visible} to {@code c} 
+			 * as Claims concluded to be false.</p>
+			 * @param c a Claim to be assumed true
+			 * @return true if this WhatIf's collection of assumed true Claims or this 
+			 * WhatIf's collection of concluded false Claims was changed by this operation, 
+			 * false otherwise
+			 * @throws IllegalStateException if {@code c} is already known to be false based 
+			 * on the other Claims assumed true in this WhatIf or if the set of Claims 
+			 * {@link sudoku.NodeSet#visible() visible} to {@code c} intersects this WhatIf's 
+			 * set of Claims assumed true
+			 */
 			public boolean assumeTrue(Claim c){
-				return assumptions.add(c) | consequences.addAll(c.visible());
+				boolean result = assumptions.add(c) | consequences.addAll(c.visible());
+				if(!Collections.disjoint(assumptions, consequences)){
+					throw new IllegalStateException("Overlap between Claims assumed true and Claims concluded false");
+				}
+				return result;
 			}
 			
-			public Collection<Claim> consequences(){
+			private Collection<Claim> consequences(){
 				return consequences;
 			}
 			
@@ -212,11 +238,15 @@ public class ColorChain extends AbstractTechnique {
 			public boolean equals(Object o){
 				if(o instanceof WhatIf){
 					WhatIf that = (WhatIf) o;
-					return this.puzzle == that.puzzle
+					return this.puzzle() == that.puzzle()
 							&& this.assumptions.equals(that.assumptions) 
 							&& this.consequences.equals(that.consequences);
 				}
 				return false;
+			}
+			
+			private Puzzle puzzle(){
+				return puzzle;
 			}
 			
 			@Override
@@ -234,7 +264,7 @@ public class ColorChain extends AbstractTechnique {
 			super(falsifiedClaims);
 			this.initFact = f;
 		}
-
+		
 		@Override
 		protected String toStringStart() {
 			return "Exploration of the consequences of the possible solutions of " + initFact;
