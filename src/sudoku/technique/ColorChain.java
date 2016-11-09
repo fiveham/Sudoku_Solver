@@ -100,7 +100,7 @@ public class ColorChain extends AbstractTechnique {
 	}
 	
 	private class Logic {
-
+		
 		private final Puzzle puzzle;
 		private Collection<WhatIf> whatIfs;
 		
@@ -110,15 +110,28 @@ public class ColorChain extends AbstractTechnique {
 		 * @throws IllegalArgumentException if {@code claims} is empty.
 		 */
 		public Logic(Set<? extends Claim> claims){
-			whatIfs = claims.stream()
-					.map((c) -> new WhatIf(c))
-					.collect(Collectors.toList());
 			try{
 				this.puzzle = claims.iterator().next().getPuzzle();
 			} catch(NoSuchElementException e){
 				throw new IllegalArgumentException("Could not get any Claims from the specified set.");
 			}
+			
+			whatIfs = claims.stream()
+					.map((c) -> new WhatIf(c))
+					.collect(Collectors.toList());
+			
+			popularity = new HashMap<>();
 		}
+		
+		private Comparator<Collection<?>> byPopularity(){
+			return (f1,f2) -> Integer.compare(popularity(f1), popularity(f2));
+		}
+		
+		private int popularity(Collection<?> f){
+			return popularity.get(f);
+		}
+		
+		private Map<Fact,Integer> popularity;
 		
 		public Set<Claim> consequenceIntersection(){
 			return whatIfs.stream()
@@ -136,9 +149,15 @@ public class ColorChain extends AbstractTechnique {
 		}
 		
 		public void exploreDepth(){
+			populatePopularity();
 			whatIfs = whatIfs.stream()
 					.map(WhatIf::exploreDepth)
 					.collect(Sets.massUnionCollector());
+		}
+		
+		private void populatePopularity(){
+			popularity = Sets.countingUnion(whatIfs.stream()
+					.map((wi) -> wi.partiallyAccountedFacts().collect(Collectors.toList())));
 		}
 		
 		private class WhatIf implements Cloneable{
@@ -200,7 +219,7 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			public Collection<WhatIf> exploreDepth(){
-				return smallestPartiallyAccountedFact().stream()
+				return mostPopularSmallestPartiallyAccountedFact().stream()
 						.map(this::explore)
 						.filter((a) -> a != null)
 						.collect(Collectors.toList());
@@ -232,9 +251,9 @@ public class ColorChain extends AbstractTechnique {
 						}); 
 			}
 			
-			private Fact smallestPartiallyAccountedFact(){
+			private Fact mostPopularSmallestPartiallyAccountedFact(){
 				return partiallyAccountedFacts()
-						.sorted(ColorChain.SMALL_TO_LARGE)
+						.sorted(ColorChain.SMALL_TO_LARGE.thenComparing(byPopularity()))
 						.findFirst().get();
 			}
 			
