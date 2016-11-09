@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collector.Characteristics;
+import java.util.stream.Stream;
 
 public class Sets {
 	
@@ -189,15 +190,19 @@ public class Sets {
 	 * the collections in {@code collections}.
 	 */
 	public static <T> Map<T,Integer> countingUnion(Collection<? extends Collection<T>> collections){
+		return countingUnion(collections.stream());
+	}
+	
+	public static <T> Map<T,Integer> countingUnion(Stream<? extends Collection<T>> collections){
 		Map<T,Integer> result = new HashMap<>();
 		
-		for(Collection<T> collection : collections){
+		collections.forEach((collection) -> {
 			for(T t : collection){
 				result.put(t, result.containsKey(t) 
 						? 1+result.get(t) 
 						: 1 );
 			}
-		}
+		});
 		
 		return result;
 	}
