@@ -19,7 +19,7 @@ import java.math.BigInteger;
  * @author fiveham
  *
  */
-public class BackedSet<E> implements Set<E> {
+public class BackedSet<E> implements Set<E>, Cloneable{
 	
 	private final Universe<E> universe;
 	private BigInteger mask;
@@ -262,5 +262,10 @@ public class BackedSet<E> implements Set<E> {
 	@Override
 	public int hashCode(){
 		return universe.hashCode() + mask.hashCode();
+	}
+	
+	@Override
+	public BackedSet<E> clone(){
+		return new BackedSet<>(this.universe, this);
 	}
 }
