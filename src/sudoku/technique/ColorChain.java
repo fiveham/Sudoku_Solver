@@ -198,13 +198,18 @@ public class ColorChain extends AbstractTechnique {
 			public Collection<WhatIf> exploreDepth(){
 				return smallestAffectedFact().stream()
 						.map(this::explore)
+						.filter((a) -> a != null)
 						.collect(Collectors.toList());
 			}
 			
 			private WhatIf explore(Claim c){
-				WhatIf out = clone();
-				out.assumeTrue(c);
-				return out;
+				try{
+					WhatIf out = clone();
+					out.assumeTrue(c);
+					return out;
+				} catch(IllegalStateException e){
+					return null;
+				}
 			}
 			
 			@Override
