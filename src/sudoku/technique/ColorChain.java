@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -221,15 +222,7 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			private boolean hasIllegalEmptyFact(){
-				Map<Fact,Integer> lastSizes = new HashMap<>();
-				return !target.factStream()
-						.peek((f) -> {
-							Set<Claim> bs = new BackedSet<>(puzzle.claimUniverse(), f);
-							bs.removeAll(assumptions);
-							bs.removeAll(consequences);
-							lastSizes.put(f, bs.size());
-						})
-						.filter((f) -> lastSizes.get(f) == 0)
+				return !filteredAccountedFacts(ColorChain::factFullyAccounted)
 						.allMatch((f) -> {
 							Set<Claim> trueIntersection = assumptions.clone();
 							trueIntersection.retainAll(f);
@@ -246,6 +239,10 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			private Stream<Fact> partiallyAccountedFacts(){
+				return filteredAccountedFacts(ColorChain::factPartiallyAccounted);
+			}
+			
+			private Stream<Fact> filteredAccountedFacts(Function<Map<Fact,Integer>,Predicate<Fact>> func){
 				Map<Fact,Integer> lastSizes = new HashMap<>();
 				return target.factStream()
 						.peek((f) -> {
@@ -254,11 +251,7 @@ public class ColorChain extends AbstractTechnique {
 							bs.removeAll(consequences);
 							lastSizes.put(f, bs.size());
 						})
-						.filter(factPartiallyAccounted(lastSizes));
-			}
-			
-			private Predicate<Fact> factPartiallyAccounted(Map<Fact,Integer> lastSizes){
-				return (f) -> 0 < lastSizes.get(f) && lastSizes.get(f) < f.size();
+						.filter(func.apply(lastSizes));
 			}
 			
 			@Override
@@ -281,6 +274,14 @@ public class ColorChain extends AbstractTechnique {
 				return assumptions.hashCode() + consequences.hashCode();
 			}
 		}
+	}
+	
+	private static Predicate<Fact> factPartiallyAccounted(Map<Fact,Integer> lastSizes){
+		return (f) -> 0 < lastSizes.get(f) && lastSizes.get(f) < f.size();
+	}
+	
+	private static Predicate<Fact> factFullyAccounted(Map<Fact,Integer> lastSizes){
+		return (f) -> lastSizes.get(f) == 0;
 	}
 	
 	public static class SolveEventImplications extends TechniqueEvent{
