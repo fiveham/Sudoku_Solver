@@ -142,8 +142,8 @@ public class ColorChain extends AbstractTechnique {
 		
 		private class WhatIf implements Cloneable{
 			
-			private final Set<Claim> assumptions;
-			private final Set<Claim> consequences;
+			private final BackedSet<Claim> assumptions;
+			private final BackedSet<Claim> consequences;
 			
 			public WhatIf(Claim c){
 				assumptions = puzzle.claimUniverse().back();
@@ -183,6 +183,9 @@ public class ColorChain extends AbstractTechnique {
 				if(!Collections.disjoint(assumptions, consequences)){
 					throw new IllegalStateException("Overlap between Claims assumed true and Claims concluded false");
 				}
+				if(hasIllegalEmptyFact()){
+					throw new IllegalStateException("A Fact would have all false Claims or multiple true Claims.");
+				}
 				return result;
 			}
 			
@@ -196,7 +199,7 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			public Collection<WhatIf> exploreDepth(){
-				return smallestAffectedFact().stream()
+				return smallestPartiallyAccountedFact().stream()
 						.map(this::explore)
 						.filter((a) -> a != null)
 						.collect(Collectors.toList());
@@ -217,7 +220,26 @@ public class ColorChain extends AbstractTechnique {
 				return new WhatIf(assumptions, consequences, puzzle);
 			}
 			
-			private Fact smallestAffectedFact(){
+			private boolean hasIllegalEmptyFact(){
+				Map<Fact,Integer> lastSizes = new HashMap<>();
+				return !target.factStream()
+						.peek((f) -> {
+							Set<Claim> bs = new BackedSet<>(puzzle.claimUniverse(), f);
+							bs.removeAll(assumptions);
+							bs.removeAll(consequences);
+							lastSizes.put(f, bs.size());
+						})
+						.filter((f) -> lastSizes.get(f) == 0)
+						.allMatch((f) -> {
+							Set<Claim> trueIntersection = assumptions.clone();
+							trueIntersection.retainAll(f);
+							Set<Claim> falseIntersection = consequences.clone();
+							falseIntersection.retainAll(f);
+							return trueIntersection.size() == 1 && falseIntersection.size() == f.size() - 1;
+						}); 
+			}
+			
+			private Fact smallestPartiallyAccountedFact(){
 				return partiallyAccountedFacts()
 						.sorted(ColorChain.SMALL_TO_LARGE)
 						.findFirst().get();
