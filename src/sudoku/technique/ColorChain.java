@@ -8,6 +8,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -62,15 +64,14 @@ public class ColorChain extends AbstractTechnique {
 	 * {@code null} if no progress was made
 	 */
 	private TechniqueEvent implications(){
-		for(Fact f : target.factStream()
+		Optional<TechniqueEvent> result = target.factStream()
 				.sorted(SMALL_TO_LARGE)
-				.collect(Collectors.toList())){
-			TechniqueEvent result = implications(f);
-			if(result != null){
-				return result;
-			}
-		}
-		return null;
+				.map(this::implications)
+				.filter(Objects::nonNull)
+				.findFirst();
+		return result.isPresent() 
+				? result.get() 
+				: null;
 	}
 	
 	public static final Comparator<Collection<?>> SMALL_TO_LARGE = 
@@ -219,9 +220,9 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			public Collection<WhatIf> exploreDepth(){
-				return mostPopularSmallestPartiallyReducedFact().stream()
+				return factToExplore().stream()
 						.map(this::explore)
-						.filter((a) -> a != null)
+						.filter(Objects::nonNull)
 						.collect(Collectors.toList());
 			}
 			
@@ -251,7 +252,7 @@ public class ColorChain extends AbstractTechnique {
 						}); 
 			}
 			
-			private Fact mostPopularSmallestPartiallyReducedFact(){
+			private Fact factToExplore(){
 				return partiallyReducedFacts()
 						.sorted(ColorChain.SMALL_TO_LARGE.thenComparing(byPopularity()))
 						.findFirst().get();
