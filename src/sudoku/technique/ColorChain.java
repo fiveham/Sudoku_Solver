@@ -157,7 +157,7 @@ public class ColorChain extends AbstractTechnique {
 		
 		private void populatePopularity(){
 			popularity = Sets.countingUnion(whatIfs.stream()
-					.map((wi) -> wi.partiallyAccountedFacts().collect(Collectors.toList())));
+					.map((wi) -> wi.reducedFacts().collect(Collectors.toList())));
 		}
 		
 		private class WhatIf implements Cloneable{
@@ -214,12 +214,12 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			public boolean isDepthAvailable(){
-				return partiallyAccountedFacts()
+				return partiallyReducedFacts()
 						.findFirst().isPresent();
 			}
 			
 			public Collection<WhatIf> exploreDepth(){
-				return mostPopularSmallestPartiallyAccountedFact().stream()
+				return mostPopularSmallestPartiallyReducedFact().stream()
 						.map(this::explore)
 						.filter((a) -> a != null)
 						.collect(Collectors.toList());
@@ -241,7 +241,7 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			private boolean hasIllegalEmptyFact(){
-				return !filteredAccountedFacts(ColorChain::factFullyAccounted)
+				return !filteredReducedFacts(ColorChain::factFullyReduced)
 						.allMatch((f) -> {
 							Set<Claim> trueIntersection = assumptions.clone();
 							trueIntersection.retainAll(f);
@@ -251,17 +251,25 @@ public class ColorChain extends AbstractTechnique {
 						}); 
 			}
 			
-			private Fact mostPopularSmallestPartiallyAccountedFact(){
-				return partiallyAccountedFacts()
+			private Fact mostPopularSmallestPartiallyReducedFact(){
+				return partiallyReducedFacts()
 						.sorted(ColorChain.SMALL_TO_LARGE.thenComparing(byPopularity()))
 						.findFirst().get();
 			}
 			
-			private Stream<Fact> partiallyAccountedFacts(){
-				return filteredAccountedFacts(ColorChain::factPartiallyAccounted);
+			private Stream<Fact> partiallyReducedFacts(){
+				return filteredReducedFacts(ColorChain::factPartiallyReduced);
 			}
 			
-			private Stream<Fact> filteredAccountedFacts(Function<Map<Fact,Integer>,Predicate<Fact>> func){
+			private Stream<Fact> fullyReducedFacts(){
+				return filteredReducedFacts(ColorChain::factFullyReduced);
+			}
+			
+			private Stream<Fact> reducedFacts(){
+				return filteredReducedFacts(ColorChain::factReduced);
+			}
+			
+			private Stream<Fact> filteredReducedFacts(Function<Map<Fact,Integer>,Predicate<Fact>> func){
 				Map<Fact,Integer> lastSizes = new HashMap<>();
 				return target.factStream()
 						.peek((f) -> {
@@ -295,12 +303,16 @@ public class ColorChain extends AbstractTechnique {
 		}
 	}
 	
-	private static Predicate<Fact> factPartiallyAccounted(Map<Fact,Integer> lastSizes){
+	private static Predicate<Fact> factPartiallyReduced(Map<Fact,Integer> lastSizes){
 		return (f) -> 0 < lastSizes.get(f) && lastSizes.get(f) < f.size();
 	}
 	
-	private static Predicate<Fact> factFullyAccounted(Map<Fact,Integer> lastSizes){
+	private static Predicate<Fact> factFullyReduced(Map<Fact,Integer> lastSizes){
 		return (f) -> lastSizes.get(f) == 0;
+	}
+	
+	private static Predicate<Fact> factReduced(Map<Fact,Integer> lastSizes){
+		return (f) -> lastSizes.get(f) < f.size();
 	}
 	
 	public static class SolveEventImplications extends TechniqueEvent{
