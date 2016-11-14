@@ -239,8 +239,8 @@ public class ColorChain extends AbstractTechnique {
 			private boolean hasIllegalEmptyFact(){
 				return !fullyReducedFacts()
 						.allMatch((f) -> 
-								intersectionHasSize(f, assumptions, 1) 
-								&& intersectionHasSize(f, consequences, f.size()-1)); 
+								intersectionHasSize(f, assumptions, Fact.TRUE_CLAIM_COUNT) 
+								&& intersectionHasSize(f, consequences, f.size() - Fact.TRUE_CLAIM_COUNT)); 
 			}
 			
 			private boolean intersectionHasSize(Fact f, BackedSet<Claim> set, int size){

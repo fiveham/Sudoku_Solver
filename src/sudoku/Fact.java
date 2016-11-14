@@ -16,6 +16,8 @@ public abstract class Fact extends NodeSet<Claim,Fact>{
 	 */
 	public static final int SIZE_WHEN_SOLVED = 1;
 	
+	public static final int TRUE_CLAIM_COUNT = SIZE_WHEN_SOLVED;
+	
 	/**
 	 * <p>The number ({@value}) of elements (neighbors) of a Rule that 
 	 * is a {@code xor}. A Rule is a {@code xor} if it has two Claims, 
