@@ -140,11 +140,6 @@ public class ColorChain extends AbstractTechnique {
 					.collect(Sets.massIntersectionCollector());
 		}
 		
-		/*
-		 * TODO use allMatch instead. If any WhatIf has no depth available 
-		 * and is preventing the intersection from being non-empty, then 
-		 * that intersection will never be useful and analysis should short-circuit
-		 */
 		public boolean isDepthAvailable(){
 			return whatIfs.stream().anyMatch(WhatIf::isDepthAvailable);
 		}
@@ -220,7 +215,7 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			public Collection<WhatIf> exploreDepth(){
-				return factToExplore().stream()
+				return claimsToExplore()
 						.map(this::explore)
 						.filter(Objects::nonNull)
 						.collect(Collectors.toList());
@@ -242,20 +237,25 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			private boolean hasIllegalEmptyFact(){
-				return !filteredReducedFacts(ColorChain::factFullyReduced)
-						.allMatch((f) -> {
-							Set<Claim> trueIntersection = assumptions.clone();
-							trueIntersection.retainAll(f);
-							Set<Claim> falseIntersection = consequences.clone();
-							falseIntersection.retainAll(f);
-							return trueIntersection.size() == 1 && falseIntersection.size() == f.size() - 1;
-						}); 
+				return !fullyReducedFacts()
+						.allMatch((f) -> 
+								intersectionHasSize(f, assumptions, 1) 
+								&& intersectionHasSize(f, consequences, f.size()-1)); 
 			}
 			
-			private Fact factToExplore(){
-				return partiallyReducedFacts()
+			private boolean intersectionHasSize(Fact f, BackedSet<Claim> set, int size){
+				Set<Claim> result = set.clone();
+				result.retainAll(f);
+				return result.size() == size;
+			}
+			
+			private Stream<Claim> claimsToExplore(){
+				Set<Claim> result = partiallyReducedFacts()
 						.sorted(ColorChain.SMALL_TO_LARGE.thenComparing(byPopularity()))
 						.findFirst().get();
+				result = new BackedSet<>(puzzle.claimUniverse(), result);
+				result.removeAll(consequences);
+				return result.stream();
 			}
 			
 			private Stream<Fact> partiallyReducedFacts(){
