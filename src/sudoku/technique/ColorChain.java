@@ -11,8 +11,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import sudoku.Claim;
@@ -269,17 +268,15 @@ public class ColorChain extends AbstractTechnique {
 			private Stream<Fact> reducedFacts(){
 				return filteredReducedFacts(ColorChain::factReduced);
 			}
-			
-			private Stream<Fact> filteredReducedFacts(Function<Map<Fact,Integer>,Predicate<Fact>> func){
-				Map<Fact,Integer> lastSizes = new HashMap<>();
+
+			private Stream<Fact> filteredReducedFacts(BiPredicate<Fact,BackedSet<Claim>> test){
 				return target.factStream()
-						.peek((f) -> {
-							Set<Claim> bs = new BackedSet<>(puzzle.claimUniverse(), f);
+						.filter((f) -> {
+							BackedSet<Claim> bs = new BackedSet<>(puzzle.claimUniverse(), f);
 							bs.removeAll(assumptions);
 							bs.removeAll(consequences);
-							lastSizes.put(f, bs.size());
-						})
-						.filter(func.apply(lastSizes));
+							return test.test(f,bs);
+						});
 			}
 			
 			@Override
@@ -304,16 +301,16 @@ public class ColorChain extends AbstractTechnique {
 		}
 	}
 	
-	private static Predicate<Fact> factPartiallyReduced(Map<Fact,Integer> lastSizes){
-		return (f) -> 0 < lastSizes.get(f) && lastSizes.get(f) < f.size();
+	private static boolean factPartiallyReduced(Fact f, BackedSet<Claim> bs){
+		return 0 < bs.size() && bs.size() < f.size();
 	}
 	
-	private static Predicate<Fact> factFullyReduced(Map<Fact,Integer> lastSizes){
-		return (f) -> lastSizes.get(f) == 0;
+	private static boolean factFullyReduced(Fact f, BackedSet<Claim> bs){
+		return bs.size() == 0;
 	}
 	
-	private static Predicate<Fact> factReduced(Map<Fact,Integer> lastSizes){
-		return (f) -> lastSizes.get(f) < f.size();
+	private static boolean factReduced(Fact f, BackedSet<Claim> bs){
+		return bs.size() < f.size();
 	}
 	
 	public static class SolveEventImplications extends TechniqueEvent{
