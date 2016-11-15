@@ -11,6 +11,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -144,16 +145,16 @@ public class ColorChain extends AbstractTechnique {
 							.collect(Collectors.toList())));
 		}
 		
-		private int popularity(WhatIf.ReducedFact rf){
-			return popularity.containsKey(rf) 
-					? popularity.get(rf) 
-					: 0;
-		}
-		
-		private Map<WhatIf.ReducedFact,Integer> popularity;
+		private Map<Fact,Integer> popularity;
 		
 		private Comparator<WhatIf.ReducedFact> byPopularity(){
-			return Comparator.comparingInt(this::popularity).reversed();
+			return Comparator.comparingInt((WhatIf.ReducedFact rf) -> popularity(rf.getFact())).reversed();
+		}
+		
+		private int popularity(Fact f){
+			return popularity.containsKey(f) 
+					? popularity.get(f) 
+					: 0;
 		}
 		
 		private class WhatIf implements Cloneable{
@@ -186,11 +187,15 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			public boolean isDepthAvailable(){
-				return 0 != partiallyReducedFacts().count();
+				return 0 != partiallyReducedFactsRaw().count();
 			}
 			
-			private Stream<ReducedFact> reducedFacts(){
-				return filteredReducedFacts(ColorChain::factReduced);
+			private Stream<Fact> reducedFacts(){
+				return filteredReducedFacts(ColorChain::factReduced, JUST_THE_FACTS);
+			}
+			
+			private Stream<Fact> partiallyReducedFactsRaw(){
+				return filteredReducedFacts(ColorChain::factPartiallyReduced, JUST_THE_FACTS);
 			}
 			
 			private Stream<ReducedFact> partiallyReducedFacts(){
@@ -202,14 +207,18 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			private Stream<ReducedFact> filteredReducedFacts(BiPredicate<Fact,BackedSet<Claim>> test){
+				return filteredReducedFacts(test, ReducedFact::new);
+			}
+			
+			private <T> Stream<T> filteredReducedFacts(BiPredicate<Fact,BackedSet<Claim>> test, BiFunction<Fact,BackedSet<Claim>,T> bifu){
 				return target.factStream()
 						.map((f) -> {
 							BackedSet<Claim> bs = new BackedSet<>(puzzle.claimUniverse(), f);
 							bs.removeAll(assumptions);
 							bs.removeAll(consequences);
 							
-							ReducedFact result = test.test(f, bs) 
-									? new ReducedFact(f, bs) 
+							T result = test.test(f, bs) 
+									? bifu.apply(f, bs) 
 									: null;
 							return result;
 						})
@@ -321,10 +330,6 @@ public class ColorChain extends AbstractTechnique {
 					return f;
 				}
 				
-				public int initialSize(){
-					return f.size();
-				}
-				
 				public BackedSet<Claim> getReducedForm(){
 					return reducedForm;
 				}
@@ -350,6 +355,8 @@ public class ColorChain extends AbstractTechnique {
 			}
 		}
 	}
+	
+	private static final BiFunction<Fact,BackedSet<Claim>,Fact> JUST_THE_FACTS = (f,bs) -> f;
 	
 	private static boolean factPartiallyReduced(Fact f, BackedSet<Claim> bs){
 		return 0 < bs.size() && bs.size() < f.size();
