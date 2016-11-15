@@ -64,7 +64,7 @@ public class ColorChain extends AbstractTechnique {
 	 */
 	private TechniqueEvent implications(){
 		Optional<TechniqueEvent> result = target.factStream()
-				.sorted(SMALL_TO_LARGE)
+				.sorted(Comparator.comparingInt(Fact::size))
 				.map(this::implications)
 				.filter(Objects::nonNull)
 				.findFirst();
@@ -72,9 +72,6 @@ public class ColorChain extends AbstractTechnique {
 				? result.get() 
 				: null;
 	}
-	
-	public static final Comparator<Collection<?>> SMALL_TO_LARGE = 
-			(small,large) -> Integer.compare(large.size(), small.size());
 	
 	/**
 	 * <p>Tries to find an overlap among the consequences of each 
@@ -88,15 +85,14 @@ public class ColorChain extends AbstractTechnique {
 	private TechniqueEvent implications(Fact f){
 		Logic logic = new Logic(f);
 		
-		while(logic.consequenceIntersection().isEmpty() && logic.isDepthAvailable()){
+		Set<Claim> con;
+		while( (con = logic.consequenceIntersection()).isEmpty() && logic.isDepthAvailable()){
 			logic.exploreDepth();
 		}
 		
-		Set<Claim> con = logic.consequenceIntersection();
-		if(!con.isEmpty()){
-			return new SolveEventImplications(f, con).falsifyClaims();
-		}
-		return null;
+		return con.isEmpty() 
+				? null
+				: new SolveEventImplications(f, con).falsifyClaims();
 	}
 	
 	private class Logic {
@@ -123,17 +119,17 @@ public class ColorChain extends AbstractTechnique {
 			popularity = new HashMap<>();
 		}
 		
-		private Comparator<Collection<?>> byPopularity(){
-			return (f1,f2) -> Integer.compare(popularity(f1), popularity(f2));
+		private Comparator<WhatIf.ReducedFact> byPopularity(){
+			return Comparator.comparingInt(this::popularity).reversed();
 		}
 		
-		private int popularity(Collection<?> f){
-			return popularity.containsKey(f) 
-					? popularity.get(f) 
+		private int popularity(WhatIf.ReducedFact rf){
+			return popularity.containsKey(rf) 
+					? popularity.get(rf) 
 					: 0;
 		}
 		
-		private Map<Fact,Integer> popularity;
+		private Map<WhatIf.ReducedFact,Integer> popularity;
 		
 		public Set<Claim> consequenceIntersection(){
 			return whatIfs.stream()
@@ -212,8 +208,7 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			public boolean isDepthAvailable(){
-				return partiallyReducedFacts()
-						.findFirst().isPresent();
+				return 0 != partiallyReducedFacts().count();
 			}
 			
 			public Collection<WhatIf> exploreDepth(){
@@ -239,47 +234,41 @@ public class ColorChain extends AbstractTechnique {
 			}
 			
 			private boolean hasIllegalEmptyFact(){
-				return !fullyReducedFacts()
-						.allMatch((f) -> 
-								intersectionHasSize(f, assumptions, Fact.TRUE_CLAIM_COUNT) 
-								&& intersectionHasSize(f, consequences, f.size() - Fact.TRUE_CLAIM_COUNT)); 
-			}
-			
-			private boolean intersectionHasSize(Fact f, BackedSet<Claim> set, int size){
-				Set<Claim> result = set.clone();
-				result.retainAll(f);
-				return result.size() == size;
+				return fullyReducedFacts()
+						.anyMatch(ReducedFact::isIllegalEmpty); 
 			}
 			
 			private Stream<Claim> claimsToExplore(){
-				Set<Claim> result = partiallyReducedFacts()
-						.sorted(ColorChain.SMALL_TO_LARGE.thenComparing(byPopularity())) //TODO sort by size of analogous reducedFact instead. Or don't.
-						.findFirst().get();
-				result = new BackedSet<>(puzzle.claimUniverse(), result);
-				result.removeAll(consequences);
-				return result.stream();
+				return partiallyReducedFacts()
+						.sorted(Comparator.comparingInt(ReducedFact::reducedSize).thenComparing(byPopularity()))
+						.findFirst().get().getReducedForm().stream();
 			}
 			
-			private Stream<Fact> partiallyReducedFacts(){
+			private Stream<ReducedFact> partiallyReducedFacts(){
 				return filteredReducedFacts(ColorChain::factPartiallyReduced);
 			}
 			
-			private Stream<Fact> fullyReducedFacts(){
+			private Stream<ReducedFact> fullyReducedFacts(){
 				return filteredReducedFacts(ColorChain::factFullyReduced);
 			}
 			
-			private Stream<Fact> reducedFacts(){
+			private Stream<ReducedFact> reducedFacts(){
 				return filteredReducedFacts(ColorChain::factReduced);
 			}
-
-			private Stream<Fact> filteredReducedFacts(BiPredicate<Fact,BackedSet<Claim>> test){
+			
+			private Stream<ReducedFact> filteredReducedFacts(BiPredicate<Fact,BackedSet<Claim>> test){
 				return target.factStream()
-						.filter((f) -> {
+						.map((f) -> {
 							BackedSet<Claim> bs = new BackedSet<>(puzzle.claimUniverse(), f);
 							bs.removeAll(assumptions);
 							bs.removeAll(consequences);
-							return test.test(f,bs);
-						});
+							
+							ReducedFact result = test.test(f, bs) 
+									? new ReducedFact(f, bs) 
+									: null;
+							return result;
+						})
+						.filter(Objects::nonNull);
 			}
 			
 			@Override
@@ -300,6 +289,62 @@ public class ColorChain extends AbstractTechnique {
 			@Override
 			public int hashCode(){
 				return assumptions.hashCode() + consequences.hashCode();
+			}
+			
+			private class ReducedFact{
+				
+				private final Fact f;
+				private final BackedSet<Claim> reducedForm;
+				
+				ReducedFact(Fact f, BackedSet<Claim> reducedForm){
+					this.f = f;
+					this.reducedForm = reducedForm;
+				}
+				
+				@Override
+				public boolean equals(Object o){
+					if(o instanceof ReducedFact){
+						ReducedFact that = (ReducedFact) o;
+						return that.f.equals(this.f) && that.reducedForm.equals(this.reducedForm); 
+					}
+					return false;
+				}
+				
+				@Override
+				public int hashCode(){
+					return f.hashCode() + reducedForm.hashCode();
+				}
+				
+				public Fact getFact(){
+					return f;
+				}
+				
+				public int initialSize(){
+					return f.size();
+				}
+				
+				public BackedSet<Claim> getReducedForm(){
+					return reducedForm;
+				}
+				
+				public int reducedSize(){
+					return reducedForm.size();
+				}
+				
+				public boolean isIllegalEmpty(){
+					return !isLegalEmpty();
+				}
+				
+				public boolean isLegalEmpty(){
+					return intersectionHasSize(f, assumptions, Fact.TRUE_CLAIM_COUNT) 
+							&& intersectionHasSize(f, consequences, f.size() - Fact.TRUE_CLAIM_COUNT);
+				}
+				
+				private boolean intersectionHasSize(Fact f, BackedSet<Claim> set, int size){
+					Set<Claim> result = set.clone();
+					result.retainAll(f);
+					return result.size() == size;
+				}
 			}
 		}
 	}
