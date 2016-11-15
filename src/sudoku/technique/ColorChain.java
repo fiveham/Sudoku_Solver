@@ -128,7 +128,9 @@ public class ColorChain extends AbstractTechnique {
 		}
 		
 		private int popularity(Collection<?> f){
-			return popularity.get(f);
+			return popularity.containsKey(f) 
+					? popularity.get(f) 
+					: 0;
 		}
 		
 		private Map<Fact,Integer> popularity;
@@ -152,7 +154,8 @@ public class ColorChain extends AbstractTechnique {
 		
 		private void populatePopularity(){
 			popularity = Sets.countingUnion(whatIfs.stream()
-					.map((wi) -> wi.reducedFacts().collect(Collectors.toList())));
+					.map((wi) -> wi.reducedFacts()
+							.collect(Collectors.toList())));
 		}
 		
 		private class WhatIf implements Cloneable{
@@ -250,7 +253,7 @@ public class ColorChain extends AbstractTechnique {
 			
 			private Stream<Claim> claimsToExplore(){
 				Set<Claim> result = partiallyReducedFacts()
-						.sorted(ColorChain.SMALL_TO_LARGE.thenComparing(byPopularity()))
+						.sorted(ColorChain.SMALL_TO_LARGE.thenComparing(byPopularity())) //TODO sort by size of analogous reducedFact instead. Or don't.
 						.findFirst().get();
 				result = new BackedSet<>(puzzle.claimUniverse(), result);
 				result.removeAll(consequences);
