@@ -43,13 +43,13 @@ public class ColorChain extends AbstractTechnique {
 	}
 	
 	@Override
-	public TechniqueEvent process(){
-		return implications();
+	public ColorChain apply(Sudoku sudoku){
+		return new ColorChain(sudoku);
 	}
 	
 	@Override
-	public ColorChain apply(Sudoku sudoku){
-		return new ColorChain(sudoku);
+	public TechniqueEvent process(){
+		return implications();
 	}
 	
 	/**
@@ -83,13 +83,7 @@ public class ColorChain extends AbstractTechnique {
 	 * {@code null} if no progress was made
 	 */
 	private TechniqueEvent implications(Fact f){
-		Logic logic = new Logic(f);
-		
-		Set<Claim> con;
-		while( (con = logic.consequenceIntersection()).isEmpty() && logic.isDepthAvailable()){
-			logic.exploreDepth();
-		}
-		
+		Set<Claim> con = new Logic(f).nonEmptyConsequenceIntersection();
 		return con.isEmpty() 
 				? null
 				: new SolveEventImplications(f, con).falsifyClaims();
@@ -119,17 +113,13 @@ public class ColorChain extends AbstractTechnique {
 			popularity = new HashMap<>();
 		}
 		
-		private Comparator<WhatIf.ReducedFact> byPopularity(){
-			return Comparator.comparingInt(this::popularity).reversed();
+		public Set<Claim> nonEmptyConsequenceIntersection(){
+			Set<Claim> result;
+			while( (result = consequenceIntersection()).isEmpty() && isDepthAvailable()){
+				exploreDepth();
+			}
+			return result;
 		}
-		
-		private int popularity(WhatIf.ReducedFact rf){
-			return popularity.containsKey(rf) 
-					? popularity.get(rf) 
-					: 0;
-		}
-		
-		private Map<WhatIf.ReducedFact,Integer> popularity;
 		
 		public Set<Claim> consequenceIntersection(){
 			return whatIfs.stream()
@@ -152,6 +142,18 @@ public class ColorChain extends AbstractTechnique {
 			popularity = Sets.countingUnion(whatIfs.stream()
 					.map((wi) -> wi.reducedFacts()
 							.collect(Collectors.toList())));
+		}
+		
+		private int popularity(WhatIf.ReducedFact rf){
+			return popularity.containsKey(rf) 
+					? popularity.get(rf) 
+					: 0;
+		}
+		
+		private Map<WhatIf.ReducedFact,Integer> popularity;
+		
+		private Comparator<WhatIf.ReducedFact> byPopularity(){
+			return Comparator.comparingInt(this::popularity).reversed();
 		}
 		
 		private class WhatIf implements Cloneable{
@@ -179,6 +181,69 @@ public class ColorChain extends AbstractTechnique {
 				this.consequences = puzzle.claimUniverse().back(consequences);
 			}
 			
+			private Collection<Claim> consequences(){
+				return consequences;
+			}
+			
+			public boolean isDepthAvailable(){
+				return 0 != partiallyReducedFacts().count();
+			}
+			
+			private Stream<ReducedFact> reducedFacts(){
+				return filteredReducedFacts(ColorChain::factReduced);
+			}
+			
+			private Stream<ReducedFact> partiallyReducedFacts(){
+				return filteredReducedFacts(ColorChain::factPartiallyReduced);
+			}
+			
+			private Stream<ReducedFact> fullyReducedFacts(){
+				return filteredReducedFacts(ColorChain::factFullyReduced);
+			}
+			
+			private Stream<ReducedFact> filteredReducedFacts(BiPredicate<Fact,BackedSet<Claim>> test){
+				return target.factStream()
+						.map((f) -> {
+							BackedSet<Claim> bs = new BackedSet<>(puzzle.claimUniverse(), f);
+							bs.removeAll(assumptions);
+							bs.removeAll(consequences);
+							
+							ReducedFact result = test.test(f, bs) 
+									? new ReducedFact(f, bs) 
+									: null;
+							return result;
+						})
+						.filter(Objects::nonNull);
+			}
+			
+			public Collection<WhatIf> exploreDepth(){
+				return claimsToExplore()
+						.map(this::explore)
+						.filter(Objects::nonNull)
+						.collect(Collectors.toList());
+			}
+			
+			private Stream<Claim> claimsToExplore(){
+				return partiallyReducedFacts()
+						.sorted(Comparator.comparingInt(ReducedFact::reducedSize).thenComparing(byPopularity()))
+						.findFirst().get().getReducedForm().stream();
+			}
+			
+			private WhatIf explore(Claim c){
+				try{
+					WhatIf out = clone();
+					out.assumeTrue(c);
+					return out;
+				} catch(IllegalStateException e){
+					return null;
+				}
+			}
+			
+			@Override
+			public WhatIf clone(){
+				return new WhatIf(assumptions, consequences, puzzle);
+			}
+			
 			/**
 			 * <p>Adds {@code c} to this WhatIf as a Claim assumed to be true, and 
 			 * adds the Claims {@link sudoku.NodeSet#visible() visible} to {@code c} 
@@ -203,72 +268,9 @@ public class ColorChain extends AbstractTechnique {
 				return result;
 			}
 			
-			private Collection<Claim> consequences(){
-				return consequences;
-			}
-			
-			public boolean isDepthAvailable(){
-				return 0 != partiallyReducedFacts().count();
-			}
-			
-			public Collection<WhatIf> exploreDepth(){
-				return claimsToExplore()
-						.map(this::explore)
-						.filter(Objects::nonNull)
-						.collect(Collectors.toList());
-			}
-			
-			private WhatIf explore(Claim c){
-				try{
-					WhatIf out = clone();
-					out.assumeTrue(c);
-					return out;
-				} catch(IllegalStateException e){
-					return null;
-				}
-			}
-			
-			@Override
-			public WhatIf clone(){
-				return new WhatIf(assumptions, consequences, puzzle);
-			}
-			
 			private boolean hasIllegalEmptyFact(){
 				return fullyReducedFacts()
 						.anyMatch(ReducedFact::isIllegalEmpty); 
-			}
-			
-			private Stream<Claim> claimsToExplore(){
-				return partiallyReducedFacts()
-						.sorted(Comparator.comparingInt(ReducedFact::reducedSize).thenComparing(byPopularity()))
-						.findFirst().get().getReducedForm().stream();
-			}
-			
-			private Stream<ReducedFact> partiallyReducedFacts(){
-				return filteredReducedFacts(ColorChain::factPartiallyReduced);
-			}
-			
-			private Stream<ReducedFact> fullyReducedFacts(){
-				return filteredReducedFacts(ColorChain::factFullyReduced);
-			}
-			
-			private Stream<ReducedFact> reducedFacts(){
-				return filteredReducedFacts(ColorChain::factReduced);
-			}
-			
-			private Stream<ReducedFact> filteredReducedFacts(BiPredicate<Fact,BackedSet<Claim>> test){
-				return target.factStream()
-						.map((f) -> {
-							BackedSet<Claim> bs = new BackedSet<>(puzzle.claimUniverse(), f);
-							bs.removeAll(assumptions);
-							bs.removeAll(consequences);
-							
-							ReducedFact result = test.test(f, bs) 
-									? new ReducedFact(f, bs) 
-									: null;
-							return result;
-						})
-						.filter(Objects::nonNull);
 			}
 			
 			@Override
