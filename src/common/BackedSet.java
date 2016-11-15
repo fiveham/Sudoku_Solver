@@ -266,6 +266,8 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 	
 	@Override
 	public BackedSet<E> clone(){
-		return new BackedSet<>(this.universe, this);
+		BackedSet<E> result = new BackedSet<>(this.universe);
+		result.mask = this.mask;
+		return result;
 	}
 }
