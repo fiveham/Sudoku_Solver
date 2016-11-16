@@ -6,8 +6,6 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.math.BigInteger;
 
 /**
@@ -197,7 +195,7 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		}
 		return c.stream()
 				.map(this::add)
-				.collect(MASS_OR);
+				.reduce(false, Boolean::logicalOr);
 	}
 	
 	@Override
@@ -222,8 +220,6 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		return result;
 	}
 	
-	private static final Collector<Boolean,?,Boolean> MASS_OR = Collectors.reducing(false, (a,b) -> a || b);
-	
 	@Override
 	public boolean removeAll(Collection<?> c) {
 		if(c instanceof BackedSet<?>){
@@ -237,7 +233,7 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		
 		return c.stream()
 				.map(this::remove)
-				.collect(MASS_OR);
+				.reduce(false, Boolean::logicalOr);
 	}
 	
 	public Universe<E> universe(){
