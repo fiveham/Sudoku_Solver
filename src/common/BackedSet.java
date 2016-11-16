@@ -126,13 +126,7 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 	}
 	
 	private List<E> asList(){
-		List<E> asList = new ArrayList<>();
-		for(int i=0; i<universe.size() && asList.size()<size(); ++i){
-			if(mask.testBit(i)){
-				asList.add(universe.get(i));
-			}
-		}
-		return asList;
+		return new ArrayList<>(this);
 	}
 	
 	/**
