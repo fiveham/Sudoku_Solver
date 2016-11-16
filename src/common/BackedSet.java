@@ -101,9 +101,13 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 			
 			@Override
 			public void remove(){
-				concurrentModificationCheck();
-				BackedSet.this.remove(lastResult);
-				comparisonMask = mask;
+				if(comparisonMask.testBit(pointer)){
+					concurrentModificationCheck();
+					BackedSet.this.remove(lastResult);
+					comparisonMask = mask;
+				} else{
+					throw new IllegalStateException("Element already removed.");
+				}
 			}
 		}
 		
