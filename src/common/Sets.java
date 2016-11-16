@@ -164,7 +164,7 @@ public class Sets {
 	}
 	
 	/**
-	 * <p>Adds {@code c2} to {@code c1} and returns {@code c1}. This is intended to 
+	 * <p>Adds {@code c1} to {@code c2} and returns {@code c2}. This is intended to 
 	 * be used as a {@link java.util.stream.Collector#combiner() combiner} for a 
 	 * {@link java.util.stream.Collector Collector}.</p>
 	 * @param <E> the parameter type of {@code c1} and {@code c2}
@@ -173,11 +173,11 @@ public class Sets {
 	 * {@code c2}
 	 * @param c2 a collection whose contents are to be combined with those of 
 	 * {@code c1}
-	 * @return {@code c1} after the contents of {@code c2} are added to it
+	 * @return {@code c2} after the contents of {@code c1} are added to it
 	 */
 	public static <E, C extends Collection<E>> C mergeCollections(C c1, C c2){
-		c1.addAll(c2);
-		return c1;
+		c2.addAll(c1);
+		return c2;
 	}
 	
 	/**
