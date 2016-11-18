@@ -3,6 +3,7 @@ package common;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -20,10 +21,12 @@ import java.math.BigInteger;
 public class BackedSet<E> implements Set<E>, Cloneable{
 	
 	private final Universe<E> universe;
+	private final Set<Integer> indices;
 	private BigInteger mask;
 	
 	public BackedSet(Universe<E> universe) {
 		this.universe = universe;
+		this.indices = new HashSet<>();
 		this.mask = BigInteger.ZERO;
 	}
 	
@@ -38,7 +41,7 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 	
 	@Override
 	public int size() {
-		return mask.bitCount();
+		return indices.size();
 	}
 	
 	@Override
@@ -54,58 +57,28 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 	
 	@Override
 	public Iterator<E> iterator() {
-		
 		class BSIterator implements Iterator<E>{
+			Iterator<Integer> indexIterator = indices.iterator();
+			Integer lastNext = null;
 			
-			BigInteger comparisonMask;
-			int pointer;
-			
-			BSIterator(){
-				comparisonMask = BackedSet.this.mask;
-				pointer = comparisonMask.getLowestSetBit();
-			}
-			
-			private void updatePointer(){
-				while(pointer<universe.size()){
-					if(comparisonMask.testBit(pointer)){
-						return;
-					}
-					pointer++;
-				}
-			}
-			
-			private void concurrentModificationCheck(){
-				if(!comparisonMask.equals(mask)){
-					throw new ConcurrentModificationException();
-				}
+			@Override
+			public boolean hasNext(){
+				return indexIterator.hasNext();
 			}
 			
 			@Override
-			public boolean hasNext() {
-				concurrentModificationCheck();
-				return comparisonMask.testBit(pointer);
+			public E next(){
+				return universe.get(lastNext = indexIterator.next());
 			}
 			
 			@Override
-			public E next() {
-				concurrentModificationCheck();
-				lastResult = universe.get(pointer);
-				pointer++;
-				updatePointer();
-				return lastResult;
-			}
-			
-			private E lastResult = null;
-			
-			@Override
-			public void remove(){
-				if(lastResult != null){
-					concurrentModificationCheck();
-					BackedSet.this.remove(lastResult);
-					lastResult = null;
-					comparisonMask = mask;
+			public void remove(){ //removes index from indices
+				if(lastNext == null){
+					throw new IllegalStateException("Last result not available or already removed.");
 				} else{
-					throw new IllegalStateException("Element already removed.");
+					mask = mask.clearBit(lastNext);
+					indexIterator.remove();
+					lastNext = null;
 				}
 			}
 		}
@@ -141,9 +114,8 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 	public boolean add(E e) {
 		if(universe.contains(e)){
 			int index = universe.index(e);
-			boolean old = mask.testBit(index);
 			mask = mask.setBit(index);
-			return old != mask.testBit(index);
+			return indices.add(index);
 		} else{
 			throw new OutOfUniverseException("Cannot add the object because it is not in this set's universe.");
 		}
@@ -165,9 +137,8 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		if(universe.contains(o)){
 			@SuppressWarnings("unchecked")
 			int index = universe.index((E)o);
-			boolean old = mask.testBit(index);
 			mask = mask.clearBit(index);
-			return old != mask.testBit(index);
+			return indices.remove(index);
 		}
 		return false;
 	}
@@ -190,11 +161,14 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 			if(universe.equals(b.universe)){
 				BigInteger oldMask = mask;
 				mask = mask.or(b.mask);
+				c.stream()
+						.map(universe::index)
+						.forEach(indices::add);
 				return !oldMask.equals(mask);
 			}
 		}
 		return c.stream()
-				.map(this::add)
+				.map(this::add) //adds index to indices
 				.reduce(false, Boolean::logicalOr);
 	}
 	
@@ -203,9 +177,8 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		if(c instanceof BackedSet<?>){
 			BackedSet<?> b = (BackedSet<?>) c;
 			if(universe.equals(b.universe)){
-				BigInteger oldMask = mask;
 				mask = mask.and(b.mask);
-				return !oldMask.equals(mask);
+				return indices.retainAll(b.indices);
 			}
 		}
 		
@@ -213,7 +186,7 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		for(Iterator<E> iter = iterator(); iter.hasNext();){
 			E e = iter.next();
 			if(!c.contains(e)){
-				iter.remove();
+				iter.remove(); //removes index from indices
 				result = true;
 			}
 		}
@@ -225,14 +198,13 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		if(c instanceof BackedSet<?>){
 			BackedSet<?> b = (BackedSet<?>) c;
 			if(universe.equals(b.universe)){
-				BigInteger oldMask = mask;
 				mask = mask.andNot(b.mask);
-				return !mask.equals(oldMask);
+				return indices.removeAll(b.indices);
 			}
 		}
 		
 		return c.stream()
-				.map(this::remove)
+				.map(this::remove) //removes index from indices
 				.reduce(false, Boolean::logicalOr);
 	}
 	
@@ -263,6 +235,7 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 	public BackedSet<E> clone(){
 		BackedSet<E> result = new BackedSet<>(this.universe);
 		result.mask = this.mask;
+		result.indices.addAll(this.indices);
 		return result;
 	}
 }
