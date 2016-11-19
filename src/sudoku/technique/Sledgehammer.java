@@ -119,7 +119,7 @@ import sudoku.time.TechniqueEvent;
  * @author fiveham
  *
  */
-public class Sledgehammer extends AbstractTechnique {
+public class Sledgehammer extends AbstractTechnique<Sledgehammer> {
 	
 	public static final int MIN_RECIPIENT_COUNT_PER_SOURCE = 2;
 	public static final int MIN_SOURCE_COUNT_PER_RECIPIENT = 2;

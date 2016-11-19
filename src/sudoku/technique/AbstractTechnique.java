@@ -8,7 +8,7 @@ import sudoku.time.TechniqueEvent;
  * <p>Represents a technique used for solving sudoku puzzles.</p>
  * @author fiveham
  */
-public abstract class AbstractTechnique implements Technique{
+public abstract class AbstractTechnique<T extends Technique<T>> implements Technique<T>{
 	
 	/**
 	 * <p>The Sudoku graph that this Technique tries to solve.</p>
@@ -46,7 +46,7 @@ public abstract class AbstractTechnique implements Technique{
 	 */
 	protected abstract TechniqueEvent process();
 	
-	public abstract Technique apply(Sudoku sudoku);
+	public abstract T apply(Sudoku sudoku);
 }
 
 

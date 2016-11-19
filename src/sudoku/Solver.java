@@ -26,11 +26,11 @@ import sudoku.parse.Parser;
  */
 public class Solver{
 	
-	public static final List<Function<Sudoku,Technique>> DEFAULT_TECHNIQUE_SOURCE = Arrays.asList(
+	public static final List<Function<Sudoku,Technique<?>>> DEFAULT_TECHNIQUE_SOURCE = Arrays.asList(
 			ColorChain::new, 
 			Sledgehammer::new);
 	
-	private final List<Technique> techniques;
+	private final List<Technique<?>> techniques;
 	
 	private final Sudoku target;
 	
@@ -77,7 +77,7 @@ public class Solver{
 		this(puzzle, new SudokuThreadGroup(filename), new Object(), DEFAULT_TECHNIQUE_SOURCE, filename);
 	}
 	
-	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, List<? extends Function<Sudoku,Technique>> processorSource, String source){
+	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, List<? extends Function<? super Sudoku, ? extends Technique<?>>> processorSource, String source){
 		this.target = target;
 		
 		this.techniques = generateTechniques(target, processorSource);
@@ -89,12 +89,12 @@ public class Solver{
 		this.source = source;
 	}
 	
-	private Solver(Sudoku target, SudokuThreadGroup group, Object waiter, List<? extends Function<Sudoku,Technique>> processorSource, String source){
+	private Solver(Sudoku target, SudokuThreadGroup group, Object waiter, List<? extends Function<? super Sudoku, ? extends Technique<?>>> processorSource, String source){
 		this(target, null, group, waiter, processorSource, source);
 		group.setRootSolver(this);
 	}
 	
-	private static List<Technique> generateTechniques(Sudoku sudoku, List<? extends Function<Sudoku,Technique>> processorSource){
+	private static List<Technique<?>> generateTechniques(Sudoku sudoku, List<? extends Function<? super Sudoku, ? extends Technique<?>>> processorSource){
 		return processorSource.stream()
 				.map((func)->func.apply(sudoku))
 				.collect(Collectors.toList());
@@ -142,10 +142,6 @@ public class Solver{
 	
 	private void run(){
 		
-		//DEBUG
-		/*Debug.log("Running a thread: " + Thread.currentThread().getName());
-		Debug.log("Current graph size: "+target.size());*/
-		
 		ThreadEvent eventAndChildSrc = process();
 		List<SudokuNetwork> networks;
 		if(eventAndChildSrc != null 
@@ -182,7 +178,7 @@ public class Solver{
 	 * @return true if the target is solved, false otherwise
 	 */
 	private ThreadEvent process(){
-		for(Technique technique : techniques){
+		for(Technique<?> technique : techniques){
 			TechniqueEvent techniqueEvent = technique.digest();
 			if(techniqueEvent != null){
 				return new ThreadEvent(eventParent, techniqueEvent, Thread.currentThread().getName());
@@ -204,14 +200,9 @@ public class Solver{
 	 * argument could not be found
 	 */
 	public static void main(String[] args) throws FileNotFoundException, InterruptedException{
-		Debug.log("STARTING"); //DEBUG
-		Solver s = solver(args);//new Solver(new File(args[SRC_FILE_ARG_INDEX]));
+		Solver s = solver(args);
 		s.solve();
 		System.out.println(s.target.toString());
-		
-		//DEBUG
-		Debug.log("Solution process: ");
-		Debug.log(s.event);
 	}
 	
 	private static Solver solver(String[] args) throws FileNotFoundException{

@@ -5,7 +5,7 @@ import sudoku.Rule;
 import sudoku.Sudoku;
 import sudoku.time.TechniqueEvent;
 
-public interface Technique extends Function<Sudoku,Technique>{
+public interface Technique<T extends Technique<T>> extends Function<Sudoku,T>{
 	
 	/**
 	 * <p>Performs this technique's analysis on the underlying sudoku graph.</p>
@@ -39,5 +39,5 @@ public interface Technique extends Function<Sudoku,Technique>{
 	 * construction of the new instance to be returned.</p>
 	 */
 	@Override
-	public Technique apply(Sudoku sudoku);
+	public T apply(Sudoku sudoku);
 }

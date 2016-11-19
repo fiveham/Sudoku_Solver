@@ -31,7 +31,7 @@ import sudoku.time.TechniqueEvent;
  * @author fiveham
  * 
  */
-public class ColorChain extends AbstractTechnique {
+public class ColorChain extends AbstractTechnique<ColorChain> {
 	
 	/**
 	 * <p>Constructs a ColorChain that works to solve the 
