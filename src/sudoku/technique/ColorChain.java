@@ -122,7 +122,7 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 			}
 			
 			whatIfs = claims.stream()
-					.map((c) -> new WhatIf(c))
+					.map(WhatIf::new)
 					.collect(Collectors.toList());
 			
 			popularity = new HashMap<>();
