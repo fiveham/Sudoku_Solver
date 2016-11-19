@@ -3,7 +3,6 @@ package sudoku.technique;
 import common.BackedSet;
 import common.Sets;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -268,7 +267,7 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 			 */
 			public boolean assumeTrue(Claim c){
 				boolean result = assumptions.add(c) | consequences.addAll(c.visible());
-				if(!Collections.disjoint(assumptions, consequences)){
+				if(!BackedSet.disjoint(assumptions, consequences)){
 					throw new IllegalStateException("Overlap between Claims assumed true and Claims concluded false");
 				}
 				if(hasIllegalEmptyFact()){

@@ -2,6 +2,7 @@ package common;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.Set;
@@ -259,5 +260,11 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		BackedSet<E> result = new BackedSet<>(this.universe);
 		result.mask = this.mask;
 		return result;
+	}
+	
+	public static boolean disjoint(BackedSet<?> a, BackedSet<?> b){
+		return a.universe.equals(b.universe)
+			? a.mask.xor(b.mask).equals(BigInteger.ZERO)
+			: Collections.disjoint(a, b);
 	}
 }
