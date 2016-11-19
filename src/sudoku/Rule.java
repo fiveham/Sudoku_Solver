@@ -1,10 +1,7 @@
 package sudoku;
 
-import common.time.Time;
 import java.util.Collection;
-import java.util.Set;
 import sudoku.Puzzle.RuleType;
-import sudoku.time.FalsifiedTime;
 import sudoku.Puzzle.IndexInstance;
 
 public class Rule extends Fact{
@@ -58,70 +55,5 @@ public class Rule extends Fact{
 	
 	public IndexInstance dimB(){
 		return dimB;
-	}
-
-	/**
-	 * <p>A time node denoting an {@link #verifyFinalState automatic collapse} 
-	 * and encapsulating subordinate automatic collapses.</p>
-	 * @author fiveham
-	 *
-	 */
-	public static abstract class AutoResolve extends FalsifiedTime{
-		private AutoResolve(Time parent, Set<Claim> falseClaims){
-			super(parent, falseClaims);
-		}
-	}
-	
-	/**
-	 * <p>A time node denoting the complete collapse of a Rule because 
-	 * it has exactly one Claim and encapsulating subordinate events that 
-	 * occur as {@link #verifyFinalState() an automatic result} of the 
-	 * aforementioned collapse.</p>
-	 * @author fiveham
-	 *
-	 */
-	public static class TimeTotalLocalization extends AutoResolve{
-		
-		private final Fact src;
-		
-		private TimeTotalLocalization(Time parent, Set<Claim> falseClaims, Fact src){
-			super(parent, falseClaims);
-			this.src = src;
-		}
-		
-		@Override
-		protected String toStringStart(){
-			
-			//DEBUG
-			if(src==null){
-				System.out.println("WAT; it's null");
-			}
-			
-			//return "Total localization from "+src+src.contentString(); //DEBUG
-			return "Total localization from " + src + "[CONTENT STRING ABSENT FOR DEBUGGING]";
-		}
-	}
-	
-	/**
-	 * <p>A time node denoting a value-claim event where one Rule 
-	 * is a subset of another and the superset collapses onto the 
-	 * subset.</p>
-	 * @author fiveham
-	 *
-	 */
-	public static class TimeValueClaim extends AutoResolve{
-		
-		private final Fact sub, sup;
-		
-		private TimeValueClaim(Time parent, Set<Claim> falseClaims, Fact sub, Fact sup){
-			super(parent, falseClaims);
-			this.sub = sub;
-			this.sup = sup;
-		}
-		
-		@Override
-		protected String toStringStart(){
-			return "Value-claim "+sup+" subsumes "+sub;
-		}
 	}
 }
