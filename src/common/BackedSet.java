@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.math.BigInteger;
 
@@ -105,7 +104,7 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 					lastResult = null;
 					comparisonMask = mask;
 				} else{
-					throw new IllegalStateException("Element already removed.");
+					throw new IllegalStateException("Element already removed or not yet returned.");
 				}
 			}
 		}
@@ -115,16 +114,12 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 	
 	@Override
 	public Object[] toArray() {
-		return asList().toArray();
+		return new ArrayList<>(this).toArray();
 	}
 	
 	@Override
 	public <T> T[] toArray(T[] a) {
-		return asList().toArray(a);
-	}
-	
-	private List<E> asList(){
-		return new ArrayList<>(this);
+		return new ArrayList<>(this).toArray(a);
 	}
 	
 	/**
