@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import sudoku.technique.ColorChain;
@@ -141,16 +143,15 @@ public class Solver{
 	}
 	
 	private void run(){
-		
-		ThreadEvent eventAndChildSrc = process();
+		ThreadEvent processingResult = process();
 		List<SudokuNetwork> networks;
-		if(eventAndChildSrc != null 
+		if(processingResult != null 
 				&& !(networks = target.connectedComponents().stream()
 						.filter((component) -> !SudokuNetwork.isSolved(component))
 						.map((component) -> new SudokuNetwork(target.magnitude(), component))
 						.collect(Collectors.toList())).isEmpty()){
 			String name = Thread.currentThread().getName();
-			this.event = eventAndChildSrc;
+			this.event = processingResult;
 			for(int i=0; i<networks.size(); ++i){
 				SudokuNetwork network = networks.get(i);
 				new Thread(
@@ -178,13 +179,13 @@ public class Solver{
 	 * @return true if the target is solved, false otherwise
 	 */
 	private ThreadEvent process(){
-		for(Technique<?> technique : techniques){
-			TechniqueEvent techniqueEvent = technique.digest();
-			if(techniqueEvent != null){
-				return new ThreadEvent(eventParent, techniqueEvent, Thread.currentThread().getName());
-			}
-		}
-		return null;
+		Optional<TechniqueEvent> result = techniques.stream()
+				.map(Technique::digest)
+				.filter(Objects::nonNull)
+				.findFirst();
+		return result.isPresent() 
+				? new ThreadEvent(eventParent, result.get(), Thread.currentThread().getName())
+				: null;
 	}
 	
 	/**
