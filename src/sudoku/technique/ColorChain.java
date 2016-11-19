@@ -89,6 +89,21 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 				: new SolveEventImplications(f, con).falsifyClaims();
 	}
 	
+	public static class SolveEventImplications extends TechniqueEvent{
+		
+		private final Fact initFact;
+		
+		SolveEventImplications(Fact f, Set<Claim> falsifiedClaims){
+			super(falsifiedClaims);
+			this.initFact = f;
+		}
+		
+		@Override
+		protected String toStringStart() {
+			return "Exploration of the consequences of the possible solutions of " + initFact;
+		}
+	}
+	
 	private class Logic {
 		
 		private final Puzzle puzzle;
@@ -153,8 +168,10 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 		private int popularity(Fact f){
 			return popularity.containsKey(f) 
 					? popularity.get(f) 
-					: 0;
+					: POPULARITY_IF_ABSENT;
 		}
+		
+		public static final int POPULARITY_IF_ABSENT = 0;
 		
 		private class WhatIf implements Cloneable{
 			
@@ -238,13 +255,13 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 			}
 			
 			private WhatIf explore(Claim c){
+				WhatIf out = clone();
 				try{
-					WhatIf out = clone();
 					out.assumeTrue(c);
-					return out;
 				} catch(IllegalStateException e){
 					return null;
 				}
+				return out;
 			}
 			
 			@Override
@@ -357,30 +374,15 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 	
 	private static final BiFunction<Fact,BackedSet<Claim>,Fact> JUST_THE_FACTS = (f,bs) -> f;
 	
-	private static boolean factPartiallyReduced(Fact f, BackedSet<Claim> bs){
-		return 0 < bs.size() && bs.size() < f.size();
+	private static boolean factPartiallyReduced(Fact fullFact, BackedSet<Claim> reducedFact){
+		return 0 < reducedFact.size() && reducedFact.size() < fullFact.size();
 	}
 	
-	private static boolean factFullyReduced(Fact f, BackedSet<Claim> bs){
-		return bs.size() == 0;
+	private static boolean factFullyReduced(Fact fullFact, BackedSet<Claim> reducedFact){
+		return reducedFact.isEmpty();
 	}
 	
-	private static boolean factReduced(Fact f, BackedSet<Claim> bs){
-		return bs.size() < f.size();
-	}
-	
-	public static class SolveEventImplications extends TechniqueEvent{
-		
-		private final Fact initFact;
-		
-		SolveEventImplications(Fact f, Set<Claim> falsifiedClaims){
-			super(falsifiedClaims);
-			this.initFact = f;
-		}
-		
-		@Override
-		protected String toStringStart() {
-			return "Exploration of the consequences of the possible solutions of " + initFact;
-		}
+	private static boolean factReduced(Fact fullFact, BackedSet<Claim> reducedFact){
+		return reducedFact.size() < fullFact.size();
 	}
 }
