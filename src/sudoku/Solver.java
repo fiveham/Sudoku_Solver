@@ -74,22 +74,24 @@ public class Solver{
 	 * @param target the Puzzle to be solved
 	 */
 	public Solver(Sudoku puzzle, String filename){
-		this(puzzle, null, new SudokuThreadGroup(filename), new Object(), DEFAULT_TECHNIQUE_SOURCE, filename);
+		this(puzzle, new SudokuThreadGroup(filename), new Object(), DEFAULT_TECHNIQUE_SOURCE, filename);
 	}
 	
 	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, List<? extends Function<Sudoku,Technique>> processorSource, String source){
 		this.target = target;
 		
-		this.techniques   = generateTechniques(target, processorSource);
+		this.techniques = generateTechniques(target, processorSource);
 		
 		this.eventParent = eventParent;
 		this.group = group;
-		if(eventParent==null){
-			group.setRootSolver(this);
-		}
 		
 		this.lock = waiter;
 		this.source = source;
+	}
+	
+	private Solver(Sudoku target, SudokuThreadGroup group, Object waiter, List<? extends Function<Sudoku,Technique>> processorSource, String source){
+		this(target, null, group, waiter, processorSource, source);
+		group.setRootSolver(this);
 	}
 	
 	private static List<Technique> generateTechniques(Sudoku sudoku, List<? extends Function<Sudoku,Technique>> processorSource){
@@ -148,7 +150,7 @@ public class Solver{
 		List<SudokuNetwork> networks;
 		if(eventAndChildSrc != null 
 				&& !(networks = target.connectedComponents().stream()
-						.filter((component) -> SudokuNetwork.isSolved(component))
+						.filter((component) -> !SudokuNetwork.isSolved(component))
 						.map((component) -> new SudokuNetwork(target.magnitude(), component))
 						.collect(Collectors.toList())).isEmpty()){
 			String name = Thread.currentThread().getName();
@@ -213,20 +215,13 @@ public class Solver{
 	}
 	
 	private static Solver solver(String[] args) throws FileNotFoundException{
-		String charset = null;
-		if(args.length >= 2){
-			charset = args[1];
-		}
 		if(args.length < 1){
 			errorExit();
 		}
-		
-		File file = new File(args[0]);
-		if(charset == null){
-			return new Solver(file);
-		} else{
-			return new Solver(file, charset);
-		}
+		File file = new File(args[SRC_FILE_ARG_INDEX]);
+		return args.length < 2
+			? new Solver(file)
+			: new Solver(file, args[CHARSET_ARG_INDEX]);
 	}
 	
 	private static void errorExit(){
@@ -235,6 +230,7 @@ public class Solver{
 	}
 	
 	public static final int SRC_FILE_ARG_INDEX = 0;
+	public static final int CHARSET_ARG_INDEX = 1;
 	
 	/**
 	 * <p>Extends ThreadGroup to override uncaughtException() so that 
