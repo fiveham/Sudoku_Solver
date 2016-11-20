@@ -83,7 +83,7 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 	 * {@code null} if no progress was made
 	 */
 	private TechniqueEvent implications(Fact f){
-		Set<Claim> con = new Logic(f).nonEmptyConsequenceIntersection();
+		Set<Claim> con = new Logic(f).findConsequenceIntersection();
 		return con.isEmpty() 
 				? null
 				: new SolveEventImplications(f, con).falsifyClaims();
@@ -128,7 +128,7 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 			popularity = new HashMap<>();
 		}
 		
-		public Set<Claim> nonEmptyConsequenceIntersection(){
+		public Set<Claim> findConsequenceIntersection(){
 			Set<Claim> result;
 			while( (result = consequenceIntersection()).isEmpty() && isDepthAvailable()){
 				exploreDepth();
@@ -295,7 +295,7 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 			
 			private boolean hasIllegalEmptyFact(){
 				return fullyReducedFacts()
-						.anyMatch(ReducedFact::isIllegalEmpty); 
+						.anyMatch(ReducedFact::isIllegalIfEmpty); 
 			}
 			
 			@Override
@@ -354,11 +354,11 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 					return reducedForm.size();
 				}
 				
-				public boolean isIllegalEmpty(){
-					return !isLegalEmpty();
+				public boolean isIllegalIfEmpty(){
+					return !isLegalIfEmpty();
 				}
 				
-				public boolean isLegalEmpty(){
+				public boolean isLegalIfEmpty(){
 					return intersectionHasSize(f, assumptions, Fact.TRUE_CLAIM_COUNT) 
 							&& intersectionHasSize(f, consequences, f.size() - Fact.TRUE_CLAIM_COUNT);
 				}
