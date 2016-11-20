@@ -2,6 +2,7 @@ package sudoku.technique;
 
 import common.BackedSet;
 import common.Sets;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -148,9 +149,19 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 		
 		public void exploreDepth(){
 			populatePopularity();
+			int sizeForExploration = sizeForExploration();
 			whatIfs = whatIfs.stream()
-					.map(WhatIf::exploreDepth)
+					.map((wi) -> wi.hasExplorableReducedFact(sizeForExploration)
+							? wi.exploreDepth() 
+							: Arrays.asList(wi))
 					.collect(Sets.massUnionCollector());
+		}
+		
+		private int sizeForExploration(){
+			return whatIfs.stream()
+					.filter(WhatIf::isDepthAvailable)
+					.map(WhatIf::minReducedFactSize)
+					.reduce(Integer.MAX_VALUE, Integer::min);
 		}
 		
 		private void populatePopularity(){
@@ -206,6 +217,12 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 				return 0 != partiallyReducedFactsRaw().count();
 			}
 			
+			private boolean hasExplorableReducedFact(int maxReducedFactSizeForExploration){
+				return 0 < partiallyReducedFacts()
+						.filter((rf) -> rf.reducedSize() <= maxReducedFactSizeForExploration)
+						.count();
+			}
+			
 			private Stream<Fact> reducedFacts(){
 				return filteredReducedFacts(ColorChain::factReduced, JUST_THE_FACTS);
 			}
@@ -239,6 +256,12 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 							return result;
 						})
 						.filter(Objects::nonNull);
+			}
+			
+			private int minReducedFactSize(){
+				return partiallyReducedFacts()
+						.map(ReducedFact::reducedSize)
+						.reduce(Integer.MAX_VALUE, Integer::min);
 			}
 			
 			public Collection<WhatIf> exploreDepth(){
