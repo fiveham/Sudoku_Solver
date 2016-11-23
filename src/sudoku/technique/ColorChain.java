@@ -22,23 +22,17 @@ import sudoku.Sudoku;
 import sudoku.time.TechniqueEvent;
 
 /**
- * <p>The color-chain technique exploits the fact that a Rule with 
- * only two connected Claims is analogous to a {@code xor} operation. 
- * A collection of interconnected two-Claim Rules, regardless of 
- * the size and shape of such a network, has only two possible 
- * solution-states.</p>
- * 
+ * <p>The color-chain technique exploits the fact that a Rule with only two connected Claims is
+ * analogous to a {@code xor} operation. A collection of interconnected two-Claim Rules, regardless
+ * of the size and shape of such a network, has only two possible solution-states.</p>
  * @author fiveham
- * 
  */
 public class ColorChain extends AbstractTechnique<ColorChain> {
 	
-	/**
-	 * <p>Constructs a ColorChain that works to solve the 
-	 * specified {@code target}.</p>
-	 * @param target the Puzzle that this Technique works 
-	 * to solve.
-	 */
+    /**
+     * <p>Constructs a ColorChain that works to solve the specified {@code target}.</p>
+     * @param target the Puzzle that this Technique works to solve.
+     */
 	public ColorChain(Sudoku puzzle) {
 		super(puzzle);
 	}
@@ -53,16 +47,14 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 		return implications();
 	}
 	
-	/**
-	 * <p>Tries to find an overlap among the consequences of each 
-	 * of the Claims of a given Fact in the puzzle hypothetically 
-	 * being true, starting from the smallest Facts in the puzzle
-	 * and increasing in Fact size from there.</p>
-	 * @return a TechniqueEvent describing the Fact whose Claims' 
-	 * consequences led to progress in solving the puzzle and the 
-	 * Claims that were falsified in that step of progress, or 
-	 * {@code null} if no progress was made
-	 */
+    /**
+     * <p>Tries to find an overlap among the consequences of each of the Claims of a given Fact in
+     * the puzzle hypothetically being true, starting from the smallest Facts in the puzzle and
+     * increasing in Fact size from there.</p>
+     * @return a TechniqueEvent describing the Fact whose Claims' consequences led to progress in
+     * solving the puzzle and the Claims that were falsified in that step of progress, or
+     * {@code null} if no progress was made
+     */
 	private TechniqueEvent implications(){
 		Optional<TechniqueEvent> result = target.factStream()
 				.sorted(Comparator.comparingInt(Fact::size))
@@ -74,15 +66,13 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 				: null;
 	}
 	
-	/**
-	 * <p>Tries to find an overlap among the consequences of each 
-	 * of the Claims of {@code f} in the puzzle hypothetically 
-	 * being true.</p>
-	 * @return a TechniqueEvent describing the Fact whose Claims' 
-	 * consequences led to progress in solving the puzzle and the 
-	 * Claims that were falsified in that step of progress, or 
-	 * {@code null} if no progress was made
-	 */
+    /**
+     * <p>Tries to find an overlap among the consequences of each of the Claims of {@code f} in the
+     * puzzle hypothetically being true.</p>
+     * @return a TechniqueEvent describing the Fact whose Claims' consequences led to progress in
+     * solving the puzzle and the Claims that were falsified in that step of progress, or
+     * {@code null} if no progress was made
+     */
 	private TechniqueEvent implications(Fact f){
 		Set<Claim> con = new Logic(f).findConsequenceIntersection();
 		return con.isEmpty() 
@@ -110,11 +100,10 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 		private final Puzzle puzzle;
 		private Collection<WhatIf> whatIfs;
 		
-		/**
-		 * 
-		 * @param claims
-		 * @throws IllegalArgumentException if {@code claims} is empty.
-		 */
+        /**
+         * @param claims
+         * @throws IllegalArgumentException if {@code claims} is empty.
+         */
 		public Logic(Set<? extends Claim> claims){
 			try{
 				this.puzzle = claims.iterator().next().getPuzzle();
@@ -195,15 +184,15 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 				consequences = puzzle.claimUniverse().back(c.visible());
 			}
 			
-			/**
-			 * <p>Constructs a WhatIf having the specified {@code assumptions}, 
-			 * {@code consequences}, and {@code puzzle}. Used to {@link #clone() clone} 
-			 * a WhatIf.</p>
-			 * @param assumptions
-			 * @param consequences
-			 * @param puzzle
-			 * @see #clone()
-			 */
+            /**
+             * <p>Constructs a WhatIf having the specified {@code assumptions},
+             * {@code consequences}, and {@code puzzle}. Used to {@link #clone() clone} a
+             * WhatIf.</p>
+             * @param assumptions
+             * @param consequences
+             * @param puzzle
+             * @see #clone()
+             */
 			private WhatIf(Set<Claim> assumptions, Set<Claim> consequences, Puzzle puzzle){
 				this.assumptions = puzzle.claimUniverse().back(assumptions);
 				this.consequences = puzzle.claimUniverse().back(consequences);
@@ -292,19 +281,18 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 				return new WhatIf(assumptions, consequences, puzzle);
 			}
 			
-			/**
-			 * <p>Adds {@code c} to this WhatIf as a Claim assumed to be true, and 
-			 * adds the Claims {@link sudoku.NodeSet#visible() visible} to {@code c} 
-			 * as Claims concluded to be false.</p>
-			 * @param c a Claim to be assumed true
-			 * @return true if this WhatIf's collection of assumed true Claims or this 
-			 * WhatIf's collection of concluded false Claims was changed by this operation, 
-			 * false otherwise
-			 * @throws IllegalStateException if {@code c} is already known to be false based 
-			 * on the other Claims assumed true in this WhatIf or if the set of Claims 
-			 * {@link sudoku.NodeSet#visible() visible} to {@code c} intersects this WhatIf's 
-			 * set of Claims assumed true
-			 */
+            /**
+             * <p>Adds {@code c} to this WhatIf as a Claim assumed to be true, and adds the Claims
+             * {@link sudoku.NodeSet#visible() visible} to {@code c} as Claims concluded to be
+             * false.</p>
+             * @param c a Claim to be assumed true
+             * @return true if this WhatIf's collection of assumed true Claims or this WhatIf's
+             * collection of concluded false Claims was changed by this operation, false otherwise
+             * @throws IllegalStateException if {@code c} is already known to be false based on the
+             * other Claims assumed true in this WhatIf or if the set of Claims
+             * {@link sudoku.NodeSet#visible() visible} to {@code c} intersects this WhatIf's set of
+             * Claims assumed true
+             */
 			public boolean assumeTrue(Claim c){
 				boolean result = assumptions.add(c) | consequences.addAll(c.visible());
 				if(!BackedSet.disjoint(assumptions, consequences)){

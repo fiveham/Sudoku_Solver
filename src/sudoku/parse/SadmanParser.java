@@ -10,42 +10,36 @@ import java.io.FileNotFoundException;
 import sudoku.Puzzle;
 
 /**
- * <p>Parses the initial puzzle out of a Sadman Sudoku puzzle 
- * file. This format is defined at 
- * http://www.sadmansoftware.com/sudoku/faq19.php (retrieved 25 
- * May 2016).</p>
- * 
- * <p>All elements of a Sadman format file other than the 
- * initial state of the puzzle are ignored, including the 
- * number of solutions.</p>
+ * <p>Parses the initial puzzle out of a Sadman Sudoku puzzle file. This format is defined at
+ * http://www.sadmansoftware.com/sudoku/faq19.php (retrieved 25 May 2016).</p> <p>All elements of a
+ * Sadman format file other than the initial state of the puzzle are ignored, including the number
+ * of solutions.</p>
+ * @author fiveham
  * @author fiveham
  *
  */
 public class SadmanParser implements Parser{
 	
-	/**
-	 * <p>Content of the line prior to the statement of the initial 
-	 * state of the puzzle.</p>
-	 */
+    /**
+     * <p>Content of the line prior to the statement of the initial state of the puzzle.</p>
+     */
 	public static final String INITIAL_PUZZLE_MARKER = "[Puzzle]";
 	
-	/**
-	 * <p>Indicates an empty cell in the initial puzzle state.</p>
-	 */
+    /**
+     * <p>Indicates an empty cell in the initial puzzle state.</p>
+     */
 	public static final char EMPTY_CELL = '.';
 	
 	private final int mag;
 	private final List<Integer> values;
 	
-	/**
-	 * <p>Constructs a Parser that interprets the contents of the file {@code f} 
-	 * as a Sadman-format sudoku puzzle, using the specified {@code charset} to 
-	 * read the file.</p>
-	 * @param f the file to be interpreted
-	 * @param charset the name of the charset to be used in reading the file. 
-	 * If the 
-	 * @throws FileNotFoundException
-	 */
+    /**
+     * <p>Constructs a Parser that interprets the contents of the file {@code f} as a Sadman-format
+     * sudoku puzzle, using the specified {@code charset} to read the file.</p>
+     * @param f the file to be interpreted
+     * @param charset the name of the charset to be used in reading the file. If the
+     * @throws FileNotFoundException
+     */
 	public SadmanParser(File f, String charset) throws FileNotFoundException{
 		this(() -> {
 			try{

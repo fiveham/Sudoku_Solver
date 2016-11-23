@@ -5,6 +5,7 @@ import java.util.Collection;
 /**
  * A vertex in a graph
  * @author fiveham
+ * @author fiveham
  *
  */
 public interface Vertex<N> {

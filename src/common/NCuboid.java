@@ -8,25 +8,18 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 /**
- * <p>Manages an arbitrary number of abstract dimensions, each of 
- * which can take an arbitrary, constant number of different values.</p>
- * 
- * <p>With two dimensions, the NCuboid is a rectangle, and with three 
- * a rectangular prism (cuboid).</p>
- * 
- * <p>Accounting for two options can be done with two nested {@code for} 
- * loops, and accounting for three can be done with three nested 
- * {@code for} loops, but to account for an arbitrary number of 
- * independent dimensions, something more adaptable than hard-coded loops 
- * is required.</p>
- * 
- * <p>To that end, this class treats each possible position in an 
- * N-dimensional cuboid as a number in a variable-radix number-system. 
- * For example, in a 3-dimensional cuboid where the highest-order dimension 
- * has two options, the middle-order dimension has 8 options, and the lowest
- * -order dimension has 5 options, the digits of the equivalent number 
- * would be [1 to 2][1 to 8][1 to 5]. This abstract number is stored 
- * internally as an int array.</p>
+ * <p>Manages an arbitrary number of abstract dimensions, each of which can take an arbitrary,
+ * constant number of different values.</p> <p>With two dimensions, the NCuboid is a rectangle, and
+ * with three a rectangular prism (cuboid).</p> <p>Accounting for two options can be done with two
+ * nested {@code for} loops, and accounting for three can be done with three nested {@code for}
+ * loops, but to account for an arbitrary number of independent dimensions, something more adaptable
+ * than hard-coded loops is required.</p> <p>To that end, this class treats each possible position
+ * in an N-dimensional cuboid as a number in a variable-radix number-system. For example, in a
+ * 3-dimensional cuboid where the highest-order dimension has two options, the middle-order
+ * dimension has 8 options, and the lowest -order dimension has 5 options, the digits of the
+ * equivalent number would be [1 to 2][1 to 8][1 to 5]. This abstract number is stored internally as
+ * an int array.</p>
+ * @author fiveham
  * @author fiveham
  *
  */
@@ -35,13 +28,12 @@ public class NCuboid<T> implements Iterable<List<T>> {
 	private final List<List<? extends T>> src;
 	private final int[] key;
 	
-	/**
-	 * <p>Constructs an NCuboid whose dimensions are the elements of 
-	 * {@code src}.</p>
-	 * @param dimensions
-	 * @throws IllegalArgumentException if any of the dimensions specified 
-	 * as elements of {@code src} is empty
-	 */
+    /**
+     * <p>Constructs an NCuboid whose dimensions are the elements of {@code src}.</p>
+     * @param dimensions
+     * @throws IllegalArgumentException if any of the dimensions specified as elements of
+     * {@code src} is empty
+     */
 	public NCuboid(Collection<? extends Collection<? extends T>> dimensions) {
 		
 		this.src = new ArrayList<>(dimensions.size());
@@ -67,10 +59,11 @@ public class NCuboid<T> implements Iterable<List<T>> {
 		return new CubeIterator();
 	}
 	
-	/**
-	 * <p>An Iterator which keeps track of its position in an N-dimensional 
-	 * cuboid defined by the dimensions specified as elements of {@code src}.</p>
-	 * @author fiveham
+    /**
+     * <p>An Iterator which keeps track of its position in an N-dimensional cuboid defined by the
+     * dimensions specified as elements of {@code src}.</p>
+     * @author fiveham
+     * @author fiveham
 	 *
 	 */
 	private class CubeIterator implements Iterator<List<T>>{

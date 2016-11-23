@@ -1,9 +1,9 @@
 package common.time;
 
 /**
- * <p>A Time which has no parent ({@code parent() == null}) and serves 
- * as the root of the tree structure for which the Time interface is 
- * intended.</p>
+ * <p>A Time which has no parent ({@code parent() == null}) and serves as the root of the tree
+ * structure for which the Time interface is intended.</p>
+ * @author fiveham
  * @author fiveham
  *
  */

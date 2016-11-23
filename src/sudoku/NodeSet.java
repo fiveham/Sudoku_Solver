@@ -10,28 +10,24 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * <p>A set that's a node in {@link Puzzle a graph representation of a sudoku target}, 
- * such that the NodeSet itself is a collection of its {@link Vertex#neighbors() neighbors}.</p>
- * 
- * <p>The NodeSet class serves as a pool to unite certain operations performed identically 
- * by both Claim and Rule. Most importantly, NodeSet serves to enforce, in one 
- * consistent location, the rule that any node's neighbors must know that that node in 
- * question is one of their neighbors: neighbor status must be symmetrical. Additionally, 
- * NodeSet being superclass to both Claim and Rule enables Claim and Rule to be elements 
- * of the same collection, so that a bipartite graph like Puzzle doesn't need to be described 
- * as a bipartite graph explicitly via a BipartiteGraph contract, as that would feed into 
+ * <p>A set that's a node in {@link Puzzle a graph representation of a sudoku target}, such that the
+ * NodeSet itself is a collection of its {@link Vertex#neighbors() neighbors}.</p> <p>The NodeSet
+ * class serves as a pool to unite certain operations performed identically by both Claim and Rule.
+ * Most importantly, NodeSet serves to enforce, in one consistent location, the rule that any node's
+ * neighbors must know that that node in question is one of their neighbors: neighbor status must be
+ * symmetrical. Additionally, NodeSet being superclass to both Claim and Rule enables Claim and Rule
+ * to be elements of the same collection, so that a bipartite graph like Puzzle doesn't need to be
+ * described as a bipartite graph explicitly via a BipartiteGraph contract, as that would feed into
  * combinatorial explosion, given the need for WrappingGraphs as well.</p>
- * 
  * @author fiveham
  * @param <T> The type of the elements of this Set.
- * @param <S> The type of the Set elements of this Set. This should also be a proxy 
- * for this type itself.
+ * @param <S> The type of the Set elements of this Set. This should also be a proxy for this type
+ * itself.
  */
 public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends ToolSet<T> implements Vertex<NodeSet<?,?>>{
 	
-	/**
-	 * 
-	 */
+    /**
+     */
 	private static final long serialVersionUID = 6938429068342291749L;
 	
 	protected final Puzzle puzzle;
@@ -48,10 +44,10 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		this.hashCode = hash;
 	}
 	
-	/**
-	 * <p>Returns the target to which this NodeSet belongs.</p>
-	 * @return the target to which this NodeSet belongs
-	 */
+    /**
+     * <p>Returns the target to which this NodeSet belongs.</p>
+     * @return the target to which this NodeSet belongs
+     */
 	public Puzzle getPuzzle(){
 		return puzzle;
 	}
@@ -80,23 +76,19 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		return remove_internal(o);
 	}
 	
-	/**
-	 * <p>Removes {@code o} and removes {@code this} from {@code o} 
-	 * without {@link #validateFinalState() validating the set afterwards}.</p>
-	 * 
-	 * <p>Used internally so that bulk operations can validate the set's state 
-	 * only after they have completed instead of numerous times throughout 
-	 * the bulk operation and so that only one removal method needs to ensure 
-	 * mutual element-removal. If bulk operations were subject to final-state 
-	 * validation checks by calling remove(Object) repeatedly, then any bulk 
-	 * removal operation that removes all but one of the elements of this set 
-	 * could force a Rule to trigger a value-claim event in the middle of the 
-	 * operation even though such a Rule really ought to wait until the end 
-	 * to validate, which allows just one automatic resolution event to trigger.</p>
-	 * 
-	 * @param o the object being removed
-	 * @return true if this set has been changed by the operation, false otherwise
-	 */
+    /**
+     * <p>Removes {@code o} and removes {@code this} from {@code o} without
+     * {@link #validateFinalState() validating the set afterwards}.</p> <p>Used internally so that
+     * bulk operations can validate the set's state only after they have completed instead of
+     * numerous times throughout the bulk operation and so that only one removal method needs to
+     * ensure mutual element-removal. If bulk operations were subject to final-state validation
+     * checks by calling remove(Object) repeatedly, then any bulk removal operation that removes all
+     * but one of the elements of this set could force a Rule to trigger a value-claim event in the
+     * middle of the operation even though such a Rule really ought to wait until the end to
+     * validate, which allows just one automatic resolution event to trigger.</p>
+     * @param o the object being removed
+     * @return true if this set has been changed by the operation, false otherwise
+     */
 	private boolean remove_internal(Object o){
 		boolean result = super.remove(o);
 		if(result){
@@ -143,13 +135,13 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		return new SafeRemovingIterator();
 	}
 	
-	/**
-	 * <p>An Iterator whose {@link Iterator#remove() remove()} method 
-	 * calls the {@link Collection#remove() remove(Object)} method 
-	 * of the removed element so as to remove this NodeSet from the 
-	 * element that was removed from this NodeSet, guaranteeing 
-	 * symmetry of connections in the graph.</p>
-	 * @author fiveham
+    /**
+     * <p>An Iterator whose {@link Iterator#remove() remove()} method calls the
+     * {@link Collection#remove() remove(Object)} method of the removed element so as to remove this
+     * NodeSet from the element that was removed from this NodeSet, guaranteeing symmetry of
+     * connections in the graph.</p>
+     * @author fiveham
+     * @author fiveham
 	 *
 	 */
 	private class SafeRemovingIterator implements Iterator<T>{
@@ -188,28 +180,25 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		return this.stream().map(NodeSet.class::cast).collect(Collectors.toList());
 	}
 	
-	/**
-	 * <p>Returns a set of the vertices visible to this vertex. A vertex is 
-	 * visible to this one if that vertex and this one share at least 
-	 * one {@link #neighbors() neighbor} in common.</p>
-	 * @return a set of the vertices that share at least one 
-	 * {@link #neighbors() neighbor} in common with this vertex
-	 */
+    /**
+     * <p>Returns a set of the vertices visible to this vertex. A vertex is visible to this one if
+     * that vertex and this one share at least one {@link #neighbors() neighbor} in common.</p>
+     * @return a set of the vertices that share at least one {@link #neighbors() neighbor} in common
+     * with this vertex
+     */
 	public Set<S> visible(){
 		Set<S> pool = Sets.massUnion(this);
 		pool.remove(this);
 		return pool;
 	}
 	
-	/**
-	 * <p>Returns a collection of the nodes visible to this node at a 
-	 * position {@code n} edges away.</p>
-	 * @param n the number of edges to cross to go from this node to 
-	 * the nodes in the returned set
-	 * @return a collection of the nodes visible to this node at a 
-	 * position {@code n} edges away
-	 * @throws IllegalArgumentException if {@code n} is negative
-	 */
+    /**
+     * <p>Returns a collection of the nodes visible to this node at a position {@code n} edges
+     * away.</p>
+     * @param n the number of edges to cross to go from this node to the nodes in the returned set
+     * @return a collection of the nodes visible to this node at a position {@code n} edges away
+     * @throws IllegalArgumentException if {@code n} is negative
+     */
 	public Collection<NodeSet<?,?>> visible(int n){
 		switch(n){
 		case 0: 
@@ -249,11 +238,10 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		}
 	}
 	
-	/**
-	 * <p>Returns the toString() content for this NodeSet as if it were only 
-	 * a HashSet.</p>
-	 * @return {@link HashSet#toString() super.toString()}
-	 */
+    /**
+     * <p>Returns the toString() content for this NodeSet as if it were only a HashSet.</p>
+     * @return {@link HashSet#toString() super.toString()}
+     */
 	public String contentString(){
 		return super.toString();
 	}
@@ -263,24 +251,21 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		return hashCode;
 	}
 	
-	/**
-	 * <p>Returns an int that encodes the specified {@code x}, {@code y}, and {@code z} 
-	 * coordinates as if they belong to a Claim whose {@link #getPuzzle puzzle} has the 
-	 * specified {@code sideLength}.</p>
-	 * 
-	 * <p>The coordinates are concatenated as digits in a number system with a base 
-	 * equal to {@code sideLength + 1}, with the first digit being the x-coordinate, 
-	 * followed by the y-coordinate, followed by the z-coordinate.</p>
-	 * 
-	 * @param x the coordinate given the highest digital significance
-	 * @param y the coordinate given the second-highest digital significance
-	 * @param z the coordinate given the lowest digital significance.
-	 * @param sideLength the side-length of the {@link #getPuzzle puzzle} to which 
-	 * the NodeSet whose coordinates are being linearized belongs.
-	 * @return an int that encodes the specified {@code x}, {@code y}, and {@code z} 
-	 * coordinates as if they belong to a Claim whose {@link #getPuzzle puzzle} has the 
-	 * specified {@code sideLength}
-	 */
+    /**
+     * <p>Returns an int that encodes the specified {@code x}, {@code y}, and {@code z} coordinates
+     * as if they belong to a Claim whose {@link #getPuzzle puzzle} has the specified
+     * {@code sideLength}.</p> <p>The coordinates are concatenated as digits in a number system with
+     * a base equal to {@code sideLength + 1}, with the first digit being the x-coordinate, followed
+     * by the y-coordinate, followed by the z-coordinate.</p>
+     * @param x the coordinate given the highest digital significance
+     * @param y the coordinate given the second-highest digital significance
+     * @param z the coordinate given the lowest digital significance.
+     * @param sideLength the side-length of the {@link #getPuzzle puzzle} to which the NodeSet whose
+     * coordinates are being linearized belongs.
+     * @return an int that encodes the specified {@code x}, {@code y}, and {@code z} coordinates as
+     * if they belong to a Claim whose {@link #getPuzzle puzzle} has the specified
+     * {@code sideLength}
+     */
 	public static int linearizeCoords(int x, int y, int z, int sideLength){
 		return x*sideLength*sideLength + y*sideLength + z;
 	}

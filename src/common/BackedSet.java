@@ -9,11 +9,11 @@ import java.util.Set;
 import java.math.BigInteger;
 
 /**
- * <p>A {@code Set} implementation capable of containing only 
- * elements included in an initially-specified list that backs 
- * the contents of the Set in a manner like the way that the 
- * content of a String is backed by a backing {@code CharSequence} 
- * array which may be much longer than the String in question.</p>
+ * <p>A {@code Set} implementation capable of containing only elements included in an
+ * initially-specified list that backs the contents of the Set in a manner like the way that the
+ * content of a String is backed by a backing {@code CharSequence} array which may be much longer
+ * than the String in question.</p>
+ * @author fiveham
  * @author fiveham
  *
  */
@@ -123,16 +123,13 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		return new ArrayList<>(this).toArray(a);
 	}
 	
-	/**
-	 * <p>Adds the specified object to this set as long as it is 
-	 * in this set's universe; otherwise, throws an 
-	 * OutOfUniverseException.</p>
-	 * @param e the element to be added to this BackedSet
-	 * @return true if this set was modified by this operation, 
-	 * false otherwise
-	 * @throws OutOfUniverseException if {@code e} is not in this 
-	 * BackedSet's backing Universe.
-	 */
+    /**
+     * <p>Adds the specified object to this set as long as it is in this set's universe; otherwise,
+     * throws an OutOfUniverseException.</p>
+     * @param e the element to be added to this BackedSet
+     * @return true if this set was modified by this operation, false otherwise
+     * @throws OutOfUniverseException if {@code e} is not in this BackedSet's backing Universe.
+     */
 	@Override
 	public boolean add(E e) {
 		if(universe.contains(e)){
@@ -146,9 +143,8 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 	}
 	
 	public static class OutOfUniverseException extends RuntimeException{
-		/**
-		 * 
-		 */
+        /**
+         */
 		private static final long serialVersionUID = -4023554063682941699L;
 
 		OutOfUniverseException(String s){

@@ -11,20 +11,21 @@ import sudoku.parse.Parser;
 /**
  * <p>A bipartite graph of Facts and Claims.</p>
  * @author fiveham
+ * @author fiveham
  *
  */
 public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	
-	/**
-	 * <p>The fundamental order of the target to which the nodes of this graph pertain, 
-	 * equal to the square root of the {@link #sideLength side length}.</p>
-	 */
+    /**
+     * <p>The fundamental order of the target to which the nodes of this graph pertain, equal to the
+     * square root of the {@link #sideLength side length}.</p>
+     */
 	protected final int magnitude;
 	
-	/**
-	 * <p>The number of coordinates along a dimension of the target to which the nodes 
-	 * of this graph belong.</p>
-	 */
+    /**
+     * <p>The number of coordinates along a dimension of the target to which the nodes of this graph
+     * belong.</p>
+     */
 	protected final int sideLength;
 	
 	public SudokuNetwork(int magnitude) {
@@ -37,12 +38,11 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 		this.nodes.addAll(connectedComponent.nodeStream().collect(Collectors.toList()));
 	}
 	
-	/**
-	 * <p>Returns true if this SudokuNetwork is solved, false otherwise. A 
-	 * SudokuNetwork is solved iff all of its {@code Fact}s each have only 
-	 * one {@code Claim}.</p>
-	 * @return true if this SudokuNetwork is solved, false otherwise
-	 */
+    /**
+     * <p>Returns true if this SudokuNetwork is solved, false otherwise. A SudokuNetwork is solved
+     * iff all of its {@code Fact}s each have only one {@code Claim}.</p>
+     * @return true if this SudokuNetwork is solved, false otherwise
+     */
 	@Override
 	public boolean isSolved(){
 		return factStream().allMatch(Fact::isSolved);
@@ -53,12 +53,11 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 		return nodes.stream().filter(Fact.class::isInstance).map(Fact.class::cast);
 	}
 	
-	/**
-	 * <p>Returns a Stream of all the {@code Claim}-type nodes in this 
-	 * Puzzle's underlying graph.</p>
-	 * @return a Stream of all the {@code Claim}-type nodes in this 
-	 * Puzzle's underlying graph.
-	 */
+    /**
+     * <p>Returns a Stream of all the {@code Claim}-type nodes in this Puzzle's underlying
+     * graph.</p>
+     * @return a Stream of all the {@code Claim}-type nodes in this Puzzle's underlying graph.
+     */
 	@Override
 	public Stream<Claim> claimStream(){
 		return nodes.stream().filter(Claim.class::isInstance).map(Claim.class::cast);
@@ -114,14 +113,14 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 		return result.toString();
 	}
 	
-	/**
-	 * <p>Returns true if {@code graph}, were it a SudokuNetwork, meets the 
-	 * criteria for a SudokuNetwork to be solved, false otherwise.</p>
-	 * @param graph a graph to be interpreted as a SudokuNetwork and tested 
-	 * for being in a solved state
-	 * @return true if {@code graph}, were it a SudokuNetwork, meets the 
-	 * criteria for a SudokuNetwork to be solved, false otherwise
-	 */
+    /**
+     * <p>Returns true if {@code graph}, were it a SudokuNetwork, meets the criteria for a
+     * SudokuNetwork to be solved, false otherwise.</p>
+     * @param graph a graph to be interpreted as a SudokuNetwork and tested for being in a solved
+     * state
+     * @return true if {@code graph}, were it a SudokuNetwork, meets the criteria for a
+     * SudokuNetwork to be solved, false otherwise
+     */
 	public static boolean isSolved(Graph<NodeSet<?,?>> graph){
 		return graph.nodeStream()
 				.filter(Fact.class::isInstance)

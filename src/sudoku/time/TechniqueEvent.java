@@ -4,9 +4,9 @@ import sudoku.Claim;
 import java.util.Set;
 
 /**
- * <p>A time node denoting and encapsulating an event in which some 
- * progress is made in solving the target.</p>
- * 
+ * <p>A time node denoting and encapsulating an event in which some progress is made in solving the
+ * target.</p>
+ * @author fiveham
  * @author fiveham
  *
  */

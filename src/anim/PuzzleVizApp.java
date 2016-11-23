@@ -51,14 +51,13 @@ public class PuzzleVizApp extends Application {
 		}
     }
 	
-	/**
-	 * <p>Creates and solves the sudoku puzzle specified in the file named by 
-	 * the first {@link #getParameters() command-line argument} sent to 
-	 * {@link main(String[]) main()}, which precipitated the call to this 
-	 * method, extracts the root of the thread-termination time-tree, 
-	 * {@link Stage#setScene(Scene) sets the Scene}, generates 
-	 * {@code Timeline}s that animate the solution process, and plays them.</p>
-	 */
+    /**
+     * <p>Creates and solves the sudoku puzzle specified in the file named by the first
+     * {@link #getParameters() command-line argument} sent to {@link main(String[]) main()}, which
+     * precipitated the call to this method, extracts the root of the thread-termination time-tree,
+     * {@link Stage#setScene(Scene) sets the Scene}, generates {@code Timeline}s that animate the
+     * solution process, and plays them.</p>
+     */
 	@Override
 	public void start(Stage primaryStage) throws Exception{
 		primaryStage.setResizable(false);
@@ -90,21 +89,17 @@ public class PuzzleVizApp extends Application {
         genTimeline(voxelModels, puzzle, timeRoot).play();
 	}
 	
-	/**
-	 * <p>Creates the scene graph for this application and returns a Pair 
-	 * containing the scene graph as the first element and the Group that 
-	 * contains the voxel models as the second element.</p>
-	 * 
-	 * <p>Access to the voxel model Group is provided as an independent 
-	 * result even though it is contained in the overall scene graph 
-	 * because it is more efficient than requiring 
-	 * {@link #start(Stage) the calling code} to extract the voxel model 
-	 * Group out of the overall scene graph.</p>
-	 * 
-	 * @param puzzle the Puzzle whose solution process is being animated
-	 * @return a Pair containing the scene graph as the first element and 
-	 * the Group that contains the voxel models as the second element
-	 */
+    /**
+     * <p>Creates the scene graph for this application and returns a Pair containing the scene graph
+     * as the first element and the Group that contains the voxel models as the second element.</p>
+     * <p>Access to the voxel model Group is provided as an independent result even though it is
+     * contained in the overall scene graph because it is more efficient than requiring
+     * {@link #start(Stage) the calling code} to extract the voxel model Group out of the overall
+     * scene graph.</p>
+     * @param puzzle the Puzzle whose solution process is being animated
+     * @return a Pair containing the scene graph as the first element and the Group that contains
+     * the voxel models as the second element
+     */
 	private static Pair<Parent,Group> createContent(Puzzle puzzle){
 		Camera camera = genCamera();
 		Group voxelModels = genVoxelModels(puzzle);
@@ -126,18 +121,17 @@ public class PuzzleVizApp extends Application {
 		return result;
 	}
 	
-	/**
-	 * <p>Creates all the voxel models for the claims of {@code target}, sequenced so that first quarter 
-	 * of the list contains voxel models for all the claims of the target in order of increasing 
-	 * {@link Claim#linearizeCoords(int, int, int, int) linearized coordinates}. The voxel models in the 
-	 * first fourth of the list all pertain to the same {@link #RegionSpecies type} of Rule.  Each of 
-	 * the other three fourths pertains to another {@code type} so that all voxel models for all claims are 
-	 * represented.
-	 * Ordering the 
-	 * @param target the Puzzle whose solution process is being animated
-	 * @return a {@link Group Group} encapsulating the voxel models for the Claims of {@code target}
-	 * @see #associates(Claim, List)
-	 */
+    /**
+     * <p>Creates all the voxel models for the claims of {@code target}, sequenced so that first
+     * quarter of the list contains voxel models for all the claims of the target in order of
+     * increasing {@link Claim#linearizeCoords(int, int, int, int) linearized coordinates}. The
+     * voxel models in the first fourth of the list all pertain to the same
+     * {@link #RegionSpecies type} of Rule. Each of the other three fourths pertains to another
+     * {@code type} so that all voxel models for all claims are represented. Ordering the
+     * @param target the Puzzle whose solution process is being animated
+     * @return a {@link Group Group} encapsulating the voxel models for the Claims of {@code target}
+     * @see #associates(Claim, List)
+     */
 	private static Group genVoxelModels(Puzzle puzzle){
 		Group result = new Group();
 		for(RuleType region : RuleType.values()){
@@ -155,29 +149,20 @@ public class PuzzleVizApp extends Application {
 		return result;
 	}
 	
-	/**
-	 * <p>Creates the {@code BagModel}s for the solved Puzzle, 
-	 * and gives each VoxelModel belonging to each BagModel a 
-	 * {@link VoxelModel#getOwnerBag() reference} to that 
-	 * BagModel.</p>
-	 * 
-	 * <p>This method does not return a value and does not add 
-	 * an element to the scene graph because a BagModel's 
-	 * representation in the scene is exactly the representation 
-	 * of its voxel models; as such, any extant BagModel is 
-	 * already represented properly in the scene.</p>
-	 * 
-	 * <p>Access to the BagModels is only ever needed through 
-	 * their VoxelModels. Even the one context that calls this method 
-	 * doesn't need access to any of the BagModels once they've 
-	 * been assigned all their VoxelModels.</p>
-	 * 
-	 * @param voxels a List of all the VoxelModels (a List<Node> 
-	 * in the calling context, but all the child nodes listed 
-	 * are necessarily VoxelModels in that context) needed to 
-	 * animate the Puzzle {@code p}
-	 * @param p the Puzzle whose solution process is being animated
-	 */
+    /**
+     * <p>Creates the {@code BagModel}s for the solved Puzzle, and gives each VoxelModel belonging
+     * to each BagModel a {@link VoxelModel#getOwnerBag() reference} to that BagModel.</p> <p>This
+     * method does not return a value and does not add an element to the scene graph because a
+     * BagModel's representation in the scene is exactly the representation of its voxel models; as
+     * such, any extant BagModel is already represented properly in the scene.</p> <p>Access to the
+     * BagModels is only ever needed through their VoxelModels. Even the one context that calls this
+     * method doesn't need access to any of the BagModels once they've been assigned all their
+     * VoxelModels.</p>
+     * @param voxels a List of all the VoxelModels (a List<Node> in the calling context, but all the
+     * child nodes listed are necessarily VoxelModels in that context) needed to animate the Puzzle
+     * {@code p}
+     * @param p the Puzzle whose solution process is being animated
+     */
 	private static void genBagModels(List<? super VoxelModel> voxels, Puzzle p){
 		int claimCount = (int)Math.pow(p.sideLength(), Puzzle.DIMENSION_COUNT);
 		for(RuleType reg : RuleType.values()){
@@ -207,18 +192,16 @@ public class PuzzleVizApp extends Application {
 	
 	public static final double SMALL_HALFEDGE = 0.3;
 	
-	/**
-	 * <p>The distance ({@value}) from the center of a VoxelModel's true voxel to a 
-	 * face of the VoxelModel that faces another VoxelModel belonging to the same 
-	 * BagModel.</p>
-	 */
+    /**
+     * <p>The distance ({@value}) from the center of a VoxelModel's true voxel to a face of the
+     * VoxelModel that faces another VoxelModel belonging to the same BagModel.</p>
+     */
 	public static final double LONG_HALFEDGE = 0.5;
 	
-	/**
-	 * <p>The distance ({@value}) from the center of a VoxelModel's true voxel to a 
-	 * face of the VoxelModel that does not face another VoxelModel belonging to the 
-	 * same BagModel.</p>
-	 */
+    /**
+     * <p>The distance ({@value}) from the center of a VoxelModel's true voxel to a face of the
+     * VoxelModel that does not face another VoxelModel belonging to the same BagModel.</p>
+     */
 	public static final double MED_HALFEDGE = (SMALL_HALFEDGE + LONG_HALFEDGE)/2;
 	
 	private static final RuleType.DimensionSelector SELECT_X = (x,y,z) -> x;
@@ -244,69 +227,46 @@ public class PuzzleVizApp extends Application {
 	private static final PhongMaterial ROW_RED      = new PhongMaterial(Color.web("red",BAGMODEL_OPACITY));
 	private static final PhongMaterial BOX_YELLOW   = new PhongMaterial(Color.web("yellow",BAGMODEL_OPACITY));
 	
-	/**
-	 * <p>A mapping from each type of Rule to several pieces of information 
-	 * pertinent to that type of Rule in the context of animating the 
-	 * process of solving a Puzzle.</p>
-	 * 
-	 * <p>The pieces of information mapped from each region type are 
-	 * <ul>
-	 * <li>pertinent {@link Puzzle.RuleType Puzzle.RegionSpecies}</li>
-	 * 
-	 * <li>a function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
-	 * the distance from the center of a VoxelModel having those signs to 
-	 * the lower-X face of that VoxelModel</li>
-	 * 
-	 * <li>a function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
-	 * the distance from the center of a VoxelModel having those signs to 
-	 * the higher-X face of that VoxelModel</li>
-	 * 
-	 * <li>a function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
-	 * the distance from the center of a VoxelModel having those signs to 
-	 * the lower-Y face of that VoxelModel</li>
-	 * 
-	 * <li>a function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
-	 * the distance from the center of a VoxelModel having those signs to 
-	 * the higher-Y face of that VoxelModel</li>
-	 * 
-	 * <li>a function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
-	 * the distance from the center of a VoxelModel having those signs to 
-	 * the lower-Z face of that VoxelModel</li>
-	 * 
-	 * <li>a function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs 
-	 * the distance from the center of a VoxelModel having those signs to 
-	 * the higher-Z face of that VoxelModel</li>
-	 * 
-	 * <li>a function accepting a Puzzle and outputing the maximum value that a 
-	 * certain dimension withing the pertinent region type can have, to be used 
-	 * in computing the signs passed to the six functions described above: 
-	 * if a VoxelModel's (adjusted) position equals the value output by this 
-	 * function, it is on the far right edge of its BagModel, in whatever dimension 
-	 * was tested, in which case, that VoxelModel's face pointing in that direction 
-	 * is slightly closer to the center of the VoxelModel's true voxel</li>
-	 * 
-	 * <li>a function accepting a Puzzle and an int indicating a position along 
-	 * a dimension in the Puzzle and outputting an adjusted value of the input 
-	 * int that stays within the bounds implicitly incorporated in that function: 
-	 * For linear Rules/BagModels, the input int is output, but for Box types, the 
-	 * input int must be modded by the Puzzle's magnitude</li>
-	 * 
-	 * <li>the first physical dimension pertinent to this type of region</li>
-	 * 
-	 * <li>the second physical dimension pertinent to this type of region</li>
-	 * 
-	 * <li>the PhongMaterial color for the VoxelModels of BagModels of this type</li>
-	 * 
-	 * <li>a reference to the dimension of a VoxelModel belonging to a BagModel of 
-	 * this type along which the VoxelModel compresses when its Claim is discovered 
-	 * to be false</li>
-	 * 
-	 * <li>a reference to the component of the position of a VoxelModel belonging to 
-	 * a BagModel of this type that needs to shift as this VoxelModel compresses once 
-	 * its Claim is discovered to be false in order to keep the non-moving face stationary</li>
-	 * </ul></p>
-	 * @see Puzzle.RuleType
-	 * @author fiveham
+    /**
+     * <p>A mapping from each type of Rule to several pieces of information pertinent to that type
+     * of Rule in the context of animating the process of solving a Puzzle.</p> <p>The pieces of
+     * information mapped from each region type are <ul> <li>pertinent
+     * {@link Puzzle.RuleType Puzzle.RegionSpecies}</li> <li>a function that takes a
+     * {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs the distance from the
+     * center of a VoxelModel having those signs to the lower-X face of that VoxelModel</li> <li>a
+     * function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs
+     * the distance from the center of a VoxelModel having those signs to the higher-X face of that
+     * VoxelModel</li> <li>a function that takes a
+     * {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs the distance from the
+     * center of a VoxelModel having those signs to the lower-Y face of that VoxelModel</li> <li>a
+     * function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs
+     * the distance from the center of a VoxelModel having those signs to the higher-Y face of that
+     * VoxelModel</li> <li>a function that takes a
+     * {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs the distance from the
+     * center of a VoxelModel having those signs to the lower-Z face of that VoxelModel</li> <li>a
+     * function that takes a {@link RuleType#getSigns(Puzzle,int,int,int) pair of signs} and outputs
+     * the distance from the center of a VoxelModel having those signs to the higher-Z face of that
+     * VoxelModel</li> <li>a function accepting a Puzzle and outputing the maximum value that a
+     * certain dimension withing the pertinent region type can have, to be used in computing the
+     * signs passed to the six functions described above: if a VoxelModel's (adjusted) position
+     * equals the value output by this function, it is on the far right edge of its BagModel, in
+     * whatever dimension was tested, in which case, that VoxelModel's face pointing in that
+     * direction is slightly closer to the center of the VoxelModel's true voxel</li> <li>a function
+     * accepting a Puzzle and an int indicating a position along a dimension in the Puzzle and
+     * outputting an adjusted value of the input int that stays within the bounds implicitly
+     * incorporated in that function: For linear Rules/BagModels, the input int is output, but for
+     * Box types, the input int must be modded by the Puzzle's magnitude</li> <li>the first physical
+     * dimension pertinent to this type of region</li> <li>the second physical dimension pertinent
+     * to this type of region</li> <li>the PhongMaterial color for the VoxelModels of BagModels of
+     * this type</li> <li>a reference to the dimension of a VoxelModel belonging to a BagModel of
+     * this type along which the VoxelModel compresses when its Claim is discovered to be false</li>
+     * <li>a reference to the component of the position of a VoxelModel belonging to a BagModel of
+     * this type that needs to shift as this VoxelModel compresses once its Claim is discovered to
+     * be false in order to keep the non-moving face stationary</li> </ul></p>
+     * @see Puzzle.RuleType
+     * @author fiveham
+     * @author fiveham
+     * @author fiveham
 	 *
 	 */
 	public static enum RuleType{
@@ -381,35 +341,29 @@ public class PuzzleVizApp extends Application {
 			};
 		}
 		
-		/**
-		 * <p>Returns -1, 1, or 0 if {@code dimensionValue} is 0, 
-		 * {@code dimValueWhenPos}, or between 0 and {@code dimValueWhenPos} 
-		 * respectively.</p>
-		 * 
-		 * <p>0 is returned when the voxel whose location within its cell, 
-		 * box, row, or column or represented by {@code dimensionValue} 
-		 * is not an edge position. For cells, rows, and columns, edge voxels 
-		 * are on the edge of the typically 9x9x9 cube; for boxes, edge voxels 
-		 * are on the borders between boxes.</p>
-		 * 
-		 * @param p the Puzzle whose solution process is being animated
-		 * @param xyz an adjusted component of a VoxelModel's Claim's position 
-		 * in physical space
-		 * @return -1 if the {@code xyz} is 0, indicating the VoxelModel 
-		 * in question is on the lower-valued end of the pertinent physical 
-		 * dimension, 1 if {@code xyz} equals the value output by 
-		 * {@code farEdgeForType} when passed {@code p} as a parameter, or 
-		 * 0 otherwise
-		 */
+        /**
+         * <p>Returns -1, 1, or 0 if {@code dimensionValue} is 0, {@code dimValueWhenPos}, or
+         * between 0 and {@code dimValueWhenPos} respectively.</p> <p>0 is returned when the voxel
+         * whose location within its cell, box, row, or column or represented by
+         * {@code dimensionValue} is not an edge position. For cells, rows, and columns, edge voxels
+         * are on the edge of the typically 9x9x9 cube; for boxes, edge voxels are on the borders
+         * between boxes.</p>
+         * @param p the Puzzle whose solution process is being animated
+         * @param xyz an adjusted component of a VoxelModel's Claim's position in physical space
+         * @return -1 if the {@code xyz} is 0, indicating the VoxelModel in question is on the
+         * lower-valued end of the pertinent physical dimension, 1 if {@code xyz} equals the value
+         * output by {@code farEdgeForType} when passed {@code p} as a parameter, or 0 otherwise
+         */
 		private int edgeSign(Puzzle p, int xyz){
 			return (xyz==0) ? -1 : xyz==farEdgeForType.apply(p) ? 1 : 0;
 		}
 		
-		/**
-		 * <p>Selects and returns one of the three dimensions specified 
-		 * as parameters, or returns a dummy value to choose not to 
-		 * make a selection.</p>
-		 * @author fiveham
+        /**
+         * <p>Selects and returns one of the three dimensions specified as parameters, or returns a
+         * dummy value to choose not to make a selection.</p>
+         * @author fiveham
+         * @author fiveham
+         * @author fiveham
 		 *
 		 */
 		@FunctionalInterface
@@ -459,33 +413,30 @@ public class PuzzleVizApp extends Application {
 		return result;
 	}
 	
-	/**
-	 * <p>Wraps {@code parallelTimeline()}</p>
-	 * @param voxelModels
-	 * @param puzzle
-	 * @return
-	 */
+    /**
+     * <p>Wraps {@code parallelTimeline()}</p>
+     * @param voxelModels
+     * @param puzzle
+     * @return
+     */
 	public static Timeline genTimeline(Group voxelModels, Puzzle puzzle, ThreadEvent timeRoot){
 		return parallelTimeline(timeRoot, genModelHandler(voxelModels));
 		//return depthFirstLinearTimeline(timeRoot, genModelHandler(voxelModels));
 		//return breadthFirstLinearTimeline(timeRoot, genModelHandler(voxelModels));
 	}
 	
-	/**
-	 * <p>Returns a Timeline which, when it finishes playing, plays 
-	 * Timelines for each of the events that occured as a result of 
-	 * the event modeled by that Timeline. Each Timeline played in 
-	 * such a fashion exhibits the same child-producing behavior.</p>
-	 * 
-	 * <p>When one of these Timelines finishes playing, the child 
-	 * Timelines are produced at that time rather than in advance, by 
-	 * a call to this method.</p>
-	 * @param event
-	 * @param voxelModels
-	 * @param puzzle
-	 * @param modelHandler
-	 * @return
-	 */
+    /**
+     * <p>Returns a Timeline which, when it finishes playing, plays Timelines for each of the events
+     * that occured as a result of the event modeled by that Timeline. Each Timeline played in such
+     * a fashion exhibits the same child-producing behavior.</p> <p>When one of these Timelines
+     * finishes playing, the child Timelines are produced at that time rather than in advance, by a
+     * call to this method.</p>
+     * @param event
+     * @param voxelModels
+     * @param puzzle
+     * @param modelHandler
+     * @return
+     */
 	public static Timeline parallelTimeline(ThreadEvent event, Map<Claim,List<VoxelModel>> modelHandler){
 		Timeline result = solutionEventTimeline(event.techniqueEvent(), modelHandler);
 		
@@ -552,14 +503,13 @@ public class PuzzleVizApp extends Application {
 		return result;
 	}
 	
-	/**
-	 * <p>Produces a Timeline animating all the Claim-falsification and BagModel 
-	 * contraction events that occured as a direct or indirect part of the 
-	 * specified {@code event}.</p>
-	 * @param event
-	 * @param modelHandler
-	 * @return
-	 */
+    /**
+     * <p>Produces a Timeline animating all the Claim-falsification and BagModel contraction events
+     * that occured as a direct or indirect part of the specified {@code event}.</p>
+     * @param event
+     * @param modelHandler
+     * @return
+     */
 	public static Timeline solutionEventTimeline(FalsifiedTime event, Map<Claim,List<VoxelModel>> modelHandler){
 		Timeline result = new Timeline();
 		
@@ -580,14 +530,13 @@ public class PuzzleVizApp extends Application {
 		return time.children().stream().filter(ThreadEvent.class::isInstance).map(ThreadEvent.class::cast).collect(Collectors.toList());
 	}
 	
-	/**
-	 * <p>Adds to {@code timeline} the falsification animation (VoxleModel collapse and 
-	 * BagModel contraction) an {@link FalsifiedTime event} whose {@code falsified} Claims 
-	 * are specified.</p>
-	 * @param timeline
-	 * @param falsified
-	 * @param modelHandler
-	 */
+    /**
+     * <p>Adds to {@code timeline} the falsification animation (VoxleModel collapse and BagModel
+     * contraction) an {@link FalsifiedTime event} whose {@code falsified} Claims are specified.</p>
+     * @param timeline
+     * @param falsified
+     * @param modelHandler
+     */
 	public static void addFalsificationAnimation(final Timeline timeline, Set<Claim> falsified, Map<Claim,List<VoxelModel>> modelHandler){
 		double initLength = timeline.totalDurationProperty().get().toMillis();
 		for(Claim c : falsified){
