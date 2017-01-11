@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -142,8 +143,12 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 			whatIfs = whatIfs.stream()
 					.map((wi) -> wi.hasExplorableReducedFact(sizeForExploration)
 							? wi.exploreDepth() 
-							: Arrays.asList(wi))
-					.collect(Sets.massUnionCollector());
+							: new HashSet<>(Arrays.asList(wi))) 
+					.reduce((c1, c2) -> {
+					  c1.addAll(c2);
+					  return c1;
+					})
+					.get();
 		}
 		
 		private int sizeForExploration(){
@@ -253,11 +258,11 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 						.reduce(Integer.MAX_VALUE, Integer::min);
 			}
 			
-			public Collection<WhatIf> exploreDepth(){
+			public Set<WhatIf> exploreDepth(){
 				return claimsToExplore()
 						.map(this::explore)
 						.filter(Objects::nonNull)
-						.collect(Collectors.toList());
+						.collect(Collectors.toSet());
 			}
 			
 			private Stream<Claim> claimsToExplore(){
