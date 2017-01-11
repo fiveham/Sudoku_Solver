@@ -1,6 +1,5 @@
 package sudoku.time;
 
-import common.Sets;
 import common.time.AbstractTime;
 import common.time.Time;
 import java.util.HashSet;
@@ -55,19 +54,26 @@ public abstract class FalsifiedTime extends AbstractTime {
 				.filter(FalsifiedTime.class::isInstance)
 				.map(FalsifiedTime.class::cast)
 				.map(FalsifiedTime::falsified)
-				.collect(Sets.massUnionCollector());
+				.map(HashSet<Claim>::new)
+				.reduce((c1, c2) -> {
+				  c1.addAll(c2);
+				  return c1;
+				})
+				.get();
 	}
 	
-    /**
-     * <p>{@link Stream#skip(long) Skips} the first element of {@code stream} if and only if
-     * {@code skip} is true.</p<
-     * @param stream a Stream whose first element may be skipped
-     * @param skip specifies whether {@code stream}'s first element will be skipped
-     * @return a Stream consisting of the remaining elements of {@code stream} after discarding the
-     * first element of {@code stream}.
-     */
+  /**
+   * <p>{@link Stream#skip(long) Skips} the first element of {@code stream} if and only if
+   * {@code skip} is true.</p<
+   * @param stream a Stream whose first element may be skipped
+   * @param skip specifies whether {@code stream}'s first element will be skipped
+   * @return a Stream consisting of the remaining elements of {@code stream} after discarding the
+   * first element of {@code stream}.
+   */
 	private static Stream<Time> skip(Stream<Time> stream, boolean skip){
-		return skip ? stream.skip(1) : stream;
+		return skip 
+		    ? stream.skip(1) 
+		    : stream;
 	}
 	
     /**
