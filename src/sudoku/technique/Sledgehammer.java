@@ -183,7 +183,7 @@ public class Sledgehammer extends AbstractTechnique<Sledgehammer> {
 			return upperBound;
 		} else if(noLoopVisibleRuleCount > actualVisibleCount){
 			for(List<Fact> visibleCombo : new ComboGen<>(visible, MIN_RECIPIENT_COUNT_PER_SOURCE, r.size())){
-				if(Sets.massUnion(visibleCombo).containsAll(r)){
+				if(unionContainsAll(visibleCombo, r)){
 					return visibleCombo.size();
 				}
 			}
@@ -192,6 +192,14 @@ public class Sledgehammer extends AbstractTechnique<Sledgehammer> {
 			throw new IllegalStateException("noLoopVisibleRuleCount ("+noLoopVisibleRuleCount+") < actualVisibleCount ("+actualVisibleCount+")");
 		}
 	}
+	
+  private static boolean unionContainsAll(List<Fact> visibleCombo, Fact r){
+    return r.parallelStream()
+        .allMatch(
+            (c) -> visibleCombo.parallelStream()
+                .anyMatch(
+                    (f) -> f.contains(c)));
+  }
 	
     /**
      * <p>Iterates over all the possible pairs of source-combination and recipient-combination,
@@ -493,8 +501,16 @@ public class Sledgehammer extends AbstractTechnique<Sledgehammer> {
 	}
 	
 	private Set<Claim> areSledgehammerScenario(Collection<Fact> sources, Collection<Fact> recipients){
-		Set<Claim> sourceClaims = Sets.massUnion(sources);
-		ToolSet<Claim> recipClaims = new ToolSet<>(Sets.massUnion(recipients));
+		Set<Claim> sourceClaims = sources.stream()
+		    .map(HashSet<Claim>::new)
+		    .reduce(
+		        new HashSet<>(), 
+		        Sets::mergeCollections);
+		ToolSet<Claim> recipClaims = recipients.stream()
+		    .map(ToolSet<Claim>::new)
+		    .reduce(
+		        new ToolSet<>(), 
+		        Sets::mergeCollections);
 		
 		if(recipClaims.hasProperSubset(sourceClaims)){
 			recipClaims.removeAll(sourceClaims);

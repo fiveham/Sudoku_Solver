@@ -116,63 +116,16 @@ public class Sets {
 		}
 	}
 	
-    /**
-     * <p>Unions all the collections in {@code collections} into one set and returns that set.</p>
-     * @param <E> The type of the elements of the Set produced and of the collections that are
-     * unioned to produce that Set
-     * @param <C> The type of the elements of {@code collections} which contain elements of type
-     * {@code E}.
-     * @param collections a collection of collections whose elements are combined into one set and
-     * returned.
-     * @return the union of all the collections that are elements of {@code collections}
-     */
-	public static <E, C extends Collection<E>> Set<E> massUnion(Collection<C> collections){
-		return collections.stream().collect(massUnionCollector());
-	}
-	
-    /**
-     * <p>Collects a Stream of collections as the union of all the collections in the Stream.</p>
-     * <p>This is a convenience method equivalent to
-     * {@link #massUnionCollector(Supplier) massUnionCollector(HashSet::new)}.</p>
-     * @param <S> the type of the elements of the resulting mass-union set and of the collections in
-     * the Stream being collected
-     * @param <T> the type of the collections in the Stream being collected
-     * @return a Collector that collects a Stream of collections as the union of all the collections
-     * in the Stream
-     */
-	public static <S, T extends Collection<S>> Collector<T,?,Set<S>> massUnionCollector(){
-		return massUnionCollector(HashSet<S>::new);
-	}
-	
-    /**
-     * <p>Collects a Stream of collections as the union of all the collections in the Stream.</p>
-     * @param <S> the type of the elements of the resulting mass-union set and of the collections in
-     * the Stream being collected
-     * @param <T> the type of the collections in the Stream being collected
-     * @param <U> the type of the mass-union Set produced by the returned Collector and the type of
-     * the Sets used to accumulate the collections from the Stream being collected
-     * @param supplier a source of a specific type of Set to be used to gather the mass-union and
-     * which will be the type of the resulting set produced by the returned Collector.</p>
-     * @return a Collector which collects a Stream of collections as the union of all the
-     * collections in the Stream
-     */
-	public static <S, T extends Collection<S>, U extends Set<S>> Collector<T,?,U> massUnionCollector(Supplier<U> supplier){
-		return Collector.of(
-				supplier, 
-				Set::addAll, 
-				Sets::mergeCollections);
-	}
-	
-    /**
-     * <p>Adds {@code c1} to {@code c2} and returns {@code c2}. This is intended to be used as a
-     * {@link java.util.stream.Collector#combiner() combiner} for a
-     * {@link java.util.stream.Collector Collector}.</p>
-     * @param <E> the parameter type of {@code c1} and {@code c2}
-     * @param <C> the type of {@code c1} and {@code c2}
-     * @param c1 a collection whose contents are to be combined with those of {@code c2}
-     * @param c2 a collection whose contents are to be combined with those of {@code c1}
-     * @return {@code c2} after the contents of {@code c1} are added to it
-     */
+  /**
+   * <p>Adds {@code c1} to {@code c2} and returns {@code c2}. This is intended to be used as a
+   * {@link java.util.stream.Collector#combiner() combiner} for a
+   * {@link java.util.stream.Collector Collector}.</p>
+   * @param <E> the parameter type of {@code c1} and {@code c2}
+   * @param <C> the type of {@code c1} and {@code c2}
+   * @param c1 a collection whose contents are to be combined with those of {@code c2}
+   * @param c2 a collection whose contents are to be combined with those of {@code c1}
+   * @return {@code c2} after the contents of {@code c1} are added to it
+   */
 	public static <E, C extends Collection<E>> C mergeCollections(C c1, C c2){
 		c2.addAll(c1);
 		return c2;

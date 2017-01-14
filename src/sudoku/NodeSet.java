@@ -187,7 +187,11 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
      * with this vertex
      */
 	public Set<S> visible(){
-		Set<S> pool = Sets.massUnion(this);
+		Set<S> pool = stream()
+		    .map(HashSet<S>::new)
+		    .reduce(
+		        new HashSet<S>(), 
+		        Sets::mergeCollections);
 		pool.remove(this);
 		return pool;
 	}
@@ -238,10 +242,10 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		}
 	}
 	
-    /**
-     * <p>Returns the toString() content for this NodeSet as if it were only a HashSet.</p>
-     * @return {@link HashSet#toString() super.toString()}
-     */
+  /**
+   * <p>Returns the toString() content for this NodeSet as if it were only a HashSet.</p>
+   * @return {@link HashSet#toString() super.toString()}
+   */
 	public String contentString(){
 		return super.toString();
 	}
