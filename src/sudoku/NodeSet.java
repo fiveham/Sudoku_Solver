@@ -196,52 +196,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		return pool;
 	}
 	
-    /**
-     * <p>Returns a collection of the nodes visible to this node at a position {@code n} edges
-     * away.</p>
-     * @param n the number of edges to cross to go from this node to the nodes in the returned set
-     * @return a collection of the nodes visible to this node at a position {@code n} edges away
-     * @throws IllegalArgumentException if {@code n} is negative
-     */
-	public Collection<NodeSet<?,?>> visible(int n){
-		switch(n){
-		case 0: 
-			Collection<NodeSet<?,?>> result = new HashSet<>(1);
-			result.add(this);
-			return result;
-		case 1: 
-			return new HashSet<>(this);
-		case 2: 
-			return new HashSet<>(visible());
-		default:
-			if(n < 0){
-				throw new IllegalArgumentException("negative distance: "+n);
-			} else{
-				Set<NodeSet<?,?>> core = new HashSet<>();
-				Set<NodeSet<?,?>> edge = new HashSet<>();
-				Set<NodeSet<?,?>> cuttingEdge = new HashSet<>();
-				cuttingEdge.add(this);
-				
-				for(int i = 0; i < n; ++i){
-					
-					//contract
-					core.addAll(edge);
-					edge = cuttingEdge;
-					cuttingEdge = new HashSet<>();
-					
-					//grow
-					for(NodeSet<?,?> edgeNode : edge){
-						cuttingEdge.addAll(edgeNode);
-					}
-					cuttingEdge.removeAll(core);
-					cuttingEdge.removeAll(edge);
-				}
-				
-				return cuttingEdge;
-			}
-		}
-	}
-	
   /**
    * <p>Returns the toString() content for this NodeSet as if it were only a HashSet.</p>
    * @return {@link HashSet#toString() super.toString()}
