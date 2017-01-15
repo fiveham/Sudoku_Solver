@@ -400,14 +400,16 @@ public class Sledgehammer extends AbstractTechnique<Sledgehammer> {
 			
 			@Override
 			public int hashCode(){
-				return wrapped.superHashCode();
+				return wrapped.parallelStream()
+				    .mapToInt(Object::hashCode)
+				    .reduce(0, Integer::sum);
 			}
 			
 			@Override
 			public boolean equals(Object o){
 				if(o instanceof RuleWrap){
 					RuleWrap rw = (RuleWrap) o;
-					return wrapped.superEquals(rw.wrapped);
+					return wrapped.size() == rw.wrapped.size() && wrapped.containsAll(rw.wrapped);
 				}
 				return false;
 			}

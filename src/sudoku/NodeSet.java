@@ -167,14 +167,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		}
 	}
 	
-	public final int superHashCode(){
-		return super.hashCode();
-	}
-	
-	public final boolean superEquals(Object o){
-		return super.equals(o);
-	}
-	
 	@Override
 	public final Collection<NodeSet<?,?>> neighbors(){
 		return this.stream().map(NodeSet.class::cast).collect(Collectors.toList());
