@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -57,14 +56,12 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
    * {@code null} if no progress was made
    */
 	private TechniqueEvent implications(){
-		Optional<TechniqueEvent> result = target.factStream()
+		return target.factStream()
 				.sorted(Comparator.comparingInt(Fact::size))
 				.map(this::implications)
 				.filter(Objects::nonNull)
-				.findFirst();
-		return result.isPresent() 
-				? result.get() 
-				: null;
+				.findFirst()
+				.orElse(null);
 	}
 	
   /**
