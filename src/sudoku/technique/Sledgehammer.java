@@ -18,7 +18,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import sudoku.Claim;
 import sudoku.Debug;
@@ -522,32 +521,27 @@ public class Sledgehammer extends AbstractTechnique<Sledgehammer> {
 		}
 	}
 	
-    /**
-     * <p>Sets all the Claims in {@code claimsToSetFalse} false.</p>
-     * @param claimsToSetFalse the Claims to be set false
-     * @return a SolutionEvent describing the changes made to the puzzle, or null if no changes were
-     * made
-     */
+  /**
+   * <p>Sets all the Claims in {@code claimsToSetFalse} false.</p>
+   * @param claimsToSetFalse the Claims to be set false
+   * @return a SolutionEvent describing the changes made to the puzzle, or null if no changes were
+   * made
+   */
 	private static TechniqueEvent resolve(Set<Claim> claimsToSetFalse, Collection<? extends Fact> src, Collection<? extends Fact> recip){
 		return new SolveEventSledgehammer(claimsToSetFalse, src, recip).falsifyClaims();
 	}
 	
-	public static final Function<Sudoku,List<Integer>> DIMSOURCE = 
-			(s) -> IntStream.range(0,s.sideLength()).mapToObj(Integer.class::cast).collect(Collectors.toList());
-	
-    /**
-     * <p>A {@link java.util.HashMap HashMap} whose {@link HashMap#get(Object) get} method
-     * automatically checks for the argument's existence in the Map and adds a mapping from the
-     * specified Rule to a Set of that Rule's {@link Rule#visibleRules() visible Rules} to the
-     * Map.</p>
-     * @author fiveham
-     * @author fiveham
+  /**
+   * <p>A {@link java.util.HashMap HashMap} whose {@link HashMap#get(Object) get} method
+   * automatically checks for the argument's existence in the Map and adds a mapping from the
+   * specified Rule to a Set of that Rule's {@link Rule#visibleRules() visible Rules} to the
+   * Map.</p>
+   * @author fiveham
+   * @author fiveham
 	 *
 	 */
 	private class VisibleCache extends HashMap<Pair<Fact,Integer>,Set<Fact>>{
 		
-        /**
-         */
 		private static final long serialVersionUID = -8687502832663252756L;
 		
 		@Override
