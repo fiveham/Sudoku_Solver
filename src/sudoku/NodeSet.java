@@ -24,10 +24,10 @@ import java.util.stream.Collectors;
  * @param <S> The type of the Set elements of this Set. This should also be a proxy for this type
  * itself.
  */
-public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> extends ToolSet<T> implements Vertex<NodeSet<?,?>>{
+public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>> 
+    extends ToolSet<T> 
+    implements Vertex<NodeSet<?, ?>>{
 	
-    /**
-     */
 	private static final long serialVersionUID = 6938429068342291749L;
 	
 	protected final Puzzle puzzle;
@@ -44,10 +44,10 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		this.hashCode = hash;
 	}
 	
-    /**
-     * <p>Returns the target to which this NodeSet belongs.</p>
-     * @return the target to which this NodeSet belongs
-     */
+  /**
+   * <p>Returns the target to which this NodeSet belongs.</p>
+   * @return the target to which this NodeSet belongs
+   */
 	public Puzzle getPuzzle(){
 		return puzzle;
 	}
@@ -76,19 +76,19 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		return remove_internal(o);
 	}
 	
-    /**
-     * <p>Removes {@code o} and removes {@code this} from {@code o} without
-     * {@link #validateFinalState() validating the set afterwards}.</p> <p>Used internally so that
-     * bulk operations can validate the set's state only after they have completed instead of
-     * numerous times throughout the bulk operation and so that only one removal method needs to
-     * ensure mutual element-removal. If bulk operations were subject to final-state validation
-     * checks by calling remove(Object) repeatedly, then any bulk removal operation that removes all
-     * but one of the elements of this set could force a Rule to trigger a value-claim event in the
-     * middle of the operation even though such a Rule really ought to wait until the end to
-     * validate, which allows just one automatic resolution event to trigger.</p>
-     * @param o the object being removed
-     * @return true if this set has been changed by the operation, false otherwise
-     */
+  /**
+   * <p>Removes {@code o} and removes {@code this} from {@code o} without
+   * {@link #validateFinalState() validating the set afterwards}.</p> <p>Used internally so that
+   * bulk operations can validate the set's state only after they have completed instead of
+   * numerous times throughout the bulk operation and so that only one removal method needs to
+   * ensure mutual element-removal. If bulk operations were subject to final-state validation
+   * checks by calling remove(Object) repeatedly, then any bulk removal operation that removes all
+   * but one of the elements of this set could force a Rule to trigger a value-claim event in the
+   * middle of the operation even though such a Rule really ought to wait until the end to
+   * validate, which allows just one automatic resolution event to trigger.</p>
+   * @param o the object being removed
+   * @return true if this set has been changed by the operation, false otherwise
+   */
 	private boolean remove_internal(Object o){
 		boolean result = super.remove(o);
 		if(result){
@@ -100,7 +100,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 	@Override
 	public final boolean removeAll(Collection<?> c){
 		boolean result = false;
-		
 		for(Object o : c){
 			result |= remove_internal(o);
 		}
@@ -110,7 +109,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 	@Override
 	public final boolean retainAll(Collection<?> c){
 		boolean result = false;
-		
 		Iterator<T> iter = super.iterator();
 		for(T t; iter.hasNext();){
 			if(!c.contains(t = iter.next())){
@@ -135,18 +133,20 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 		return new SafeRemovingIterator();
 	}
 	
-    /**
-     * <p>An Iterator whose {@link Iterator#remove() remove()} method calls the
-     * {@link Collection#remove() remove(Object)} method of the removed element so as to remove this
-     * NodeSet from the element that was removed from this NodeSet, guaranteeing symmetry of
-     * connections in the graph.</p>
-     * @author fiveham
-     * @author fiveham
+  /**
+   * <p>An Iterator whose {@link Iterator#remove() remove()} method calls the
+   * {@link Collection#remove() remove(Object)} method of the removed element so as to remove this
+   * NodeSet from the element that was removed from this NodeSet, guaranteeing symmetry of
+   * connections in the graph.</p>
+   * @author fiveham
+   * @author fiveham
 	 *
 	 */
 	private class SafeRemovingIterator implements Iterator<T>{
+	  
 		private Iterator<T> wrapped = NodeSet.super.iterator();
-		private T lastResult=null;
+		private T lastResult = null;
+		
 		@Override
 		public void remove(){
 			if(lastResult != null){
@@ -157,10 +157,12 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 				throw new IllegalStateException("Previous next() element already removed.");
 			}
 		}
+		
 		@Override
 		public T next(){
 			return lastResult = wrapped.next();
 		}
+		
 		@Override
 		public boolean hasNext(){
 			return wrapped.hasNext();
@@ -168,7 +170,7 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
 	}
 	
 	@Override
-	public final Collection<NodeSet<?,?>> neighbors(){
+	public final Collection<NodeSet<?, ?>> neighbors(){
 		return this.stream().map(NodeSet.class::cast).collect(Collectors.toList());
 	}
 	
@@ -217,6 +219,6 @@ public abstract class NodeSet<T extends NodeSet<S,T>, S extends NodeSet<T,S>> ex
      * {@code sideLength}
      */
 	public static int linearizeCoords(int x, int y, int z, int sideLength){
-		return x*sideLength*sideLength + y*sideLength + z;
+		return x * sideLength * sideLength + y * sideLength + z;
 	}
 }
