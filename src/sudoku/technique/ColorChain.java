@@ -30,10 +30,10 @@ import sudoku.time.TechniqueEvent;
  */
 public class ColorChain extends AbstractTechnique<ColorChain> {
 	
-    /**
-     * <p>Constructs a ColorChain that works to solve the specified {@code target}.</p>
-     * @param target the Puzzle that this Technique works to solve.
-     */
+  /**
+   * <p>Constructs a ColorChain that works to solve the specified {@code target}.</p>
+   * @param target the Puzzle that this Technique works to solve.
+   */
 	public ColorChain(Sudoku puzzle) {
 		super(puzzle);
 	}
@@ -48,14 +48,14 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 		return implications();
 	}
 	
-    /**
-     * <p>Tries to find an overlap among the consequences of each of the Claims of a given Fact in
-     * the puzzle hypothetically being true, starting from the smallest Facts in the puzzle and
-     * increasing in Fact size from there.</p>
-     * @return a TechniqueEvent describing the Fact whose Claims' consequences led to progress in
-     * solving the puzzle and the Claims that were falsified in that step of progress, or
-     * {@code null} if no progress was made
-     */
+  /**
+   * <p>Tries to find an overlap among the consequences of each of the Claims of a given Fact in
+   * the puzzle hypothetically being true, starting from the smallest Facts in the puzzle and
+   * increasing in Fact size from there.</p>
+   * @return a TechniqueEvent describing the Fact whose Claims' consequences led to progress in
+   * solving the puzzle and the Claims that were falsified in that step of progress, or
+   * {@code null} if no progress was made
+   */
 	private TechniqueEvent implications(){
 		Optional<TechniqueEvent> result = target.factStream()
 				.sorted(Comparator.comparingInt(Fact::size))
@@ -67,13 +67,13 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 				: null;
 	}
 	
-    /**
-     * <p>Tries to find an overlap among the consequences of each of the Claims of {@code f} in the
-     * puzzle hypothetically being true.</p>
-     * @return a TechniqueEvent describing the Fact whose Claims' consequences led to progress in
-     * solving the puzzle and the Claims that were falsified in that step of progress, or
-     * {@code null} if no progress was made
-     */
+  /**
+   * <p>Tries to find an overlap among the consequences of each of the Claims of {@code f} in the
+   * puzzle hypothetically being true.</p>
+   * @return a TechniqueEvent describing the Fact whose Claims' consequences led to progress in
+   * solving the puzzle and the Claims that were falsified in that step of progress, or
+   * {@code null} if no progress was made
+   */
 	private TechniqueEvent implications(Fact f){
 		Set<Claim> con = new Logic(f).findConsequenceIntersection();
 		return con.isEmpty() 
@@ -101,10 +101,10 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 		private final Puzzle puzzle;
 		private Collection<WhatIf> whatIfs;
 		
-        /**
-         * @param claims
-         * @throws IllegalArgumentException if {@code claims} is empty.
-         */
+    /**
+     * @param claims
+     * @throws IllegalArgumentException if {@code claims} is empty.
+     */
 		public Logic(Set<? extends Claim> claims){
 			try{
 				this.puzzle = claims.iterator().next().getPuzzle();
@@ -121,7 +121,7 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 		
 		public Set<Claim> findConsequenceIntersection(){
 			Set<Claim> result;
-			while( (result = consequenceIntersection()).isEmpty() && isDepthAvailable()){
+			while((result = consequenceIntersection()).isEmpty() && isDepthAvailable()){
 				exploreDepth();
 			}
 			return result;

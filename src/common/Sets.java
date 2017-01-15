@@ -12,47 +12,47 @@ import java.util.stream.Stream;
 
 public class Sets {
 	
-    /**
-     * <p>The factor by which the expected size of a {@link java.util.HashSet HashSet} should be
-     * multiplied went sent to HashSet's constructor as the initial capacity, if using the default
-     * load factor.</p>
-     * @see http://docs.oracle.com/javase/tutorial/collections/implementations/set.html
-     */
+  /**
+   * <p>The factor by which the expected size of a {@link java.util.HashSet HashSet} should be
+   * multiplied went sent to HashSet's constructor as the initial capacity, if using the default
+   * load factor.</p>
+   * @see http://docs.oracle.com/javase/tutorial/collections/implementations/set.html
+   */
 	public static final int JAVA_UTIL_HASHSET_SIZE_FACTOR = 2;
 	
-    /**
-     * <p>A Collector that collects a Stream of collections into the intersection of all the
-     * collections in the stream, so that the result is a Set containing exactly the elements held
-     * in common by all the collections in the Stream.</p> <p>This is a convenience method
-     * equivalent to
-     * {@link #massIntersectionCollector(Supplier) massIntersectionCollector(HashSet::new)}.</p>
-     * @param <T> the parameter type of the Stream to be collected, a type that extends Collection
-     * with paramter type {@code E}
-     * @param <E> the parameter type of the Collections that are the elements of the Stream to be
-     * collected
-     * @return a Collector that collects a Stream of collections into the intersection of all the
-     * collections in the stream
-     */
+  /**
+   * <p>A Collector that collects a Stream of collections into the intersection of all the
+   * collections in the stream, so that the result is a Set containing exactly the elements held
+   * in common by all the collections in the Stream.</p> <p>This is a convenience method
+   * equivalent to
+   * {@link #massIntersectionCollector(Supplier) massIntersectionCollector(HashSet::new)}.</p>
+   * @param <T> the parameter type of the Stream to be collected, a type that extends Collection
+   * with paramter type {@code E}
+   * @param <E> the parameter type of the Collections that are the elements of the Stream to be
+   * collected
+   * @return a Collector that collects a Stream of collections into the intersection of all the
+   * collections in the stream
+   */
 	public static <T extends Collection<E>, E> Collector<T,?,Set<E>> massIntersectionCollector(){
 		return massIntersectionCollector(HashSet<E>::new);
 	}
 	
-    /**
-     * <p>A Collector that collects a Stream of collections into the intersection of all the
-     * collections in the stream, so that the result is a Set containing exactly the elements held
-     * in common by all the collections in the Stream. The type of the resulting Set is specified by
-     * {@code supplier}.</p> <p>This is a convenience method equivalent to
-     * {@link #massIntersectionCollector(Supplier) massIntersectionCollector(HashSet::new)}.</p>
-     * @param <T> the parameter type of the Stream to be collected, a type that extends Collection
-     * with paramter type {@code E}
-     * @param <E> the parameter type of the Collections that are the elements of the Stream to be
-     * collected
-     * @param <Z> the type of the Sets to be used to reduce the Stream to its collections' shared
-     * intersection and of the resulting Set ultimately produced
-     * @param supplier a source of Sets of a specific type
-     * @return a Collector that collects a Stream of collections into the intersection of all the
-     * collections in the stream
-     */
+  /**
+   * <p>A Collector that collects a Stream of collections into the intersection of all the
+   * collections in the stream, so that the result is a Set containing exactly the elements held
+   * in common by all the collections in the Stream. The type of the resulting Set is specified by
+   * {@code supplier}.</p> <p>This is a convenience method equivalent to
+   * {@link #massIntersectionCollector(Supplier) massIntersectionCollector(HashSet::new)}.</p>
+   * @param <T> the parameter type of the Stream to be collected, a type that extends Collection
+   * with paramter type {@code E}
+   * @param <E> the parameter type of the Collections that are the elements of the Stream to be
+   * collected
+   * @param <Z> the type of the Sets to be used to reduce the Stream to its collections' shared
+   * intersection and of the resulting Set ultimately produced
+   * @param supplier a source of Sets of a specific type
+   * @return a Collector that collects a Stream of collections into the intersection of all the
+   * collections in the stream
+   */
 	public static <T extends Collection<E>, E, Z extends Set<E>> Collector<T,?,Z> massIntersectionCollector(Supplier<Z> supplier){
 		return Collector.of(
 				() -> new Intersection<Z,E>(supplier), 
@@ -62,24 +62,24 @@ public class Sets {
 				Characteristics.UNORDERED);
 	}
 	
-    /**
-     * <p>Wraps a Set of a specified type to be used in collecting a Stream of collections as the
-     * intersection of all the collections in the Stream.</p>
-     * @author fiveham
-     * @author fiveham
-	 *
-     * @param <X> the type of the Set to be used to collect a Stream's 
-     * @param <X> the type of the Set to be used to collect a Stream's @param <X> the type of the
-     * @param <X> the type of the Set to be used to collect a Stream's Set to be used to collect a
-     * @param <X> the type of the Set to be used to collect a Stream's Stream's collections'
-     * @param <X> the type of the Set to be used to collect a Stream's intersection and the type of
-     * @param <X> the type of the Set to be used to collect a Stream's the Set in which the ultimate
-     * @param <X> the type of the Set to be used to collect a Stream's result is reported
-     * @param <X> the type of the Set to be used to collect a Stream's @param <E> the parameter type
-     * @param <X> the type of the Set to be used to collect a Stream's of the collections that are
-     * @param <X> the type of the Set to be used to collect a Stream's elements of the Stream being
-     * @param <X> the type of the Set to be used to collect a Stream's collected
-     */
+  /**
+   * <p>Wraps a Set of a specified type to be used in collecting a Stream of collections as the
+   * intersection of all the collections in the Stream.</p>
+   * @author fiveham
+   * @author fiveham
+ *
+   * @param <X> the type of the Set to be used to collect a Stream's 
+   * @param <X> the type of the Set to be used to collect a Stream's @param <X> the type of the
+   * @param <X> the type of the Set to be used to collect a Stream's Set to be used to collect a
+   * @param <X> the type of the Set to be used to collect a Stream's Stream's collections'
+   * @param <X> the type of the Set to be used to collect a Stream's intersection and the type of
+   * @param <X> the type of the Set to be used to collect a Stream's the Set in which the ultimate
+   * @param <X> the type of the Set to be used to collect a Stream's result is reported
+   * @param <X> the type of the Set to be used to collect a Stream's @param <E> the parameter type
+   * @param <X> the type of the Set to be used to collect a Stream's of the collections that are
+   * @param <X> the type of the Set to be used to collect a Stream's elements of the Stream being
+   * @param <X> the type of the Set to be used to collect a Stream's collected
+   */
 	private static class Intersection<X extends Set<E>, E>{
 		
         /**
@@ -131,14 +131,14 @@ public class Sets {
 		return c2;
 	}
 	
-    /**
-     * <p>Unions the collections in {@code collections} and counts how many times each element is
-     * present.</p>
-     * @param <T> the type of the elements being counted
-     * @param collections
-     * @return a Map from each element present in the collections in {@code collections} to the
-     * number of times each such element occurs among the collections in {@code collections}.
-     */
+  /**
+   * <p>Unions the collections in {@code collections} and counts how many times each element is
+   * present.</p>
+   * @param <T> the type of the elements being counted
+   * @param collections
+   * @return a Map from each element present in the collections in {@code collections} to the
+   * number of times each such element occurs among the collections in {@code collections}.
+   */
 	public static <T> Map<T,Integer> countingUnion(Collection<? extends Collection<T>> collections){
 		return countingUnion(collections.stream());
 	}
