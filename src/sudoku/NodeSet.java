@@ -64,11 +64,9 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	
 	@Override
 	public final boolean addAll(Collection<? extends T> c){
-		boolean result = false;
-		for(T t : c){
-			result |= add(t);
-		}
-		return result;
+		return c.stream()
+		    .map(this::add)
+		    .reduce(false, Boolean::logicalOr);
 	}
 	
 	@Override

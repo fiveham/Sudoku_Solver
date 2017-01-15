@@ -25,16 +25,16 @@ public abstract class FalsifiedTime extends AbstractTime {
 	
 	private final Set<Claim> falsified;
 	
-    /**
-     * <p>Constructs a FalsifiedTime having the specified {@code parent} and representing the
-     * falsification of Claims from {@code falsified} that are not included as
-     * {@link #falsified() claims} of any nth-parents of this Time that are instances of
-     * FalsifiedTime.</p>
-     * @param parent the event which caused this event and of which this event is a part
-     * @param falsified a superset of the Claims set false in this event
-     * @throws NoUnaccountedClaims if all the Claims in {@code falsified} are accounted for as false
-     * by this Time's {@code FalsifiedTime} nth-parents
-     */
+  /**
+   * <p>Constructs a FalsifiedTime having the specified {@code parent} and representing the
+   * falsification of Claims from {@code falsified} that are not included as
+   * {@link #falsified() claims} of any nth-parents of this Time that are instances of
+   * FalsifiedTime.</p>
+   * @param parent the event which caused this event and of which this event is a part
+   * @param falsified a superset of the Claims set false in this event
+   * @throws NoUnaccountedClaims if all the Claims in {@code falsified} are accounted for as false
+   * by this Time's {@code FalsifiedTime} nth-parents
+   */
 	public FalsifiedTime(Time parent, Set<Claim> falsified){
 		super(parent);
 		this.falsified = new HashSet<>(falsified);
@@ -44,11 +44,11 @@ public abstract class FalsifiedTime extends AbstractTime {
 		}
 	}
 	
-    /**
-     * <p>Returns a set of all the Claims falsified in all the FalsifiedTime nth parents of this
-     * Time.</p>
-     * @return a set of all the Claims falsified in all the FalsifiedTime nth parents of this Time
-     */
+  /**
+   * <p>Returns a set of all the Claims falsified in all the FalsifiedTime nth parents of this
+   * Time.</p>
+   * @return a set of all the Claims falsified in all the FalsifiedTime nth parents of this Time
+   */
 	private static Set<Claim> upFalsified(Time time, boolean skip){
 		return skip(time.upTrail().stream(), skip)
 				.filter(FalsifiedTime.class::isInstance)
@@ -76,27 +76,27 @@ public abstract class FalsifiedTime extends AbstractTime {
 		    : stream;
 	}
 	
-    /**
-     * <p>Returns the unmodifiable set of claims set false by the operation that this time node
-     * represents.</p>
-     * @return the set of claims set false by the operation that this time node represents
-     */
+  /**
+   * <p>Returns the unmodifiable set of claims set false by the operation that this time node
+   * represents.</p>
+   * @return the set of claims set false by the operation that this time node represents
+   */
 	public Set<Claim> falsified(){
 		return falsified;
 	}
 	
-    /**
-     * <p>The first time this method is called, {@link Claim#setFalse() falsifies} the Claims
-     * specified to be {@link #falsified() falsified} by the event represented by this object.
-     * Subsequent calls do nothing.</p> <p>This method allows duplicated Claim-falsification code to
-     * be centralized and unified. Performing this falsification inside the FalsifiedTime
-     * constructor is not safe, since the members of this object's subclasses, if any, have not been
-     * assigned, meaning those classes' methods, if called upon before a call to setFalse returns,
-     * may not work as intended. By separating the mass-falsification process into a method like
-     * this, subclass instances can finish constructing before their methods may be needed.</p>
-     * <p>This method is best used at the time when this object is constructed.</p>
-     * @return this FalsifiedTime
-     */
+  /**
+   * <p>The first time this method is called, {@link Claim#setFalse() falsifies} the Claims
+   * specified to be {@link #falsified() falsified} by the event represented by this object.
+   * Subsequent calls do nothing.</p> <p>This method allows duplicated Claim-falsification code to
+   * be centralized and unified. Performing this falsification inside the FalsifiedTime
+   * constructor is not safe, since the members of this object's subclasses, if any, have not been
+   * assigned, meaning those classes' methods, if called upon before a call to setFalse returns,
+   * may not work as intended. By separating the mass-falsification process into a method like
+   * this, subclass instances can finish constructing before their methods may be needed.</p>
+   * <p>This method is best used at the time when this object is constructed.</p>
+   * @return this FalsifiedTime
+   */
 	public FalsifiedTime falsifyClaims(){
 		falsifyClaims.run();
 		falsifyClaims = DO_NOTHING;
@@ -139,20 +139,20 @@ public abstract class FalsifiedTime extends AbstractTime {
 		return false;
 	}
 	
-    /**
-     * <p>A short description of this type of Time. The output of {@code toString()} begins with
-     * this. A trailing space should not be included. The description should take the form of a noun
-     * phrase.</p>
-     * @return a short description of this type of Time
-     */
+  /**
+   * <p>A short description of this type of Time. The output of {@code toString()} begins with
+   * this. A trailing space should not be included. The description should take the form of a noun
+   * phrase.</p>
+   * @return a short description of this type of Time
+   */
 	protected abstract String toStringStart();
 	
-    /**
-     * <p>Returns the number of Claims {@link #falsified() falsified} by all the FalsifiedTime
-     * nth-children of this Time.</p>
-     * @return the number of Claims {@link #falsified() falsified} by all the FalsifiedTime
-     * nth-children of this Time
-     */
+  /**
+   * <p>Returns the number of Claims {@link #falsified() falsified} by all the FalsifiedTime
+   * nth-children of this Time.</p>
+   * @return the number of Claims {@link #falsified() falsified} by all the FalsifiedTime
+   * nth-children of this Time
+   */
 	private int deepFalse(){
 		int count = 0;
 		
@@ -171,18 +171,16 @@ public abstract class FalsifiedTime extends AbstractTime {
 		return count;
 	}
 	
-    /**
-     * <p>An Exception thrown when a FalsifiedTime is constructed without any specified falsified
-     * Claims not already {@link #falsified falsified} by the constructed FalsifiedTime's
-     * FalsifiedTime nth-parents.</p>
-     * @author fiveham
-     * @author fiveham
+  /**
+   * <p>An Exception thrown when a FalsifiedTime is constructed without any specified falsified
+   * Claims not already {@link #falsified falsified} by the constructed FalsifiedTime's
+   * FalsifiedTime nth-parents.</p>
+   * @author fiveham
+   * @author fiveham
 	 *
 	 */
 	public static class NoUnaccountedClaims extends RuntimeException{
 		
-        /**
-         */
 		private static final long serialVersionUID = 7063069284727178843L;
 		
 		private NoUnaccountedClaims(String s){
