@@ -581,11 +581,10 @@ public class Sledgehammer extends AbstractTechnique<Sledgehammer> {
 		}
 	}
 	
-    /**
-     * <p>Represents an event (group) when a valid sledgehammer has been found and is being
-     * resolved.</p>
-     * @author fiveham
-     * @author fiveham
+  /**
+   * <p>Represents an event (group) when a valid sledgehammer has been found and is being
+   * resolved.</p>
+   * @author fiveham
 	 *
 	 */
 	public static class SolveEventSledgehammer extends TechniqueEvent{
