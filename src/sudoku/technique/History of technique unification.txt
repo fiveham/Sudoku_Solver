@@ -1,0 +1,27 @@
+History of technique unification.
+
+Many techniques.
+Naked pairs, triples, quadruples, n-tuples
+Hidden pairs, triples, quarduples, n-tuples
+x-wing, swordfish, jellyfish
+...
+
+various i-tuples unified as n-tuples
+naked and hidden n-tuples got recognized as two sides of the same coin
+
+Common pattern noticed among n-tuples and other techniques: a set of regions had the set of all their 
+elements be a proper subset of the set of all the elements of a set of the same number of other regions. 
+Only the types of the regions differed depending on the technique.  N-fish paired rows and columns 
+against each other. N-tuples paired cells in a box/column/row against the values of the puzzle. 
+
+N-tuples and N-fish unify into Sledgehammer: Naked N-tuples' sources are cells; Hidden N-tuples' 
+sources are rows/columns/boxes; N-fishes' sources are either rows or columns
+
+Color chain, forcing chain, xy-chain, xy-wing, etc. unify into xor-chain analysis.
+
+xor-chain analysis and sledgehammer unify because both are cases of en-masse brute force: Xor-chain 
+implications manifest as a result of the overlap of the consequences of the two solution-states of 
+a xor-chain. Sledgehammer scenarios always collapse the recipients' footprint down to the sources' 
+footprint because any and all solutions of the set of sources will falsify all claims in recipients 
+that are not also in sources.  (All possible solutions among such-and-such Facts force such-and-such 
+Claims outside those Facts to necessarily be false.)
