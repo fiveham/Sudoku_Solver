@@ -2,16 +2,9 @@ package sudoku;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import sudoku.technique.ColorChain;
-import sudoku.technique.Sledgehammer;
-import sudoku.technique.Technique;
-import sudoku.time.TechniqueEvent;
+import sudoku.technique.ConsequenceIntersection;
 import sudoku.time.ThreadEvent;
 import sudoku.parse.Parser;
 
@@ -22,16 +15,8 @@ import sudoku.parse.Parser;
  * resetting to the start of the list, more powerful and less expensive techniques are
  * prioritized.</p>
  * @author fiveham
- * @author fiveham
- *
  */
 public class Solver{
-	
-	public static final List<Function<Sudoku,Technique<?>>> DEFAULT_TECHNIQUE_SOURCE = Arrays.asList(
-			ColorChain::new, 
-			Sledgehammer::new);
-	
-	private final List<Technique<?>> techniques;
 	
 	private final Sudoku target;
 	
@@ -69,13 +54,11 @@ public class Solver{
    * @param target the Puzzle to be solved
    */
 	public Solver(Sudoku puzzle, String filename){
-		this(puzzle, new SudokuThreadGroup(filename), new Object(), DEFAULT_TECHNIQUE_SOURCE, filename);
+		this(puzzle, new SudokuThreadGroup(filename), new Object(), filename);
 	}
 	
-	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, List<? extends Function<? super Sudoku, ? extends Technique<?>>> processorSource, String source){
+	private Solver(Sudoku target, ThreadEvent eventParent, SudokuThreadGroup group, Object waiter, String source){
 		this.target = target;
-		
-		this.techniques = generateTechniques(target, processorSource);
 		
 		this.eventParent = eventParent;
 		this.group = group;
@@ -84,25 +67,19 @@ public class Solver{
 		this.source = source;
 	}
 	
-	private Solver(Sudoku target, SudokuThreadGroup group, Object waiter, List<? extends Function<? super Sudoku, ? extends Technique<?>>> processorSource, String source){
-		this(target, null, group, waiter, processorSource, source);
+	private Solver(Sudoku target, SudokuThreadGroup group, Object waiter, String source){
+		this(target, null, group, waiter, source);
 		group.setRootSolver(this);
-	}
-	
-	private static List<Technique<?>> generateTechniques(Sudoku sudoku, List<? extends Function<? super Sudoku, ? extends Technique<?>>> processorSource){
-		return processorSource.stream()
-				.map((func) -> func.apply(sudoku))
-				.collect(Collectors.toList());
 	}
 	
 	public ThreadEvent getEvent(){
 		return event;
 	}
 	
-    /**
-     * <p>Returns the Puzzle that this Solver works to solve.</p>
-     * @return the Puzzle that this Solver works to solve
-     */
+  /**
+   * <p>Returns the Puzzle that this Solver works to solve.</p>
+   * @return the Puzzle that this Solver works to solve
+   */
 	public Sudoku getTarget(){
 		return target;
 	}
@@ -143,12 +120,12 @@ public class Solver{
 						.collect(Collectors.toList())).isEmpty()){
 			String name = Thread.currentThread().getName();
 			this.event = processingResult;
-			for(int i=0; i<networks.size(); ++i){
+			for(int i = 0; i<networks.size(); ++i){
 				SudokuNetwork network = networks.get(i);
 				new Thread(
 						group, 
-						new Solver(network, event, group, lock, techniques, source)::run, 
-						name+Integer.toString(i,Parser.MAX_RADIX))
+						new Solver(network, event, group, lock, source)::run, 
+						name+Integer.toString(i, Parser.MAX_RADIX))
 						.start();
 			}
 		} else{
@@ -167,13 +144,10 @@ public class Solver{
    * @return true if the target is solved, false otherwise
    */
 	private ThreadEvent process(){
-		Optional<TechniqueEvent> result = techniques.stream()
-				.map(Technique::digest)
-				.filter(Objects::nonNull)
-				.findFirst();
-		return result.isPresent() 
-				? new ThreadEvent(eventParent, result.get(), Thread.currentThread().getName())
-				: null;
+		return new ThreadEvent(
+		    eventParent, 
+		    new ConsequenceIntersection(target).digest(), 
+		    Thread.currentThread().getName());
 	}
 	
   /**

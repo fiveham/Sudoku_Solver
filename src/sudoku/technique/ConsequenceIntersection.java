@@ -27,19 +27,19 @@ import sudoku.time.TechniqueEvent;
  * of the size and shape of such a network, has only two possible solution-states.</p>
  * @author fiveham
  */
-public class ColorChain extends AbstractTechnique<ColorChain> {
+public class ConsequenceIntersection extends AbstractTechnique<ConsequenceIntersection> {
 	
   /**
    * <p>Constructs a ColorChain that works to solve the specified {@code target}.</p>
    * @param target the Puzzle that this Technique works to solve.
    */
-	public ColorChain(Sudoku puzzle) {
+	public ConsequenceIntersection(Sudoku puzzle) {
 		super(puzzle);
 	}
 	
 	@Override
-	public ColorChain apply(Sudoku sudoku){
-		return new ColorChain(sudoku);
+	public ConsequenceIntersection apply(Sudoku sudoku){
+		return new ConsequenceIntersection(sudoku);
 	}
 	
 	@Override
@@ -213,19 +213,19 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 			}
 			
 			private Stream<Fact> reducedFacts(){
-				return filteredReducedFacts(ColorChain::factReduced, JUST_THE_FACTS);
+				return filteredReducedFacts(ConsequenceIntersection::factReduced, JUST_THE_FACTS);
 			}
 			
 			private Stream<Fact> partiallyReducedFactsRaw(){
-				return filteredReducedFacts(ColorChain::factPartiallyReduced, JUST_THE_FACTS);
+				return filteredReducedFacts(ConsequenceIntersection::factPartiallyReduced, JUST_THE_FACTS);
 			}
 			
 			private Stream<ReducedFact> partiallyReducedFacts(){
-				return filteredReducedFacts(ColorChain::factPartiallyReduced);
+				return filteredReducedFacts(ConsequenceIntersection::factPartiallyReduced);
 			}
 			
 			private Stream<ReducedFact> fullyReducedFacts(){
-				return filteredReducedFacts(ColorChain::factFullyReduced);
+				return filteredReducedFacts(ConsequenceIntersection::factFullyReduced);
 			}
 			
 			private Stream<ReducedFact> filteredReducedFacts(BiPredicate<Fact,BackedSet<Claim>> test){
