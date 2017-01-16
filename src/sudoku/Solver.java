@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
-import sudoku.technique.ConsequenceIntersection;
+
 import sudoku.time.ThreadEvent;
 import sudoku.parse.Parser;
 
@@ -146,7 +146,7 @@ public class Solver{
 	private ThreadEvent process(){
 		return new ThreadEvent(
 		    eventParent, 
-		    new ConsequenceIntersection(target).digest(), 
+		    new ConsequenceIntersection(target).implications(), 
 		    Thread.currentThread().getName());
 	}
 	

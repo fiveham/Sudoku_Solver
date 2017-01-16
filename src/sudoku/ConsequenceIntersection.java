@@ -1,4 +1,4 @@
-package sudoku.technique;
+package sudoku;
 
 import common.BackedSet;
 import common.Sets;
@@ -15,10 +15,7 @@ import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import sudoku.Claim;
-import sudoku.Fact;
-import sudoku.Puzzle;
-import sudoku.Sudoku;
+
 import sudoku.time.TechniqueEvent;
 
 /**
@@ -27,23 +24,23 @@ import sudoku.time.TechniqueEvent;
  * of the size and shape of such a network, has only two possible solution-states.</p>
  * @author fiveham
  */
-public class ConsequenceIntersection extends AbstractTechnique<ConsequenceIntersection> {
+public class ConsequenceIntersection{
 	
+  private final Sudoku target;
+  
   /**
    * <p>Constructs a ColorChain that works to solve the specified {@code target}.</p>
    * @param target the Puzzle that this Technique works to solve.
    */
-	public ConsequenceIntersection(Sudoku puzzle) {
-		super(puzzle);
+	public ConsequenceIntersection(Sudoku puzzle){
+	  this.target = puzzle;
 	}
 	
-	@Override
 	public ConsequenceIntersection apply(Sudoku sudoku){
 		return new ConsequenceIntersection(sudoku);
 	}
 	
-	@Override
-	public TechniqueEvent process(){
+	protected TechniqueEvent process(){
 		return implications();
 	}
 	
@@ -55,7 +52,7 @@ public class ConsequenceIntersection extends AbstractTechnique<ConsequenceInters
    * solving the puzzle and the Claims that were falsified in that step of progress, or
    * {@code null} if no progress was made
    */
-	private TechniqueEvent implications(){
+	public TechniqueEvent implications(){
 		return target.factStream()
 				.sorted(Comparator.comparingInt(Fact::size))
 				.map(this::implications)
