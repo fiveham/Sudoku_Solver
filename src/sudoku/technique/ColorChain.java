@@ -164,12 +164,11 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 		private Map<Fact,Integer> popularity;
 		
 		private Comparator<WhatIf.ReducedFact> byPopularity(){
-			return Comparator.comparingInt((WhatIf.ReducedFact rf) -> popularity(rf.getFact()))
-			    .reversed();
+			return Comparator.comparingInt(this::popularity).reversed();
 		}
 		
-		private int popularity(Fact f){
-			return popularity.getOrDefault(f, POPULARITY_IF_ABSENT);
+		private int popularity(WhatIf.ReducedFact f){
+			return popularity.getOrDefault(f.getFact(), POPULARITY_IF_ABSENT);
 		}
 		
 		public static final int POPULARITY_IF_ABSENT = 0;
