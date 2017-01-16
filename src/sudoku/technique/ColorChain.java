@@ -151,7 +151,7 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 		private int sizeForExploration(){
 			return whatIfs.stream()
 					.filter(WhatIf::isDepthAvailable)
-					.map(WhatIf::minReducedFactSize)
+					.mapToInt(WhatIf::minReducedFactSize)
 					.reduce(Integer.MAX_VALUE, Integer::min);
 		}
 		
@@ -164,13 +164,12 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 		private Map<Fact,Integer> popularity;
 		
 		private Comparator<WhatIf.ReducedFact> byPopularity(){
-			return Comparator.comparingInt((WhatIf.ReducedFact rf) -> popularity(rf.getFact())).reversed();
+			return Comparator.comparingInt((WhatIf.ReducedFact rf) -> popularity(rf.getFact()))
+			    .reversed();
 		}
 		
 		private int popularity(Fact f){
-			return popularity.containsKey(f) 
-					? popularity.get(f) 
-					: POPULARITY_IF_ABSENT;
+			return popularity.getOrDefault(f, POPULARITY_IF_ABSENT);
 		}
 		
 		public static final int POPULARITY_IF_ABSENT = 0;
@@ -186,15 +185,15 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 				consequences = puzzle.claimUniverse().back(c.visible());
 			}
 			
-            /**
-             * <p>Constructs a WhatIf having the specified {@code assumptions},
-             * {@code consequences}, and {@code puzzle}. Used to {@link #clone() clone} a
-             * WhatIf.</p>
-             * @param assumptions
-             * @param consequences
-             * @param puzzle
-             * @see #clone()
-             */
+      /**
+       * <p>Constructs a WhatIf having the specified {@code assumptions},
+       * {@code consequences}, and {@code puzzle}. Used to {@link #clone() clone} a
+       * WhatIf.</p>
+       * @param assumptions
+       * @param consequences
+       * @param puzzle
+       * @see #clone()
+       */
 			private WhatIf(Set<Claim> assumptions, Set<Claim> consequences, Puzzle puzzle){
 				this.assumptions = puzzle.claimUniverse().back(assumptions);
 				this.consequences = puzzle.claimUniverse().back(consequences);
@@ -283,18 +282,18 @@ public class ColorChain extends AbstractTechnique<ColorChain> {
 				return new WhatIf(assumptions, consequences, puzzle);
 			}
 			
-            /**
-             * <p>Adds {@code c} to this WhatIf as a Claim assumed to be true, and adds the Claims
-             * {@link sudoku.NodeSet#visible() visible} to {@code c} as Claims concluded to be
-             * false.</p>
-             * @param c a Claim to be assumed true
-             * @return true if this WhatIf's collection of assumed true Claims or this WhatIf's
-             * collection of concluded false Claims was changed by this operation, false otherwise
-             * @throws IllegalStateException if {@code c} is already known to be false based on the
-             * other Claims assumed true in this WhatIf or if the set of Claims
-             * {@link sudoku.NodeSet#visible() visible} to {@code c} intersects this WhatIf's set of
-             * Claims assumed true
-             */
+      /**
+       * <p>Adds {@code c} to this WhatIf as a Claim assumed to be true, and adds the Claims
+       * {@link sudoku.NodeSet#visible() visible} to {@code c} as Claims concluded to be
+       * false.</p>
+       * @param c a Claim to be assumed true
+       * @return true if this WhatIf's collection of assumed true Claims or this WhatIf's
+       * collection of concluded false Claims was changed by this operation, false otherwise
+       * @throws IllegalStateException if {@code c} is already known to be false based on the
+       * other Claims assumed true in this WhatIf or if the set of Claims
+       * {@link sudoku.NodeSet#visible() visible} to {@code c} intersects this WhatIf's set of
+       * Claims assumed true
+       */
 			public boolean assumeTrue(Claim c){
 				boolean result = assumptions.add(c) | consequences.addAll(c.visible());
 				if(!BackedSet.disjoint(assumptions, consequences)){
