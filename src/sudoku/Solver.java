@@ -91,7 +91,7 @@ public class Solver{
 	
 	private static List<Technique<?>> generateTechniques(Sudoku sudoku, List<? extends Function<? super Sudoku, ? extends Technique<?>>> processorSource){
 		return processorSource.stream()
-				.map((func)->func.apply(sudoku))
+				.map((func) -> func.apply(sudoku))
 				.collect(Collectors.toList());
 	}
 	
@@ -177,39 +177,6 @@ public class Solver{
 	}
 	
   /**
-   * <p>Main method. Creates a Solver instance and {@link #solve() uses} it, then
-   * {@link Puzzle#toString() prints} the target to the console.</p> <p>The first command-line
-   * argument is the name of the file from which to read the target to be solved.</p>
-   * @param args command line arguments
-   * @see #run()
-   * @throws FileNotFoundException if the file specified by the first command-line argument could
-   * not be found
-   */
-	public static void main(String[] args) throws FileNotFoundException, InterruptedException{
-		Solver s = solver(args);
-		s.solve();
-		System.out.println(s.target.toString());
-	}
-	
-	private static Solver solver(String[] args) throws FileNotFoundException{
-		if(args.length < 1){
-			errorExit();
-		}
-		File file = new File(args[SRC_FILE_ARG_INDEX]);
-		return args.length < 2
-			? new Solver(file)
-			: new Solver(file, args[CHARSET_ARG_INDEX]);
-	}
-	
-	private static void errorExit(){
-		System.err.println("Usage: java Solver puzzle-file character-encoding");
-		System.exit(0);
-	}
-	
-	public static final int SRC_FILE_ARG_INDEX = 0;
-	public static final int CHARSET_ARG_INDEX = 1;
-	
-  /**
    * <p>Extends ThreadGroup to override uncaughtException() so that all the Solver threads spawned
    * from a call to main() can be easily forced to share the same </p>
    * @author fiveham
@@ -228,7 +195,7 @@ public class Solver{
 		
 		Solver rootSolver;
 		
-		public void setRootSolver(Solver s){
+		private void setRootSolver(Solver s){
 			this.rootSolver = s;
 		}
 	}
