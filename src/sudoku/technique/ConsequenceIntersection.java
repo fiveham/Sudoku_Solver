@@ -171,7 +171,7 @@ public class ConsequenceIntersection extends AbstractTechnique<ConsequenceInters
 			return popularity.getOrDefault(f.getFact(), POPULARITY_IF_ABSENT);
 		}
 		
-		public static final int POPULARITY_IF_ABSENT = 0;
+		private static final int POPULARITY_IF_ABSENT = 0;
 		
 		private class WhatIf implements Cloneable{
 			
@@ -202,7 +202,7 @@ public class ConsequenceIntersection extends AbstractTechnique<ConsequenceInters
 				return consequences;
 			}
 			
-			public boolean isDepthAvailable(){
+			private boolean isDepthAvailable(){
 				return 0 != partiallyReducedFactsRaw().count();
 			}
 			
@@ -253,7 +253,7 @@ public class ConsequenceIntersection extends AbstractTechnique<ConsequenceInters
 						.reduce(Integer.MAX_VALUE, Integer::min);
 			}
 			
-			public Set<WhatIf> exploreDepth(){
+			private Set<WhatIf> exploreDepth(){
 				return claimsToExplore()
 						.map(this::explore)
 						.filter(Objects::nonNull)
@@ -293,7 +293,7 @@ public class ConsequenceIntersection extends AbstractTechnique<ConsequenceInters
        * {@link sudoku.NodeSet#visible() visible} to {@code c} intersects this WhatIf's set of
        * Claims assumed true
        */
-			public boolean assumeTrue(Claim c){
+			private boolean assumeTrue(Claim c){
 				boolean result = assumptions.add(c) | consequences.addAll(c.visible());
 				if(!BackedSet.disjoint(assumptions, consequences)){
 					throw new IllegalStateException("Overlap between Claims assumed true and Claims concluded false");
@@ -353,23 +353,23 @@ public class ConsequenceIntersection extends AbstractTechnique<ConsequenceInters
 					return f.hashCode() + reducedForm.hashCode();
 				}
 				
-				public Fact getFact(){
+				private Fact getFact(){
 					return f;
 				}
 				
-				public BackedSet<Claim> getReducedForm(){
+				private BackedSet<Claim> getReducedForm(){
 					return reducedForm;
 				}
 				
-				public int reducedSize(){
+				private int reducedSize(){
 					return reducedForm.size();
 				}
 				
-				public boolean isIllegalIfEmpty(){
+				private boolean isIllegalIfEmpty(){
 					return !isLegalIfEmpty();
 				}
 				
-				public boolean isLegalIfEmpty(){
+				private boolean isLegalIfEmpty(){
 					return intersectionHasSize(f, assumptions, Fact.TRUE_CLAIM_COUNT) 
 							&& intersectionHasSize(f, consequences, f.size() - Fact.TRUE_CLAIM_COUNT);
 				}
