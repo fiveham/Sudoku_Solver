@@ -38,13 +38,13 @@ public class Solver{
 		this(f, System.getProperty("file.encoding"));
 	}
 	
-    /**
-     * <p>Constructs a Solver that works to solve the puzzle specified by the text in {@code f}. The
-     * file is read using the specified charset encoding.</p>
-     * @param f the file containing a target to be solved
-     * @param charset the charset encoding to be used in reading {@code f}
-     * @throws FileNotFoundException if {@code f} could not be found
-     */
+  /**
+   * <p>Constructs a Solver that works to solve the puzzle specified by the text in {@code f}. The
+   * file is read using the specified charset encoding.</p>
+   * @param f the file containing a target to be solved
+   * @param charset the charset encoding to be used in reading {@code f}
+   * @throws FileNotFoundException if {@code f} could not be found
+   */
 	public Solver(File f, String charset) throws FileNotFoundException{
 		this(new Puzzle(f, charset), f.getName());
 	}
