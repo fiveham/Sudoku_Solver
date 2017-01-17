@@ -98,13 +98,13 @@ public class Solver{
    * @throws InterruptedException
    */
 	public void solve() throws InterruptedException{
-		Thread operation = new Thread(group, this::run, source+"_0");
+		Thread operation = new Thread(group, this::run, source + "_0");
 		operation.start(); //calls run()
 		
 		while(group.activeCount() > 0){
 			synchronized(lock){
 				//if(group.activeCount() > 0){
-					lock.wait(100); 
+					lock.wait(100); //MAGIC
 				//}
 			}
 		}
@@ -120,12 +120,12 @@ public class Solver{
 						.collect(Collectors.toList())).isEmpty()){
 			String name = Thread.currentThread().getName();
 			this.event = processingResult;
-			for(int i = 0; i<networks.size(); ++i){
+			for(int i = 0; i < networks.size(); ++i){
 				SudokuNetwork network = networks.get(i);
 				new Thread(
 						group, 
 						new Solver(network, event, group, lock, source)::run, 
-						name+Integer.toString(i, Parser.MAX_RADIX))
+						name + Integer.toString(i, Parser.MAX_RADIX))
 						.start();
 			}
 		} else{
