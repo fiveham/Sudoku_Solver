@@ -7,19 +7,11 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.stream.Stream;
 import sudoku.Claim;
-import sudoku.Rule;
 
 /**
- * <p>A Time in which some Claims are {@link Claim#setFalse(FalsifiedTime) set false}.</p> <p>This
- * class is a base class for {@code Time}s that denote events in the process of solving a sudoku
- * puzzle, including direct {@link TechniqueEvent}s in which a Technique changes the puzzle and
- * indirect {@link Rule.AutoResolve AutoResolve} events in which changes made to the puzzle by some
- * solution event allow a part of the puzzle to
- * {@link Rule#validateState(FalsifiedTime) automatically detect} a solving action that it can take
- * locally.</p>
+ * <p>An event in which some Claims are {@link Claim#setFalse(FalsifiedTime) set false}.</p>
+ * <p>This class is a base class for events in the process of solving a sudoku puzzle.</p>
  * @author fiveham
- * @author fiveham
- *
  */
 public abstract class FalsifiedTime extends AbstractTime {
 	
@@ -28,10 +20,9 @@ public abstract class FalsifiedTime extends AbstractTime {
   /**
    * <p>Constructs a FalsifiedTime having the specified {@code parent} and representing the
    * falsification of Claims from {@code falsified} that are not included as
-   * {@link #falsified() claims} of any nth-parents of this Time that are instances of
-   * FalsifiedTime.</p>
+   * {@link #falsified() claims} of any nth-parents of this Time that are also FalsifiedTimes.</p>
    * @param parent the event which caused this event and of which this event is a part
-   * @param falsified a superset of the Claims set false in this event
+   * @param falsified the Claims set false in this event
    * @throws NoUnaccountedClaims if all the Claims in {@code falsified} are accounted for as false
    * by this Time's {@code FalsifiedTime} nth-parents
    */
@@ -45,7 +36,7 @@ public abstract class FalsifiedTime extends AbstractTime {
 	}
 	
   /**
-   * <p>Returns a set of all the Claims falsified in all the FalsifiedTime nth parents of this
+   * <p>Returns a set of all the Claims falsified in all the FalsifiedTime nth-parents of this
    * Time.</p>
    * @return a set of all the Claims falsified in all the FalsifiedTime nth parents of this Time
    */
@@ -64,11 +55,11 @@ public abstract class FalsifiedTime extends AbstractTime {
 	
   /**
    * <p>{@link Stream#skip(long) Skips} the first element of {@code stream} if and only if
-   * {@code skip} is true.</p<
+   * {@code skip == true}.</p<
    * @param stream a Stream whose first element may be skipped
    * @param skip specifies whether {@code stream}'s first element will be skipped
-   * @return a Stream consisting of the remaining elements of {@code stream} after discarding the
-   * first element of {@code stream}.
+   * @return a Stream consisting of the remaining elements of {@code stream} after optionally 
+   * skipping the first element.
    */
 	private static Stream<Time> skip(Stream<Time> stream, boolean skip){
 		return skip 
@@ -77,9 +68,8 @@ public abstract class FalsifiedTime extends AbstractTime {
 	}
 	
   /**
-   * <p>Returns the unmodifiable set of claims set false by the operation that this time node
-   * represents.</p>
-   * @return the set of claims set false by the operation that this time node represents
+   * <p>Returns the unmodifiable set of claims set false by this event.</p>
+   * @return the unmodifiable set of claims set false by this event
    */
 	public Set<Claim> falsified(){
 		return falsified;
