@@ -29,17 +29,11 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	protected final ArrayList<T> nodes;
 	
     /**
-     * <p>The list of connected-component contraction event-listeners for this Graph.</p>
-     */
-	protected final List<Supplier<Consumer<Set<T>>>> contractEventListenerFactories;
-	
-    /**
      * <p>Constructs an AbstractGraph with an empty list of vertices and an empty list of
      * connected-component contraction event-listeners.</p>
      */
 	public AbstractGraph() {
 		nodes = new ArrayList<>();
-		contractEventListenerFactories = new ArrayList<>();
 	}
 	
     /**
@@ -49,7 +43,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
      */
 	public AbstractGraph(int size) {
 		nodes = new ArrayList<>(size);
-		contractEventListenerFactories = new ArrayList<>();
 	}
 	
     /**
@@ -58,7 +51,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
      */
 	public AbstractGraph(Collection<? extends T> coll){
 		nodes = new ArrayList<>(coll);
-		contractEventListenerFactories = new ArrayList<>();
 	}
 	
     /**
@@ -69,7 +61,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
      */
 	public AbstractGraph(Collection<? extends T> coll, List<Supplier<Consumer<Set<T>>>> factories) {
 		nodes = new ArrayList<>(coll);
-		contractEventListenerFactories = new ArrayList<>(factories);
 	}
 	
 	@Override
