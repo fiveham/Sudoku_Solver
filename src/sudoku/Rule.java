@@ -11,7 +11,8 @@ public class Rule extends Fact{
 	private static final long serialVersionUID = 2703809294481675542L;
 	
 	private final Puzzle.RuleType type;
-	private final IndexInstance dimA, dimB;
+	private final IndexInstance dimA;
+	private final IndexInstance dimB;
 	
     /**
      * <p>Constructs a Rule belonging to the specified Puzzle, having only the specified
@@ -20,8 +21,17 @@ public class Rule extends Fact{
      * @param types the single initial {@link #getTypes() types} of this Rule
      * @param c a collection whose elements this Rule will also have as elements
      */
-	public Rule(Puzzle puzzle, RuleType type, Collection<Claim> c, IndexInstance dimA, IndexInstance dimB) {
-		super(puzzle, c, linearizeCoords(type.ordinal(), dimA.intValue(), dimB.intValue(), puzzle.sideLength()));
+	public Rule(
+	    Puzzle puzzle, 
+	    RuleType type, 
+	    Collection<Claim> c, 
+	    IndexInstance dimA, 
+	    IndexInstance dimB) {
+	  
+		super(
+		    puzzle, 
+		    c, 
+		    linearizeCoords(type.ordinal(), dimA.intValue(), dimB.intValue(), puzzle.sideLength()));
 		this.type = type;
 		this.dimA = dimA;
 		this.dimB = dimB;
@@ -38,7 +48,7 @@ public class Rule extends Fact{
 	
 	@Override
 	public String toString(){
-		return "Rule: " + type.descriptionFor(dimA,dimB) /*+ " ["+size()+"]"*/;
+		return "Rule: " + type.descriptionFor(dimA, dimB);
 	}
 	
 	public RuleType getType(){
