@@ -1,5 +1,6 @@
 package sudoku.time;
 
+import common.Sets;
 import common.time.AbstractTime;
 import common.time.Time;
 import java.util.Collections;
@@ -111,16 +112,20 @@ public abstract class FalsifiedTime extends AbstractTime {
 	private int deepFalse(){
 		int count = 0;
 		
-		Set<Time> layer = new HashSet<>(children());
-		while(!layer.isEmpty()){
-			Set<Time> newLayer = new HashSet<>();
-			for(Time t : layer){
-				newLayer.addAll(t.children());
-				if(t instanceof FalsifiedTime){
-					count += ((FalsifiedTime) t).falsified().size();
-				}
-			}
-			layer = newLayer;
+		Set<Time> currentLayer = new HashSet<>(children());
+		while(!currentLayer.isEmpty()){
+			count += currentLayer.stream()
+			    .filter(FalsifiedTime.class::isInstance)
+			    .map(FalsifiedTime.class::cast)
+			    .map(FalsifiedTime::falsified)
+			    .mapToInt(Set::size)
+			    .reduce(0, Integer::sum);
+			currentLayer = currentLayer.stream()
+          .map(Time::children)
+          .map(HashSet<Time>::new)
+          .reduce(
+              new HashSet<Time>(), 
+              Sets::mergeCollections);
 		}
 		
 		return count;
