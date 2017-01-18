@@ -101,9 +101,9 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 					result.append(empty);
 				} else{
 					for(int z=0; z<sideLength(); ++z){
-						int val = cell.contains(cell.getPuzzle().claim(x, y, z)) ? z : 0;
-						String text = val == 0 ? " " : Integer.toString(val,Parser.MAX_RADIX);
-						result.append(text);
+						result.append(cell.contains(cell.getPuzzle().claim(x, y, z))
+                ? Integer.toString(z, Parser.MAX_RADIX)
+                : " ");
 					}
 				}
 			}
