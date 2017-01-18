@@ -71,23 +71,6 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	
 	@Override
 	public final boolean remove(Object linkedNode){
-		return remove_internal(linkedNode);
-	}
-	
-  /**
-   * <p>Removes {@code o} and removes {@code this} from {@code o} without
-   * {@link #validateFinalState() validating the set afterwards}.</p> <p>Used internally so that
-   * bulk operations can validate the set's state only after they have completed instead of
-   * numerous times throughout the bulk operation and so that only one removal method needs to
-   * ensure mutual element-removal. If bulk operations were subject to final-state validation
-   * checks by calling remove(Object) repeatedly, then any bulk removal operation that removes all
-   * but one of the elements of this set could force a Rule to trigger a value-claim event in the
-   * middle of the operation even though such a Rule really ought to wait until the end to
-   * validate, which allows just one automatic resolution event to trigger.</p>
-   * @param linkedNode the object being removed
-   * @return true if this set has been changed by the operation, false otherwise
-   */
-	private boolean remove_internal(Object linkedNode){
 		boolean change = super.remove(linkedNode);
 		if(change){
 			((NodeSet<?, ?>) linkedNode).remove(this);
@@ -99,7 +82,7 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	public final boolean removeAll(Collection<?> otherNodes){
 		boolean change = false;
 		for(Object otherNode : otherNodes){
-			change |= remove_internal(otherNode);
+			change |= remove(otherNode);
 		}
 		return change;
 	}
@@ -110,7 +93,7 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 		Iterator<T> linkedNodes = super.iterator();
 		for(T linkedNode; linkedNodes.hasNext();){
 			if(!otherNodes.contains(linkedNode = linkedNodes.next())){
-				remove_internal(linkedNode);
+				remove(linkedNode);
 				change = true;
 			}
 		}
