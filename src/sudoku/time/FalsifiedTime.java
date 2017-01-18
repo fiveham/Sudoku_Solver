@@ -1,14 +1,11 @@
 package sudoku.time;
 
-import common.Sets;
 import common.time.AbstractTime;
 import common.time.Time;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.stream.Stream;
 import sudoku.Claim;
 import sudoku.Rule;
 
@@ -42,43 +39,18 @@ public abstract class FalsifiedTime extends AbstractTime {
 		super(parent);
 		
 		Set<Claim> f = new HashSet<>(falsified);
-		f.removeAll(upFalsified(this, true));
+		upTrail().stream()
+    		.skip(1)
+    		.filter(FalsifiedTime.class::isInstance)
+    		.map(FalsifiedTime.class::cast)
+    		.map(FalsifiedTime::falsified)
+    		.forEach(f::removeAll);
 		if(f.isEmpty()){
 		  throw new NoUnaccountedClaims("No unaccounted-for Claims specified.");
 		}
 		
 		this.falsified = Collections.unmodifiableSet(f);
 		this.falsified.stream().forEach(Claim::setFalse);
-	}
-	
-  /**
-   * <p>Returns a set of all the Claims falsified in all the FalsifiedTime nth parents of this
-   * Time.</p>
-   * @return a set of all the Claims falsified in all the FalsifiedTime nth parents of this Time
-   */
-	private static Set<Claim> upFalsified(Time time, boolean skip){
-		return skip(time.upTrail().stream(), skip)
-				.filter(FalsifiedTime.class::isInstance)
-				.map(FalsifiedTime.class::cast)
-				.map(FalsifiedTime::falsified)
-				.map(HashSet<Claim>::new)
-				.reduce(
-				    new HashSet<Claim>(), 
-				    Sets::mergeCollections);
-	}
-	
-  /**
-   * <p>{@link Stream#skip(long) Skips} the first element of {@code stream} if and only if
-   * {@code skip} is true.</p<
-   * @param stream a Stream whose first element may be skipped
-   * @param skip specifies whether {@code stream}'s first element will be skipped
-   * @return a Stream consisting of the remaining elements of {@code stream} after discarding the
-   * first element of {@code stream}.
-   */
-	private static Stream<Time> skip(Stream<Time> stream, boolean skip){
-		return skip 
-		    ? stream.skip(1) 
-		    : stream;
 	}
 	
   /**
