@@ -171,33 +171,35 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		int index1 = nodes.indexOf(v1);
 		int index2 = nodes.indexOf(v2);
 		
-		if( index1<0 || index2<0 ){
+		if( index1 < 0 || index2 < 0 ){
 			throw new IllegalArgumentException("At least one of the specified nodes is not in this graph.");
 		}
 		
-		if(index1==index2){
+		if(index1 == index2){
 			return 0;
 		}
 		
 		final boolean[][] adjacencyMatrix = new boolean[nodes.size()][nodes.size()];
-		for(int i=0; i<nodes.size(); ++i){
-			for(int j=0; j<i; ++j){
-				adjacencyMatrix[i][j] = adjacencyMatrix[j][i] = nodes.get(i).neighbors().contains(nodes.get(j));
+		for(int i = 0; i < nodes.size(); ++i){
+			for(int j = 0; j < i; ++j){
+				adjacencyMatrix[i][j] = 
+				    adjacencyMatrix[j][i] = 
+				        nodes.get(i).neighbors().contains(nodes.get(j));
 			}
 			adjacencyMatrix[i][i] = false;
 		}
 		
 		//adjacency matrix raised to a power (initially the power of 1)
 		boolean[][] adjPower = new boolean[nodes.size()][nodes.size()];
-		for(int i=0; i<adjPower.length; ++i){
+		for(int i = 0; i < adjPower.length; ++i){
 			adjPower[i] = Arrays.copyOf(adjacencyMatrix[i], adjacencyMatrix.length);
 		}
 		
-		for(int n=1; n<nodes.size(); ++n){
+		for(int n = 1; n<nodes.size(); ++n){
 			if(adjPower[index1][index2]){
 				return n;
 			} else{
-				adjPower = times(adjPower,adjacencyMatrix);
+				adjPower = times(adjPower, adjacencyMatrix);
 			}
 		}
 		return NO_CONNECTION;
@@ -222,11 +224,11 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	private boolean[][] times(boolean[][] a, boolean[][] b){
 		boolean[][] result = new boolean[a.length][a.length];
 		
-		for(int i=0; i<nodes.size(); ++i){
-			for(int j=0; j<i; ++j){
-				result[i][j] = result[j][i] = dot(a[j],b[i]);
+		for(int i = 0; i < nodes.size(); ++i){
+			for(int j = 0; j < i; ++j){
+				result[i][j] = result[j][i] = dot(a[j], b[i]);
 			}
-			result[i][i] = dot(a[i],b[i]);
+			result[i][i] = dot(a[i], b[i]);
 		}
 		
 		return result;
@@ -242,8 +244,8 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
      * @return the boolean dot product of two boolean vectors
      */
 	private boolean dot(boolean[] a, boolean[] b){
-		for(int i=0; i<a.length; ++i){
-			if( a[i] && b[i] ){
+		for(int i = 0; i < a.length; ++i){
+			if(a[i] && b[i]){
 				return true;
 			}
 		}
@@ -293,7 +295,8 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	@Override
 	public List<T> path(T t1, T t2){
 		
-		Branch implicitPath = findPath(t2, t1); //reverse args so parent-path goes in order from t1 to t2
+	  //reverse args so parent-path goes in order from t1 to t2
+		Branch implicitPath = findPath(t2, t1);
 		
 		List<T> result = new ArrayList<>();
 		for(Branch pointer = implicitPath; pointer != null; pointer = pointer.parent){
@@ -304,8 +307,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	}
 	
 	private Branch findPath(T to, T from){
-		
-		if( !(nodes.contains(to) && nodes.contains(from)) ){
+		if(!(nodes.contains(to) && nodes.contains(from))){
 			throw new IllegalStateException(to + " and/or " + from + " not present in this graph");
 		}
 		
@@ -346,7 +348,8 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 			}
 		}
 		
-		throw new IllegalArgumentException("Cannot find path between specified nodes: "+from+" and "+to);
+		throw new IllegalArgumentException(
+		    "Cannot find path between specified nodes: " + from + " and " + to);
 	}
 	
 	private class Branch{
@@ -362,7 +365,10 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		public boolean equals(Object o){
 			if(o instanceof AbstractGraph.Branch){
 				AbstractGraph<?>.Branch b = (AbstractGraph<?>.Branch)o; 
-				return wrapped.equals(b.wrapped) && (parent == null ? b.parent == null : parent.equals(b.parent));
+				return wrapped.equals(b.wrapped) 
+				    && (parent == null 
+    				    ? b.parent == null 
+    				    : parent.equals(b.parent));
 			}
 			return false;
 		}
@@ -382,11 +388,20 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	@Override
 	public String toString(){
-		StringBuilder out = new StringBuilder();
-		out.append(getClass()).append(" size ").append(size()).append(System.lineSeparator()).append(nodes).append(System.lineSeparator());
+		StringBuilder out = new StringBuilder()
+		    .append(getClass())
+		    .append(" size ")
+		    .append(size())
+		    .append(System.lineSeparator())
+		    .append(nodes)
+		    .append(System.lineSeparator());
 		
 		for(T node : nodes){
-			out.append(node).append(": ").append(System.lineSeparator()).append(node.neighbors()).append(System.lineSeparator());
+			out
+			    .append(node).append(": ")
+			    .append(System.lineSeparator())
+			    .append(node.neighbors())
+			    .append(System.lineSeparator());
 		}
 		
 		return out.toString();
