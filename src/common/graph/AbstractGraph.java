@@ -111,7 +111,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	@Override
 	public Collection<Graph<T>> connectedComponents(List<Consumer<Set<T>>> contractEventListenerSrc, 
 			Function<List<T>,T> seedSrc){
-		
 		List<Graph<T>> result = new ArrayList<>();
 		
 		List<T> unassignedNodes = new ArrayList<>(nodes);
@@ -126,7 +125,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	@Override
 	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc, List<Consumer<Set<T>>> contractEventListeners){
-		
 		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(nodes.size(), unassignedNodes, contractEventListeners);
 		{
 			int initUnassignedCount = unassignedNodes.size();
@@ -167,7 +165,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	@Override
 	public int distance(T v1, T v2){
-		
 		int index1 = nodes.indexOf(v1);
 		int index2 = nodes.indexOf(v2);
 		
@@ -294,7 +291,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	@Override
 	public List<T> path(T t1, T t2){
-		
 	  //reverse args so parent-path goes in order from t1 to t2
 		Branch implicitPath = findPath(t2, t1);
 		
