@@ -1,7 +1,10 @@
 package sudoku.time;
 
+import common.Sets;
 import common.time.AbstractTime;
 import common.time.Time;
+
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
@@ -37,11 +40,14 @@ public abstract class FalsifiedTime extends AbstractTime {
    */
 	public FalsifiedTime(Time parent, Set<Claim> falsified){
 		super(parent);
-		this.falsified = new HashSet<>(falsified);
-		this.falsified.removeAll(upFalsified(this, true));
-		if(this.falsified.isEmpty()){
-			throw new NoUnaccountedClaims("No unaccounted-for Claims specified.");
+		
+		Set<Claim> f = new HashSet<>(falsified);
+		f.removeAll(upFalsified(this, true));
+		if(f.isEmpty()){
+		  throw new NoUnaccountedClaims("No unaccounted-for Claims specified.");
 		}
+		
+		this.falsified = Collections.unmodifiableSet(f);
 		this.falsified.stream().forEach(Claim::setFalse);
 	}
 	
@@ -56,11 +62,9 @@ public abstract class FalsifiedTime extends AbstractTime {
 				.map(FalsifiedTime.class::cast)
 				.map(FalsifiedTime::falsified)
 				.map(HashSet<Claim>::new)
-				.reduce((c1, c2) -> {
-				  c1.addAll(c2);
-				  return c1;
-				})
-				.get();
+				.reduce(
+				    new HashSet<Claim>(), 
+				    Sets::mergeCollections);
 	}
 	
   /**
