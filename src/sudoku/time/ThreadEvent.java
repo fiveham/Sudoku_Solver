@@ -7,26 +7,22 @@ import java.util.List;
 import java.util.Scanner;
 
 /**
- * <p>Denotes the termination of a Solver thread because a change was made to the puzzle being
- * solved. The SolutionEvent resulting from this change to the puzzle is
- * {@link #techniqueEvent() wrapped} by this Time.</p>
+ * <p>Denotes the termination of a Solver thread because the Solver made a change to its puzzle and 
+ * {@link #techniqueEvent() wraps} a TechniqueEvent describing that change to the puzzle.</p>
  * @author fiveham
- * @author fiveham
- *
  */
 public class ThreadEvent extends AbstractTime {
 	
 	private final TechniqueEvent techniqueEvent;
 	private final String threadName;
 	
-    /**
-     * <p>Constructs a ThreadEvent having the specified {@code parent} and wrapping the specified
-     * SolutionEvent.</p>
-     * @param parent the ThreadEvent marking the change-making termination of the thread that
-     * spawned the thread whose change-making termination is represented by this ThreadEvent
-     * @param techniqueEvent the SolutionEvent that terminated the thread to which this ThreadEvent
-     * pertains
-     */
+  /**
+   * <p>Constructs a ThreadEvent having the specified {@code parent} and wrapping the specified
+   * TechniqueEvent.</p>
+   * @param parent the end of the Solver thread that spawned the Solver thread whose end this 
+   * ThreadEvent represents
+   * @param techniqueEvent the event that ended the Solver thread to which this ThreadEvent pertains
+   */
 	public ThreadEvent(ThreadEvent parent, TechniqueEvent techniqueEvent, String threadName) {
 		super(parent);
 		this.techniqueEvent = techniqueEvent;
@@ -37,25 +33,24 @@ public class ThreadEvent extends AbstractTime {
 		}
 	}
 	
-    /**
-     * <p>Adds the specified Time to this ThreadEvent as a child. This method is synchronized
-     * because each child added shall be added from a different thread, in order to minimize the
-     * ThreadEvent time-tree. Only once a thread has changed the puzzle and is thus about to
-     * terminate does it add a child ThreadEvent to the ThreadEvent that ended that thread's parent
-     * thread.</p>
-     * @param time the new child Time
-     * @return true if this Time's collection of children was changed by this call to this method,
-     * false otherwise
-     */
+  /**
+   * <p>Adds the specified Time to this ThreadEvent as a child.</p>
+   * <p>This method is synchronized because each child added shall be added from a different Solver 
+   * thread. A Solver thread will only call this method once it has made a change to its puzzle. 
+   * After that call, that Solver thread dies.</p>
+   * @param time the new child Time
+   * @return true if this Time's collection of children was changed by this call to this method,
+   * false otherwise
+   */
 	@Override
 	public synchronized boolean addChild(Time time){
 		return super.addChild(time);
 	}
 	
-    /**
-     * <p>Returns the SolutionEvent wrapped by this ThreadEvent.</p>
-     * @return the SolutionEvent wrapped by this ThreadEvent
-     */
+  /**
+   * <p>Returns the TechniqueEvent wrapped by this ThreadEvent.</p>
+   * @return the TechniqueEvent wrapped by this ThreadEvent
+   */
 	public TechniqueEvent techniqueEvent(){
 		return techniqueEvent;
 	}
