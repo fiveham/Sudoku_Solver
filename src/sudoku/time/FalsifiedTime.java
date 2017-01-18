@@ -130,8 +130,8 @@ public abstract class FalsifiedTime extends AbstractTime {
 	}
 	
   /**
-   * <p>A short description of this type of Time. The output of {@code toString()} begins with
-   * this. A trailing space should not be included. The description should take the form of a noun
+   * <p>A short description of this type of Time. This is used as the start of the output of 
+   * {@link #toString()}. A trailing space should not be included. The description should be a noun 
    * phrase.</p>
    * @return a short description of this type of Time
    */
