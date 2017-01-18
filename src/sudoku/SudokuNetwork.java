@@ -84,7 +84,11 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?, ?>> implements Sudoku{
 				.map(Rule.class::cast)
 				.filter(Puzzle.RuleType.CELL::isTypeOf)
 				.collect(Collectors.toMap(
-						(cell) -> NodeSet.linearizeCoords(0, cell.dimA().intValue(), cell.dimB().intValue(), sideLength()), 
+						(cell) -> NodeSet.linearizeCoords(
+						    0, 
+						    cell.dimA().intValue(), 
+						    cell.dimB().intValue(), 
+						    sideLength()), 
 						Function.identity()));
 		
 		StringBuilder result = new StringBuilder();
