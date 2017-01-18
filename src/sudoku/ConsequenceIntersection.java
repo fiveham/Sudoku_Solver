@@ -72,7 +72,7 @@ public class ConsequenceIntersection{
 		Set<Claim> con = new Logic(f).findConsequenceIntersection();
 		return con.isEmpty() 
 				? null
-				: new SolveEventImplications(f, con).falsifyClaims();
+				: new SolveEventImplications(f, con);
 	}
 	
 	public static class SolveEventImplications extends TechniqueEvent{

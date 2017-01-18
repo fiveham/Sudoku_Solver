@@ -14,10 +14,4 @@ public abstract class TechniqueEvent extends FalsifiedTime{
 	public TechniqueEvent(Set<Claim> falsified){
 		super(null, falsified);
 	}
-	
-	@Override
-	public final TechniqueEvent falsifyClaims(){
-		super.falsifyClaims();
-		return this;
-	}
 }
