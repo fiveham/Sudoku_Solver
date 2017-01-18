@@ -57,7 +57,7 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	public final boolean add(T e){
 		boolean result = super.add(e);
 		if(result){
-			e.add((S)this);
+			e.add((S) this);
 		}
 		return result;
 	}
@@ -169,7 +169,9 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	
 	@Override
 	public final Collection<NodeSet<?, ?>> neighbors(){
-		return this.stream().map(NodeSet.class::cast).collect(Collectors.toList());
+		return this.stream()
+		    .map(NodeSet.class::cast)
+		    .collect(Collectors.toList());
 	}
 	
     /**
