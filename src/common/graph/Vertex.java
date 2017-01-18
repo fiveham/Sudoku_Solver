@@ -3,12 +3,14 @@ package common.graph;
 import java.util.Collection;
 
 /**
- * A vertex in a graph
+ * <p>A vertex in a {@code Graph graph}.</p>
  * @author fiveham
- * @author fiveham
- *
  */
 public interface Vertex<N> {
 	
+  /**
+   * <p>Returns the vertices to which this vertex is connected by edges.</p>
+   * @return the vertices to which this vertex is connected by edges
+   */
 	public Collection<N> neighbors();
 }
