@@ -2,10 +2,7 @@ package common.graph;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -42,21 +39,6 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	public Stream<T> nodeStream();
 	
     /**
-     * <p>Adds the specified event-listener-supplier to this Graph then returns this Graph.</p>
-     * @param newEL an event-listener-supplier to be added
-     * @return this Graph
-     */
-	public Graph<T> addGrowthListenerFactory(Supplier<Consumer<Set<T>>> newEL);
-	
-    /**
-     * <p>Returns a list of all the registered event-listeners for a contraction event during the
-     * construction of connected components.</p>
-     * @return a list of all the registered event-listeners for a contraction event during the
-     * construction of connected components
-     */
-	public List<Consumer<Set<T>>> growthListeners();
-	
-    /**
      * <p>Returns a collection of all the connected components of this Graph.</p>
      * @param eventListeners event-listeners that respond to the contractions that occur in
      * connected components while they build
@@ -64,7 +46,7 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
      * which to begin building a given connected component
      * @return a collection of all the connected components of this Graph
      */
-	public Collection<Graph<T>> connectedComponents(List<Consumer<Set<T>>> eventListeners, Function<List<T>,T> seedSrc);
+	public Collection<Graph<T>> connectedComponents(Function<List<T>,T> seedSrc);
 	
     /**
      * <p>Returns a collection of all the connected components of this Graph. This is a convenience
@@ -88,7 +70,7 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
      * @return the connected component of this Grapht hat contains the {@code T} output by
      * {@code seedSrc} when {@code unassignedNodes} is given to it as input
      */
-	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc, List<Consumer<Set<T>>> eventListeners);
+	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc);
 	
     /**
      * <p>Returns a list of the vertices to be traversed to travel through this Graph from t1 to t2.

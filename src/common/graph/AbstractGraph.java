@@ -3,7 +3,6 @@ package common.graph;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -73,19 +72,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		contractEventListenerFactories = new ArrayList<>(factories);
 	}
 	
-    /**
-     * <p>Add to {@code contractEventListenerFactories} the specified object that supplies a list of
-     * event-listeners for when a ConnectedComponent
-     * {@link ConnectedComponent#contract() contracts}.</p>
-     * @param newEL an event-listener
-     * @return this Graph
-     */
-	@Override
-	public Graph<T> addGrowthListenerFactory(Supplier<Consumer<Set<T>>> newEL){
-		contractEventListenerFactories.add(newEL);
-		return this;
-	}
-	
 	@Override
 	public int size(){
 		return nodes.size();
@@ -105,19 +91,18 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	@Override
 	public Collection<Graph<T>> connectedComponents(){
-		return connectedComponents(growthListeners(), STD_CONCOM_SEED_SRC);
+		return connectedComponents(STD_CONCOM_SEED_SRC);
 	}
 	
 	@Override
-	public Collection<Graph<T>> connectedComponents(List<Consumer<Set<T>>> contractEventListenerSrc, 
-			Function<List<T>,T> seedSrc){
+	public Collection<Graph<T>> connectedComponents(Function<List<T>,T> seedSrc){
 		
 		List<Graph<T>> result = new ArrayList<>();
 		
 		List<T> unassignedNodes = new ArrayList<>(nodes);
 		
 		while( !unassignedNodes.isEmpty() ){
-			Graph<T> component = component(unassignedNodes, seedSrc, contractEventListenerSrc);
+			Graph<T> component = component(unassignedNodes, seedSrc);
 			result.add(component);
 		}
 		
@@ -125,9 +110,9 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	}
 	
 	@Override
-	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc, List<Consumer<Set<T>>> contractEventListeners){
+	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc){
 		
-		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(nodes.size(), unassignedNodes, contractEventListeners);
+		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(nodes.size(), unassignedNodes);
 		{
 			int initUnassignedCount = unassignedNodes.size();
 			T seed = seedSrc.apply(unassignedNodes);
@@ -145,24 +130,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		}
 		
 		return new BasicGraph<T>(newComponent.contract());
-	}
-	
-    /**
-     * <p>Returns a list of objects that will respond to a ConnectedComponent
-     * {@link ConnectedComponent#contract() contracting} to move its vertices inward toward its
-     * core. The returned list contains all the contents of all the lists produced by the individual
-     * event-listener factories in {@code contractEventListenerFactories}.</p>
-     * @return
-     */
-	@Override
-	public List<Consumer<Set<T>>> growthListeners(){
-		List<Consumer<Set<T>>> result = new ArrayList<>();
-		
-		for(Supplier<Consumer<Set<T>>> contractEventListenerFactory : contractEventListenerFactories){
-			result.add(contractEventListenerFactory.get());
-		}
-		
-		return result;
 	}
 	
 	@Override
@@ -248,46 +215,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 			}
 		}
 		return false;
-	}
-	
-    /**
-     * <p>Determines the distance between vertices {@code t1} and {@code t2} if both are in this
-     * graph and in the same connected component by building a connected component around
-     * {@code t1}.</p>
-     * @param t1 a vertex in this Graph
-     * @param t2 a vertex in this Graph
-     * @return the distance between {@code t1} and {@code t2} in this Graph, or -1 if there is no
-     * path connecting them
-     */
-	public int distance2(final T t1, final T t2){
-		if( !nodes.contains(t1) || !nodes.contains(t2) ){
-			throw new IllegalArgumentException("At least one of the specified Nodes is not in this graph.");
-		}
-		
-		if(t1==t2){
-			return 0;
-		}
-		
-		class DistFinder implements Consumer<Set<T>>{
-			int dist = 0;
-			boolean foundTarget = false;
-			
-			@Override
-			public void accept(Set<T> cuttingEdge){
-				if(!foundTarget){
-					if(cuttingEdge.contains(t2)){
-						foundTarget = true;
-					} else{
-						++dist;
-					}
-				}
-			}
-		};
-		DistFinder distFinder = new DistFinder();
-		
-		component(new ArrayList<>(nodes), (list)->t1, Collections.singletonList(distFinder));
-		
-		return distFinder.dist;
 	}
 	
 	@Override
