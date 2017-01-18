@@ -14,7 +14,7 @@ import sudoku.parse.Parser;
  * @author fiveham
  *
  */
-public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
+public class SudokuNetwork extends BasicGraph<NodeSet<?, ?>> implements Sudoku{
 	
     /**
      * <p>The fundamental order of the target to which the nodes of this graph pertain, equal to the
@@ -33,7 +33,7 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 		this.sideLength = magnitude*magnitude;
 	}
 	
-	public SudokuNetwork(int magnitude, Graph<NodeSet<?,?>> connectedComponent){
+	public SudokuNetwork(int magnitude, Graph<NodeSet<?, ?>> connectedComponent){
 		this(magnitude);
 		this.nodes.addAll(connectedComponent.nodeStream().collect(Collectors.toList()));
 	}
@@ -50,7 +50,9 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	
 	@Override
 	public Stream<Fact> factStream(){
-		return nodes.stream().filter(Fact.class::isInstance).map(Fact.class::cast);
+		return nodes.stream()
+		    .filter(Fact.class::isInstance)
+		    .map(Fact.class::cast);
 	}
 	
     /**
@@ -60,7 +62,9 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
      */
 	@Override
 	public Stream<Claim> claimStream(){
-		return nodes.stream().filter(Claim.class::isInstance).map(Claim.class::cast);
+		return nodes.stream()
+		    .filter(Claim.class::isInstance)
+		    .map(Claim.class::cast);
 	}
 	
 	@Override
@@ -75,7 +79,7 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	
 	@Override
 	public String toString(){
-		Map<Integer,Fact> cells = factStream()
+		Map<Integer, Fact> cells = factStream()
 				.filter(Rule.class::isInstance)
 				.map(Rule.class::cast)
 				.filter(Puzzle.RuleType.CELL::isTypeOf)
@@ -87,7 +91,7 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 		String empty;
 		{
 			StringBuilder empt = new StringBuilder();
-			for(int i=0; i<sideLength(); ++i){
+			for(int i = 0; i < sideLength(); ++i){
 				empt.append(" ");
 			}
 			empty = empt.toString();
@@ -100,9 +104,13 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 				if(cell == null){
 					result.append(empty);
 				} else{
-					for(int z=0; z<sideLength(); ++z){
-						int val = cell.contains(cell.getPuzzle().claim(x, y, z)) ? z : 0;
-						String text = val == 0 ? " " : Integer.toString(val,Parser.MAX_RADIX);
+					for(int z = 0; z < sideLength(); ++z){
+						int val = cell.contains(cell.getPuzzle().claim(x, y, z)) 
+						    ? z 
+						    : 0;
+						String text = val == 0 
+						    ? " " 
+						    : Integer.toString(val,Parser.MAX_RADIX);
 						result.append(text);
 					}
 				}
