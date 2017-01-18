@@ -45,13 +45,17 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	}
 	
   /**
-   * <p>Returns the target to which this NodeSet belongs.</p>
-   * @return the target to which this NodeSet belongs
+   * <p>Returns the puzzle to which this NodeSet belongs.</p>
+   * @return the puzzle to which this NodeSet belongs
    */
 	public Puzzle getPuzzle(){
 		return puzzle;
 	}
 	
+	/**
+	 * <p>Links this node with {@code otherNode}.</p>
+	 * @return true if the added connection was not present before the call, false otherwise
+	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public final boolean add(T e){
@@ -62,6 +66,9 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 		return result;
 	}
 	
+	/**
+	 * <p>Links this node with all the nodes in {@code otherNodes}.</p>
+	 */
 	@Override
 	public final boolean addAll(Collection<? extends T> c){
 		return c.stream()
@@ -69,6 +76,10 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 		    .reduce(false, Boolean::logicalOr);
 	}
 	
+	/**
+	 * <p>Removes the edge linking this node with the {@code otherNode} if {@code otherNode} is a 
+	 * node.</p>
+	 */
 	@Override
 	public final boolean remove(Object o){
 		return remove_internal(o);
@@ -96,11 +107,11 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	}
 	
 	/**
-	 * <p>Removes from this set all elements of {@code c}. Since this class of set is meant to be used 
-	 * as a node in a graph, in practice, a call to this method will be an instruction for this node 
-	 * and all nodes contained in {@code c} to remove the edge linking this node with each of those 
-	 * nodes.</p>
-	 * @param c nodes to be disconnected from this node
+	 * <p>Removes from this set all elements of {@code otherNodes}. Since this class of set is meant 
+	 * to be used as a node in a graph, in practice a call to this method will be an instruction for 
+	 * this node and all nodes contained in {@code c} to remove the edge linking this node with each 
+	 * of those nodes.</p>
+	 * @param otherNodes nodes to be disconnected from this node
 	 */
 	@Override
 	public final boolean removeAll(Collection<?> c){
@@ -112,7 +123,12 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	}
 	
 	/**
-	 * <p>
+	 * <p>Removes from this set all of its elements that are not found in {@code otherNodes}. Since 
+	 * this class is meant to be used as a node in a graph, in practice a call to method will be an 
+	 * instruction for this node to delete all its edges that don't connect it with nodes in 
+	 * {@code otherNodes}.</p>
+	 * @param otherNodes the nodes connections to which will not be broken while all other connections 
+	 * are broken
 	 */
 	@Override
 	public final boolean retainAll(Collection<?> c){
@@ -127,6 +143,9 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 		return result;
 	}
 	
+	/**
+	 * <p>Removes all edges connecting to this node.</p>
+	 */
 	@Override
 	public final void clear(){
 		Iterator<T> iter = iterator();
@@ -142,13 +161,11 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	}
 	
   /**
-   * <p>An Iterator whose {@link Iterator#remove() remove()} method calls the
-   * {@link Collection#remove() remove(Object)} method of the removed element so as to remove this
-   * NodeSet from the element that was removed from this NodeSet, guaranteeing symmetry of
-   * connections in the graph.</p>
+   * <p>An Iterator whose {@link Iterator#remove() remove()} method calls 
+   * {@link Collection#remove() remove(this)} on the removed element to remove this NodeSet from 
+   * the removed element, ensuring that the edge linking this node with the removed element is 
+   * completely removed.</p>
    * @author fiveham
-   * @author fiveham
-	 *
 	 */
 	private class SafeRemovingIterator implements Iterator<T>{
 	  
@@ -182,12 +199,12 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 		return this.stream().map(NodeSet.class::cast).collect(Collectors.toList());
 	}
 	
-    /**
-     * <p>Returns a set of the vertices visible to this vertex. A vertex is visible to this one if
-     * that vertex and this one share at least one {@link #neighbors() neighbor} in common.</p>
-     * @return a set of the vertices that share at least one {@link #neighbors() neighbor} in common
-     * with this vertex
-     */
+  /**
+   * <p>Returns a set of vertices that share at least one {@link #neighbors() neighbor} in common 
+   * with this vertex and which are not directly connected to this vertex.</p>
+   * @return a set of vertices that share at least one {@link #neighbors() neighbor} in common with 
+   * this vertex and which are not directly connected to this vertex
+   */
 	public Set<S> visible(){
 		Set<S> pool = stream()
 		    .map(HashSet<S>::new)
@@ -211,21 +228,19 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 		return hashCode;
 	}
 	
-    /**
-     * <p>Returns an int that encodes the specified {@code x}, {@code y}, and {@code z} coordinates
-     * as if they belong to a Claim whose {@link #getPuzzle puzzle} has the specified
-     * {@code sideLength}.</p> <p>The coordinates are concatenated as digits in a number system with
-     * a base equal to {@code sideLength + 1}, with the first digit being the x-coordinate, followed
-     * by the y-coordinate, followed by the z-coordinate.</p>
-     * @param x the coordinate given the highest digital significance
-     * @param y the coordinate given the second-highest digital significance
-     * @param z the coordinate given the lowest digital significance.
-     * @param sideLength the side-length of the {@link #getPuzzle puzzle} to which the NodeSet whose
-     * coordinates are being linearized belongs.
-     * @return an int that encodes the specified {@code x}, {@code y}, and {@code z} coordinates as
-     * if they belong to a Claim whose {@link #getPuzzle puzzle} has the specified
-     * {@code sideLength}
-     */
+  /**
+   * <p>The specified {@code x}, {@code y}, and {@code z} coordinates are combined into a single 
+   * unique integer equal to the concatenation of {@code x}, {@code y}, and {@code z} in 
+   * base-{@code sideLength} if {@code x}, {@code y}, and {@code z} are all less than 
+   * {@code sideLength}.</p>
+   * @param x the coordinate given the highest digital significance
+   * @param y the coordinate given the second-highest digital significance
+   * @param z the coordinate given the lowest digital significance.
+   * @param sideLength the side-length of the {@link #getPuzzle puzzle} to which the NodeSet whose
+   * coordinates are being linearized belongs.
+   * @return an int that encodes {@code x}, {@code y}, and {@code z} as base-{@code sideLength} 
+   * digits
+   */
 	public static int linearizeCoords(int x, int y, int z, int sideLength){
 		return x * sideLength * sideLength + y * sideLength + z;
 	}
