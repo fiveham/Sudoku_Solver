@@ -87,11 +87,13 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		return nodes.stream();
 	}
 	
-	private final Function<List<T>,T> STD_CONCOM_SEED_SRC = (unassigned)->unassigned.remove(unassigned.size()-1);
+	private T stdSeed(List<T> list){
+	  return list.remove(list.size() - 1);
+	}
 	
 	@Override
 	public Collection<Graph<T>> connectedComponents(){
-		return connectedComponents(STD_CONCOM_SEED_SRC);
+		return connectedComponents(this::stdSeed);
 	}
 	
 	@Override
