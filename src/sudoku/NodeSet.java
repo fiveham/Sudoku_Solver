@@ -95,6 +95,13 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 		return result;
 	}
 	
+	/**
+	 * <p>Removes from this set all elements of {@code c}. Since this class of set is meant to be used 
+	 * as a node in a graph, in practice, a call to this method will be an instruction for this node 
+	 * and all nodes contained in {@code c} to remove the edge linking this node with each of those 
+	 * nodes.</p>
+	 * @param c nodes to be disconnected from this node
+	 */
 	@Override
 	public final boolean removeAll(Collection<?> c){
 		boolean result = false;
@@ -104,6 +111,9 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 		return result;
 	}
 	
+	/**
+	 * <p>
+	 */
 	@Override
 	public final boolean retainAll(Collection<?> c){
 		boolean result = false;
