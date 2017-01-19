@@ -24,12 +24,11 @@ public class TxtParser implements Parser{
 	private int mag;
 	private final List<Integer> values;
 	
-    /**
-     * <p>Constructs a Parser that extracts and parses text via the specified Scanner. {@code s} is
-     * closed by this constructor.</p>
-     * @param s the Scanner that sources the text that this Parser analyses. {@code s} is closed by
-     * this constructor
-     */
+  /**
+   * <p>Constructs a TxtParser parses the text of {@code f} as a sudoku puzzle.</p>
+   * @param f the file from which a puzzle is read
+   * @param charset the name of the charset used to read the text of {@code f}
+   */
 	public TxtParser(File f, String charset) throws FileNotFoundException{
 		Pair<List<Integer>,Integer> pair = null;
 		for(TextFormatStyle style : TextFormatStyle.values()){
@@ -102,24 +101,21 @@ public class TxtParser implements Parser{
 		}
 	}
 	
-    /**
-     * <p>Returns the magnitude of the puzzle specified by the text behind the Scanner sent to the
-     * {@link #Parser(Scanner) constructor}, which is determined as a side-effect of the
-     * {@link #parse(Scanner) parsing} process.</p>
-     * @return the magnitude of the puzzle specified by the text behind the Scanner sent to the
-     * {@link #Parser(Scanner) constructor}
-     */
+  /**
+   * <p>Returns the magnitude of the puzzle described in the file used to construct this parser.</p>
+   * @return the magnitude of the puzzle described in the file used to construct this parser
+   */
 	@Override
 	public int mag(){
 		return mag;
 	}
 	
-    /**
-     * <p>Returns a list of the integers present in the text of the puzzle as read from the text
-     * source specified by the Scanner sent to the {@link #Parser(Scanner) constructor}.</p>
-     * @return the initial values in the cells of this Parser's puzzle, where 0 represents an empty
-     * cell
-     */
+  /**
+   * <p>Returns a list of the integers present in the file used to construct this parser. The 
+   * entries in the list are in the order in which they were encountered.</p>
+   * @return the initial values in the cells of this Parser's puzzle, where 0 represents an empty
+   * cell, listed in encounter order
+   */
 	@Override
 	public List<Integer> values(){
 		return values;
