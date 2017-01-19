@@ -95,9 +95,9 @@ public class TxtParser implements Parser{
 			return new Pair<>(val,mag);
 		});
 		
-		private final Function<Scanner,Pair<List<Integer>,Integer>> parse;
+		private final Function<Scanner, Pair<List<Integer>, Integer>> parse;
 		
-		private TextFormatStyle(Function<Scanner,Pair<List<Integer>,Integer>> parse){
+		private TextFormatStyle(Function<Scanner, Pair<List<Integer>, Integer>> parse){
 			this.parse = parse;
 		}
 	}
