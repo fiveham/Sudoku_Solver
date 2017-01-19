@@ -173,8 +173,11 @@ public abstract class FalsifiedTime extends AbstractTime {
 	
   /**
    * <p>An Exception thrown when a FalsifiedTime is constructed without any specified falsified
-   * Claims not already {@link #falsified falsified} by that FalsifiedTime's nth-parents.</p>
+   * Claims not already {@link #falsified falsified} by the constructed FalsifiedTime's
+   * FalsifiedTime nth-parents.</p>
    * @author fiveham
+   * @author fiveham
+	 *
 	 */
 	public static class NoUnaccountedClaims extends RuntimeException{
 		
