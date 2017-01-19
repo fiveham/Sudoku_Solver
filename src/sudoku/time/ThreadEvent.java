@@ -71,11 +71,9 @@ public class ThreadEvent extends AbstractTime {
 	
 	@Override
 	public String toString(){
-		StringBuilder result = new StringBuilder("ThreadEvent terminating ")
-		    .append(threadName)
-		    .append(System.lineSeparator());
+		StringBuilder result = new StringBuilder("ThreadEvent terminating ").append(threadName).append(System.lineSeparator());
 		
-		List<Object> subordinateTimes = new ArrayList<>(children().size() + 1);
+		List<Object> subordinateTimes = new ArrayList<>(children().size()+1);
 		subordinateTimes.add(techniqueEvent);
 		subordinateTimes.addAll(children());
 		for(Object o : subordinateTimes){
