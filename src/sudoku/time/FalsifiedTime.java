@@ -7,6 +7,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import sudoku.Claim;
 import sudoku.Rule;
 
@@ -112,7 +114,9 @@ public abstract class FalsifiedTime extends AbstractTime {
 	private int deepFalse(){
 		int count = 0;
 		
-		Set<Time> currentLayer = new HashSet<>(children());
+		Set<Time> currentLayer = children().stream()
+		    .filter(FalsifiedTime.class::isInstance)
+		    .collect(Collectors.toSet());
 		while(!currentLayer.isEmpty()){
 			count += currentLayer.stream()
 			    .filter(FalsifiedTime.class::isInstance)
