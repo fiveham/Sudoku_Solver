@@ -161,14 +161,11 @@ public abstract class FalsifiedTime extends AbstractTime {
 		return count;
 	}
 	
-  /**
+	/**
    * <p>An Exception thrown when a FalsifiedTime is constructed without any specified falsified
-   * Claims not already {@link #falsified falsified} by the constructed FalsifiedTime's
-   * FalsifiedTime nth-parents.</p>
+   * Claims not already {@link #falsified falsified} by that FalsifiedTime's nth-parents.</p>
    * @author fiveham
-   * @author fiveham
-	 *
-	 */
+   */
 	public static class NoUnaccountedClaims extends RuntimeException{
 		
 		private static final long serialVersionUID = 7063069284727178843L;
