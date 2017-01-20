@@ -73,7 +73,7 @@ public class SadmanParser implements Parser{
 		try{
 			initCells = new StringBuilder(s.nextLine());
 			this.mag = (int)Math.sqrt(initCells.length());
-			for(int i=1; i<mag*mag; ++i){
+			for(int i = 1; i < mag * mag; ++i){
 				initCells.append(s.nextLine());
 			}
 		} catch(NoSuchElementException e){
@@ -82,11 +82,11 @@ public class SadmanParser implements Parser{
 			s.close();
 		}
 		this.values = new ArrayList<>(initCells.length());
-		for(int i=0; i<initCells.length(); ++i){
+		for(int i = 0; i < initCells.length(); ++i){
 			char c = initCells.charAt(i);
 			values.add(c == EMPTY_CELL 
 					? Puzzle.BLANK_CELL 
-					: Integer.parseInt(Character.toString(c), mag*mag+1));
+					: Integer.parseInt(Character.toString(c), mag * mag + 1));
 		}
 	}
 	
