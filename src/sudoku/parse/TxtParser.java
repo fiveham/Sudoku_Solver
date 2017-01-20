@@ -5,8 +5,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.function.Function;
+import java.util.stream.Stream;
+
 import sudoku.Sudoku;
 
 /**
@@ -31,12 +34,15 @@ public class TxtParser implements Parser{
      * this constructor
      */
 	public TxtParser(File f, String charset) throws FileNotFoundException{
-		Pair<List<Integer>,Integer> pair = null;
-		for(TextFormatStyle style : TextFormatStyle.values()){
-			pair = style.parse.apply(new Scanner(f, charset));
-			if(pair != null){
-				break;
-			}
+		Pair<List<Integer>, Integer> pair;
+		try{
+		  pair = Stream.of(TextFormatStyle.values())
+	        .map((style) -> style.parse(f, charset))
+	        .filter(Objects::nonNull)
+	        .findFirst()
+	        .orElse(null);
+		} catch(ScannerNotConstructed e){
+		    throw e.getCause();
 		}
 		
 		if(pair == null){
@@ -44,6 +50,34 @@ public class TxtParser implements Parser{
 		}
 		this.values = pair.getA();
 		this.mag = pair.getB();
+	}
+	
+	/**
+	 * <p>A non-checked exception used to smuggle a FileNotFoundException out of a lambda 
+	 * expression so the FileNotFoundException can be rethrown outside the lambda expression.</p>
+	 * @author fiveham
+	 */
+	private static class ScannerNotConstructed extends RuntimeException{
+	  
+    private static final long serialVersionUID = 4859671724169737013L;
+    
+    /**
+     * <p>Constructs a ScannerNotConstructed whose cause is {@code src}.</p>
+     * @param src the FileNotFoundException thrown inside a lambda expression that needs to be 
+     * smuggled out into the context around that lambda expression
+     */
+    private ScannerNotConstructed(FileNotFoundException src){
+	    super(src);
+	  }
+	  
+    /**
+     * @return the FileNotFoundException that this unchecked exception is smuggling out of a lambda 
+     * expression
+     */
+	  @Override
+	  public FileNotFoundException getCause(){
+	    return (FileNotFoundException) super.getCause();
+	  }
 	}
 	
 	public static final int TYPICAL_BLOCK_SIDE_LENGTH = 9;
@@ -74,6 +108,28 @@ public class TxtParser implements Parser{
 		
 		private TextFormatStyle(Function<Scanner,Pair<List<Integer>,Integer>> parse){
 			this.parse = parse;
+		}
+		
+		/**
+		 * <p>Reads {@code f} using the specified {@code charset} name and tries to parse the file 
+		 * according to the rules of this TextFormatStyle.</p>
+		 * @param f the file to be read
+		 * @param charset the name of the charset used in the file
+		 * @return the initial values of the cells of the puzzle described in {@code f} and the square 
+		 * root of the side-length of the puzzle
+		 * @throws ScannerNotConstructed if a FileNotFoundException was thrown trying to open {@code f}
+		 */
+		private Pair<List<Integer>, Integer> parse(File f, String charset){
+		  Scanner s = null;
+		  try{
+		    s = new Scanner(f, charset);
+		  } catch(FileNotFoundException e){
+		    throw new ScannerNotConstructed(e);
+		  }
+		  
+		  Pair<List<Integer>, Integer> result = parse.apply(s);
+		  s.close();
+		  return result;
 		}
 		
 		/**
