@@ -61,7 +61,11 @@ public class Claim extends NodeSet<Fact,Claim>{
 	public IndexValue getY(){
 		return y;
 	}
-	
+  
+  /**
+   * <p>Returns the z-coordinate of this Claim in claim-space.</p>
+   * @return the z-coordinate of this Claim in claim-space
+   */
 	public IndexValue getZ(){
 		return z;
 	}
