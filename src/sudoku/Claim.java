@@ -9,7 +9,7 @@ import sudoku.Puzzle.IndexValue;
  * @author fiveham
  *
  */
-public class Claim extends NodeSet<Fact,Claim>{
+public class Claim extends NodeSet<Fact, Claim>{
 	
     /**
      */
@@ -89,12 +89,14 @@ public class Claim extends NodeSet<Fact,Claim>{
 	
 	@Override
 	public String toString(){
-		return "Claim: cell "+x.humanReadableIntValue()+","+y.humanReadableIntValue()+" is "+symbol.humanReadableIntValue();
+		return "Claim: cell " + x.humanReadableIntValue() 
+		    + "," + y.humanReadableIntValue() 
+		    + " is " + symbol.humanReadableIntValue();
 	}
 	
 	@Override
 	public boolean equals(Object o){
-		if( o instanceof Claim){
+		if(o instanceof Claim){
 			Claim c = (Claim) o;
 			return c.x == x && c.y == y && c.symbol == symbol && c.puzzle == puzzle;
 		}
@@ -110,7 +112,7 @@ public class Claim extends NodeSet<Fact,Claim>{
 		int dx = this.x.intValue() - otherClaim.x.intValue();
 		int dy = this.y.intValue() - otherClaim.y.intValue();
 		int dz = this.symbol.intValue() - otherClaim.symbol.intValue();
-		return Math.sqrt( dx*dx + dy*dy + dz*dz );
+		return Math.sqrt(dx * dx + dy * dy + dz * dz);
 	}
 	
     /**
