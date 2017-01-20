@@ -36,14 +36,6 @@ public class ConsequenceIntersection{
 	  this.target = puzzle;
 	}
 	
-	public ConsequenceIntersection apply(Sudoku sudoku){
-		return new ConsequenceIntersection(sudoku);
-	}
-	
-	protected TechniqueEvent process(){
-		return implications();
-	}
-	
   /**
    * <p>Tries to find an overlap among the consequences of each of the Claims of a given Fact in
    * the puzzle hypothetically being true, starting from the smallest Facts in the puzzle and
@@ -99,7 +91,7 @@ public class ConsequenceIntersection{
      * @param claims
      * @throws IllegalArgumentException if {@code claims} is empty.
      */
-		public Logic(Set<? extends Claim> claims){
+		private Logic(Set<? extends Claim> claims){
 			try{
 				this.puzzle = claims.iterator().next().getPuzzle();
 			} catch(NoSuchElementException e){
@@ -113,7 +105,7 @@ public class ConsequenceIntersection{
 			popularity = new HashMap<>();
 		}
 		
-		public Set<Claim> findConsequenceIntersection(){
+		private Set<Claim> findConsequenceIntersection(){
 			Set<Claim> result;
 			while((result = consequenceIntersection()).isEmpty() && isDepthAvailable()){
 				exploreDepth();
@@ -121,17 +113,17 @@ public class ConsequenceIntersection{
 			return result;
 		}
 		
-		public Set<Claim> consequenceIntersection(){
+		private Set<Claim> consequenceIntersection(){
 			return whatIfs.stream()
 					.map(WhatIf::consequences)
 					.collect(Sets.massIntersectionCollector());
 		}
 		
-		public boolean isDepthAvailable(){
+		private boolean isDepthAvailable(){
 			return whatIfs.stream().anyMatch(WhatIf::isDepthAvailable);
 		}
 		
-		public void exploreDepth(){
+		private void exploreDepth(){
 			populatePopularity();
 			int sizeForExploration = sizeForExploration();
 			whatIfs = whatIfs.stream()
@@ -175,7 +167,7 @@ public class ConsequenceIntersection{
 			private final BackedSet<Claim> assumptions;
 			private final BackedSet<Claim> consequences;
 			
-			public WhatIf(Claim c){
+			private WhatIf(Claim c){
 				assumptions = puzzle.claimUniverse().back();
 				assumptions.add(c);
 				consequences = puzzle.claimUniverse().back(c.visible());
