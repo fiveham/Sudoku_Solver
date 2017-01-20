@@ -7,17 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.function.Function;
-import sudoku.Sudoku;
 
 /**
- * <p>A utility class that tries to parse a target out of a text source via a specified Scanner that
- * scans from that text.</p> <p>Used by Puzzle to read a sudoku puzzle of unknown dimensions from a
- * .txt file and to extract both the content of the puzzle and the
- * {@link Sudoku#magnitude() magnitude} of the puzzle without requiring separate passes for each of
- * those results.</p>
+ * <p>A utility class that parses a sudoku puzzle out of a text file.</p>
  * @author fiveham
- * @author fiveham
- *
  */
 public class TxtParser implements Parser{
 	
@@ -47,6 +40,12 @@ public class TxtParser implements Parser{
 	
 	public static final int TYPICAL_BLOCK_SIDE_LENGTH = 9;
 	
+	/**
+	 * <p>A TextFormatStyle represents a known style of formatting the text of a file to represent a 
+	 * sudoku Puzzle.</p>
+	 * <p>Currently, only block and token formats are represented in this enum.</p>
+	 * @author fiveham
+	 */
 	private static enum TextFormatStyle{
 		BLOCK((s) -> {
 			List<String> lines = new ArrayList<>(TYPICAL_BLOCK_SIDE_LENGTH);
