@@ -3,40 +3,32 @@ package sudoku;
 import java.util.Collections;
 
 /**
- * <p>An expression of a specific value of a cell in a sudoku puzzle.</p> <p>A {@link Rule Rule} is
- * equivalent to a specific true statement about its puzzle, indicating that exactly one of its
- * neighbors is true and all its other neighbor Claims are false. The collection of all the Rules of
- * a Puzzle is an expression of a system of equations. To solve this system, specific values are
- * needed, akin to the boundary or initial values needed to solve a system of differential
- * equations. An Init is such a value, and the collection of initial values provided for a sudoku
- * puzzle is typically sufficient to specify a unique solution of the entire system of equations
- * that the puzzle's Rules constitute.</p>
+ * <p>An Init marks the value of a cell whose value is given as part of the initial state of the 
+ * puzzle. It does this by being a Fact whose sole element is the one Claim pertaining to that cell 
+ * and that value, forcing that Claim to be true and all Claims visible to it to be false.</p>
  * @author fiveham
- * @author fiveham
- *
  */
 public class Init extends Fact {
 	
-    /**
-     */
 	private static final long serialVersionUID = 7730369667106322962L;
 	
 	private final Claim claim;
 	
-    /**
-     * <p>Constructs an Init belonging to the specified {@code puzzle}, with an initial capacity of
-     * {@value #CAPACITY}.</p>
-     * @param puzzle
-     */
+  /**
+   * <p>Constructs an Init belonging to the specified {@code puzzle}, marking the specified claim 
+   * as true.</p>
+   * @param puzzle the puzzle one of whose initial values this Init indicates
+   * @param c the Claim made true by the puzzle having the initial value indicated by this Init
+   */
 	public Init(Puzzle puzzle, Claim c) {
 		super(puzzle, Collections.singletonList(c), c.hashCode());
 		this.claim = c;
 	}
 	
-    /**
-     * <p>Returns the Claim that this Init marks true.</p>
-     * @return the Claim that this Init marks true
-     */
+  /**
+   * <p>Returns the Claim that this Init marks true.</p>
+   * @return the Claim that this Init marks true
+   */
 	public Claim claim(){
 		return claim;
 	}
