@@ -353,34 +353,9 @@ public class Puzzle extends SudokuNetwork{
 					return Integer.compare(snake1, snake2);
 				})
 				.forEach((cell) -> result.append(cell.isSolved() 
-						? cell.iterator().next().getSymbol() 
+						? cell.iterator().next().getZ() 
 						: BLANK_CELL)
 						.append(betweenNumbers.get()));
-		
-		return result.toString();
-	}
-	
-    /**
-     * <p>Returns a string representation of the Puzzle, with each cell represented by a string of
-     * {@code sideLength} characters, each {@link Claim#possText() character} pertaining to a
-     * possible value of the cell.</p>
-     * @return a string representation of the Puzzle, with each cell represented by a string of
-     * {@code sideLength} characters, each {@link Claim#possText() character} pertaining to a
-     * possible value of the cell
-     */
-	public String possibilitiesToString(){
-		StringBuilder result = new StringBuilder();
-		
-		for(IndexValue y : indices){
-			for(IndexValue x : indices){
-				for(IndexValue z : indices){
-					Claim claim = claims.get(x, y, z);
-					result.append(claim.isSetFalse() ? " " : claim.getSymbol());
-				}
-				result.append("|");
-			}
-			result.append(System.lineSeparator());
-		}
 		
 		return result.toString();
 	}
