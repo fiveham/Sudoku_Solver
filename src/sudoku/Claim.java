@@ -3,16 +3,12 @@ package sudoku;
 import sudoku.Puzzle.IndexValue;
 
 /**
- * <p>Represents a claim that "Cell x,y has value z."</p> <p>This is implemented as a set of the
- * Rules that have this Claim as an element.</p>
+ * <p>Represents a claim that "Cell x,y has value z."</p>
+ * <p>This is implemented as a set of the Rules that have this Claim as an element.</p>
  * @author fiveham
- * @author fiveham
- *
  */
 public class Claim extends NodeSet<Fact,Claim>{
 	
-    /**
-     */
 	private static final long serialVersionUID = -2402719833037606449L;
 	
     /**
@@ -63,22 +59,29 @@ public class Claim extends NodeSet<Fact,Claim>{
 		return stream().allMatch(Fact::isSolved);
 	}
 	
-    /**
-     * <p>Sets this Claim false. Removes all elements from this set, and removes this Claim from all
-     * its neighbors.</p>
-     * @param time the TechniqueEvent which precipitated the call to this method
-     * @return true if calling this method changed the state of this Claim, false otherwise
-     */
+  /**
+   * <p>Sets this Claim false. Removes all elements from this set, and removes this Claim from all
+   * its neighbors.</p>
+   * @return true if calling this method changed the state of this Claim, false otherwise
+   */
 	public boolean setFalse(){
 		int initSize = size();
 		clear();
 		return size() != initSize;
 	}
 	
+	/**
+   * <p>Returns the x-coordinate of this Claim in claim-space.</p>
+   * @return the x-coordinate of this Claim in claim-space
+   */
 	public IndexValue getX(){
 		return x;
 	}
 	
+	/**
+	 * <p>Returns the y-coordinate of this Claim in claim-space.</p>
+	 * @return the y-coordinate of this Claim in claim-space
+	 */
 	public IndexValue getY(){
 		return y;
 	}
@@ -101,11 +104,11 @@ public class Claim extends NodeSet<Fact,Claim>{
 		return false;
 	}
 	
-    /**
-     * <p>Returns the distance between this Claim and {@code otherClaim} in claim-space.</p>
-     * @param otherClaim
-     * @return the distance between this Claim and {@code otherClaim} in claim-space
-     */
+  /**
+   * <p>Returns the distance between this Claim and {@code otherClaim} in claim-space.</p>
+   * @param otherClaim another Claim
+   * @return the distance between this Claim and {@code otherClaim} in claim-space
+   */
 	public double spaceDist(Claim otherClaim){
 		int dx = this.x.intValue() - otherClaim.x.intValue();
 		int dy = this.y.intValue() - otherClaim.y.intValue();
