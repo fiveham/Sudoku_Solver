@@ -576,25 +576,22 @@ public class Puzzle extends SudokuNetwork{
      */
 	public static final int DIMENSIONS_INSIDE_RULE = 1;
 	
-    /**
-     * <p>A wrapper for IndexValue that internally specifies to which
-     * {@link Puzzle.DimensionType dimension} (of which five are available) the wrapped IndexValue
-     * pertains.</p>
-     * @author fiveham
-     * @author fiveham
-	 *
+  /**
+   * <p>A wrapper for IndexValue that internally specifies to which
+   * {@link Puzzle.DimensionType dimension} (of which five are available) the wrapped IndexValue
+   * pertains.</p>
+   * @author fiveham
 	 */
 	public static class IndexInstance{
 		private DimensionType type;
 		private IndexValue val;
 		
-        /**
-         * <p>Constructs an IndexInstance belonging to the {@code target}, pertaining to the
-         * specified dimension {@code type} and having the value {@code val}.</p>
-         * @param target the Puzzle to which this IndexInstance belongs
-         * @param type the dimension along which this IndedInstance lies
-         * @param val the value of this IndexInstance's position along its dimension
-         */
+    /**
+     * <p>Constructs an IndexInstance pertaining to the specified dimension {@code type} and having 
+     * the value {@code val}.</p>
+     * @param type the dimension along which this IndedInstance lies
+     * @param val this IndexInstance's position along its dimension
+     */
 		public IndexInstance(DimensionType type, IndexValue val){
 			this.type = type;
 			this.val = val;
@@ -609,59 +606,63 @@ public class Puzzle extends SudokuNetwork{
 			return false;
 		}
 		
+		/**
+		 * <p>The numerical value of this IndexInstance's position along its dimension.</p>
+		 * @return the numerical value of this IndexInstance's position along its dimension
+		 */
 		public int intValue(){
 			return val.intValue();
 		}
 		
-        /**
-         * <p>The {@link Puzzle.DimensionType dimension type} of this IndexInstance.</p>
-         * @return {@link Puzzle.DimensionType dimension type} of this IndexInstance
-         */
+    /**
+     * <p>The {@link Puzzle.DimensionType dimension type} of this IndexInstance.</p>
+     * @return {@link Puzzle.DimensionType dimension type} of this IndexInstance
+     */
 		public DimensionType getType(){
 			return type;
 		}
 		
-        /**
-         * <p>The x-component of the wrapped IndexValue given that it specifies a position along
-         * this IndexInstance's wrapped {@link #getType() dimension}.</p>
-         * @return the x-component of the wrapped IndexValue given that it pertains to the wrapped
-         * dimension
-         */
+    /**
+     * <p>The x-component of the wrapped IndexValue given that it specifies a position along this
+     * IndexInstance's wrapped {@link #getType() dimension}.</p>
+     * @return the x-component of the wrapped IndexValue given that it pertains to the wrapped
+     * dimension
+     */
 		public int contributionX(){
 			return type.contribX.apply(val, val.puzzle.magnitude);
 		}
-
-        /**
-         * <p>The y-component of the wrapped IndexValue given that it specifies a position along
-         * this IndexInstance's wrapped {@link #getType() dimension}.</p>
-         * @return the y-component of the wrapped IndexValue given that it pertains to the wrapped
-         * dimension
-         */
+		
+    /**
+     * <p>The y-component of the wrapped IndexValue given that it specifies a position along this
+     * IndexInstance's wrapped {@link #getType() dimension}.</p>
+     * @return the y-component of the wrapped IndexValue given that it pertains to the wrapped
+     * dimension
+     */
 		public int contributionY(){
 			return type.contribY.apply(val, val.puzzle.magnitude);
 		}
-
-        /**
-         * <p>The z-component of the wrapped IndexValue given that it specifies a position along
-         * this IndexInstance's wrapped {@link #getType() dimension}.</p>
-         * @return the z-component of the wrapped IndexValue given that it pertains to the wrapped
-         * dimension
-         */
+		
+    /**
+     * <p>The z-component of the wrapped IndexValue given that it specifies a position along this
+     * IndexInstance's wrapped {@link #getType() dimension}.</p>
+     * @return the z-component of the wrapped IndexValue given that it pertains to the wrapped
+     * dimension
+     */
 		public int contributionZ(){
 			return type.contribZ.apply(val, val.puzzle.magnitude);
 		}
 	}
 	
-    /**
-     * <p>A dimensional component contribution function that provides a contribution of zero
-     * regardless of its inputs.</p>
-     */
+  /**
+   * <p>A dimensional component contribution function that provides a contribution of zero
+   * regardless of its inputs.</p>
+   */
 	private static final BiFunction<IndexValue,Integer,Integer> ZERO       = (indx,mag) -> 0;
 	
-    /**
-     * <p>A dimensional component contribution function that produces all the the input dimension
-     * value as output.</p>
-     */
+  /**
+   * <p>A dimensional component contribution function that produces all the the input dimension
+   * value as output.</p>
+   */
 	private static final BiFunction<IndexValue,Integer,Integer> INT_VALUE  = (indx,mag) -> indx.intValue();
 	
 	private static int snakeInSquareX(IndexValue index, int magnitude){
