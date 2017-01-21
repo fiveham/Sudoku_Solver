@@ -76,7 +76,7 @@ public class Puzzle extends SudokuNetwork{
      * @throws FileNotFoundException if {@code f} cannot be found or read
      */
 	public Puzzle(File f, String charset) throws FileNotFoundException{
-		this(chooseParser(f,charset));
+		this(chooseParser(f, charset));
 	}
 	
 	public Puzzle(Parser parser){
@@ -106,7 +106,8 @@ public class Puzzle extends SudokuNetwork{
 		switch(extension){
 		case ".txt": return new TxtParser(f, charset);
 		case ".sdk": return new SadmanParser(f, charset);
-		default: throw new IllegalArgumentException("Illegal file extension "+extension+" only .txt and .sdk allowed.");
+		default: throw new IllegalArgumentException(
+		    "Illegal file extension " + extension + " only .txt and .sdk allowed.");
 		}
 	}
 	
@@ -118,7 +119,8 @@ public class Puzzle extends SudokuNetwork{
      * @return a list of the Rules for {@code p}
      */
 	private List<Rule> genRuleNodes(Puzzle p, int sideLength, SpaceMap claims){
-		List<Rule> rules = new ArrayList<>(RuleType.values().length * p.sideLength * p.sideLength * p.sideLength);
+		List<Rule> rules = new ArrayList<>(
+		    RuleType.values().length * p.sideLength * p.sideLength * p.sideLength);
 		for(RuleType type : RuleType.values()){
 			for(IndexInstance dimA : type.dimA(p)){
 				for(IndexInstance dimB : type.dimB(p)){
@@ -166,7 +168,7 @@ public class Puzzle extends SudokuNetwork{
      */
 	private static List<IndexValue> genIndices(int sideLength, Puzzle p){
 		List<IndexValue> indices = new ArrayList<>(sideLength);
-		for(int i=0; i<sideLength; ++i){
+		for(int i = 0; i < sideLength; ++i){
 			indices.add(new IndexValue(p, i));
 		}
 		return indices;
@@ -230,7 +232,7 @@ public class Puzzle extends SudokuNetwork{
      * @return a 0-based IndexValue corresponding to the 1-based integer {@code i}.
      */
 	private IndexValue indexFromHumanReadableInt(int i){
-		return indexFromInt(i-1);
+		return indexFromInt(i - 1);
 	}
 	
     /**
@@ -333,8 +335,8 @@ public class Puzzle extends SudokuNetwork{
 			private int useCount = 0;
 			@Override
 			public String get(){
-				if(++useCount%sideLength()==0){
-					return " "+System.lineSeparator();
+				if(++useCount % sideLength() == 0){
+					return " " + System.lineSeparator();
 				} else{
 					return " ";
 				}
@@ -375,7 +377,9 @@ public class Puzzle extends SudokuNetwork{
 			for(IndexValue x : indices){
 				for(IndexValue z : indices){
 					Claim claim = claims.get(x, y, z);
-					result.append(claim.isSetFalse() ? " " : claim.getSymbol());
+					result.append(claim.isSetFalse() 
+					    ? " " 
+					    : claim.getSymbol());
 				}
 				result.append("|");
 			}
@@ -431,7 +435,8 @@ public class Puzzle extends SudokuNetwork{
 				try{
 					value = values.get(pointer++);
 				} catch(IndexOutOfBoundsException e){
-					throw new IllegalArgumentException("Fewer than "+ sideLength*sideLength +" tokens in source text", e);
+					throw new IllegalArgumentException(
+					    "Fewer than " + (sideLength * sideLength) + " tokens in source text", e);
 				}
 				
 				if(value != BLANK_CELL){
@@ -461,33 +466,54 @@ public class Puzzle extends SudokuNetwork{
 	 */
 	public static enum RuleType{
 		
-        /**
-         * <p>For a box, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the second
-         * dimension is {@link Puzzle.DimensionType#BOX box-index}, and the third dimension is
-         * {@link Puzzle.DimensionType#CELL_ID_IN_BOX cell-index}.</p>
-         */
-		BOX		(DimensionType.SYMBOL, DimensionType.BOX, DimensionType.CELL_ID_IN_BOX, (rt,p) -> "The "+p.getA().val.humanReadableIntValue()+" in "+rt+" "+p.getB().val.humanReadableIntValue()), 
+    /**
+     * <p>For a box, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the second
+     * dimension is {@link Puzzle.DimensionType#BOX box-index}, and the third dimension is
+     * {@link Puzzle.DimensionType#CELL_ID_IN_BOX cell-index}.</p>
+     */
+		BOX(
+		    DimensionType.SYMBOL, 
+		    DimensionType.BOX, 
+		    DimensionType.CELL_ID_IN_BOX, 
+		    (rt, p) -> "The " + p.getA().val.humanReadableIntValue() 
+		        + " in " + rt + " " + p.getB().val.humanReadableIntValue()), 
 		
-        /**
-         * <p>For a row, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the second
-         * dimension is {@link Puzzle.DimensionType#Y y}, and the third dimension is
-         * {@link Puzzle.DimensionType#X x}.</p>
-         */
-		ROW		(DimensionType.SYMBOL, DimensionType.Y,   DimensionType.X, 				(rt,p) -> "The "+p.getA().val.humanReadableIntValue()+" in "+rt+" "+p.getB().val.humanReadableIntValue()),
+    /**
+     * <p>For a row, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the second
+     * dimension is {@link Puzzle.DimensionType#Y y}, and the third dimension is
+     * {@link Puzzle.DimensionType#X x}.</p>
+     */
+		ROW(
+		    DimensionType.SYMBOL, 
+		    DimensionType.Y, 
+		    DimensionType.X, 
+		    (rt, p) -> "The " + p.getA().val.humanReadableIntValue() 
+		        + " in " + rt + " " + p.getB().val.humanReadableIntValue()),
 		
-        /**
-         * <p>For a box, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the second
-         * dimension is {@link Puzzle.DimensionType#X x}, and the third dimension is
-         * {@link Puzzle.DimensionType#Y y}.</p>
-         */
-		COLUMN	(DimensionType.SYMBOL, DimensionType.X,   DimensionType.Y, 				(rt,p) -> "The "+p.getA().val.humanReadableIntValue()+" in "+rt+" "+p.getB().val.humanReadableIntValue()), 
+    /**
+     * <p>For a column, the first dimension is {@link Puzzle.DimensionType#SYMBOL z}, the second
+     * dimension is {@link Puzzle.DimensionType#X x}, and the third dimension is
+     * {@link Puzzle.DimensionType#Y y}.</p>
+     */
+		COLUMN(
+		    DimensionType.SYMBOL, 
+		    DimensionType.X, 
+		    DimensionType.Y, 
+		    (rt, p) -> "The " + p.getA().val.humanReadableIntValue() 
+		        + " in " + rt + " " + p.getB().val.humanReadableIntValue()), 
 		
-        /**
-         * <p>For a cell, the first dimension is {@link Puzzle.DimensionType#Y y}, the second
-         * dimension is {@link Puzzle.DimensionType#X x}, and the third dimension is
-         * {@link Puzzle.DimensionType#SYMBOL z}.</p>
-         */
-		CELL	(DimensionType.Y, 	   DimensionType.X,   DimensionType.SYMBOL,			(rt,p) -> "The value in "+rt+" "+p.getB().val.humanReadableIntValue()+","+p.getA().val.humanReadableIntValue());
+    /**
+     * <p>For a cell, the first dimension is {@link Puzzle.DimensionType#Y y}, the second dimension 
+     * is {@link Puzzle.DimensionType#X x}, and the third dimension is
+     *  {@link Puzzle.DimensionType#SYMBOL z}.</p>
+     */
+		CELL(
+		    DimensionType.Y, 
+		    DimensionType.X, 
+		    DimensionType.SYMBOL,	
+		    (rt, p) -> "The value in " + rt + " " 
+		        + p.getB().val.humanReadableIntValue() + "," 
+		        + p.getA().val.humanReadableIntValue());
 		
 		static{
 			BOX.subsumableTypes    = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ROW, COLUMN)));
@@ -499,12 +525,16 @@ public class Puzzle extends SudokuNetwork{
 		private final DimensionType dimAType;
 		private final DimensionType dimBType;
 		private final DimensionType dimCType;
-		private final BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> description;
+		private final BiFunction<RuleType, Pair<IndexInstance, IndexInstance>, String> description;
 		
 		private Set<RuleType> subsumableTypes = null;
 		
-		private RuleType(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType, 
-				BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> description){
+		private RuleType(
+		    DimensionType dimAType, 
+		    DimensionType dimBType, 
+		    DimensionType dimCType, 
+				BiFunction<RuleType, Pair<IndexInstance, IndexInstance>, String> description){
+		  
 			this.dimAType = dimAType;
 			this.dimBType = dimBType;
 			this.dimCType = dimCType;
@@ -520,11 +550,11 @@ public class Puzzle extends SudokuNetwork{
          * {@code dimB}
          */
 		public String descriptionFor(IndexInstance dimA, IndexInstance dimB){
-			return description.apply(this, new Pair<>(dimA,dimB));
+			return description.apply(this, new Pair<>(dimA, dimB));
 		}
 		
 		public boolean isTypeOf(Rule r){
-			return r.getType()==this;
+			return r.getType() == this;
 		}
 		
         /**
@@ -656,13 +686,14 @@ public class Puzzle extends SudokuNetwork{
      * <p>A dimensional component contribution function that provides a contribution of zero
      * regardless of its inputs.</p>
      */
-	private static final BiFunction<IndexValue,Integer,Integer> ZERO       = (indx,mag) -> 0;
+	private static final BiFunction<IndexValue,Integer,Integer> ZERO = (indx, mag) -> 0;
 	
     /**
      * <p>A dimensional component contribution function that produces all the the input dimension
      * value as output.</p>
      */
-	private static final BiFunction<IndexValue,Integer,Integer> INT_VALUE  = (indx,mag) -> indx.intValue();
+	private static final BiFunction<IndexValue,Integer,Integer> INT_VALUE = 
+	    (indx, mag) -> indx.intValue();
 	
 	private static int snakeInSquareX(IndexValue index, int magnitude){
 		return index.intValue() % magnitude;
@@ -787,7 +818,7 @@ public class Puzzle extends SudokuNetwork{
          * @return the wrapped integer plus 1
          */
 		public int humanReadableIntValue(){
-			return v+1;
+			return v + 1;
 		}
 		
         /**
@@ -795,7 +826,7 @@ public class Puzzle extends SudokuNetwork{
          * @return a string representation of the wrapped int value plus 1
          */
 		public String humanReadableSymbol(){
-			return Integer.toString(humanReadableIntValue(), puzzle.sideLength+1);
+			return Integer.toString(humanReadableIntValue(), puzzle.sideLength + 1);
 		}
 		
 		@Override
