@@ -206,13 +206,13 @@ public class Puzzle extends SudokuNetwork{
 		return dimensions.get(dim.ordinal());
 	}
 	
-    /**
-     * <p>Returns the IndexValue in this Puzzle that is equivalent to the specified int.</p>
-     * @param i the int whose equivalent IndexValue will be returned
-     * @return the IndexValue for this Puzzle equivalent to {@code i}
-     * @throws IllegalArgumentException if {@code i} is negative or greater than or equal to
-     * {@link #sideLength() sideLength}.
-     */
+  /**
+   * <p>Returns the IndexValue in this Puzzle that is equivalent to the specified int.</p>
+   * @param i the int whose equivalent IndexValue will be returned
+   * @return the IndexValue for this Puzzle equivalent to {@code i}
+   * @throws IllegalArgumentException if {@code i} is negative or greater than or equal to this 
+   * Puzzle's {@link #sideLength() sideLength}.
+   */
 	private IndexValue indexFromInt(int i){
 		try{
 			return indices.get(i);
@@ -221,22 +221,21 @@ public class Puzzle extends SudokuNetwork{
 		}
 	}
 	
-    /**
-     * <p>Returns the in-memory IndexValue corresponding to the specified human-readable integer
-     * value.</p> <p>This is used to convert the 1-based human-readable integers in a target's
-     * source file into the 0-based in-memory IndexValues used by Puzzle to specify values of
-     * spatial coordinates.</p>
-     * @param i a 1-based human-readable integer from a target's source text file
-     * @return a 0-based IndexValue corresponding to the 1-based integer {@code i}.
-     */
+  /**
+   * <p>Returns the IndexValue corresponding to the specified human-readable integer.</p>
+   * <p>This is used to convert the 1-based human-readable integers in a puzzle's source text into 
+   * the 0-based runtime IndexValues used by Puzzle to specify values of spatial coordinates.</p>
+   * @param i a 1-based human-readable integer from a puzzle's source text file
+   * @return a 0-based IndexValue corresponding to the 1-based integer {@code i}.
+   */
 	private IndexValue indexFromHumanReadableInt(int i){
 		return indexFromInt(i-1);
 	}
 	
-    /**
-     * <p>Returns this Puzzle's list of indices.</p>
-     * @return this Puzzle's list of indices
-     */
+  /**
+   * <p>Returns this Puzzle's list of the valid values for its dimensions.</p>
+   * @return this Puzzle's list of the valid values for its dimensions
+   */
 	List<IndexValue> getIndices(){
 		return indices;
 	}
