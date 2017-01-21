@@ -6,11 +6,7 @@ import common.time.TimeBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -464,19 +460,10 @@ public class Puzzle extends SudokuNetwork{
          */
 		CELL	(DimensionType.Y, 	   DimensionType.X,   DimensionType.SYMBOL,			(rt,p) -> "The value in "+rt+" "+p.getB().val.humanReadableIntValue()+","+p.getA().val.humanReadableIntValue());
 		
-		static{
-			BOX.subsumableTypes    = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ROW, COLUMN)));
-			ROW.subsumableTypes    = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(BOX)));
-			COLUMN.subsumableTypes = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(BOX)));
-			CELL.subsumableTypes   = Collections.emptySet();
-		}
-		
 		private final DimensionType dimAType;
 		private final DimensionType dimBType;
 		private final DimensionType dimCType;
 		private final BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> description;
-		
-		private Set<RuleType> subsumableTypes = null;
 		
 		private RuleType(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType, 
 				BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> description){
@@ -534,22 +521,7 @@ public class Puzzle extends SudokuNetwork{
 		public List<IndexInstance> dimInsideRule(Puzzle p){
 			return p.indexInstances(dimCType);
 		}
-		
-		public Set<DimensionType> dimsOutsideRule(Puzzle p){
-			Set<DimensionType> result = new HashSet<>(DIMENSION_COUNT - DIMENSIONS_INSIDE_RULE);
-			Collections.addAll(result, dimAType, dimBType);
-			return result;
-		}
-		
-		public boolean canClaimValue(RuleType type){
-			return subsumableTypes.contains(type);
-		}
 	}
-	
-    /**
-     * <p>The number of dimensions that the Claims of a given Rule traverse.</p>
-     */
-	public static final int DIMENSIONS_INSIDE_RULE = 1;
 	
     /**
      * <p>A wrapper for IndexValue that internally specifies to which
