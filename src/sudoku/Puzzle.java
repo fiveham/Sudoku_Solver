@@ -237,20 +237,19 @@ public class Puzzle extends SudokuNetwork{
 		return indices;
 	}
 	
-    /**
-     * <p>A convenience method that returns the outputs of
-     * {@link #decodeX(IndexInstance...) decodeX}, {@link #decodeY(IndexInstance...) decodeY}, and
-     * {@link #decodeZ(IndexInstance...) decodeSymbol}, as an ordered triple in the form of an
-     * array.</p>
-     * @param dims dimension args passed on to decodeX, decodeY, and decodeSymbol.
-     * @return an ordered triple of the outputs of decodeX, decodeY, and decodeSymbol given the same
-     * args this method received
-     */
-	public IndexValue[] decodeXYZ(IndexInstance... dims){
+	/**
+   * <p>A convenience method that returns the outputs of {@link #decodeX(IndexInstance...) decodeX},
+   * {@link #decodeY(IndexInstance...) decodeY}, and {@link #decodeZ(IndexInstance...) decodeZ}, as 
+   * an ordered triple in the form of an array.</p>
+   * @param points dimensional indices passed on to decodeX, decodeY, and decodeZ
+   * @return an ordered triple of the outputs of decodeX, decodeY, and decodeZ given the same 
+   * parameter this method received
+   */
+	public IndexValue[] decodeXYZ(IndexInstance... points){
 		return new IndexValue[]{		
-			decodeX(dims),
-			decodeY(dims),
-			decodeZ(dims)
+			decodeX(points),
+			decodeY(points),
+			decodeZ(points)
 		};
 	}
 	
