@@ -413,14 +413,13 @@ public class Puzzle extends SudokuNetwork{
 		return mag * snakeInSquareY(boxIndex, mag);
 	}
 	
-    /**
-     * <p>Returns a list of those Claims from {@link #claims the SpaceMap} that are true, given the
-     * content of the source file for this target.
-     * @param values a list of the integer values of the cells of this target as read from this
-     * target's source text. {@value #BLANK_CELL} indicates an empty cell.</p>
-     * @return a list of those Claims from {@link #claims the SpaceMap} that are true, given the
-     * content of the source file for this target
-     */
+  /**
+   * <p>Returns a list of the Claims that are known true as part of the initial state of the 
+   * puzzle.</p>
+   * @param values the initial values of the cells of this puzzle as read from its text source. 
+   * A {@value #BLANK_CELL} indicates an empty cell.</p>
+   * @return a list of the Claims that are known true as part of the initial state of the puzzle
+   */
 	private List<Claim> parseText(List<Integer> values){
 		List<Claim> knownTrueClaims = new ArrayList<>();
 		
@@ -443,21 +442,24 @@ public class Puzzle extends SudokuNetwork{
 		return knownTrueClaims;
 	}
 	
-    /**
-     * <p>The value ({@value #BLANK_CELL}) used internally to refer to a blank cell or to the value
-     * in a blank cell.</p>
-     */
+  /**
+   * <p>The value ({@value #BLANK_CELL}) used internally to refer to a blank cell or to the value in
+   * a blank cell.</p>
+   */
 	public static final int BLANK_CELL = 0;
 	
-    /**
-     * <p>Entries in this enum describe properties of the four types of regions in a sudoku target:
-     * <ul><li>box</li><li>row</li><li>column</li><li>cell</li></ul></p> <p>The first two dimensions
-     * of a RegionSpecies are held constant for any one Rule (in regards to the Rule's initial set
-     * of Claims) with that RegionSpecies as its type, while the RegionSpecies's third dimension is
-     * fully explored within the aforementioned Rule.</p>
-     * @author fiveham
-     * @author fiveham
-	 *
+  /**
+   * <p>Entries in this enum describe properties of the four types of regions in a sudoku puzzle:
+   * <ul>
+   * <li>box</li>
+   * <li>row</li>
+   * <li>column</li>
+   * <li>cell</li>
+   * </ul></p>
+   * <p>The Claims of a Rule whose type is a given RuleType all have the same value for the first 
+   * and second dimensions of that RuleType. That Rule's RuleType's third dimension's values are all
+   * represented in the Claims of that Rule.</p>
+   * @author fiveham
 	 */
 	public static enum RuleType{
 		
