@@ -329,11 +329,11 @@ public class Puzzle extends SudokuNetwork{
 			private int useCount = 0;
 			@Override
 			public String get(){
-				if(++useCount%sideLength()==0){
-					return " "+System.lineSeparator();
-				} else{
-					return " ";
+			  StringBuilder result = new StringBuilder(" ");
+				if(++useCount % sideLength() == 0){
+					result.append(System.lineSeparator());
 				}
+				return result.toString();
 			}
 		}
 		
