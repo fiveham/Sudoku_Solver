@@ -114,7 +114,7 @@ public class Puzzle extends SudokuNetwork{
      * @return a list of the Rules for {@code p}
      */
 	private List<Rule> genRuleNodes(Puzzle p, int sideLength, SpaceMap claims){
-		List<Rule> rules = new ArrayList<>(RuleType.values().length * p.sideLength * p.sideLength * p.sideLength);
+		List<Rule> rules = new ArrayList<>(RuleType.values().length * (int) Math.pow(p.sideLength, DIMENSION_COUNT));
 		for(RuleType type : RuleType.values()){
 			for(IndexInstance dimA : type.dimA(p)){
 				for(IndexInstance dimB : type.dimB(p)){
