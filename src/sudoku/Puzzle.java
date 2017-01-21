@@ -319,12 +319,12 @@ public class Puzzle extends SudokuNetwork{
 		return indexFromInt(score);
 	}
 	
-    /**
-     * <p>Returns a string representing the target, with each cell represented by its solved value
-     * if known or by a space if the cell's value is unknown.</p>
-     * @return a string representing the target, with each cell represented by its solved value if
-     * known or by a space if the cell's value is unknown
-     */
+  /**
+   * <p>Returns a string representing this puzzle. Each cell is represented by its value if known or
+   * by a space if the cell's value is unknown.</p>
+   * @return a string representing this puzzle. Each cell is represented by its value if known or
+   * by a space if the cell's value is unknown
+   */
 	@Override
 	public String toString(){
 		StringBuilder result = new StringBuilder();
@@ -360,14 +360,14 @@ public class Puzzle extends SudokuNetwork{
 		return result.toString();
 	}
 	
-    /**
-     * <p>Returns a string representation of the Puzzle, with each cell represented by a string of
-     * {@code sideLength} characters, each {@link Claim#possText() character} pertaining to a
-     * possible value of the cell.</p>
-     * @return a string representation of the Puzzle, with each cell represented by a string of
-     * {@code sideLength} characters, each {@link Claim#possText() character} pertaining to a
-     * possible value of the cell
-     */
+  /**
+   * <p>Returns a text representation of the Puzzle where each cell is represented by a string of
+   * {@code sideLength} characters, each {@link Claim#possText() character} pertaining to a possible
+   * value of the cell.</p>
+   * @return a text representation of the Puzzle where each cell is represented by a string of
+   * {@code sideLength} characters, each {@link Claim#possText() character} pertaining to a possible
+   * value of the cell
+   */
 	public String possibilitiesToString(){
 		StringBuilder result = new StringBuilder();
 		
@@ -385,30 +385,22 @@ public class Puzzle extends SudokuNetwork{
 		return result.toString();
 	}
 	
-    /**
-     * <p>Returns the x-coordinate of the low-X edge of the specified box. The index of a box
-     * follows a snaking pattern from the upper left with box 0, moving rightward and increasing,
-     * then wrapping around to the next line of boxes below as needed until the lower right is
-     * reached.</p>
-     * @param boxIndex the index of the box whose lower-x-coordinate edge's x-coordinate is
-     * returned.
-     * @return the x-coordinate of the low-X edge of the box in the {@code boxIndex}-th box of a
-     * Puzzle whose {@link Sudoku#magnitude() magnitude} is {@code mag}
-     */
+	/**
+   * <p>Returns the x-coordinate of the low-X edge of the box in this puzzle with the specified 
+   * {@link DimensionType#BOX box-index}.</p>
+   * @param boxIndex the index of a box in this puzzle
+   * @return the x-coordinate of the low-Y edge of the {@code boxIndex}-th box in this puzzle
+   */
 	private static int boxLowX(IndexValue boxIndex, int mag){
 		return mag * snakeInSquareX(boxIndex, mag);
 	}
 	
-    /**
-     * <p>Returns the y-coordinate of the low-Y edge of the specified box. The index of a box
-     * follows a snaking pattern from the upper left with box 0, moving rightward and increasing,
-     * then wrapping around to the next line of boxes below as needed until the lower right is
-     * reached.</p>
-     * @param boxIndex the index of the box whose lower-y-coordinate edge's y-coordinate is
-     * returned.
-     * @return the y-coordinate of the low-Y edge of the box in the {@code boxIndex}-th box of a
-     * Puzzle whose {@link Sudoku#magnitude() magnitude} is {@code mag}
-     */
+  /**
+   * <p>Returns the y-coordinate of the low-Y edge of the box in this puzzle with the specified 
+   * {@link DimensionType#BOX box-index}.</p>
+   * @param boxIndex the index of a box in this puzzle
+   * @return the y-coordinate of the low-Y edge of the {@code boxIndex}-th box in this puzzle
+   */
 	private static int boxLowY(IndexValue boxIndex, int mag){
 		return mag * snakeInSquareY(boxIndex, mag);
 	}
