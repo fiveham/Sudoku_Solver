@@ -10,19 +10,20 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * <p>A set that's a node in {@link Puzzle a graph representation of a sudoku target}, such that the
- * NodeSet itself is a collection of its {@link Vertex#neighbors() neighbors}.</p> <p>The NodeSet
- * class serves as a pool to unite certain operations performed identically by both Claim and Rule.
- * Most importantly, NodeSet serves to enforce, in one consistent location, the rule that any node's
- * neighbors must know that that node in question is one of their neighbors: neighbor status must be
- * symmetrical. Additionally, NodeSet being superclass to both Claim and Rule enables Claim and Rule
- * to be elements of the same collection, so that a bipartite graph like Puzzle doesn't need to be
- * described as a bipartite graph explicitly via a BipartiteGraph contract, as that would feed into
- * combinatorial explosion, given the need for WrappingGraphs as well.</p>
+ * <p>A set that's a node in {@link Puzzle a graph representation of a sudoku puzzle}, such that a 
+ * NodeSet itself is a collection of its {@link Vertex#neighbors() neighbors}.</p>
+ * 
+ * <p>The NodeSet class serves as a pool to unite certain operations performed identically by both 
+ * Claim and Fact. Most importantly, NodeSet serves to enforce, in one consistent location, the rule
+ * that any node's neighbors must know that that node in question is one of their neighbors: 
+ * Neighbor status must be symmetrical. Additionally, NodeSet being superclass to both Claim and 
+ * Rule enables Claim and Fact to be elements of the same collection, allowing a Puzzle's graph  to 
+ * be backed by a single {@literal Collection<NodeSet<?, ?>} rather than two Collections of 
+ * different parameter-types.</p>
+ * 
  * @author fiveham
- * @param <T> The type of the elements of this Set.
- * @param <S> The type of the Set elements of this Set. This should also be a proxy for this type
- * itself.
+ * @param <T> The type of the elements of this set.
+ * @param <S> The type of this set
  */
 public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>> 
     extends ToolSet<T> 
@@ -33,11 +34,25 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	protected final Puzzle puzzle;
 	protected final int hashCode;
 	
+	/**
+	 * <p>Constructs a NodeSet that belongs to {@code puzzle} and has {@code hash} as its 
+	 * {@link #hashCode() hashcode}.</p>
+	 * @param puzzle the puzzle to which this NodeSet belongs
+	 * @param hash this NodeSet's hashcode
+	 * @see #hashCode()
+	 */
 	protected NodeSet(Puzzle puzzle, int hash){
 		this.puzzle = puzzle;
 		this.hashCode = hash;
 	}
 	
+	/**
+	 * <p>Constructs a </p>
+	 * @param puzzle the puzzle to which this NodeSet belongs
+	 * @param initialCapacity the initial capacity of this set
+	 * @param hash this NodeSet's hashcode
+   * @see #hashCode()
+	 */
 	protected NodeSet(Puzzle puzzle, int initialCapacity, int hash) {
 		super(initialCapacity * Sets.JAVA_UTIL_HASHSET_SIZE_FACTOR);
 		this.puzzle = puzzle;
@@ -223,6 +238,31 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 		return super.toString();
 	}
 	
+	/**
+	 * <p>Returns this NodeSet's hashcode, which is a constant value that does not change with changes 
+	 * in the content of the set.</p>
+	 * 
+	 * <p>Because a NodeSet contains (references to) its neighbors as elements, a NodeSet's elements all
+   * contain (references to) that NodeSet itself. Nodeset extends HashSet; so, the implementation of 
+   * hashCode available to NodeSet without overriding the method returns the sum of the hashcodes of 
+   * the elements of the set, but since a NodeSet just refers to other NodeSets, no concrete values 
+   * can ever be extracted to begin summing; rather, a call for one NodeSet's hashcode will result in 
+   * a loop of calls to {@code hashCode()} on one NodeSet after another, ending in stack overflow.</p>
+   * 
+   * <p>A NodeSet is used as an element of other NodeSets; so, a NodeSet's hashcode needs to remain 
+   * consistent and be independent of the NodeSet's content. Otherwise the process of mutual 
+   * dissociation when an edge is removed won't work. If NodeSet did not override {@code hashCode()} 
+   * and used HashSet's implementation, then the process of removing an edge between {@code A} and 
+   * {@code B} by calling {@code A.remove(B)} would go as follows:
+   * <ol>
+   * <li>B's hashcode is determined</li>
+   * <li>B's entry in A is found and removed</li>
+   * <li>B.remove(A) is called</li>
+   * <li>A's hashcode is determined</li>
+   * <li>A's entry in B is not found, even though it is present, because A's hashcode is different 
+   * than it was when the entry was put in</li>
+   * </ol></p>
+	 */
 	@Override
 	public final int hashCode(){
 		return hashCode;
