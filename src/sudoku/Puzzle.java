@@ -726,74 +726,67 @@ public class Puzzle extends SudokuNetwork{
 		}
 	}
 	
-    /**
-     * <p>A wrapper for an integer value valid for use as a coordinate in this Puzzle along any of
-     * its Claim-coordinating dimensions.</p> <p>The number of index values a given Puzzle has is
-     * equal to the side-length of the target and thus may vary. In order to allow a Puzzle to take
-     * on an arbitrary size depending solely on the Puzzle's source text, its allowable index values
-     * must be determined at runtime instead of being hard-coded in an enum as has previously been
-     * the case. The use of an enum is preferable over the use of raw primitive data types such as
-     * {@code int} because {@code int} and other applicable types can vary over a wider range than a
-     * Puzzle ever needs and thus need to be range-checked. Another reason to avoid the use of
-     * primitive data types for the purposes that IndexValue fulfills is that both an enum and a
-     * runtime-generated list of non-enum values allow less verbose iteration, not having to
-     * explicitly range-check an int against the target's sidelength for instance.</p>
-     * @author fiveham
-     * @author fiveham
-	 *
+  /**
+   * <p>IndexValue is a mock-enum of legal coordinates. For the typical 9x9 puzzle, such an enum 
+   * would have 9 elements: the numbers one through nine. This implementation of a Puzzle 
+   * accommodates puzzles of all sizes; so, a static enum is not viable. Instead, a list of legal 
+   * coordinates must be drawn up on a per-Puzzle basis.</p>
+   * @author fiveham
 	 */
 	public static class IndexValue{
 		
-        /**
-         * <p>The Puzzle to which this IndexValue belongs.</p>
-         */
+    /**
+     * <p>The Puzzle to which this IndexValue belongs.</p>
+     */
 		private final Puzzle puzzle;
 		
-        /**
-         * <p>The wrapped int value.</p>
-         */
+    /**
+     * <p>The wrapped int value.</p>
+     */
 		private final int v;
 		
-        /**
-         * <p>Constructs an IndexValue belonging to {@code target} and wrapping {@code v}.</p>
-         * @param target the Puzzle to which this IndexValue belongs
-         * @param v the int value wrapped by this IndexValue
-         */
+    /**
+     * <p>Constructs an IndexValue belonging to {@code puzzle} and wrapping the value {@code v}.</p>
+     * @param puzzle the Puzzle to which this IndexValue belongs
+     * @param v the int value wrapped by this IndexValue
+     */
 		private IndexValue(Puzzle puzzle, int v){
 			this.puzzle = puzzle;
 			this.v = v;
 		}
 		
-        /**
-         * <p>The wrapped int value.</p>
-         * @return the wrapped int value
-         */
+    /**
+     * <p>The wrapped int value.</p>
+     * @return the wrapped int value
+     */
 		public int intValue(){
 			return v;
 		}
 		
-        /**
-         * <p>The target that owns and created this IndexValue. This IndexValue is only valid in
-         * this Puzzle.</p>
-         * @return the Puzzle that owns and created this IndedValue
-         */
+    /**
+     * <p>The puzzle that owns and created this IndexValue. This IndexValue is only valid in this 
+     * Puzzle.</p>
+     * @return the Puzzle that owns and created this IndexValue
+     */
 		public Puzzle getPuzzle(){
 			return puzzle;
 		}
 		
-        /**
-         * <p>Returns this IndexValue's wrapped int value plus 1, translating the internal 0-based
-         * values to the conventional 1-based values used in written sudoku puzzles.</p>
-         * @return the wrapped integer plus 1
-         */
+    /**
+     * <p>Returns this IndexValue's wrapped int value plus 1, translating the internal 0-based
+     * values to the conventional 1-based values used in written sudoku puzzles.</p>
+     * @return the wrapped integer plus 1
+     */
 		public int humanReadableIntValue(){
 			return v+1;
 		}
 		
-        /**
-         * <p>Returns the human-readable representation of the wrapped integer value.</p>
-         * @return a string representation of the wrapped int value plus 1
-         */
+    /**
+     * <p>Returns {@link #humanReadableIntValue()} as a String of digits in base-
+     * {@code sideLength() + 1}.</p>
+     * @return {@link #humanReadableIntValue()} as a String of digits in base-
+     * {@code sideLength() + 1}
+     */
 		public String humanReadableSymbol(){
 			return Integer.toString(humanReadableIntValue(), puzzle.sideLength+1);
 		}
