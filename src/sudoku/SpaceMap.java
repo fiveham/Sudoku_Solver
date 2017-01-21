@@ -78,7 +78,7 @@ class SpaceMap implements Iterable<Claim>{
 	public Claim get(IndexInstance dimA, IndexInstance dimB, IndexInstance dimC){
 		IndexValue x = puzzle.decodeX(dimA, dimB, dimC);
 		IndexValue y = puzzle.decodeY(dimA, dimB, dimC);
-		IndexValue z = puzzle.decodeSymbol(dimA, dimB, dimC);
+		IndexValue z = puzzle.decodeZ(dimA, dimB, dimC);
 		return get(x, y, z);
 	}
 	

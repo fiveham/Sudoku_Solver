@@ -240,7 +240,7 @@ public class Puzzle extends SudokuNetwork{
     /**
      * <p>A convenience method that returns the outputs of
      * {@link #decodeX(IndexInstance...) decodeX}, {@link #decodeY(IndexInstance...) decodeY}, and
-     * {@link #decodeSymbol(IndexInstance...) decodeSymbol}, as an ordered triple in the form of an
+     * {@link #decodeZ(IndexInstance...) decodeSymbol}, as an ordered triple in the form of an
      * array.</p>
      * @param dims dimension args passed on to decodeX, decodeY, and decodeSymbol.
      * @return an ordered triple of the outputs of decodeX, decodeY, and decodeSymbol given the same
@@ -250,44 +250,41 @@ public class Puzzle extends SudokuNetwork{
 		return new IndexValue[]{		
 			decodeX(dims),
 			decodeY(dims),
-			decodeSymbol(dims)
+			decodeZ(dims)
 		};
 	}
 	
-    /**
-     * <p>Returns the x-component of the point in space specified by {@code dims}. x-components of
-     * each element of {@code dims} are determined and summed, and
-     * {@link #indexFromInt(int) the corresponding IndexValue} is returned.</p>
-     * @param dims the x-component of the geometric point, line, or plane specified by these
-     * IndexInstances will be returned in the form of an IndexValue pertaining to this Puzzle.
-     * @return the x-component of the point in space specified by {@code dims}
-     */
-	public IndexValue decodeX(IndexInstance... dims){
+	/**
+   * <p>Returns the IndexValue for this Puzzle {@link #indexFromInt(int) corresponding} to the sum
+   * of the x-components of the specified {@code points}.</p>
+   * @param points IndexInstances from this puzzle
+   * @returns the IndexValue for this Puzzle {@link #indexFromInt(int) corresponding} to the sum
+   * of the x-components of the specified {@code points}
+   */
+	IndexValue decodeX(IndexInstance... dims){
 		return decodeDim(IndexInstance::contributionX, dims);
 	}
 	
-    /**
-     * <p>Returns the y-component of the point in space specified by {@code dims}. y-components of
-     * each element of {@code dims} are determined and summed, and
-     * {@link #indexFromInt(int) the corresponding IndexValue} is returned.</p>
-     * @param dims the y-component of the geometric point, line, or plane specified by these
-     * IndexInstances will be returned in the form of an IndexValue pertaining to this Puzzle.
-     * @return the y-component of the point in space specified by {@code dims}
-     */
-	public IndexValue decodeY(IndexInstance... dims){
+	/**
+   * <p>Returns the IndexValue for this Puzzle {@link #indexFromInt(int) corresponding} to the sum
+   * of the y-components of the specified {@code points}.</p>
+   * @param points IndexInstances from this puzzle
+   * @returns the IndexValue for this Puzzle {@link #indexFromInt(int) corresponding} to the sum
+   * of the y-components of the specified {@code points}
+   */
+	IndexValue decodeY(IndexInstance... dims){
 		return decodeDim(IndexInstance::contributionY, dims);
 	}
 	
-    /**
-     * <p>Returns the z-component of the point in space specified by {@code dims}. z-components of
-     * each element of {@code dims} are determined and summed, and
-     * {@link #indexFromInt(int) the corresponding IndexValue} is returned.</p>
-     * @param dims the z-component of the geometric point, line, or plane specified by these
-     * IndexInstances will be returned in the form of an IndexValue pertaining to this Puzzle.
-     * @return the z-component of the point in space specified by {@code dims}
-     */
-	IndexValue decodeSymbol(IndexInstance... dims){
-		return decodeDim(IndexInstance::contributionZ, dims);
+  /**
+   * <p>Returns the IndexValue for this Puzzle {@link #indexFromInt(int) corresponding} to the sum
+   * of the z-components of the specified {@code points}.</p>
+   * @param points IndexInstances from this puzzle
+   * @returns the IndexValue for this Puzzle {@link #indexFromInt(int) corresponding} to the sum
+   * of the z-components of the specified {@code points}
+   */
+	IndexValue decodeZ(IndexInstance... points){
+		return decodeDim(IndexInstance::contributionZ, points);
 	}
 	
     /**
@@ -296,21 +293,23 @@ public class Puzzle extends SudokuNetwork{
      */
 	public static final int DIMENSION_COUNT = 3;
 	
-    /**
-     * <p>Decodes the specified component of the specified dimension-values and returns the
-     * {@link #indexFromInt(int) corresponding IndexValue}. Performs the actual work for decodeX,
-     * decodeY, and decodeSymbol.</p>
-     * @param contrib a function used to specify which dimension's component will be used for the
-     * elements of {@code dims} to produce a result.
-     * @param dims dimension-values indicating a point (or other, non-point primitive geometric
-     * object) in space.
-     * @return the IndexValue {@link #indexFromInt(int) corresponding} to the combined specified
-     * dimensional contributions of the specified dimension-values.
-     */
-	private IndexValue decodeDim(Function<IndexInstance,Integer> contrib, IndexInstance[] dims){
+  /**
+   * <p>Decodes the specified dimensional component of the specified {@code dims} and returns the
+   * {@link #indexFromInt(int) corresponding IndexValue}.</p>
+   * <p>Performs the actual work for {@link #decodeX()}, {@link #decodeY}, and {@link #decodeZ}.</p>
+   * @param dimComponent a function used to specify which dimension's component (x, y, or z) will 
+   * be summed
+   * @param points dimensional indices
+   * @return the IndexValue {@link #indexFromInt(int) corresponding} to the combined specified
+   * dimensional contributions of the specified dimensional indices
+   */
+	private IndexValue decodeDim(
+	    Function<IndexInstance, Integer> dimComponent, 
+	    IndexInstance[] points){
+	  
 		int score = 0;
-		for(IndexInstance dim : dims){
-			score += contrib.apply(dim);
+		for(IndexInstance dim : points){
+			score += dimComponent.apply(dim);
 		}
 		return indexFromInt(score);
 	}
