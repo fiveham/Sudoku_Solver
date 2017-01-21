@@ -6,6 +6,7 @@ import common.time.TimeBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -162,10 +163,10 @@ public class Puzzle extends SudokuNetwork{
      */
 	private static List<IndexValue> genIndices(int sideLength, Puzzle p){
 		List<IndexValue> indices = new ArrayList<>(sideLength);
-		for(int i=0; i<sideLength; ++i){
+		for(int i = 0; i < sideLength; ++i){
 			indices.add(new IndexValue(p, i));
 		}
-		return indices;
+		return Collections.unmodifiableList(indices);
 	}
 	
     /**
@@ -188,14 +189,14 @@ public class Puzzle extends SudokuNetwork{
 		return claimUniverse;
 	}
 	
-    /**
-     * <p>Returns a list (sorted) of all the {@link #IndexValue index values} that exist for this
-     * Puzzle.</p>
-     * @return a list (sorted) of all the {@link #IndexValue index values} that exist for this
-     * Puzzle.
-     */
+  /**
+   * <p>Returns a list (sorted) of all the {@link #IndexValue index values} that exist for this
+   * Puzzle.</p>
+   * @return a list (sorted) of all the {@link #IndexValue index values} that exist for this
+   * Puzzle.
+   */
 	List<IndexValue> indexValues(){
-		return new ArrayList<>(indices);
+		return indices;
 	}
 	
 	List<IndexInstance> indexInstances(DimensionType dim){
@@ -227,14 +228,6 @@ public class Puzzle extends SudokuNetwork{
      */
 	private IndexValue indexFromHumanReadableInt(int i){
 		return indexFromInt(i-1);
-	}
-	
-    /**
-     * <p>Returns this Puzzle's list of indices.</p>
-     * @return this Puzzle's list of indices
-     */
-	List<IndexValue> getIndices(){
-		return indices;
 	}
 	
 	/**

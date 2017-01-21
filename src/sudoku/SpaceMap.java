@@ -91,7 +91,7 @@ class SpaceMap implements Iterable<Claim>{
 	
 	private List<Integer> ints(){
 		if(ints == null){
-			ints = puzzle.getIndices().stream()
+			ints = puzzle.indexValues().stream()
 					.map(IndexValue::intValue)
 					.collect(Collectors.toList());
 		}
