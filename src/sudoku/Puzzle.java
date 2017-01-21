@@ -672,48 +672,76 @@ public class Puzzle extends SudokuNetwork{
 		return index.intValue() / magnitude;
 	}
 	
-    /**
-     * <p>This enum specifies the properties of the five claim-coordinating dimensions available in
-     * this model of a sudoku target.</p>
-     * @author fiveham
-     * @author fiveham
-	 *
+  /**
+   * <p>This enum specifies the properties of the five claim-coordinating dimensions available in
+   * this model of a sudoku puzzle.</p>
+   * <p>These dimensions are the conventional x, y, and z dimensions and two abstract dimensions 
+   * that run through the interior of the puzzle: box-index and cell-index-in-box.</p>
+   * <p>Box-index is a number indicating a specific box in a given puzzle. Cell-index-in-box is a 
+   * number indicating a specific cell in a given box. These two dimensions take the same shape in 
+   * conventional space, snaking from the upper left hand corner (low x,y) to the high-x edge, and 
+   * wrapping back around to the low-x edge at a y-value higher by 1, like reading text on a page, 
+   * until ending at the lower right corner (high x,y).</p>
+   * @author fiveham
 	 */
 	public static enum DimensionType{
 		
-        /**
-         * <p>The conventional x dimension. An IndexInstance in this dimension contributes all of
-         * its value to the x dimension and contributes zero to y and z.</p>
-         */
-		X				(INT_VALUE,              ZERO,                   ZERO),
+    /**
+     * <p>The conventional x dimension.</p>
+     * <p>An IndexInstance in this dimension contributes all of its value to the x dimension and 
+     * contributes zero to y and z.</p>
+     */
+		X(
+		    INT_VALUE, 
+		    ZERO, 
+		    ZERO),
 		
-        /**
-         * <p>The conventional y dimension. An IndexInstance in this dimension contributes all of
-         * its value to the y dimension and contributes zero to x and z.</p>
-         */
-		Y				(ZERO,                   INT_VALUE,              ZERO),
+    /**
+     * <p>The conventional y dimension.</p>
+     * <p>An IndexInstance in this dimension contributes all of its value to the y dimension and 
+     * contributes zero to x and z.</p>
+     */
+		Y(
+		    ZERO, 
+		    INT_VALUE, 
+		    ZERO),
 		
-        /**
-         * <p>The conventional z dimension. An IndexInstance in this dimension contributes all of
-         * its value to the z dimension and contributes zero to x and y.</p>
-         */
-		SYMBOL			(ZERO,                   ZERO,                   INT_VALUE), 
+    /**
+     * <p>The conventional z dimension.</p>
+     * <p>An IndexInstance in this dimension contributes all of its value to the z dimension and 
+     * contributes zero to x and y.</p>
+     */
+		SYMBOL(
+		    ZERO, 
+		    ZERO, 
+		    INT_VALUE), 
 		
-        /**
-         * <p>The dimension for box-index within the target. This dimension snakes through the
-         * target from the upper left corner (low x,y), increases to the right (higher x), then
-         * jumps back to the next row once it reaches maximum x, continuing in this fashion until it
-         * reaches the lower right corner (high x,y).</p>
-         */
-		BOX				(Puzzle::boxLowX,        Puzzle::boxLowY,        ZERO), 
+    /**
+     * <p>The dimension for box-index within a puzzle. This dimension snakes through a Puzzle from 
+     * the upper left corner (low x,y), increases to the right (higher x), then jumps back to the 
+     * next row once it reaches maximum x, continuing in this fashion until it reaches the lower 
+     * right corner (high x,y) of the puzzle.</p>
+     * <p>An IndexInstance in this dimension contributes its value {@code % magnitude} times 
+     * {@code magnitude} to the x dimension, its value {@code / magnitude} to the y dimension, and 
+     * zero to the z dimension.</p>
+     */
+		BOX(
+		    Puzzle::boxLowX, 
+		    Puzzle::boxLowY, 
+		    ZERO), 
 		
-        /**
-         * <p>The dimension for cell-index within a box. This dimension snakes through a box-sized
-         * area from the upper left corner (low x,y), increases to the right (higher x), then jumps
-         * back to the next row once it reaches maximum x within the box, continuing in this fashion
-         * until it reaches the lower right corner (high x,y) of the box.</p>
-         */
-		CELL_ID_IN_BOX	(Puzzle::snakeInSquareX, Puzzle::snakeInSquareY, ZERO);
+    /**
+     * <p>The dimension for cell-index within a box. This dimension snakes through a box-sized area 
+     * from the upper left corner (low x,y), increases to the right (higher x), then jumps back to 
+     * the next row once it reaches maximum x within the box, continuing in this fashion until it 
+     * reaches the lower right corner (high x,y) of the box.</p>
+     * <p>An IndexInstance in this dimension contributes its value {@code % magnitude} to the x 
+     * dimension, its value {@code / magnitude} to the y dimension, and zero to the z dimension.</p>
+     */
+		CELL_ID_IN_BOX(
+		    Puzzle::snakeInSquareX, 
+		    Puzzle::snakeInSquareY, 
+		    ZERO);
 		
 		private final BiFunction<IndexValue,Integer,Integer> contribX;
 		private final BiFunction<IndexValue,Integer,Integer> contribY;
