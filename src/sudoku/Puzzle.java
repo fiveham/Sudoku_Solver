@@ -294,10 +294,10 @@ public class Puzzle extends SudokuNetwork{
 		return decodeDim(IndexInstance::contributionZ, dims);
 	}
 	
-    /**
-     * <p>The number of physical spatial dimensions ({@value}) pertinent to this model of a sudoku
-     * target.</p>
-     */
+  /**
+   * <p>The number of physical spatial dimensions ({@value}) pertinent to this model of a sudoku
+   * puzzle.</p>
+   */
 	public static final int DIMENSION_COUNT = 3;
 	
     /**
