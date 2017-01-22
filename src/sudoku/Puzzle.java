@@ -137,13 +137,13 @@ public class Puzzle extends SudokuNetwork{
 		return rules;
 	}
 	
-    /**
-     * <p>Generates the lists of dimension-associated valid coordinate values for {@code p}.</p>
-     * @param indices a pre-computed list of the valid coordinate values for {@code p}
-     * @param p the Puzzle for which these dimensions are being generated
-     * @see #dimensions
-     * @return a list of the lists of dimension-associated valid coordinate values for {@code p}
-     */
+  /**
+   * <p>Generates the lists of dimension-associated valid coordinate values for {@code p}.</p>
+   * @param indices the valid dimensional positions in {@code p}
+   * @param p the Puzzle to which these dimensional manifests belong
+   * @see #dimensions
+   * @return the lists of dimension-associated valid coordinate values for {@code p}
+   */
 	private static List<List<IndexInstance>> genDimensions(List<IndexValue> indices, Puzzle p){
 		List<List<IndexInstance>> dimensions = new ArrayList<>(DimensionType.values().length);
 		for(DimensionType type : DimensionType.values()){
