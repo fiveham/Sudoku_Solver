@@ -172,22 +172,41 @@ public class Puzzle extends SudokuNetwork{
 		return indices;
 	}
 	
-    /**
-     * <p>Returns this target's SpaceMap of claims.</p>
-     * @return this target's SpaceMap of claims
-     */
+  /**
+   * <p>Returns the SpaceMap coordinating this puzzle's Claims.</p>
+   * @return the SpaceMap coordinating this puzzle's Claims
+   */
 	public SpaceMap claims(){
 		return claims;
 	}
 	
+	/**
+	 * <p>Returns the Claims belonging to this Puzzle at position ({@code x}, {@code y}, {@code z}) in
+	 * claim-space if this Puzzle has a Claim at that position.</p>
+	 * @param x the x-coordinate to the Claim returned
+	 * @param y the y-coordinate to the Claim returned
+	 * @param z the z-coordinate to the Claim returned
+	 * @return the Claims belonging to this Puzzle at position ({@code x}, {@code y}, {@code z}) in
+   * claim-space if this Puzzle has a Claim at that position
+	 * @throws ArrayIndexOutOfBoundsException if this Puzzle doesn't have a Claim at the specified 
+	 * coordinates
+	 */
 	public Claim claim(int x, int y, int z){
 		return claims.get(x, y, z);
 	}
-	
+  
+  /**
+   * <p>Returns the {@link Universe} of all the Facts belonging to this Puzzle.</p>
+   * @return the {@link Universe} of all the Facts belonging to this Puzzle
+   */
 	public Universe<Fact> factUniverse(){
 		return factUniverse;
 	}
 	
+	/**
+	 * <p>Returns the {@link Universe} of all the Claims belonging to this Puzzle.</p>
+	 * @return the {@link Universe} of all the Claims belonging to this Puzzle
+	 */
 	public Universe<Claim> claimUniverse(){
 		return claimUniverse;
 	}
@@ -202,6 +221,13 @@ public class Puzzle extends SudokuNetwork{
 		return new ArrayList<>(indices);
 	}
 	
+	/**
+	 * <p>Returns a list of all the dimensional indices for this Puzzle pertaining to the specified 
+	 * dimension.</p>
+	 * @param dim the dimension whose pertinent dimensional indices are returned
+	 * @return a list of all the dimensional indices for this Puzzle pertaining to the specified 
+   * dimension
+	 */
 	List<IndexInstance> indexInstances(DimensionType dim){
 		return dimensions.get(dim.ordinal());
 	}
