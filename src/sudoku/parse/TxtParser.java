@@ -21,6 +21,7 @@ public class TxtParser implements Parser{
    * <p>Constructs a TxtParser parses the text of {@code f} as a sudoku puzzle.</p>
    * @param f the file from which a puzzle is read
    * @param charset the name of the charset used to read the text of {@code f}
+   * @throws FileNotFoundException if {@code f} could not be read
    */
 	public TxtParser(File f, String charset) throws FileNotFoundException{
 		Pair<List<Integer>,Integer> pair = null;
