@@ -107,15 +107,16 @@ public class Puzzle extends SudokuNetwork{
 		}
 	}
 	
-    /**
-     * <p>Generates the Rules for {@code p}.</p>
-     * @param p the Puzzle whose Rules are being generated
-     * @param sideLength the pre-computed side-length of {@code p}
-     * @param claims the pre-built array of Claims in {@code p}
-     * @return a list of the Rules for {@code p}
-     */
+  /**
+   * <p>Generates the Rules for {@code p}.</p>
+   * @param p a sudoku puzzle
+   * @param sideLength the side-length of {@code p}
+   * @param claims {@code p}'s SpaceMap of Claims
+   * @return a list of the Rules for {@code p}
+   */
 	private List<Rule> genRuleNodes(Puzzle p, int sideLength, SpaceMap claims){
-		List<Rule> rules = new ArrayList<>(RuleType.values().length * (int) Math.pow(p.sideLength, DIMENSION_COUNT));
+		List<Rule> rules = new ArrayList<>(
+		    RuleType.values().length * (int) Math.pow(p.sideLength, DIMENSION_COUNT));
 		for(RuleType type : RuleType.values()){
 			for(IndexInstance dimA : type.dimA(p)){
 				for(IndexInstance dimB : type.dimB(p)){
