@@ -4,10 +4,8 @@ import common.graph.Graph;
 import java.util.stream.Stream;
 
 /**
- * <p>A subgraph of a sudoku puzzle.</p>
+ * <p>A graph or subgraph of a sudoku puzzle.</p>
  * @author fiveham
- * @author fiveham
- *
  */
 public interface Sudoku extends Graph<NodeSet<?,?>>{
 	
