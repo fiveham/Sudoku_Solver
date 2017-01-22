@@ -99,6 +99,14 @@ public class Puzzle extends SudokuNetwork{
 		this.factUniverse = new Universe<>(factStream());
 	}
 	
+	/**
+	 * <p>Chooses which type of Parser should be used to interpret {@code f}.</p>
+	 * @param f the file to be read
+	 * @param charset the name of the charset to be used to read {@code f}
+	 * @return a Parser that parses the contents of {@code f}
+	 * @throws FileNotFoundException if {@code f} could not be read
+	 * @throws IllegalArgumentException if {@code f} has an extension other than .txt or .sdk
+	 */
 	private static Parser chooseParser(File f, String charset) throws FileNotFoundException{
 		String extension = f.getName();
 		extension = extension.substring(extension.lastIndexOf("."));
