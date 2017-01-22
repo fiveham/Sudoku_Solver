@@ -1,10 +1,8 @@
 package common.graph;
 
-import common.Universe;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -209,97 +207,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 			}
 		}
 		return false;
-	}
-	
-	@Override
-	public List<T> path(T t1, T t2){
-		
-		Branch implicitPath = findPath(t2, t1); //reverse args so parent-path goes in order from t1 to t2
-		
-		List<T> result = new ArrayList<>();
-		for(Branch pointer = implicitPath; pointer != null; pointer = pointer.parent){
-			result.add(pointer.wrapped);
-		}
-		
-		return result;
-	}
-	
-	/**
-	 * <p>Finds a path from {@code from} to {@code to} in this graph.</p>
-	 * @param to a node in this graph
-	 * @param from a node in this graph
-	 * @return a Branch describing the path from {@code from} to {@code to}
-	 * @throws IllegalStateException if {@code to} and {@code from} are not both nodes in this graph
-	 * @throws IllegalArgumentException if no path is found between {@code to} and {@code from} in 
-	 * this graph
-	 */
-	private Branch findPath(T to, T from){
-		if(!(nodes.contains(to) && nodes.contains(from))){
-			throw new IllegalStateException(to + " and/or " + from + " not present in this graph");
-		}
-		
-		Branch init = new Branch(to, null);
-		if(to.equals(from)){
-			return init;
-		}
-		
-    Set<Branch> cuttingEdge = new HashSet<>();
-    cuttingEdge.add(init);
-		
-    Universe<T> nodeUniv = new Universe<>(nodes);
-		Set<T> unassigned = nodeUniv.back();
-		unassigned.remove(to);
-		
-    Set<Branch> edge = new HashSet<>();
-		while(!cuttingEdge.isEmpty()){
-			//contract
-			edge = cuttingEdge;
-			cuttingEdge = new HashSet<>();
-			
-			//grow
-			for(Branch b : edge){
-				Set<T> n = nodeUniv.back(b.wrapped.neighbors());
-				n.retainAll(unassigned);
-				unassigned.removeAll(n);
-				
-				for(T t : n){
-					Branch newBranch = new Branch(t, b);
-					
-					if(t.equals(from)){
-						return newBranch;
-					} else{
-						cuttingEdge.add(newBranch);
-					}
-				}
-			}
-		}
-		
-		throw new IllegalArgumentException(
-		    "Cannot find path between specified nodes: " + from + " and " + to);
-	}
-	
-	private class Branch{
-		private final T wrapped;
-		private final Branch parent;
-		
-		private Branch(T wrapped, Branch parent){
-			this.wrapped = wrapped;
-			this.parent = parent;
-		}
-		
-		@Override
-		public boolean equals(Object o){
-			if(o instanceof AbstractGraph.Branch){
-				AbstractGraph<?>.Branch b = (AbstractGraph<?>.Branch)o; 
-				return wrapped.equals(b.wrapped) && (parent == null ? b.parent == null : parent.equals(b.parent));
-			}
-			return false;
-		}
-		
-		@Override
-		public int hashCode(){
-			return wrapped.hashCode();
-		}
 	}
 	
 	@Override

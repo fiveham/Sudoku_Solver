@@ -71,16 +71,4 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
      * {@code seedSrc} when {@code unassignedNodes} is given to it as input
      */
 	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc);
-	
-    /**
-     * <p>Returns a list of the vertices to be traversed to travel through this Graph from t1 to t2.
-     * The listed vertices are in the proper order. {@code t1} and {@code t2} are the first and last
-     * elements of the list, respectively.</p>
-     * @param t1
-     * @param t2
-     * @return
-     * @throws IllegalArgumentException if there is no path between {@code t1} and {@code t2} in
-     * this Graph or if either {@code t1} or {@code t2} is not part of this Graph
-     */
-	public List<T> path(T t1, T t2);
 }
