@@ -153,14 +153,14 @@ public class Puzzle extends SudokuNetwork{
 		return dimensions;
 	}
 	
-    /**
-     * <p>Generates the {@link #indices indices} for a Puzzle with the specified
-     * {@code sideLength}.</p>
-     * @param sideLength the pre-computed side-length of {@code p}
-     * @param p the target for which the {@link #indices indices} are being generated
-     * @see #indices
-     * @return the list of {@link #indices indices} generated for {@code p}
-     */
+  /**
+   * <p>Generates the {@link #indices legal dimensional positions} for a Puzzle with the specified
+   * {@code sideLength}.</p>
+   * @param sideLength the side-length of {@code p}
+   * @param p a sudoku puzzle
+   * @see #indices
+   * @return the {@link #indices legal dimensional positions} for {@code p}
+   */
 	private static List<IndexValue> genIndices(int sideLength, Puzzle p){
 		List<IndexValue> indices = new ArrayList<>(sideLength);
 		for(int i = 0; i < sideLength; ++i){
