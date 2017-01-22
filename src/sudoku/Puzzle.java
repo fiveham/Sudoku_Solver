@@ -2,7 +2,6 @@ package sudoku;
 
 import common.Pair;
 import common.Universe;
-import common.time.TimeBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -21,18 +20,10 @@ import sudoku.parse.SadmanParser;
 import sudoku.parse.TxtParser;
 
 /**
- * <p>Represents a sudoku target as a bipartite graph of {@link Claim truth-claims} such as "Cell
- * 1,7 has value 3." and {@link Rule groupings of claims} of which one claim per grouping is true
- * and the rest in the same group are false.</p> <p>The Claims are internally stored as
- * {@link SpaceMap a three-dimensional array} where the dimensions are the x and y coordinates that
- * a cell may have in the target and a z coordinate which is the values available to the cells.</p>
- * <p>A Puzzle features a sort of memory of history in the form of a time tree, built upon by
- * calling {@link #timeBuilder() timeBuilder()}} and using {@link TimeBuilder its methods}.
- * Automatic Rule-collapse uses this time-tree, and all Techniques used in solving the target should
- * do so, too.</p>
+ * <p>Represents a sudoku puzzle as a bipartite graph of {@link Claim truth-claims} such as "Cell
+ * 1,7 has value 3." and {@link Fact groupings of claims} of which exactly one claim per grouping is
+ * true.</p>
  * @author fiveham
- * @author fiveham
- *
  */
 public class Puzzle extends SudokuNetwork{
 	
