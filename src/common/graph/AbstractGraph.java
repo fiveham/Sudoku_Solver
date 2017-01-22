@@ -101,7 +101,8 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		return nodes.stream();
 	}
 	
-	private final Function<List<T>,T> STD_CONCOM_SEED_SRC = (unassigned)->unassigned.remove(unassigned.size()-1);
+	private final Function<List<T>, T> STD_CONCOM_SEED_SRC = 
+	    (unassigned) -> unassigned.remove(unassigned.size()-1);
 	
 	@Override
 	public Collection<Graph<T>> connectedComponents(){
@@ -124,8 +125,14 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	}
 	
 	@Override
-	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc, List<Consumer<Set<T>>> contractEventListeners){
-		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(nodes.size(), unassignedNodes, contractEventListeners);
+	public Graph<T> component(
+	    List<T> unassignedNodes, 
+	    Function<List<T>,T> seedSrc, 
+	    List<Consumer<Set<T>>> contractEventListeners){
+	  
+		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(
+		    nodes.size(), 
+		    unassignedNodes, contractEventListeners);
 		{
 			int initUnassignedCount = unassignedNodes.size();
 			T seed = seedSrc.apply(unassignedNodes);
@@ -137,9 +144,9 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 			newComponent.add(seed); //seed now in cuttingEdge
 		}
 		
-		while( !newComponent.cuttingEdgeIsEmpty() ){
-			newComponent.contract();	//move cuttingEdge into edge and old edge into core
-			newComponent.grow();		//add unincorporated nodes to cuttingEdge
+		while(!newComponent.cuttingEdgeIsEmpty()){
+			newComponent.contract(); //move cuttingEdge into edge and old edge into core
+			newComponent.grow(); //add unincorporated nodes to cuttingEdge
 		}
 		
 		return new BasicGraph<T>(newComponent.contract());
@@ -169,7 +176,8 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		int index2 = nodes.indexOf(v2);
 		
 		if( index1 < 0 || index2 < 0 ){
-			throw new IllegalArgumentException("At least one of the specified nodes is not in this graph.");
+			throw new IllegalArgumentException(
+			    "At least one of the specified nodes is not in this graph.");
 		}
 		
 		if(index1 == index2){
@@ -259,11 +267,11 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
      * path connecting them
      */
 	public int distance2(final T t1, final T t2){
-		if( !nodes.contains(t1) || !nodes.contains(t2) ){
+		if(!nodes.contains(t1) || !nodes.contains(t2)){
 			throw new IllegalArgumentException("At least one of the specified Nodes is not in this graph.");
 		}
 		
-		if(t1==t2){
+		if(t1 == t2){
 			return 0;
 		}
 		
@@ -284,7 +292,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		};
 		DistFinder distFinder = new DistFinder();
 		
-		component(new ArrayList<>(nodes), (list)->t1, Collections.singletonList(distFinder));
+		component(new ArrayList<>(nodes), (list) -> t1, Collections.singletonList(distFinder));
 		
 		return distFinder.dist;
 	}
@@ -360,7 +368,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		@Override
 		public boolean equals(Object o){
 			if(o instanceof AbstractGraph.Branch){
-				AbstractGraph<?>.Branch b = (AbstractGraph<?>.Branch)o; 
+				AbstractGraph<?>.Branch b = (AbstractGraph<?>.Branch) o; 
 				return wrapped.equals(b.wrapped) 
 				    && (parent == null 
     				    ? b.parent == null 
