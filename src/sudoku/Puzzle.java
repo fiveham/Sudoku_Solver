@@ -36,49 +36,52 @@ import sudoku.parse.TxtParser;
  */
 public class Puzzle extends SudokuNetwork{
 	
-    /**
-     * <p>The index for the x-dimension.</p>
-     */
+  /**
+   * <p>The index for the x-dimension in an ordered triple.</p>
+   */
 	public static final int X_DIM = 0;
 	
-    /**
-     * <p>The index for the y-dimension.</p>
-     */
+  /**
+   * <p>The index for the y-dimension in an ordered triple.</p>
+   */
 	public static final int Y_DIM = 1;
 	
-    /**
-     * <p>The index for the z-dimension.</p>
-     */
+  /**
+   * <p>The index for the z-dimension in an ordered triple.</p>
+   */
 	public static final int Z_DIM = 2;
 	
-    /**
-     * <p>A three-dimensional array of this Puzzle's Claims.</p>
-     */
+  /**
+   * <p>A three-dimensional array of this Puzzle's Claims.</p>
+   */
 	private SpaceMap claims;
 	
-    /**
-     * <p>A list of all the valid dimension-independent values for coordinates in this Puzzle.</p>
-     */
+  /**
+   * <p>a list of the valid coordinate values for this puzzle's dimensions.</p>
+   */
 	private List<IndexValue> indices;
 	
-    /**
-     * <p>A list of lists which contain dimension-associated valid coordinate values for this
-     * Puzzle.</p>
-     */
+  /**
+   * <p>A list of lists of all the dimensional indices for this Puzzle.</p>
+   */
 	private List<List<IndexInstance>> dimensions;
 	
 	private final Universe<Fact> factUniverse;
 	private final Universe<Claim> claimUniverse;
 	
-    /**
-     * <p>Constructs a Puzzle using the text in the specified file {@code f}.</p>
-     * @param f the file containing the target in text form at the start of the file
-     * @throws FileNotFoundException if {@code f} cannot be found or read
-     */
+  /**
+   * <p>Constructs a Puzzle using the text in {@code f}.</p>
+   * @param f the file containing the puzzle in text form
+   * @throws FileNotFoundException if {@code f} cannot be found or read
+   */
 	public Puzzle(File f, String charset) throws FileNotFoundException{
 		this(chooseParser(f,charset));
 	}
 	
+	/**
+	 * <p>Constructs a Puzzle using the information supplied by {@code parser}.</p>
+	 * @param parser tells the constructor what the magnitude and initial values are for this Puzzle
+	 */
 	public Puzzle(Parser parser){
 		super(parser.mag());
 		
