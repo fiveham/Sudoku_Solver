@@ -5,6 +5,7 @@ import common.graph.Graph;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import sudoku.parse.Parser;
 
@@ -75,36 +76,58 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?,?>> implements Sudoku{
 	
 	@Override
 	public String toString(){
-		Map<Integer,Fact> cells = factStream()
-				.filter(Rule.class::isInstance)
-				.map(Rule.class::cast)
-				.filter(Puzzle.RuleType.CELL::isTypeOf)
-				.collect(Collectors.toMap(
-						(cell) -> NodeSet.linearizeCoords(0, cell.dimA().intValue(), cell.dimB().intValue(), sideLength()), 
-						Function.identity()));
+	  class CellPosition{
+	    
+	    private final int x;
+	    private final int y;
+	    
+	    CellPosition(int x, int y){
+	      this.y = y;
+	      this.x = x;
+	    }
+	    
+	    @Override
+	    public boolean equals(Object o){
+	      if(o instanceof CellPosition){
+	        CellPosition c = (CellPosition) o;
+	        return c.y == y && c.x == x;
+	      }
+	      return false;
+	    }
+	    
+	    @Override
+	    public int hashCode(){
+	      return sideLength() * y + x;
+	    }
+	  }
+	  
+	  Map<CellPosition, Fact> cells = factStream()
+        .filter(Rule.class::isInstance)
+        .map(Rule.class::cast)
+        .filter(Puzzle.RuleType.CELL::isTypeOf)
+        .collect(Collectors.toMap(
+            (cell) -> new CellPosition(cell.dimB().intValue(), cell.dimA().intValue()), 
+            Function.identity()));
 		
+		String empty = IntStream.range(0, sideLength())
+		    .mapToObj((i) -> " ")
+		    .collect(Collectors.joining());
 		StringBuilder result = new StringBuilder();
-		String empty;
-		{
-			StringBuilder empt = new StringBuilder();
-			for(int i=0; i<sideLength(); ++i){
-				empt.append(" ");
-			}
-			empty = empt.toString();
-		}
-		
 		for(int y = 0; y < sideLength(); ++y){
 			for(int x = 0; x < sideLength(); ++x){
 				result.append("|");
-				Fact cell = cells.get(NodeSet.linearizeCoords(0, y, x, sideLength()));
+				Fact cell = cells.get(new CellPosition(x, y));
 				if(cell == null){
 					result.append(empty);
 				} else{
-					for(int z=0; z<sideLength(); ++z){
-						result.append(cell.contains(cell.getPuzzle().claim(x, y, z))
-                ? Integer.toString(z, Parser.MAX_RADIX)
-                : " ");
-					}
+				  Puzzle p = cell.getPuzzle();
+				  int local_x = x;
+				  int local_y = y;
+				  result.append(IntStream.range(0, sideLength())
+				      .mapToObj((z) -> cell.contains(p.claim(local_x, local_y, z)) 
+				          ? Integer.toString(z, Parser.MAX_RADIX) 
+				          : " ")
+				      .collect(Collectors.joining()));
 				}
 			}
 			result.append("|" + System.lineSeparator());
