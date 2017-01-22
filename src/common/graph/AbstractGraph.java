@@ -349,6 +349,15 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		throw new IllegalArgumentException("Cannot find path between specified nodes: "+from+" and "+to);
 	}
 	
+	/**
+	 * <p>A Branch is a wrapper around a single node of this graph used while finding a path between 
+	 * two nodes. A path between two nodes is found by growing all possible paths away from one of the 
+	 * nodes until one of the paths, while being grown, finds the other node. In order to efficiently 
+	 * find the way back from the destination node in order to return the path, Branches are used, 
+	 * each wrapping a node and pointing to the node (via its wrapping Branch) from which the node was 
+	 * reached during the search for a path.</p>
+	 * @author fiveham
+	 */
 	private class Branch{
 		private final T wrapped;
 		private final Branch parent;
