@@ -56,17 +56,4 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	static <T> T stdSeed(List<T> list){
 	  return list.remove(list.size() - 1);
 	}
-	
-    /**
-     * <p>Returns the connected component of this Graph that contains the {@code T} output by
-     * {@code seedSrc} when {@code unassignedNodes} is given to it as input.</p>
-     * @param unassignedNodes nodes from this Puzzle for which a connected component will be built
-     * @param seedSrc a function that specifies an element from {@code unassignedNodes} with which
-     * to begin building the connected component that is returned
-     * @param eventListeners a list of event-listeners that respond when the connected component
-     * being built moves newly-added nodes inward and out of the outermost layer
-     * @return the connected component of this Grapht hat contains the {@code T} output by
-     * {@code seedSrc} when {@code unassignedNodes} is given to it as input
-     */
-	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc);
 }

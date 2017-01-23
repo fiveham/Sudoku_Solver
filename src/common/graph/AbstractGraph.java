@@ -93,7 +93,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		return result;
 	}
 	
-	@Override
 	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc){
 		
 		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(nodes.size(), unassignedNodes);
