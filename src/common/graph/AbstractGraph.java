@@ -76,15 +76,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		return nodes.stream();
 	}
 	
-	private T stdSeed(List<T> list){
-	  return list.remove(list.size() - 1);
-	}
-	
-	@Override
-	public Collection<Graph<T>> connectedComponents(){
-		return connectedComponents(this::stdSeed);
-	}
-	
 	@Override
 	public Collection<Graph<T>> connectedComponents(Function<List<T>,T> seedSrc){
 		

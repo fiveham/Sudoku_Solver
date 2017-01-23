@@ -38,16 +38,20 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
      */
 	public Collection<Graph<T>> connectedComponents(Function<List<T>,T> seedSrc);
 	
-    /**
-     * <p>Returns a collection of all the connected components of this Graph. This is a convenience
-     * method supplying default arguments to
-     * {@link #connectedComponents(List<Consumer<Set<T>>>, Function<List<T>,T>) connectedComponents(List<Consumer<Set<T>>>, Function<List<T>,T>)}.
-     * The default list of event-listeners supplied is the list returned by
-     * {@link contractEventListeners() contractEventListeners()}. The default {@code seedSrc}
-     * supplied is a function that removes and returns the last element of the list it is given.</p>
-     * @return
-     */
-	public Collection<Graph<T>> connectedComponents();
+	/**
+   * <p>Returns a collection of all the connected components of this Graph. This is a convenience
+   * method supplying default arguments to {@link #connectedComponents(List, Function)}. 
+   * The default {@code seedSrc} supplied is a function that removes and returns the last element of
+   * the list it is given.</p>
+   * @return a collection of all the connected components of this Graph
+   */
+	public default Collection<Graph<T>> connectedComponents(){
+	  return connectedComponents(Graph::stdSeed);
+	}
+	
+	static <T> T stdSeed(List<T> list){
+	  return list.remove(list.size() - 1);
+	}
 	
     /**
      * <p>Returns the connected component of this Graph that contains the {@code T} output by
