@@ -5,7 +5,6 @@ import common.Sets;
 import common.Universe;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -97,9 +96,10 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	}
 	
   private Graph<T> component(BackedSet<T> unassignedNodes, Function<Set<T>, T> seedSrc){
-    Set<T> core = new HashSet<>();
-    Set<T> edge = new HashSet<>();
-    Set<T> cuttingEdge = new HashSet<>();
+    Universe<T> u = unassignedNodes.universe();
+    Set<T> core = u.back();
+    Set<T> edge = u.back();
+    Set<T> cuttingEdge = u.back();
     cuttingEdge.add(seedSrc.apply(unassignedNodes));
     
     while(!cuttingEdge.isEmpty()){
@@ -107,8 +107,8 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
       edge = cuttingEdge;
       cuttingEdge = edge.stream()
           .map(Vertex::neighbors)
-          .map(HashSet<T>::new)
-          .reduce(new HashSet<T>(), Sets::mergeCollections);
+          .map(u::back)
+          .reduce(u.back(), Sets::mergeCollections);
       
       for(Iterator<T> iterator = cuttingEdge.iterator(); iterator.hasNext();){
         T element = iterator.next();
