@@ -1,7 +1,6 @@
 package common.graph;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -122,91 +121,6 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		}
 		
 		return new BasicGraph<T>(newComponent.contract());
-	}
-	
-	@Override
-	public int distance(T v1, T v2){
-		
-		int index1 = nodes.indexOf(v1);
-		int index2 = nodes.indexOf(v2);
-		
-		if( index1<0 || index2<0 ){
-			throw new IllegalArgumentException("At least one of the specified nodes is not in this graph.");
-		}
-		
-		if(index1==index2){
-			return 0;
-		}
-		
-		final boolean[][] adjacencyMatrix = new boolean[nodes.size()][nodes.size()];
-		for(int i=0; i<nodes.size(); ++i){
-			for(int j=0; j<i; ++j){
-				adjacencyMatrix[i][j] = adjacencyMatrix[j][i] = nodes.get(i).neighbors().contains(nodes.get(j));
-			}
-			adjacencyMatrix[i][i] = false;
-		}
-		
-		//adjacency matrix raised to a power (initially the power of 1)
-		boolean[][] adjPower = new boolean[nodes.size()][nodes.size()];
-		for(int i=0; i<adjPower.length; ++i){
-			adjPower[i] = Arrays.copyOf(adjacencyMatrix[i], adjacencyMatrix.length);
-		}
-		
-		for(int n=1; n<nodes.size(); ++n){
-			if(adjPower[index1][index2]){
-				return n;
-			} else{
-				adjPower = times(adjPower,adjacencyMatrix);
-			}
-		}
-		return NO_CONNECTION;
-	}
-	
-	public static final int NO_CONNECTION = -1;
-	
-    /**
-     * <p>Matrix-multiplies the specified boolean matrices under the assumption that they are both
-     * symmetrical about the main diagonal and that they are both square and both have the same
-     * dimensions, all of which will be true for all calls to this method because method is private
-     * and is called from only one place, where those assumptions hold true.</p> <p>Since the
-     * elements of the matrices involved are boolean values instead of numbers, the operations of
-     * (scalar) multiplication and addition used in combining the elements of matrices whose
-     * elements are numbers when multiplying those matrices are replaced here with {@code and (&&)}
-     * and {@code or (||)}.</p>
-     * @param a a square symmetrical matrix of boolean values
-     * @param b a square symmetrical matrix of boolean values
-     * @return a square symmetrical matrix of boolean values corresponding to the matrix-product of
-     * {@code a} and {@code b}
-     */
-	private boolean[][] times(boolean[][] a, boolean[][] b){
-		boolean[][] result = new boolean[a.length][a.length];
-		
-		for(int i=0; i<nodes.size(); ++i){
-			for(int j=0; j<i; ++j){
-				result[i][j] = result[j][i] = dot(a[j],b[i]);
-			}
-			result[i][i] = dot(a[i],b[i]);
-		}
-		
-		return result;
-	}
-	
-    /**
-     * <p>Returns the dot product of two boolean vectors. Assumes that {@code a} and {@code b} are
-     * the same length. The operations of multiplication and addition used in calculating the dot
-     * product of two numerical vectors are replaced with {@code and (&&)} and {@code or (||)}
-     * respectively.</p>
-     * @param a a vector
-     * @param b a vector
-     * @return the boolean dot product of two boolean vectors
-     */
-	private boolean dot(boolean[] a, boolean[] b){
-		for(int i=0; i<a.length; ++i){
-			if( a[i] && b[i] ){
-				return true;
-			}
-		}
-		return false;
 	}
 	
 	@Override

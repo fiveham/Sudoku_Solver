@@ -23,16 +23,6 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	public int size();
 	
     /**
-     * <p>Returns the number of edges to be traversed to move on the Graph from {@code t1} to
-     * {@code t2}, or -1 if there is no path connecting {@code t1} and {@code t2}.</p>
-     * @param t1 a vertex in this Graph
-     * @param t2 a vertex in this Graph
-     * @return the number of edges to be traversed to move on the Graph from {@code t1} to
-     * {@code t2}, or -1 if there is no path connecting {@code t1} and {@code t2}
-     */
-	public int distance(T t1, T t2);
-	
-    /**
      * <p>Returns a stream based on the underlying collection of nodes.</p>
      * @return a stream backed by this Graph's underlying collection of nodes
      */
