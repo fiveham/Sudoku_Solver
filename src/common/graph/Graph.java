@@ -49,6 +49,13 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	  return connectedComponents(Graph::stdSeed);
 	}
 	
+	/**
+	 * <p>Removes and returns the last element of {@code list}.</p>
+	 * @param list a modifiable list from which elements can be removed and which has at least one 
+	 * element
+	 * @return the last element that {@code list} had when it was sent to this method
+	 * @throws IndexOutOfBoundsException if {@code list} is empty
+	 */
 	static <T> T stdSeed(List<T> list){
 	  return list.remove(list.size() - 1);
 	}
