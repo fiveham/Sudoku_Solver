@@ -38,9 +38,7 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	
 	/**
    * <p>Returns a collection of all the connected components of this Graph. This is a convenience
-   * method supplying default arguments to {@link #connectedComponents(List, Function)}. 
-   * The default {@code seedSrc} supplied is a function that removes and returns the last element of
-   * the list it is given.</p>
+   * method supplying default arguments to {@link #connectedComponents(List, Function)}.</p>
    * @return a collection of all the connected components of this Graph
    */
 	public default Collection<Graph<T>> connectedComponents(){
