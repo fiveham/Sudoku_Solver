@@ -1,13 +1,10 @@
 package common.graph;
 
 import common.Sets;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 
 class ConnectedComponent<T extends Vertex<T>> {
 	
@@ -17,15 +14,8 @@ class ConnectedComponent<T extends Vertex<T>> {
 	
 	private final List<T> unassignedNodes;
 	
-	@SafeVarargs
-	ConnectedComponent(int size, List<T> unassignedNodes, Consumer<Set<T>>... contractEvents) {
-		this(size, unassignedNodes, Arrays.asList(contractEvents));
-	}
-	
-	ConnectedComponent(int size, List<T> unassignedNodes, Collection<Consumer<Set<T>>> contractEvents) {
+	ConnectedComponent(int size, List<T> unassignedNodes) {
 		this.size = size;
-		this.growthListeners = new ArrayList<>(contractEvents);
-		
 		this.unassignedNodes = unassignedNodes;
 		
 		this.cuttingEdge = new HashSet<>(size);
@@ -44,20 +34,12 @@ class ConnectedComponent<T extends Vertex<T>> {
 		unassignedNodes.removeAll(cuttingEdge);
 	}
 	
-	private final List<Consumer<Set<T>>> growthListeners;
-	
 	Set<T> contract(){
-		triggerGrowthListeners();
-		
 		core.addAll(edge);
 		edge = cuttingEdge;
 		cuttingEdge = new HashSet<>((size - core.size() - edge.size()) * Sets.JAVA_UTIL_HASHSET_SIZE_FACTOR);
 		
 		return core;
-	}
-	
-	private void triggerGrowthListeners(){
-		growthListeners.stream().forEach( (c)->c.accept(cuttingEdge) );
 	}
 	
 	void add(T vertex){
