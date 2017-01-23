@@ -28,15 +28,13 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
      */
 	public Stream<T> nodeStream();
 	
-    /**
-     * <p>Returns a collection of all the connected components of this Graph.</p>
-     * @param eventListeners event-listeners that respond to the contractions that occur in
-     * connected components while they build
-     * @param seedSrc a function that selects an element from a list of nodes in this Graph from
-     * which to begin building a given connected component
-     * @return a collection of all the connected components of this Graph
-     */
-	public Collection<Graph<T>> connectedComponents(Function<List<T>,T> seedSrc);
+  /**
+   * <p>Returns a collection of all the connected components of this Graph.</p>
+   * @param seedSrc a function that selects an element from a list of nodes in this Graph from
+   * which to begin building a given connected component
+   * @return a collection of all the connected components of this Graph
+   */
+	public Collection<Graph<T>> connectedComponents(Function<List<T>, T> seedSrc);
 	
 	/**
    * <p>Returns a collection of all the connected components of this Graph. This is a convenience
