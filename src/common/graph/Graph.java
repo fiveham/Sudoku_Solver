@@ -9,20 +9,17 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
- * <p>A graph whose connection data is stored in adjacency list form, each vertex keeping track of
- * with which other vertices it shares an edge.</p>
+ * <p>A graph whose connection data is stored in adjacency list form, each {@link Vertex vertex} 
+ * keeping track of with which other vertices it shares an edge.</p>
  * @author fiveham
- * @author fiveham
- *
  * @param <T>
- * @param <T>@param <T>
  */
 public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	
-    /**
-     * <p>Returns the number of vertices in this Graph.</p>
-     * @return the number of vertices in this Graph
-     */
+  /**
+   * <p>Returns the number of vertices in this Graph.</p>
+   * @return the number of vertices in this Graph
+   */
 	public int size();
 	
     /**
@@ -35,10 +32,10 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
      */
 	public int distance(T t1, T t2);
 	
-    /**
-     * <p>Returns a stream based on the underlying collection of nodes.</p>
-     * @return a stream backed by this Graph's underlying collection of nodes
-     */
+  /**
+   * <p>Returns a stream based on the underlying collection of nodes.</p>
+   * @return a stream backed by this Graph's underlying collection of nodes
+   */
 	public Stream<T> nodeStream();
 	
     /**
