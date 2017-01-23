@@ -1,7 +1,9 @@
 package common.graph;
 
+import common.Sets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -113,6 +115,34 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		
 		return new BasicGraph<T>(newComponent.contract());
 	}
+	
+  private Graph<T> component2(List<T> unassignedNodes, Function<List<T>,T> seedSrc){
+    Set<T> core = new HashSet<>();
+    Set<T> edge = new HashSet<>();
+    Set<T> cuttingEdge = new HashSet<>();
+    cuttingEdge.add(seedSrc.apply(unassignedNodes));
+    
+    while(!cuttingEdge.isEmpty()){
+      core.addAll(edge);
+      edge = cuttingEdge;
+      cuttingEdge = edge.stream()
+          .map(Vertex::neighbors)
+          .map(HashSet<T>::new)
+          .reduce(new HashSet<T>(), Sets::mergeCollections);
+      
+      for(Iterator<T> iterator = cuttingEdge.iterator(); iterator.hasNext();){
+        T element = iterator.next();
+        if(unassignedNodes.contains(element)){
+          unassignedNodes.remove(element);
+        } else{
+          iterator.remove();
+        }
+      }
+    }
+    core.addAll(edge);
+    
+    return new BasicGraph<T>(core);
+  }
 	
 	@Override
 	public int hashCode(){
