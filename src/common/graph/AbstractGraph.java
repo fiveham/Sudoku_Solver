@@ -1,6 +1,7 @@
 package common.graph;
 
 import common.Sets;
+import common.Universe;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -79,13 +80,14 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	}
 	
 	@Override
-	public Collection<Graph<T>> connectedComponents(Function<List<T>,T> seedSrc){
+	public Collection<Graph<T>> connectedComponents(Function<Set<T>, T> seedSrc){
 		
 		List<Graph<T>> result = new ArrayList<>();
 		
-		List<T> unassignedNodes = new ArrayList<>(nodes);
+		Universe<T> u = new Universe<>(nodes);
+		Set<T> unassignedNodes = u.back();
 		
-		while( !unassignedNodes.isEmpty() ){
+		while(!unassignedNodes.isEmpty()){
 			Graph<T> component = component(unassignedNodes, seedSrc);
 			result.add(component);
 		}
@@ -93,29 +95,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		return result;
 	}
 	
-	public Graph<T> component(List<T> unassignedNodes, Function<List<T>,T> seedSrc){
-		
-		ConnectedComponent<T> newComponent = new ConnectedComponent<T>(nodes.size(), unassignedNodes);
-		{
-			int initUnassignedCount = unassignedNodes.size();
-			T seed = seedSrc.apply(unassignedNodes);
-			
-			if(unassignedNodes.size() == initUnassignedCount){
-				unassignedNodes.remove(seed);
-			}
-			
-			newComponent.add(seed); //seed now in cuttingEdge
-		}
-		
-		while( !newComponent.cuttingEdgeIsEmpty() ){
-			newComponent.contract();	//move cuttingEdge into edge and old edge into core
-			newComponent.grow();		//add unincorporated nodes to cuttingEdge
-		}
-		
-		return new BasicGraph<T>(newComponent.contract());
-	}
-	
-  private Graph<T> component2(List<T> unassignedNodes, Function<List<T>,T> seedSrc){
+  private Graph<T> component(Set<T> unassignedNodes, Function<Set<T>, T> seedSrc){
     Set<T> core = new HashSet<>();
     Set<T> edge = new HashSet<>();
     Set<T> cuttingEdge = new HashSet<>();
