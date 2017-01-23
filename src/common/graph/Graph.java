@@ -47,6 +47,7 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	
 	/**
 	 * <p>Removes and returns the last element of {@code list}.</p>
+	 * <p>This is the default seed source in {@link #connectedComponents()}.</p>
 	 * @param list a modifiable list from which elements can be removed and which has at least one 
 	 * element
 	 * @return the last element that {@code list} had when it was sent to this method
