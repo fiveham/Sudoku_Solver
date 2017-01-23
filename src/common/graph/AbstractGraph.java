@@ -110,14 +110,8 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
           .map(u::back)
           .reduce(u.back(), Sets::mergeCollections);
       
-      for(Iterator<T> iterator = cuttingEdge.iterator(); iterator.hasNext();){
-        T element = iterator.next();
-        if(unassignedNodes.contains(element)){
-          unassignedNodes.remove(element);
-        } else{
-          iterator.remove();
-        }
-      }
+      cuttingEdge.retainAll(unassignedNodes);
+      unassignedNodes.removeAll(cuttingEdge);
     }
     core.addAll(edge);
     
