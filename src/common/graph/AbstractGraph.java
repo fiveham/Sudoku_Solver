@@ -1,5 +1,6 @@
 package common.graph;
 
+import common.BackedSet;
 import common.Sets;
 import common.Universe;
 import java.util.ArrayList;
@@ -85,7 +86,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		List<Graph<T>> result = new ArrayList<>();
 		
 		Universe<T> u = new Universe<>(nodes);
-		Set<T> unassignedNodes = u.back();
+		BackedSet<T> unassignedNodes = u.back(nodes);
 		
 		while(!unassignedNodes.isEmpty()){
 			Graph<T> component = component(unassignedNodes, seedSrc);
@@ -95,7 +96,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 		return result;
 	}
 	
-  private Graph<T> component(Set<T> unassignedNodes, Function<Set<T>, T> seedSrc){
+  private Graph<T> component(BackedSet<T> unassignedNodes, Function<Set<T>, T> seedSrc){
     Set<T> core = new HashSet<>();
     Set<T> edge = new HashSet<>();
     Set<T> cuttingEdge = new HashSet<>();
