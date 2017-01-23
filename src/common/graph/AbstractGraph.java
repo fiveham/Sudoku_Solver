@@ -16,17 +16,13 @@ import java.util.stream.Stream;
 /**
  * <p>A base class for implementations of the Graph interface.</p>
  * @author fiveham
- * @author fiveham
- *
  * @param <T> the type of the vertices of this Graph
- * @param <T> the type of the vertices of this Graph@param <T> the type of the vertices of this
- * @param <T> the type of the vertices of this GraphGraph
  */
 public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
-    /**
-     * <p>The backing collection of vertices in this Graph.</p>
-     */
+  /**
+   * <p>The backing collection of vertices in this Graph.</p>
+   */
 	protected final ArrayList<T> nodes;
 	
     /**
@@ -34,29 +30,28 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
      */
 	protected final List<Supplier<Consumer<Set<T>>>> contractEventListenerFactories;
 	
-    /**
-     * <p>Constructs an AbstractGraph with an empty list of vertices and an empty list of
-     * connected-component contraction event-listeners.</p>
-     */
+  /**
+   * <p>Constructs an AbstractGraph with no vertices.</p>
+   */
 	public AbstractGraph() {
 		nodes = new ArrayList<>();
 		contractEventListenerFactories = new ArrayList<>();
 	}
 	
-    /**
-     * <p>Constructs an AbstractGraph whose backing collection of vertices is initialized empty but
-     * with a capacity of {@code size}.</p>
-     * @param size the capacity which the backing collection of vertices will have
-     */
+  /**
+   * <p>Constructs an AbstractGraph whose backing collection of vertices is initialized empty but
+   * with a capacity of {@code size}.</p>
+   * @param size the capacity which the backing collection of vertices will have
+   */
 	public AbstractGraph(int size) {
 		nodes = new ArrayList<>(size);
 		contractEventListenerFactories = new ArrayList<>();
 	}
 	
-    /**
-     * <p>Constructs an AbstractGraph having the elements of {@code coll} as vertices.</p>
-     * @param coll vertices for this Graph
-     */
+  /**
+   * <p>Constructs an AbstractGraph having the elements of {@code coll} as vertices.</p>
+   * @param coll vertices for this Graph
+   */
 	public AbstractGraph(Collection<? extends T> coll){
 		nodes = new ArrayList<>(coll);
 		contractEventListenerFactories = new ArrayList<>();
