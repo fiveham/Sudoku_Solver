@@ -1,7 +1,8 @@
 package common.graph;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -30,15 +31,15 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	
   /**
    * <p>Returns a collection of all the connected components of this Graph.</p>
-   * @param seedSrc a function that selects an element from a list of nodes in this Graph from
-   * which to begin building a given connected component
+   * @param seedSrc a function that removes and returns an element from a set of nodes belonging to 
+   * this Graph
    * @return a collection of all the connected components of this Graph
    */
-	public Collection<Graph<T>> connectedComponents(Function<List<T>, T> seedSrc);
+	public Collection<Graph<T>> connectedComponents(Function<Set<T>, T> seedSrc);
 	
 	/**
    * <p>Returns a collection of all the connected components of this Graph. This is a convenience
-   * method supplying default arguments to {@link #connectedComponents(List, Function)}.</p>
+   * method supplying default arguments to {@link #connectedComponents(Set, Function)}.</p>
    * @return a collection of all the connected components of this Graph
    */
 	public default Collection<Graph<T>> connectedComponents(){
@@ -46,14 +47,19 @@ public interface Graph<T extends Vertex<T>> extends Iterable<T>{
 	}
 	
 	/**
-	 * <p>Removes and returns the last element of {@code list}.</p>
-	 * <p>This is the default seed source in {@link #connectedComponents()}.</p>
-	 * @param list a modifiable list from which elements can be removed and which has at least one 
+	 * <p>Removes and returns one element of {@code set}.</p>
+	 * <p>This is the default seed source used by {@link #connectedComponents()}.</p>
+	 * @param set a modifiable set from which elements can be removed and which has at least one 
 	 * element
 	 * @return the last element that {@code list} had when it was sent to this method
-	 * @throws IndexOutOfBoundsException if {@code list} is empty
+	 * @throws NoSuchElementException if {@code set} is empty
+	 * @throws UnsupportedOperationException if {@code set}'s {@link Set#iterator() iterator} does not 
+	 * support the optional {@link Iterator#remove() remove()} method
 	 */
-	static <T> T stdSeed(List<T> list){
-	  return list.remove(list.size() - 1);
+	static <T> T stdSeed(Set<T> set){
+	  Iterator<T> i = set.iterator();
+	  T result = i.next();
+	  i.remove();
+	  return result;
 	}
 }
