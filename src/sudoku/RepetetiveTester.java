@@ -7,10 +7,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * <p>Runs {@code Solver} for each of a collection of sudoku puzzles.</p>
+ * <p>Runs {@code Solver} on several sudoku puzzles to test Solver.</p>
  * @author fiveham
- * @author fiveham
- *
  */
 public class RepetetiveTester {
 	
