@@ -325,6 +325,11 @@ public class ConsequenceIntersection{
 				return assumptions.hashCode() + consequences.hashCode();
 			}
 			
+			/**
+			 * <p>Pairs a Fact as yet unaltered by this analysis technique with a hypothetical altered 
+			 * state it may take on.</p>
+			 * @author fiveham
+			 */
 			private class ReducedFact{
 				
 				private final Fact f;
