@@ -18,8 +18,12 @@ public class RepetetiveTester {
 	public static final String EULER_DIRECTORY = "./puzzles/project_euler/";
 	
 	public static void main(String[] args) {
-		List<File> puzzles = Stream.of(new File(SADMAN_DIRECTORY).list()).map((s) -> new File(SADMAN_DIRECTORY + s)).collect(Collectors.toList());
-		Stream.of(new File(EULER_DIRECTORY).list()).map((s) -> new File(SADMAN_DIRECTORY + s)).forEach(puzzles::add);;
+		List<File> puzzles = Stream.of(new File(SADMAN_DIRECTORY).list())
+		    .map((s) -> new File(SADMAN_DIRECTORY + s))
+		    .collect(Collectors.toList());
+		Stream.of(new File(EULER_DIRECTORY).list())
+		  .map((s) -> new File(SADMAN_DIRECTORY + s))
+		  .forEach(puzzles::add);;
 		
 		for(File f : puzzles){
 			try{
