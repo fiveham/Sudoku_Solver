@@ -84,7 +84,7 @@ class SpaceMap implements Iterable<Claim>{
 	
 	@Override
 	public Iterator<Claim> iterator(){
-		return new ClaimIterator();
+		return new ClaimIterator(ints());
 	}
 	
 	private List<Integer> ints = null;
@@ -108,8 +108,8 @@ class SpaceMap implements Iterable<Claim>{
 	private class ClaimIterator implements Iterator<Claim>{
 		private final Iterator<List<Integer>> cubeIterator;
 		
-		private ClaimIterator(){
-			this.cubeIterator =  new NCuboid<Integer>(ints(), ints(), ints()).iterator();
+		private ClaimIterator(List<Integer> ints){
+			this.cubeIterator =  new NCuboid<Integer>(ints, ints, ints).iterator();
 		}
 		
 		@Override
