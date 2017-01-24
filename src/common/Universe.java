@@ -68,19 +68,20 @@ public class Universe<E> {
 		return false;
 	}
 	
-    /**
-     * <p>A convenience method returning an empty BackedSet backed by this Universe.</p>
-     * @return an empty BackedSet backed by this Universe
-     */
+  /**
+   * <p>A convenience method returning an empty BackedSet backed by this Universe.</p>
+   * @return an empty BackedSet backed by this Universe
+   */
 	public BackedSet<E> back(){
 		return new BackedSet<>(this);
 	}
 	
-    /**
-     * <p>A convenience method returning a BackedSet backed by this Universe, containing the
-     * contents of {@code c}.</p>
-     * @return a BackedSet backed by this Universe, containing the contents of {@code c}
-     */
+  /**
+   * <p>A convenience method returning a BackedSet backed by this Universe and containing the 
+   * contents of {@code c}.</p>
+   * @return a BackedSet backed by this Universe and containing the contents of {@code c}
+   * @throws OutOfUniverseException if any element of {@code c} is not in this Universe
+   */
 	public BackedSet<E> back(Collection<? extends E> c){
 		return new BackedSet<>(this, c);
 	}
