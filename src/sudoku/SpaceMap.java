@@ -98,14 +98,13 @@ class SpaceMap implements Iterable<Claim>{
 		return ints;
 	}
 	
-    /**
-     * <p>An Iterator<Claim> that traverses the claim-space starting from 0,0,0, ending at the
-     * opposite vertex, and passing through all the Claim coordinates.</p>
-     * @author fiveham
-     * @author fiveham
-	 *
+  /**
+   * <p>An {@literal Iterator<Claim>} that traverses claim-space starting from 0,0,0, ending at the 
+   * opposite vertex, and passing through all the Claim coordinates.</p>
+   * @author fiveham
 	 */
 	private class ClaimIterator implements Iterator<Claim>{
+	  
 		private final Iterator<List<Integer>> cubeIterator;
 		
 		private ClaimIterator(){
