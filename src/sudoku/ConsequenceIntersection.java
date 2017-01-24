@@ -300,6 +300,11 @@ public class ConsequenceIntersection{
 				return result;
 			}
 			
+			/**
+			 * <p>Returns true if any of the Facts of this WhatIf, as altered, are, if empty, also 
+			 * {@link ReducedFact#isIllegalIfEmpty() illegal}.</p>
+			 * @return
+			 */
 			private boolean hasIllegalEmptyFact(){
 				return fullyReducedFacts()
 						.anyMatch(ReducedFact::isIllegalIfEmpty); 
