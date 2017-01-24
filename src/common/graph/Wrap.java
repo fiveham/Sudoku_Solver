@@ -70,9 +70,9 @@ public class Wrap<W> implements Vertex<Wrap<W>>{
 	
   /**
    * <p>A utility method that connects the nodes in {@code wrapped} by brute force, trying every
-   * pair of them and testing the pair using {@code edgeDetector}.</p> <p>This method operates in
-   * {@code O(n^2)} time, where {@code n = wrapped.size()}.</p>
-   * @param wrapped the nodes of a graph, wrapped in some type of WrapVertex
+   * pair of them and testing the pair using {@code edgeDetector}.</p>
+   * <p>This method operates in {@code O(n^2)} time, where {@code n = wrapped.size()}.</p>
+   * @param wrapped the wrapped nodes of a graph
    * @param edgeDetector bidirectionally links two nodes from {@code wrapped} if and only if their
    * raw nodes test true
    */
