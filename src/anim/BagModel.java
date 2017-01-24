@@ -30,7 +30,7 @@ public class BagModel {
 	
 	private Set<Claim> voxels;
 	
-	private final Map<Claim,VoxelModel> map;
+	private final Map<Claim, VoxelModel> map;
 	
     /**
      * <p>Constructs a BagModel coordinating the specified {@code voxels}. The {@code voxels} are
@@ -46,7 +46,7 @@ public class BagModel {
 			int x = vm.getX();
 			int y = vm.getY();
 			int z = vm.getZ();
-			Claim c = p.claim(x,y,z);
+			Claim c = p.claim(x, y, z);
 			map.put(c, vm);
 			vm.setOwnerBag(this);
 			vm.setMaterial(bagColor);
@@ -124,302 +124,19 @@ public class BagModel {
 			VoxelModel toAnimate = map.get(c);
 			
 			/*
-             * contract() removes mappings from the BagModel, allowing multiple layers of 
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of removals
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of to
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of sometimes
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of be
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of animated
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of together,
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of unless
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of calls to
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract(),
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of which
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of modifies
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of this
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of all occur
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of after the
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of state-based
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of analysis
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of of this
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of that
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of occurs in
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of calls to
-             * contract() removes mappings from the BagModel, allowing multiple layers of contract()
-             * contract() removes mappings from the BagModel, allowing multiple layers of removes
-             * contract() removes mappings from the BagModel, allowing multiple layers of mappings
-             * contract() removes mappings from the BagModel, allowing multiple layers of from the
-             * contract() removes mappings from the BagModel, allowing multiple layers of BagModel,
-             * contract() removes mappings from the BagModel, allowing multiple layers of allowing
-             * contract() removes mappings from the BagModel, allowing multiple layers of multiple
-             * contract() removes mappings from the BagModel, allowing multiple layers of layers of
-             * contract() removes mappings from the BagModel, allowing multiple layers of canRemoveEmptyVoxel()
-             */
+			 * contract() removes mappings from the BagModel, allowing multiple layers of removals to 
+			 * sometimes be animated together, unless calls to contract(), which modifies this BagModel, 
+			 * all occur after the state-based analysis of this BagModel that occurs in calls to 
+			 * canRemoveEmptyVoxel()
+			 */
+      
 			timeline.getKeyFrames().addAll(toAnimate.vanish(time));
 		}
 		
 		return toContract.size();
 	}
 	
-	public static final BiPredicate<Claim,Claim> ADJACENT_CLAIMS = (c1,c2) -> c1.spaceDist(c2)==1;
+	public static final BiPredicate<Claim,Claim> ADJACENT_CLAIMS = (c1, c2) -> c1.spaceDist(c2) == 1;
 	
     /**
      * <p>Returns true if removing {@code emptyVoxel} from {@code markedVoxels} would not split
@@ -436,7 +153,8 @@ public class BagModel {
 		Set<Claim> newMarkedVoxels = voxels.parallelStream()
 				.filter((e) -> e != emptyVoxel && map.get(e).getStatus() != VoxelModel.Status.VANISHED)
 				.collect(Collectors.toSet());
-		return new BasicGraph<Wrap<Claim>>(Wrap.wrap(newMarkedVoxels, ADJACENT_CLAIMS)).connectedComponents().size() == SINGLE_CONNECTED_COMPONENT;
+		return new BasicGraph<Wrap<Claim>>(Wrap.wrap(newMarkedVoxels, ADJACENT_CLAIMS))
+		    .connectedComponents().size() == SINGLE_CONNECTED_COMPONENT;
 	}
 	
 	public static final int SINGLE_CONNECTED_COMPONENT = 1;
