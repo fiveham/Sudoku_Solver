@@ -81,18 +81,34 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	
 	@Override
 	public Collection<Graph<T>> connectedComponents(Function<Set<T>, T> seedSrc){
-		
 		List<Graph<T>> result = new ArrayList<>();
 		
-		Universe<T> u = new Universe<>(nodes);
-		BackedSet<T> unassignedNodes = u.back(nodes);
-		
+		BackedSet<T> unassignedNodes = new Universe<>(nodes).back(nodes);
 		while(!unassignedNodes.isEmpty()){
+		  if(needNewUniverseInstance(unassignedNodes)){
+		    unassignedNodes = new Universe<>(unassignedNodes).back(unassignedNodes);
+		  }
+		  
 			Graph<T> component = component(unassignedNodes, seedSrc);
 			result.add(component);
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * <p>Determines whether it would be a good idea for the while loop in 
+	 * {@link #connectedComponents(Function) connectedComponent()} to use a new Universe instance to 
+	 * back the sets used in subsequent calls to 
+	 * {@link component(BackedSet,Function) component()}.</p>
+	 * <p>Currently, this method is a placeholder and always returns true.</p>
+	 * @param unassigned the current set of nodes of this graph not assigned to a particular connected
+	 * component
+	 * @return true if connectedComponents needs to use a new Universe instance for its next call to 
+	 * component(), false otherwise
+	 */
+	private static boolean needNewUniverseInstance(BackedSet<?> unassigned){
+	  return true;
 	}
 	
   private Graph<T> component(BackedSet<T> unassignedNodes, Function<Set<T>, T> seedSrc){
