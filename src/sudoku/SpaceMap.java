@@ -123,7 +123,7 @@ class SpaceMap implements Iterable<Claim>{
 			int x = coords.get(Puzzle.X_DIM);
 			int y = coords.get(Puzzle.Y_DIM);
 			int z = coords.get(Puzzle.Z_DIM);
-			return get(x,y,z);
+			return get(x, y, z);
 		}
 	}
 }
