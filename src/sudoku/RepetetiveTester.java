@@ -32,9 +32,9 @@ public class RepetetiveTester {
 				solver.solve();
 				System.out.println(solver.getTarget().toString());
 			} catch(FileNotFoundException e){
-				System.out.println("Could not find file "+f.getName());
+				System.out.println("Could not find file " + f.getName());
 			} catch(InterruptedException e){
-				System.out.println("InterruptedException for file "+f.getName());
+				System.out.println("InterruptedException for file " + f.getName());
 			}
 		}
 	}
