@@ -381,6 +381,14 @@ public class ConsequenceIntersection{
 	
 	private static final BiFunction<Fact,BackedSet<Claim>,Fact> JUST_THE_FACTS = (f,bs) -> f;
 	
+	/**
+	 * <p>Returns true if {@code reducedFact} is partially but not completely reduced from 
+	 * {@code fullFact}.</p>
+	 * @param fullFact a Fact which has been reduced to {@code reducedFact}
+	 * @param reducedFact a subset of {@code fullFact}
+	 * @return true if {@code reducedFact} is partially but not completely reduced from 
+   * {@code fullFact}, false otherwise
+	 */
 	private static boolean factPartiallyReduced(Fact fullFact, BackedSet<Claim> reducedFact){
 		return 0 < reducedFact.size() && reducedFact.size() < fullFact.size();
 	}
