@@ -249,6 +249,12 @@ public class ConsequenceIntersection{
 						.reduce(Integer.MAX_VALUE, Integer::min);
 			}
 			
+			/**
+			 * <p>Explores one further layer of depth in possible solution states among the Facts of the 
+			 * puzzle.</p>
+			 * @return a set of WhatIfs based on this WhatIf, each of which assumes one addition Claim to 
+			 * be true
+			 */
 			private Set<WhatIf> exploreDepth(){
 				return claimsToExplore()
 						.map(this::explore)
