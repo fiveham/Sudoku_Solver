@@ -360,11 +360,20 @@ public class ConsequenceIntersection{
 				private int reducedSize(){
 					return reducedForm.size();
 				}
-				
+        
+        /**
+         * <p>Return true if this ReducedFact would be illegal if it were empty, false 
+         * otherwise.</p>
+         * @return true if this ReducedFact would be illegal if it were empty, false otherwise
+         */
 				private boolean isIllegalIfEmpty(){
 					return !isLegalIfEmpty();
 				}
 				
+				/**
+				 * <p>Return true if this ReducedFact would be legal if it were empty, false otherwise.</p>
+				 * @return true if this ReducedFact would be legal if it were empty, false otherwise
+				 */
 				private boolean isLegalIfEmpty(){
 					return intersectionHasSize(f, assumptions, Fact.TRUE_CLAIM_COUNT) 
 							&& intersectionHasSize(f, consequences, f.size() - Fact.TRUE_CLAIM_COUNT);
