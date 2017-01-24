@@ -379,7 +379,10 @@ public class ConsequenceIntersection{
 		}
 	}
 	
-	private static final BiFunction<Fact,BackedSet<Claim>,Fact> JUST_THE_FACTS = (f,bs) -> f;
+	/**
+	 * <p>Given a Fact and a BackedSet, this outputs the Fact.</p>
+	 */
+	private static final BiFunction<Fact, BackedSet<Claim>, Fact> JUST_THE_FACTS = (f, bs) -> f;
 	
 	/**
 	 * <p>Returns true if {@code reducedFact} is partially but not completely reduced from 
