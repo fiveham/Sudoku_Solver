@@ -349,14 +349,26 @@ public class ConsequenceIntersection{
 					return f.hashCode() + reducedForm.hashCode();
 				}
 				
+				/**
+				 * <p>Returns the Fact of this ReducedFact.</p>
+				 * @return the Fact of this ReducedFact
+				 */
 				private Fact getFact(){
 					return f;
 				}
 				
+				/**
+				 * <p>Returns the reduced form of this ReducedFact.</p>
+				 * @return the reduced form of this ReducedFact
+				 */
 				private BackedSet<Claim> getReducedForm(){
 					return reducedForm;
 				}
 				
+				/**
+				 * <p>Returns the size of the reduced form for this ReducedFact.</p>
+				 * @return the size of the reduced form for this ReducedFact
+				 */
 				private int reducedSize(){
 					return reducedForm.size();
 				}
