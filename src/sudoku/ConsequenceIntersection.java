@@ -370,6 +370,16 @@ public class ConsequenceIntersection{
 							&& intersectionHasSize(f, consequences, f.size() - Fact.TRUE_CLAIM_COUNT);
 				}
 				
+				/**
+				 * <p>Returns true if the intersection of {@code f} and {@code set} has {@code size} 
+				 * elements.</p>
+				 * @param f a set of Claims
+				 * @param set a set of Claims
+				 * @param size the number of elements the intersection of {@code f} and {@code set} should 
+				 * have
+				 * @return true if the intersection of {@code f} and {@code set} has {@code size} elements, 
+				 * false otherwise
+				 */
 				private boolean intersectionHasSize(Fact f, BackedSet<Claim> set, int size){
 					Set<Claim> result = set.clone();
 					result.retainAll(f);
