@@ -15,7 +15,6 @@ import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import sudoku.time.TechniqueEvent;
 
 /**
@@ -390,6 +389,14 @@ public class ConsequenceIntersection{
 		return reducedFact.isEmpty();
 	}
 	
+	/**
+	 * <p>Returns true if {@code reducedFact} is smaller than {@code fullFact}, false otherwise.</p>
+	 * <p>This method is a convenience for the sake of {@link Logic.WhatIf#reducedFacts()}.</p>
+	 * @param fullFact a Fact whose possible solution states are being explored
+	 * @param reducedFact a subset of {@code fullFact} from which zero or more Claims have been 
+	 * removed
+	 * @return true if {@code reducedFact} is smaller than {@code fullFact}, false otherwise
+	 */
 	private static boolean factReduced(Fact fullFact, BackedSet<Claim> reducedFact){
 		return reducedFact.size() < fullFact.size();
 	}
