@@ -35,8 +35,8 @@ class SpaceMap implements Iterable<Claim>{
 		claimSpace = new Claim[puzzle.sideLength()][puzzle.sideLength()][puzzle.sideLength()];
 		for(IndexValue x : puzzle.indexValues()){
 			for(IndexValue y : puzzle.indexValues()){
-				for(IndexValue symbol : puzzle.indexValues()){
-					claimSpace[x.intValue()][y.intValue()][symbol.intValue()] = new Claim(puzzle, x,y,symbol);
+				for(IndexValue z : puzzle.indexValues()){
+					claimSpace[x.intValue()][y.intValue()][z.intValue()] = new Claim(puzzle, x,y,z);
 				}
 			}
 		}
