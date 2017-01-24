@@ -46,9 +46,16 @@ public class Universe<E> {
 		return indexToElement.get(i);
 	}
 	
+	/**
+   * <p>Returns the index pertaining to {@code e}, or -1 if {@code e} is not in this Universe.</p>
+   * @param e the object whose index in this universe is returned
+   * @return the index of {@code e} in this Universe or -1 if {@code e} is not in this Universe
+   */
 	public int index(E e){
-		return elementToIndex.get(e);
+	  return elementToIndex.getOrDefault(e, INDEX_IF_ABSENT);
 	}
+	
+	private static final Integer INDEX_IF_ABSENT = -1;
 	
 	@Override
 	public int hashCode(){
