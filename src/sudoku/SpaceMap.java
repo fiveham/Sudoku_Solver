@@ -57,15 +57,15 @@ class SpaceMap implements Iterable<Claim>{
 		return claimSpace[x][y][z];
 	}
 	
-    /**
-     * <p>Returns the Claim in this SpaceMap's target having the specified spatial coordinates.</p>
-     * @param x the x-coordinate of the Claim returned
-     * @param y the y-coordinate of the Claim returned
-     * @param s the z-coordinate (symbol) of the Claim returned
-     * @return the Claim in this SpaceMap's target having the specified spatial coordinates
-     */
-	public Claim get(IndexValue x, IndexValue y, IndexValue s){
-		return claimSpace[x.intValue()][y.intValue()][s.intValue()];
+  /**
+   * <p>Returns the Claim in this SpaceMap's puzzle having the specified spatial coordinates.</p>
+   * @param x the x-coordinate of the Claim returned
+   * @param y the y-coordinate of the Claim returned
+   * @param z the z-coordinate (symbol - 1) of the Claim returned
+   * @return the Claim in this SpaceMap's target having the specified spatial coordinates
+   */
+	public Claim get(IndexValue x, IndexValue y, IndexValue z){
+		return claimSpace[x.intValue()][y.intValue()][z.intValue()];
 	}
 	
     /**
