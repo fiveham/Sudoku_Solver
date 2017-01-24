@@ -256,10 +256,19 @@ public class ConsequenceIntersection{
 						.collect(Collectors.toSet());
 			}
 			
+			/**
+			 * <p>Returns a Stream of Claims that should be explored by being assumed true.</p>
+			 * @return a Stream of Claims that should be explored by being assumed true
+			 * @throws NoSuchElementException if this WhatIf has no 
+			 * {@link #partiallyReducedFacts() partially reduced Facts}
+			 */
 			private Stream<Claim> claimsToExplore(){
 				return partiallyReducedFacts()
 						.sorted(Comparator.comparingInt(ReducedFact::reducedSize).thenComparing(byPopularity()))
-						.findFirst().get().getReducedForm().stream();
+						.findFirst()
+						.get()
+						.getReducedForm()
+						.stream();
 			}
 			
 			/**
