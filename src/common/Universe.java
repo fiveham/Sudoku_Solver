@@ -113,7 +113,7 @@ public class Universe<E> {
    * <p>A convenience method returning a BackedSet backed by this Universe and containing the 
    * contents of {@code c}.</p>
    * @return a BackedSet backed by this Universe and containing the contents of {@code c}
-   * @throws OutOfUniverseException if any element of {@code c} is not in this Universe
+   * @throws BackedSet.OutOfUniverseException if any element of {@code c} is not in this Universe
    */
 	public BackedSet<E> back(Collection<? extends E> c){
 		return new BackedSet<>(this, c);
