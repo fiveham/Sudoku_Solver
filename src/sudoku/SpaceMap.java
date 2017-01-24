@@ -22,7 +22,7 @@ import sudoku.Puzzle.IndexInstance;
  */
 class SpaceMap implements Iterable<Claim>{
 	
-	private Claim[][][] stuff;
+	private Claim[][][] claimSpace;
 	private Puzzle puzzle;
 	
     /**
@@ -32,11 +32,11 @@ class SpaceMap implements Iterable<Claim>{
      */
 	public SpaceMap(Puzzle puzzle) {
 		this.puzzle = puzzle;
-		stuff = new Claim[puzzle.sideLength()][puzzle.sideLength()][puzzle.sideLength()];
+		claimSpace = new Claim[puzzle.sideLength()][puzzle.sideLength()][puzzle.sideLength()];
 		for(IndexValue x : puzzle.indexValues()){
 			for(IndexValue y : puzzle.indexValues()){
 				for(IndexValue symbol : puzzle.indexValues()){
-					stuff[x.intValue()][y.intValue()][symbol.intValue()] = new Claim(puzzle, x,y,symbol);
+					claimSpace[x.intValue()][y.intValue()][symbol.intValue()] = new Claim(puzzle, x,y,symbol);
 				}
 			}
 		}
@@ -51,7 +51,7 @@ class SpaceMap implements Iterable<Claim>{
      * @return the Claim in this Puzzle having the specified spatial coordinates
      */
 	public Claim get(int x, int y, int z){
-		return stuff[x][y][z];
+		return claimSpace[x][y][z];
 	}
 	
     /**
@@ -62,7 +62,7 @@ class SpaceMap implements Iterable<Claim>{
      * @return the Claim in this SpaceMap's target having the specified spatial coordinates
      */
 	public Claim get(IndexValue x, IndexValue y, IndexValue s){
-		return stuff[x.intValue()][y.intValue()][s.intValue()];
+		return claimSpace[x.intValue()][y.intValue()][s.intValue()];
 	}
 	
     /**
