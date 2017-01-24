@@ -17,16 +17,14 @@ public interface Sudoku extends Graph<NodeSet<?,?>>{
 	public boolean isSolved();
 	
   /**
-   * <p>Returns a {@code Stream<Fact>} providing access to all of this {@code Sudoku}'s underlying
-   * {@link common.graph.Graph Graph}'s Facts.</p>
-   * @return a {@code Stream<Fact>} providing access to all of this {@code Sudoku}'s underlying
-   * {@link common.graph.Graph Graph}'s Facts.
+   * <p>Returns a Stream of all the Facts in this Sudoku.</p>
+   * @return a Stream of all the Facts in this Sudoku
    */
 	public Stream<Fact> factStream();
 	
   /**
-   * <p>Returns a Stream of the Claims in this Sudoku's underlying Graph.</p>
-   * @return a Stream of the Claims in this Sudoku's underlying Graph.
+   * <p>Returns a Stream of all the Claims in this Sudoku.</p>
+   * @return a Stream of all the Claims in this Sudoku
    */
 	public Stream<Claim> claimStream();
 	
@@ -38,7 +36,7 @@ public interface Sudoku extends Graph<NodeSet<?,?>>{
 	public int magnitude();
 	
   /**
-   * <p>Returns the square of the {@link #magnitude() magnitude}. FOr a Puzzle, this is length of a 
+   * <p>Returns the square of the {@link #magnitude() magnitude}. For a Puzzle, this is length of a 
    * side of this puzzle.</p>
    * @return the square of the magnitude
    */
