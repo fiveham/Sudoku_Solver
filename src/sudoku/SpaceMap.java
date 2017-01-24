@@ -42,14 +42,15 @@ class SpaceMap implements Iterable<Claim>{
 		}
 	}
 	
-    /**
-     * <p>Returns the Claim in this SpaceMap's target having the specified spatial coordinates.</p>
-     * @param x the x-coordinate of the Claim returned
-     * @param y the y-coordinate of the Claim returned
-     * @param z the z-coordinate (symbol) of the Claim returned
-     * @throws ArrayIndexOutOfBoundsException if {@code target.sideLength()}
-     * @return the Claim in this Puzzle having the specified spatial coordinates
-     */
+  /**
+   * <p>Returns the Claim in this SpaceMap's puzzle having the specified spatial coordinates.</p>
+   * @param x the x-coordinate of the Claim returned
+   * @param y the y-coordinate of the Claim returned
+   * @param z the z-coordinate (symbol - 1) of the Claim returned
+   * @return the Claim in this Puzzle having the specified spatial coordinates
+   * @throws ArrayIndexOutOfBoundsException if {@code x}, {@code y}, or {@code z} is less than 0 or 
+   * greater than or equal to this SpaceMap's puzzle's {@link Puzzle#sideLength() side-length}
+   */
 	public Claim get(int x, int y, int z){
 		return stuff[x][y][z];
 	}
