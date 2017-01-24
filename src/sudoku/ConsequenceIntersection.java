@@ -330,6 +330,12 @@ public class ConsequenceIntersection{
 				private final Fact f;
 				private final BackedSet<Claim> reducedForm;
 				
+				/**
+				 * <p>Constructs a ReducedFact pairing the unaltered Fact {@code f} with a smaller subset, 
+				 * {@code reducedForm}.</p>
+				 * @param f the Fact which has been reduced to {@code reducedForm}
+				 * @param reducedForm a proper subset of {@code f}
+				 */
 				ReducedFact(Fact f, BackedSet<Claim> reducedForm){
 					this.f = f;
 					this.reducedForm = reducedForm;
