@@ -243,6 +243,12 @@ public class ConsequenceIntersection{
 						.filter(Objects::nonNull);
 			}
 			
+			/**
+			 * <p>Returns the smallest size to which a Fact has been partially reduced by the exploration 
+			 * of possible solutions states in this WhatIf.</p>
+			 * @return the smallest size to which a Fact has been partially reduced by the exploration 
+       * of possible solutions states in this WhatIf
+			 */
 			private int minReducedFactSize(){
 				return partiallyReducedFacts()
 						.map(ReducedFact::reducedSize)
