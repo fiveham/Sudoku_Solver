@@ -25,18 +25,21 @@ class SpaceMap implements Iterable<Claim>{
 	private Claim[][][] claimSpace;
 	private Puzzle puzzle;
 	
-    /**
-     * <p>Constructs a SpaceMap pertaining to the specified Puzzle and creates the Claims for that
-     * Puzzle.</p>
-     * @param target the Puzzle whose Claims are created and managed
-     */
-	public SpaceMap(Puzzle puzzle) {
+  /**
+   * <p>Constructs a SpaceMap pertaining to the specified Puzzle and creates the Claims for that
+   * Puzzle.</p>
+   * @param target the Puzzle whose Claims are created and managed
+   */
+	SpaceMap(Puzzle puzzle) {
 		this.puzzle = puzzle;
-		claimSpace = new Claim[puzzle.sideLength()][puzzle.sideLength()][puzzle.sideLength()];
+		
+	  int len = puzzle.sideLength();
+	  claimSpace = new Claim[len][len][len];
+	  
 		for(IndexValue x : puzzle.indexValues()){
 			for(IndexValue y : puzzle.indexValues()){
 				for(IndexValue z : puzzle.indexValues()){
-					claimSpace[x.intValue()][y.intValue()][z.intValue()] = new Claim(puzzle, x,y,z);
+					claimSpace[x.intValue()][y.intValue()][z.intValue()] = new Claim(puzzle, x, y, z);
 				}
 			}
 		}
