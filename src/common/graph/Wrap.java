@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * @param <W>@param <W>
  * @param <W>@param <N>
  */
-public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
+public class Wrap<W> implements Vertex<Wrap<W>>{
 	
 	protected final W wrapped;
 	protected final List<Wrap<W>> neighbors;
@@ -37,7 +37,6 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 		this.neighbors = new ArrayList<>();
 	}
 	
-	@Override
 	public W wrapped(){
 		return wrapped;
 	}
@@ -80,11 +79,11 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
    * @return a List of the elements of {@code unwrapped} wrapped via {@code wrapper} and connected
    * according to {@code edgeDetector}
    */
-	private static <T extends WrapVertex<W, T>, W> List<T> wrap(
+	private static <W> List<Wrap<W>> wrap(
 			Collection<W> unwrapped, 
 			BiPredicate<? super W, ? super W> edgeDetector, 
-			Function<? super W, T> wrapper){
-		List<T> result = unwrapped.stream().map(wrapper).collect(Collectors.toList());
+			Function<? super W, Wrap<W>> wrapper){
+		List<Wrap<W>> result = unwrapped.stream().map(wrapper).collect(Collectors.toList());
 		addEdges(result, edgeDetector);
 		return result;
 	}
@@ -97,13 +96,13 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
    * @param edgeDetector bidirectionally links two nodes from {@code wrapped} if and only if their
    * raw nodes test true
    */
-	private static <T extends WrapVertex<W, T>, W> void addEdges(
-			Collection<T> wrapped, 
+	private static <W> void addEdges(
+			Collection<Wrap<W>> wrapped, 
 			BiPredicate<? super W, ? super W> edgeDetector){
 		
-		for(List<T> pair : new ComboGen<>(wrapped, VERTICES_PER_EDGE, VERTICES_PER_EDGE)){
-			T wn1 = pair.get(0);
-			T wn2 = pair.get(1);
+		for(List<Wrap<W>> pair : new ComboGen<>(wrapped, VERTICES_PER_EDGE, VERTICES_PER_EDGE)){
+			Wrap<W> wn1 = pair.get(0);
+			Wrap<W> wn2 = pair.get(1);
 			if(edgeDetector.test(wn1.wrapped(), wn2.wrapped())){
 				wn1.neighbors().add(wn2);
 				wn2.neighbors().add(wn1);
