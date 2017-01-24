@@ -385,6 +385,14 @@ public class ConsequenceIntersection{
 		return 0 < reducedFact.size() && reducedFact.size() < fullFact.size();
 	}
 	
+	/**
+	 * <p>Returns true if {@code fullFact}'s reduced counterpart has been fully reduced, having no 
+	 * elements left in it.</p>
+	 * @param fullFact a Fact
+	 * @param reducedFact a subset of {@code fullFact} from which zero or more Claims have been 
+	 * removed
+	 * @return true if {@code reducedFact} is empty, false otherwise
+	 */
 	private static boolean factFullyReduced(Fact fullFact, BackedSet<Claim> reducedFact){
 		return reducedFact.isEmpty();
 	}
