@@ -254,6 +254,8 @@ public class ConsequenceIntersection{
 			 * puzzle.</p>
 			 * @return a set of WhatIfs based on this WhatIf, each of which assumes one addition Claim to 
 			 * be true
+			 * @throws NoSuchElementException if this WhatIf has no 
+       * {@link #partiallyReducedFacts() partially reduced Facts}
 			 */
 			private Set<WhatIf> exploreDepth(){
 				return claimsToExplore()
