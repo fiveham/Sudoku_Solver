@@ -316,6 +316,11 @@ public class ConsequenceIntersection{
 				return false;
 			}
 			
+			/**
+			 * <p>Returns the puzzle to which pertains the ConsequenceIntersection enclosing this WhatIf. 
+			 * This is a convenience method which makes WhatIf.equals() less verbose.</p>
+			 * @return the puzzle to which pertains the ConsequenceIntersection enclosing this WhatIf
+			 */
 			private Puzzle puzzle(){
 				return puzzle;
 			}
