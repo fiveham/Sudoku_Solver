@@ -9,29 +9,43 @@ import java.util.Set;
 import java.math.BigInteger;
 
 /**
- * <p>A {@code Set} implementation capable of containing only elements included in an
- * initially-specified list that backs the contents of the Set in a manner like the way that the
- * content of a String is backed by a backing {@code CharSequence} array which may be much longer
- * than the String in question.</p>
+ * <p>A Set implementation that can only contain elements included in a predefined list and refers 
+ * to those elements by their index in that list.</p>
+ * @see Universe
  * @author fiveham
- * @author fiveham
- *
  */
 public class BackedSet<E> implements Set<E>, Cloneable{
 	
 	private final Universe<E> universe;
 	private BigInteger mask;
 	
+	/**
+	 * <p>Constructs a BackedSet backed by {@code universe} and initially containing no elements.</p>
+	 * @param universe the Universe backing this BackedSet
+	 */
 	public BackedSet(Universe<E> universe) {
 		this.universe = universe;
 		this.mask = BigInteger.ZERO;
 	}
 	
+	/**
+	 * <p>Constructs a BackedSet backed by {@code universe} and initially containing exactly the 
+	 * elements of {@code c}.</p>
+	 * @param universe the Universe backing this BackedSet
+	 * @param c a collection
+	 * @throws OutOfUniverseException if any element of {@code c} is not in this BackedSet's backing 
+   * Universe
+	 */
 	public BackedSet(Universe<E> universe, Collection<? extends E> c){
 		this(universe);
 		addAll(c);
 	}
 	
+	/**
+	 * <p>Constructs a BackedSet backed by {@link #universe() bs's Universe} and initially containing 
+	 * exactly the elements of {@code bs}.</p>
+	 * @param bs a BackedSet
+	 */
 	public BackedSet(BackedSet<E> bs){
 		this(bs.universe, bs);
 	}
@@ -123,13 +137,13 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		return new ArrayList<>(this).toArray(a);
 	}
 	
-    /**
-     * <p>Adds the specified object to this set as long as it is in this set's universe; otherwise,
-     * throws an OutOfUniverseException.</p>
-     * @param e the element to be added to this BackedSet
-     * @return true if this set was modified by this operation, false otherwise
-     * @throws OutOfUniverseException if {@code e} is not in this BackedSet's backing Universe.
-     */
+  /**
+   * <p>Adds the specified object to this set as long as it is in this set's universe; otherwise,
+   * throws an OutOfUniverseException.</p>
+   * @param e the element to be added to this BackedSet
+   * @return true if this set was modified by this operation, false otherwise
+   * @throws OutOfUniverseException if {@code e} is not in this BackedSet's backing Universe
+   */
 	@Override
 	public boolean add(E e) {
 		if(universe.contains(e)){
@@ -142,9 +156,12 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		}
 	}
 	
+	/**
+	 * <p>Indicates that an object is not in this set's Universe and cannot be added.</p>
+	 * @author fiveham
+	 */
 	public static class OutOfUniverseException extends RuntimeException{
-        /**
-         */
+    
 		private static final long serialVersionUID = -4023554063682941699L;
 
 		OutOfUniverseException(String s){
@@ -175,6 +192,10 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		return c.stream().allMatch(this::contains);
 	}
 	
+	/**
+	 * @throws OutOfUniverseException if any element of {@code c} is not in this BackedSet's backing 
+	 * Universe
+	 */
 	@Override
 	public boolean addAll(Collection<? extends E> c) {
 		if(c instanceof BackedSet<?>){
@@ -228,6 +249,10 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 				.reduce(false, Boolean::logicalOr);
 	}
 	
+	/**
+	 * <p>Returns the Universe object backing the elements of this set.</p>
+	 * @return the Universe object backing the elements of this set
+	 */
 	public Universe<E> universe(){
 		return universe;
 	}
