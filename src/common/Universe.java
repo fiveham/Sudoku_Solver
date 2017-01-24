@@ -8,11 +8,24 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * <p>A special immutable collection where each element maps one-to-one with an integer. Used as a 
+ * backing for BackedSets, which identify their elements as indices in a BigInteger; such an index 
+ * is the integer corresponding to the element in that BackedSet's Universe.</p>
+ * @author fiveham
+ * @param <E> the type of the elements of this universe and the parameter-type of BackedSets built 
+ * on this Universe
+ * @see java.util.EnumSet
+ */
 public class Universe<E> {
 	
 	private final List<E> ie;
 	private final Map<E,Integer> ei;
 	
+	/**
+	 * <p>Constructs a Universe containing exactly the elements of {@code c}.</p>
+	 * @param c a set whose elements will become this Universe
+	 */
 	public Universe(Collection<? extends E> c){
 		this.ie = new ArrayList<E>(c);
 		this.ei = new HashMap<>();
@@ -21,6 +34,10 @@ public class Universe<E> {
 		}
 	}
 	
+	/**
+	 * <p>Constructs a Universe containing exactly the unique elements of {@code s}.</p>
+	 * @param s a stream whose contents will become this Universe
+	 */
 	public Universe(Stream<? extends E> s){
 		this.ie = s.collect(Collectors.toList());
 		this.ei = new HashMap<>();
@@ -29,10 +46,19 @@ public class Universe<E> {
 		}
 	}
 	
+	/**
+	 * <p>Returns true if {@code o} is in this Universe, false otherwise.</p>
+	 * @param o the object to be tested for its presence in this Universe
+	 * @return true if {@code o} is in this Universe, false otherwise
+	 */
 	public boolean contains(Object o){
 		return ei.containsKey(o);
 	}
 	
+	/**
+	 * <p>Returns the number of elements that are a part of this Universe.</p>
+	 * @return the number of elements in this Universe
+	 */
 	public int size(){
 		return ie.size();
 	}
