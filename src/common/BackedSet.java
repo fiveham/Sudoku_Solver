@@ -12,6 +12,7 @@ import java.math.BigInteger;
  * <p>A Set implementation that can only contain elements included in a predefined list and refers 
  * to those elements by their index in that list.</p>
  * @see Universe
+ * @see java.util.EnumSet
  * @author fiveham
  */
 public class BackedSet<E> implements Set<E>, Cloneable{
