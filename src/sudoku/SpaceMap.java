@@ -68,12 +68,9 @@ class SpaceMap implements Iterable<Claim>{
 	
   /**
    * <p>Returns the Claim in this SpaceMap's target having the specified spatial coordinates.</p>
-   * @param dimA a spatial coordinate that specifies its own
-   * {@link Puzzle.DimensionType dimension}
-   * @param dimB a spatial coordinate that specifies its own
-   * {@link Puzzle.DimensionType dimension}
-   * @param dimC a spatial coordinate that specifies its own
-   * {@link Puzzle.DimensionType dimension}
+   * @param dimA a spatial coordinate that specifies its own {@link Puzzle.DimensionType dimension}
+   * @param dimB a spatial coordinate that specifies its own {@link Puzzle.DimensionType dimension}
+   * @param dimC a spatial coordinate that specifies its own {@link Puzzle.DimensionType dimension}
    * @return the Claim in this SpaceMap's target having the specified spatial coordinates
    */
 	public Claim get(IndexInstance dimA, IndexInstance dimB, IndexInstance dimC){
@@ -90,6 +87,10 @@ class SpaceMap implements Iterable<Claim>{
 	
 	private List<Integer> ints = null;
 	
+	/**
+	 * <p>Returns a list of the legal dimensional indices for this SpaceMap's puzzle.</p>
+	 * @return a list of the legal dimensional indices for this SpaceMap's puzzle
+	 */
 	private List<Integer> ints(){
 		if(ints == null){
 			ints = puzzle.getIndices().stream()
