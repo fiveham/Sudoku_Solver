@@ -262,6 +262,14 @@ public class ConsequenceIntersection{
 						.findFirst().get().getReducedForm().stream();
 			}
 			
+			/**
+			 * <p>Tries to create a WhatIf based on this WhatIf which explores the consequences of 
+			 * {@code c} being true. If {@code c} cannot be true, based on the other assumptions in this 
+			 * WhatIf, then null is returned.</p>
+			 * @param c a Claim to be assumed true
+			 * @return a WhatIf based on this WhatIf incorporating the idea that {@code c} is true, or 
+			 * null if such a WhatIf is illegal
+			 */
 			private WhatIf explore(Claim c){
 				WhatIf out = clone();
 				try{
