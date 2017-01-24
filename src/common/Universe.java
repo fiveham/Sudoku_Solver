@@ -50,10 +50,6 @@ public class Universe<E> {
 		return elementToIndex.get(e);
 	}
 	
-	public BackedSet<E> set(Collection<? extends E> c){
-		return new BackedSet<E>(this,c);
-	}
-	
 	@Override
 	public int hashCode(){
 		if(hash==null){
