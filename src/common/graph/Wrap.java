@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.BiPredicate;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -46,44 +45,25 @@ public class Wrap<W> implements Vertex<Wrap<W>>{
 		return neighbors;
 	}
 	
+	private static final int VERTICES_PER_EDGE = 2;
+	
   /**
-   * <p>A utility method that wraps each element of {@code unwrapped} in a Wrap and gives each
-   * resulting Wrap neighbors from among the resulting Wraps. Two resulting Wraps are neighbors if
-   * {@code edgeDetector} {@link BiPredicate#test(Object,Object) says so}.</p> <p>This method
-   * connects the nodes in {@code O(n^2)} time where {@code n = unwrapped.size()} by testing all
-   * possible pairs of nodes.</p> <p>The generated edges are bidirectional.</p>
+   * <p>A utility method that wraps each element of {@code unwrapped} and connects the resulting 
+   * Wraps according to {@code edgeDetector}.</p>
+   * <p>This method connects the nodes in {@code O(n^2)} time where {@code n = unwrapped.size()} by 
+   * testing all possible pairs of nodes.</p>
+   * <p>The generated edges are bidirectional.</p>
    * @param unwrapped raw nodes
-   * @param edgeDetector outputs true if two raw nodes from {@code unwrapped} share an edge, false
-   * otherwise
-   * @return a list of Wraps complete with populated neighbor lists
+   * @param edgeDetector when testing a pair of raw nodes from {@code unwrapped}, outputs true if 
+   * and only if those two nodes share an edge
+   * @return a List of the elements of {@code unwrapped} wrapped and connected according to 
+   * {@code edgeDetector}
    */
 	public static <W> List<Wrap<W>> wrap(
 			Collection<W> unwrapped, 
 			BiPredicate<? super W, ? super W> edgeDetector){
-		return wrap(unwrapped, edgeDetector, Wrap<W>::new);
-	}
-	
-	private static final int VERTICES_PER_EDGE = 2;
-	
-  /**
-   * <p>A utility method that wraps each element of {@code unwrapped} in a {@code T} specified by
-   * {@code wrapper} and gives each resulting {@code T} neighbors from among the resulting
-   * {@code T}s. Two resulting {@code T}s are neighbors if {@code edgeDetector}
-   * {@link BiPredicate#test(Object,Object) says so}.</p> <p>This method connects the nodes in
-   * {@code O(n^2)} time where {@code n = unwrapped.size()} by testing all possible pairs of
-   * nodes.</p> <p>The generated edges are bidirectional.</p>
-   * @param unwrapped raw nodes
-   * @param edgeDetector outputs true if and only if two raw nodes from {@code unwrapped} share an
-   * edge, false otherwise
-   * @param wrapper wraps an element of {@code unwrapped} with some type of WrapVertex
-   * @return a List of the elements of {@code unwrapped} wrapped via {@code wrapper} and connected
-   * according to {@code edgeDetector}
-   */
-	private static <W> List<Wrap<W>> wrap(
-			Collection<W> unwrapped, 
-			BiPredicate<? super W, ? super W> edgeDetector, 
-			Function<? super W, Wrap<W>> wrapper){
-		List<Wrap<W>> result = unwrapped.stream().map(wrapper).collect(Collectors.toList());
+	  
+		List<Wrap<W>> result = unwrapped.stream().map(Wrap<W>::new).collect(Collectors.toList());
 		addEdges(result, edgeDetector);
 		return result;
 	}
