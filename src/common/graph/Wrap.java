@@ -14,19 +14,10 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
- * <p>This class wraps a non-Vertex object so that a network of those non-Vertex objects can be
- * constructed and managed.</p> <p>This is a utility class created to mitigate the combinatorial
- * explosion that could result from accounting for the need to identify different types of nodes in
- * a bipartite graph contract. By wrapping non-{@link common.graph.Vertex Vertex} nodes within the
- * Graph itself (a WrappingGraph), adding the concept of a bipartite graph to the package would
- * require adding an ordinary BipartiteGraph as well as a BipartiteWrappingGraph to manage bipartite
- * graphs with nodes that do not implement Vertex.</p>
+ * <p>A Vertex wrapper around a non-Vertex object, enabling a Graph of non-Vertex objects to be 
+ * constructed and managed.</p>
  * @author fiveham
- * @author fiveham
- *
- * @param <W>
- * @param <W>@param <W>
- * @param <W>@param <N>
+ * @param <W> the type of the wrapped non-Vertex object
  */
 public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	
@@ -43,8 +34,8 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 	}
 	
   /**
-   * <p>Constructs a Wrap that wraps {@code wrapped} and has the neighbors specified as elements
-   * of {@code c}.</p>
+   * <p>Constructs a Wrap that wraps {@code wrapped} and the elements of {@code c} as its 
+   * neighbors.</p>
    * @param wrapped the object being wrapped
    * @param c a collection of this Wrap's neighbors
    */
@@ -53,6 +44,10 @@ public class Wrap<W> implements WrapVertex<W,Wrap<W>>{
 		this.neighbors = new ArrayList<>(c);
 	}
 	
+	/**
+	 * <p>Returns the object wrapped by this Wrap.</p>
+	 * @return the object wrapped by this Wrap
+	 */
 	@Override
 	public W wrapped(){
 		return wrapped;
