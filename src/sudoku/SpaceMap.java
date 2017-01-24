@@ -8,17 +8,12 @@ import sudoku.Puzzle.IndexValue;
 import sudoku.Puzzle.IndexInstance;
 
 /**
- * <p>Wraps a three-dimensional array of Claims in order to expedite access to them based on their
- * spatial coordinates or geometric constraints.</p> <p>Using only
- * {@link Puzzle#claimStream() claimStream()} to find the one Claim with specific coordinates is a
- * O(n^6) technique, where n is the magnitude of the target. Accessing the desired Claim directly
- * via its spatial coordinates can be achieved in O(1) time when storing them in an array or
- * ordering them in the Puzzle's underlying Graph's underlying list of vertices. Providing a
- * secondary means to access Claims in a spatial manner is preferable to adding extra constraints
- * onto the backing collection of vertices for the puzzle's Graph.</p>
+ * <p>Wraps a three-dimensional array of the Claims belonging to a Puzzle in order to expedite 
+ * access to those Claims using spatial coordinates or geometric constraints.</p>
+ * <p>By contrast, using only {@link Puzzle#claimStream() claimStream()} to find the one Claim with 
+ * specific coordinates takes O(n^6) time, where n is the magnitude of the puzzle. Accessing the 
+ * desired Claim via its spatial coordinates with a SpaceMap takes O(1) time.<p>
  * @author fiveham
- * @author fiveham
- *
  */
 class SpaceMap implements Iterable<Claim>{
 	
