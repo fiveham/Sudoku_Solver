@@ -2,47 +2,52 @@ package common;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Universe<E> {
 	
-	private final List<E> ie;
-	private final Map<E,Integer> ei;
+	private final List<E> indexToElement;
+	private final Map<E, Integer> elementToIndex;
 	
-	public Universe(Collection<? extends E> c){
-		this.ie = new ArrayList<E>(c);
-		this.ei = new HashMap<>();
-		for(int i=0; i<ie.size(); ++i){
-			ei.put(ie.get(i), i);
+	public Universe(Set<? extends E> c){
+		this.indexToElement = Collections.unmodifiableList(new ArrayList<>(c));
+		Map<E, Integer> elementToIndex = new HashMap<>();
+		for(int i = 0; i < indexToElement.size(); ++i){
+			elementToIndex.put(indexToElement.get(i), i);
 		}
+		this.elementToIndex = Collections.unmodifiableMap(elementToIndex);
 	}
 	
 	public Universe(Stream<? extends E> s){
-		this.ie = s.collect(Collectors.toList());
-		this.ei = new HashMap<>();
-		for(int i=0; i<ie.size(); ++i){
-			ei.put(ie.get(i), i);
+		this.indexToElement = 
+		    Collections.unmodifiableList(new ArrayList<>(s.collect(Collectors.toSet())));
+		Map<E, Integer> elementToIndex = new HashMap<>();
+		for(int i = 0; i < indexToElement.size(); ++i){
+			elementToIndex.put(indexToElement.get(i), i);
 		}
+		this.elementToIndex = Collections.unmodifiableMap(elementToIndex);
 	}
 	
 	public boolean contains(Object o){
-		return ei.containsKey(o);
+		return elementToIndex.containsKey(o);
 	}
 	
 	public int size(){
-		return ie.size();
+		return indexToElement.size();
 	}
 	
 	public E get(int i){
-		return ie.get(i);
+		return indexToElement.get(i);
 	}
 	
 	public int index(E e){
-		return ei.get(e);
+		return elementToIndex.get(e);
 	}
 	
 	public BackedSet<E> set(Collection<? extends E> c){
@@ -52,7 +57,7 @@ public class Universe<E> {
 	@Override
 	public int hashCode(){
 		if(hash==null){
-			hash = ie.hashCode();
+			hash = indexToElement.hashCode();
 		}
 		return hash;
 	}
@@ -63,7 +68,7 @@ public class Universe<E> {
 	public boolean equals(Object o){
 		if(o instanceof Universe<?>){
 			Universe<?> u = (Universe<?>) o;
-			return ie.equals(u.ie) && ei.equals(u.ei); 
+			return indexToElement.equals(u.indexToElement) && elementToIndex.equals(u.elementToIndex); 
 		}
 		return false;
 	}

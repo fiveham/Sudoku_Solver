@@ -83,7 +83,7 @@ public abstract class AbstractGraph<T extends Vertex<T>> implements Graph<T>{
 	public Collection<Graph<T>> connectedComponents(Function<Set<T>, T> seedSrc){
 		List<Graph<T>> result = new ArrayList<>();
 		
-		BackedSet<T> unassignedNodes = new Universe<>(nodes).back(nodes);
+		BackedSet<T> unassignedNodes = new Universe<>(nodes.stream()).back(nodes);
 		while(!unassignedNodes.isEmpty()){
 		  if(needNewUniverseInstance(unassignedNodes)){
 		    unassignedNodes = new Universe<>(unassignedNodes).back(unassignedNodes);
