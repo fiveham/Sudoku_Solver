@@ -37,6 +37,13 @@ public class Universe<E> {
 		return ie.size();
 	}
 	
+	/**
+	 * <p>Returns the object having index {@code i} in this Universe.</p>
+	 * @param i the index of the element of this Universe to be returned
+	 * @return the object having index {@code i} in this Universe
+	 * @throws IndexOutOfBoundsException if {@code i} is less than 0 or greater than or equal to the 
+	 * size of the Universe
+	 */
 	public E get(int i){
 		return ie.get(i);
 	}
