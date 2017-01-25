@@ -169,6 +169,11 @@ public class ConsequenceIntersection{
 		
 		private static final int POPULARITY_IF_ABSENT = 0;
 		
+		/**
+		 * <p>A hypothetical scenario where some Claims are {@link WhatIf#assumptions assumed} to be 
+		 * true, and the {@link WhatIf#consequences consequentially false} Claims are tracked.</p>
+		 * @author fiveham
+		 */
 		private class WhatIf implements Cloneable{
 			
 		  /**
