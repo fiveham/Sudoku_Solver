@@ -212,6 +212,21 @@ public class ConsequenceIntersection{
 				return filteredReducedFacts(ConsequenceIntersection::factReduced, JUST_THE_FACTS);
 			}
 			
+			/**
+       * <p>Returns a stream of the Facts from this WhatIf's containing ConsequenceIntersection's 
+       * puzzle that have been partially accounted for by this WhatIf's assumptions and consequences
+       * so that each qualifying Fact has at least one of its Claims included in {@code assumptions}
+       * or {@code consequences} and has at least one of its Claims not included in either of those 
+       * sets.</p>
+       * <p>This method returns a stream of just the Facts, without pairing the qualifying each 
+       * qualifying Fact with its reduced counterpart, making this method slightly faster than  
+       * {@link #partiallyReducedfacts() its counterpart}, where applicable.</p>
+       * @return a stream of the Facts from this WhatIf's containing ConsequenceIntersection's 
+       * puzzle that have been partially accounted for by this WhatIf's assumptions and consequences
+       * so that each qualifying Fact has at least one of its Claims included in {@code assumptions}
+       * or {@code consequences} and has at least one of its Claims not included in either of those 
+       * sets
+       */
 			private Stream<Fact> partiallyReducedFactsRaw(){
 				return filteredReducedFacts(ConsequenceIntersection::factPartiallyReduced, JUST_THE_FACTS);
 			}
