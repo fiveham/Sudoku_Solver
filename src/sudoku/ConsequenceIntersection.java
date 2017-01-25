@@ -220,6 +220,16 @@ public class ConsequenceIntersection{
 				return filteredReducedFacts(ConsequenceIntersection::factPartiallyReduced);
 			}
 			
+			/**
+			 * <p>Returns a stream of the Facts from this WhatIf's containing ConsequenceIntersection's 
+			 * puzzle that have been fully accounted for by this WhatIf's assumptions and consequences so 
+			 * that each Claim of each qualifying Fact is a member of either {@code assumptions} or 
+			 * {@code consequences}.</p>
+			 * @return a stream of the Facts from this WhatIf's containing ConsequenceIntersection's 
+       * puzzle that have been fully accounted for by this WhatIf's assumptions and consequences so 
+       * that each Claim of each qualifying Fact is a member of either {@code assumptions} or 
+       * {@code consequences}
+			 */
 			private Stream<ReducedFact> fullyReducedFacts(){
 				return filteredReducedFacts(ConsequenceIntersection::factFullyReduced);
 			}
