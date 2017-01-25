@@ -224,6 +224,20 @@ public class ConsequenceIntersection{
 				return filteredReducedFacts(ConsequenceIntersection::factFullyReduced);
 			}
 			
+			/**
+			 * <p>Streams the Facts of the puzzle of the ConsequenceIntersection that contains this 
+       * WhatIf, copies each Fact, removes this WhatIf's consequences and assumptions from each 
+       * copy, and maps each copy either to null or to a new ReducedFact made using the original 
+       * Fact and the modified copy depending on whether the original Fact and the modified copy 
+       * fail or pass the test defined by {@code test}, respectively. Any null elements are filtered
+       * out of the resulting stream.</p>
+			 * @param test a test that tests one of Facts from the puzzle of the containing 
+       * ConsequenceIntersection paired with a modified copy of that Fact from which this WhatIf's 
+       * assumptions and consequences have been removed
+			 * @return a stream of non-null ReducedFacts based on inputs that passed the specified 
+			 * {@code test} involving copies of the containing ConsequenceIntersection's puzzle's Facts 
+			 * from which this WhatIf's assumptions and consequences were removed
+			 */
 			private Stream<ReducedFact> filteredReducedFacts(BiPredicate<Fact,BackedSet<Claim>> test){
 				return filteredReducedFacts(test, ReducedFact::new);
 			}
