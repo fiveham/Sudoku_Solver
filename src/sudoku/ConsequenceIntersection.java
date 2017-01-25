@@ -144,6 +144,11 @@ public class ConsequenceIntersection{
 					.get();
 		}
 		
+		/**
+		 * <p>Returns the maximum allowable size that a Fact's reduced counterpart can have in a WhatIf 
+		 * if that reduced fact can be explored.</p>
+		 * @return the maximum allowable size for an explorable reduced counterpart of a Fact
+		 */
 		private int sizeForExploration(){
 			return whatIfs.stream()
 					.filter(WhatIf::isDepthAvailable)
