@@ -123,6 +123,12 @@ public class ConsequenceIntersection{
 			return whatIfs.stream().anyMatch(WhatIf::isDepthAvailable);
 		}
 		
+		/**
+     * <p>For each WhatIf in this Logic, creates a set of WhatIfs that build on that WhatIf, and 
+     * replaces that WhatIf in this Logic's collection of WhatIfs with the contents of that newly 
+     * created set. If a WhatIf cannot be expanded on in that way, it simply remains in this Logic's
+     * collection.</p>
+     */
 		private void exploreDepth(){
 			populatePopularity();
 			int sizeForExploration = sizeForExploration();
@@ -130,11 +136,12 @@ public class ConsequenceIntersection{
 					.map((wi) -> wi.hasExplorableReducedFact(sizeForExploration)
 							? wi.exploreDepth() 
 							: new HashSet<>(Arrays.asList(wi))) 
-					.reduce((c1, c2) -> {
-					  c1.addAll(c2);
-					  return c1;
-					})
-					.get();
+					.reduce(
+					    new HashSet<WhatIf>(), 
+					    (c1, c2) -> {
+    					  c1.addAll(c2);
+    					  return c1;
+    					});
 		}
 		
 		private int sizeForExploration(){
