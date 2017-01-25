@@ -151,6 +151,9 @@ public class ConsequenceIntersection{
 					.reduce(Integer.MAX_VALUE, Integer::min);
 		}
 		
+		/**
+		 * <p>Populates this Logic's popularity Map.</p>
+		 */
 		private void populatePopularity(){
 			popularity = Sets.countingUnion(whatIfs.stream()
 					.map((wi) -> wi.reducedFacts()
