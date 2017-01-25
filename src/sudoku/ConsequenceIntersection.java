@@ -184,9 +184,9 @@ public class ConsequenceIntersection{
        * <p>Constructs a WhatIf having the specified {@code assumptions},
        * {@code consequences}, and {@code puzzle}. Used to {@link #clone() clone} a
        * WhatIf.</p>
-       * @param assumptions
-       * @param consequences
-       * @param puzzle
+       * @param assumptions the Claims this WhatIf assumes are true
+       * @param consequences the Claims this WhatIf concludes must be false
+       * @param puzzle the Puzzle to which this WhatIf pertains
        * @see #clone()
        */
 			private WhatIf(Set<Claim> assumptions, Set<Claim> consequences, Puzzle puzzle){
