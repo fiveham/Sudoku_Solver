@@ -191,8 +191,14 @@ public class ConsequenceIntersection{
 				return consequences;
 			}
 			
+			/**
+			 * <p>Returns true if there is explorable depth available from this WhatIf, false otherwise. 
+			 * Explorable depth exists if this WhatIf has access to Facts which it has reduced partially 
+			 * but not completely.</p>
+			 * @return true if there is explorable depth available from this WhatIf, false otherwise
+			 */
 			private boolean isDepthAvailable(){
-				return 0 != partiallyReducedFactsRaw().count();
+				return partiallyReducedFactsRaw().findAny().isPresent();
 			}
 			
 			/**
