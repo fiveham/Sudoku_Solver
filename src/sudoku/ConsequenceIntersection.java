@@ -159,6 +159,13 @@ public class ConsequenceIntersection{
 		
 		private Map<Fact,Integer> popularity;
 		
+		/**
+		 * <p>Returns a comparator that compares ReducedFacts by the popularity of their Facts in this 
+		 * Logic, putting the most popular ReducedFact first. Equivalent to 
+		 * {@code Comparator.comparingInt(this::popularity).reversed()}.</p>
+		 * @return a comparator that compares ReducedFacts by the popularity of their Facts in this 
+     * Logic, putting the most popular ReducedFact first
+		 */
 		private Comparator<WhatIf.ReducedFact> byPopularity(){
 			return Comparator.comparingInt(this::popularity).reversed();
 		}
