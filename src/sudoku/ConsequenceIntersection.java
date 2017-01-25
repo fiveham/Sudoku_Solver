@@ -222,6 +222,9 @@ public class ConsequenceIntersection{
        * so that each qualifying Fact has at least one of its Claims included in {@code assumptions}
        * or {@code consequences} and has at least one of its Claims not included in either of those 
        * sets.</p>
+       * <p>Each qualifying Fact is paired, via a ReducedFact, with a modified copy of that Fact 
+       * from which the Fact's elements that occur in {@code assumptions} or {@code consequences} 
+       * have been removed.</p>
        * @return a stream of the Facts from this WhatIf's containing ConsequenceIntersection's 
        * puzzle that have been partially accounted for by this WhatIf's assumptions and consequences
        * so that each qualifying Fact has at least one of its Claims included in {@code assumptions}
@@ -237,6 +240,9 @@ public class ConsequenceIntersection{
 			 * puzzle that have been fully accounted for by this WhatIf's assumptions and consequences so 
 			 * that each Claim of each qualifying Fact is a member of either {@code assumptions} or 
 			 * {@code consequences}.</p>
+			 * <p>Each qualifying Fact is paired, via a ReducedFact, with a modified copy of that Fact 
+       * from which the Fact's elements that occur in {@code assumptions} or {@code consequences} 
+       * have been removed. For fully reduced Facts, the modified copy is empty.</p>
 			 * @return a stream of the Facts from this WhatIf's containing ConsequenceIntersection's 
        * puzzle that have been fully accounted for by this WhatIf's assumptions and consequences so 
        * that each Claim of each qualifying Fact is a member of either {@code assumptions} or 
