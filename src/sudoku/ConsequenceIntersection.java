@@ -195,10 +195,19 @@ public class ConsequenceIntersection{
 				return 0 != partiallyReducedFactsRaw().count();
 			}
 			
+			/**
+       * <p>Returns true if this WhatIf has access to any reduced Facts that are not fully 
+       * reduced.</p>
+       * @param maxReducedFactSizeForExploration the maximum allowable size for a partially reduced 
+       * Fact that this WhatIf could explore
+       * @return true if this WhatIf has access to any reduced Facts that are not fully reduced, 
+       * false otherwise
+       */
 			private boolean hasExplorableReducedFact(int maxReducedFactSizeForExploration){
-				return 0 < partiallyReducedFacts()
+				return partiallyReducedFacts()
 						.filter((rf) -> rf.reducedSize() <= maxReducedFactSizeForExploration)
-						.count();
+						.findAny()
+						.isPresent();
 			}
 			
 			private Stream<Fact> reducedFacts(){
