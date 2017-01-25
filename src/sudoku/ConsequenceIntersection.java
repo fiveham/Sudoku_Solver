@@ -235,6 +235,7 @@ public class ConsequenceIntersection{
 			 * is sent the original Fact and the modified copy depending on whether the original Fact and 
 			 * the modified copy fail or pass the test defined by {@code test}, respectively. Any null 
 			 * elements are filtered out of the resulting stream.</p>
+			 * @param <T> the type of the elements of the resulting stream
 			 * @param test a test that tests one of Facts from the puzzle of the containing 
 			 * ConsequenceIntersection paired with a modified copy of that Fact from which this WhatIf's 
 			 * assumptions and consequences have been removed
