@@ -207,7 +207,20 @@ public class ConsequenceIntersection{
 						.filter((rf) -> rf.reducedSize() <= maxReducedFactSizeForExploration)
 						.count();
 			}
-			
+
+      /**
+       * <p>Returns a stream of the Facts from this WhatIf's containing ConsequenceIntersection's 
+       * puzzle that have been partially accounted for by this WhatIf's assumptions and consequences
+       * so that each qualifying Fact has at least one of its Claims included in {@code assumptions}
+       * or {@code consequences}.</p>
+       * <p>This method's resulting stream contains all Facts that have been 
+       * {@link #partiallyReducedFactsRaw() partially reduced} and all Facts that have been 
+       * {@link #fullyReducedFacts() fully reduced}.</p>
+       * @return a stream of the Facts from this WhatIf's containing ConsequenceIntersection's 
+       * puzzle that have been partially accounted for by this WhatIf's assumptions and consequences
+       * so that each qualifying Fact has at least one of its Claims included in {@code assumptions}
+       * or {@code consequences}
+       */
 			private Stream<Fact> reducedFacts(){
 				return filteredReducedFacts(ConsequenceIntersection::factReduced, JUST_THE_FACTS);
 			}
