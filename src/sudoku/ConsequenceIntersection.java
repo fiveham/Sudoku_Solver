@@ -174,6 +174,11 @@ public class ConsequenceIntersection{
 			private final BackedSet<Claim> assumptions;
 			private final BackedSet<Claim> consequences;
 			
+			/**
+			 * <p>Constructs a WhatIf that assumes {@code c} is true, concludes the Claims visible to 
+			 * {@code c} are false, and pertains to {@code c}'s puzzle.</p>
+			 * @param c the Claim that this WhatIf initially assumes is true
+			 */
 			public WhatIf(Claim c){
 				assumptions = puzzle.claimUniverse().back();
 				assumptions.add(c);
