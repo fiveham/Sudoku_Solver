@@ -163,6 +163,13 @@ public class ConsequenceIntersection{
 			return Comparator.comparingInt(this::popularity).reversed();
 		}
 		
+		/**
+		 * <p>Returns the popularity of the specified ReducedFact's Fact among this Logic's WhatIfs. 
+		 * A Fact's popularity is the number of WhatIfs in this Logic which have accounted for at least 
+		 * one Claim from that Fact.</p>
+		 * @param f the ReducedFact whose Fact's popularity is returned
+		 * @return the popularity of the specified ReducedFact's Fact among this Logic's WhatIfs
+		 */
 		private int popularity(WhatIf.ReducedFact f){
 			return popularity.getOrDefault(f.getFact(), POPULARITY_IF_ABSENT);
 		}
