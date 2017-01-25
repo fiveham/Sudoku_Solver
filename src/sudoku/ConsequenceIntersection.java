@@ -235,8 +235,12 @@ public class ConsequenceIntersection{
 			 * is sent the original Fact and the modified copy depending on whether the original Fact and 
 			 * the modified copy fail or pass the test defined by {@code test}, respectively. Any null 
 			 * elements are filtered out of the resulting stream.</p>
-			 * @param test
-			 * @param bifu
+			 * @param test a test that tests one of Facts from the puzzle of the containing 
+			 * ConsequenceIntersection paired with a modified copy of that Fact from which this WhatIf's 
+			 * assumptions and consequences have been removed
+			 * @param bifu a function that accepts one of the Facts from the puzzle of the containing 
+			 * ConsequenceIntersection paired with a modified copy of that Fact form which this WhatIf's 
+			 * assumptions and consequences have been removed
 			 * @return a stream of non-null outputs of {@code bifu} based on inputs that passed the 
 			 * specified {@code test} involving copies of the containting ConsequenceIntersection's 
 			 * puzzle's Facts from which this WhatIf's assumptions and consequences were removed
