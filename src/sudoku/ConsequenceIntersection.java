@@ -126,6 +126,12 @@ public class ConsequenceIntersection{
 					.collect(Sets.massIntersectionCollector());
 		}
 		
+		/**
+		 * <p>Returns true if there is depth available to explore in at least one of the WhatIfs of this
+		 * Logic.</p>
+		 * @return true if there is depth available to explore in at least one of the WhatIfs of this
+     * Logic, false otherwise
+		 */
 		public boolean isDepthAvailable(){
 			return whatIfs.stream().anyMatch(WhatIf::isDepthAvailable);
 		}
