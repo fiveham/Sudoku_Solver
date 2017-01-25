@@ -194,6 +194,10 @@ public class ConsequenceIntersection{
 				this.consequences = puzzle.claimUniverse().back(consequences);
 			}
 			
+			/**
+			 * <p>Returns this WhatIf's consequences, Claims falsified by this WhatIf's assumptions.</p>
+			 * @return this WhatIf's consequences
+			 */
 			private Collection<Claim> consequences(){
 				return consequences;
 			}
