@@ -171,7 +171,14 @@ public class ConsequenceIntersection{
 		
 		private class WhatIf implements Cloneable{
 			
+		  /**
+		   * <p>Claims that are assumed to be true: "WhatIf these Claims were true?"</p>
+		   */
 			private final BackedSet<Claim> assumptions;
+			
+			/**
+			 * <p>Claims that must be false if the Claims in {@code assumptions} are all true.</p>
+			 */
 			private final BackedSet<Claim> consequences;
 			
 			/**
