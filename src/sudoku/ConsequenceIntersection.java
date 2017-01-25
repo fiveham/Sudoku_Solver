@@ -243,7 +243,7 @@ public class ConsequenceIntersection{
 			 * ConsequenceIntersection paired with a modified copy of that Fact form which this WhatIf's 
 			 * assumptions and consequences have been removed
 			 * @return a stream of non-null outputs of {@code bifu} based on inputs that passed the 
-			 * specified {@code test} involving copies of the containting ConsequenceIntersection's 
+			 * specified {@code test} involving copies of the containing ConsequenceIntersection's 
 			 * puzzle's Facts from which this WhatIf's assumptions and consequences were removed
 			 */
 			private <T> Stream<T> filteredReducedFacts(BiPredicate<Fact,BackedSet<Claim>> test, BiFunction<Fact,BackedSet<Claim>,T> bifu){
