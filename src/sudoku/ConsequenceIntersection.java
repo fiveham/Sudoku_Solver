@@ -194,7 +194,7 @@ public class ConsequenceIntersection{
 				this.consequences = puzzle.claimUniverse().back(consequences);
 			}
 			
-			private Collection<Claim> consequences(){
+			private Set<Claim> consequences(){
 				return consequences;
 			}
 			
