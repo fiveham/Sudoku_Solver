@@ -116,7 +116,21 @@ public class ConsequenceIntersection{
 		private Set<Claim> consequenceIntersection(){
 			return whatIfs.stream()
 					.map(WhatIf::consequences)
-					.collect(Sets.massIntersectionCollector());
+					.reduce(
+					    null, 
+					    (a, b) -> {
+					      if(a != null && b != null){
+					        Set<Claim> result = new HashSet<>(a);
+					        result.retainAll(b);
+					        return result;
+					      } else if(a == null && b == null){
+					        return new HashSet<Claim>();
+					      } else if(a != null){
+					        return new HashSet<>(a);
+					      } else{
+					        return new HashSet<>(b);
+					      }
+    					});
 		}
 		
 		private boolean isDepthAvailable(){
