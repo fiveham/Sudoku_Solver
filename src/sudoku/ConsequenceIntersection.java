@@ -113,6 +113,10 @@ public class ConsequenceIntersection{
 			return result;
 		}
 		
+		/**
+		 * <p>Returns a set of the Claims that are falsified by all of this Logic's WhatIfs.</p>
+		 * @return a set of the Claims that are falsified by all of this Logic's WhatIfs
+		 */
 		private Set<Claim> consequenceIntersection(){
 			return whatIfs.stream()
 					.map(WhatIf::consequences)
