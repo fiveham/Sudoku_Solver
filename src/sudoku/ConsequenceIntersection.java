@@ -28,8 +28,8 @@ public class ConsequenceIntersection{
   private final Sudoku target;
   
   /**
-   * <p>Constructs a ColorChain that works to solve the specified {@code target}.</p>
-   * @param target the Puzzle that this Technique works to solve.
+   * <p>Constructs a ConsequenceIntersection that works to solve the specified {@code puzzle}.</p>
+   * @param puzzle the sudoku puzzle that this Technique works to solve
    */
 	public ConsequenceIntersection(Sudoku puzzle){
 	  this.target = puzzle;
