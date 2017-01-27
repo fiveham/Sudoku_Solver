@@ -74,6 +74,11 @@ public class ConsequenceIntersection{
 				: new SolveEventImplications(f, con).falsifyClaims();
 	}
 	
+	/**
+	 * <p>A solution event where a Logic got results: Given a certain Fact, the possible solutions of 
+	 * that Fact all cause a certain set of Claims to be false.</p>
+	 * @author fiveham
+	 */
 	public static class SolveEventImplications extends TechniqueEvent{
 		
 		private final Fact initFact;
