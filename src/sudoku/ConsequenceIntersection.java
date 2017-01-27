@@ -89,6 +89,13 @@ public class ConsequenceIntersection{
 		}
 	}
 	
+	/**
+	 * <p>A Logic coordinates a group of hypothetical scenarios that each state "If these Claims are 
+	 * true, then these other Claims are false." By expanding these scenarios and intersecting their 
+	 * sets of Claims that they've concluded should be false, a Logic tries to find a set of Claims 
+	 * that must be false no matter what.</p>
+	 * @author fiveham
+	 */
 	private class Logic {
 		
 		private final Puzzle puzzle;
