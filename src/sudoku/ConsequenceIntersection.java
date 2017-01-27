@@ -78,6 +78,13 @@ public class ConsequenceIntersection{
 		
 		private final Fact initFact;
 		
+		/**
+		 * <p>Constructs a SolveEventImplications for a solution event that occured as the result of 
+		 * exploring the possible consequences of hypothetical solution states of the Fact 
+		 * {@code f}.</p>
+		 * @param f the Fact the exploration of which caused this solution event
+		 * @param falsifiedClaims the Claims determined false in this solution event
+		 */
 		SolveEventImplications(Fact f, Set<Claim> falsifiedClaims){
 			super(falsifiedClaims);
 			this.initFact = f;
