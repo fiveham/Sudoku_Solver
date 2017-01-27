@@ -112,6 +112,13 @@ public class ConsequenceIntersection{
 			popularity = new HashMap<>();
 		}
 		
+		/**
+		 * <p>Explores layers of depth of solution states of Facts until it finds a non-empty 
+		 * intersection of consequently falsified Claims.</p>
+		 * @return a set of Claims that must be false as the result of an intersection of the 
+     * consequences of possible solution-states of the Facts of this ConseqenceIntersection's 
+     * puzzle
+		 */
 		public Set<Claim> findConsequenceIntersection(){
 			Set<Claim> result;
 			while((result = consequenceIntersection()).isEmpty() && isDepthAvailable()){
