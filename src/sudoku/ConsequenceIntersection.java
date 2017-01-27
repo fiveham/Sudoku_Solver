@@ -18,9 +18,7 @@ import java.util.stream.Stream;
 import sudoku.time.TechniqueEvent;
 
 /**
- * <p>The color-chain technique exploits the fact that a Rule with only two connected Claims is
- * analogous to a {@code xor} operation. A collection of interconnected two-Claim Rules, regardless
- * of the size and shape of such a network, has only two possible solution-states.</p>
+ * 
  * @author fiveham
  */
 public class ConsequenceIntersection{
