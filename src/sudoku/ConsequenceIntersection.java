@@ -95,7 +95,9 @@ public class ConsequenceIntersection{
 		private Collection<WhatIf> whatIfs;
 		
     /**
-     * @param claims
+     * <p>Constructs a Logic that creates a hypothetical scenario for each Claim in {@code claims} 
+     * in which the Claim that seeds the scenario is asserted true.</p>
+     * @param claims the initial claims whose consequences if true are to be explored
      * @throws IllegalArgumentException if {@code claims} is empty.
      */
 		public Logic(Set<? extends Claim> claims){
