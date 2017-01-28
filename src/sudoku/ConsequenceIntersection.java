@@ -18,7 +18,33 @@ import java.util.stream.Stream;
 import sudoku.time.TechniqueEvent;
 
 /**
- * 
+ * <p>The consequence-intersection technique for solving a sudoku puzzle asks each possible question
+ * about the solution state of a Fact and the Facts around it to see if there are any Claims that 
+ * have to be false regardless of what the solution actually is.</p>
+ * <p>This technique asks "What if <em>this Claim</em> were true?" Then it procedurally answers the 
+ * question by pointing to a set of the Claims that are visible to that Claim and saying "Well, then
+ * <em>these Claims</em> would be false." The technique asks the question and finds the answer for 
+ * each Claim of a given Fact. Then it examines all of those answers to see if there is an overlap: 
+ * Claims that will be false no matter which Claim from that Fact is true.</p>
+ * <p>If there is an overlap, the technique reports that information to the solver. If not, the 
+ * technique asks a related set of new, more detailed questions, breaking down some or all of the 
+ * original questions into multiple questions, asking "What if <em>these Claims</em> were true?", 
+ * as each solution scenario now has multiple Claims supposed true.</p>
+ * <p>For example, the single first question may be expanded into two or more single questions, and 
+ * where the first question asked "What if A is true?", the corresponding set of questions descended
+ * from that first quesiton ask "What if A and B are true?", "What if A and C are true?", etc., 
+ * where B and C are Claims from another Fact whose population of Claims is reduced by the 
+ * consequences of the original first question "What if A is true?".</p>
+ * <p>This process of asking questions, determining answers, and overlapping the answers is 
+ * continued, adding more Claims to the questions until the smallest size of any available Fact 
+ * affected by the questions is greater than the size of the original Fact whose Claims were used to
+ * form the original set of questions. At that point, the technique moves on to a new Fact.</p>
+ * <p>When a question is expanded into multiple related questions, the Claims assumed true in the 
+ * new questions are all of the Claims of a Fact of the smallest available size, after its 
+ * population of Claims is adjusted to ignore Claims already accounted for (falsified by) the 
+ * parent question.</p>
+ * <p>The order in which the technique uses Facts to seed its questioning process starts using the 
+ * smallest available Facts first, increasing the sizes of first-Facts as it goes.</p>
  * @author fiveham
  */
 public class ConsequenceIntersection{
