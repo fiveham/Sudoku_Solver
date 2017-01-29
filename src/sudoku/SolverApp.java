@@ -20,16 +20,30 @@ public class SolverApp {
     s.solve();
     System.out.println(s.getTarget().toString());
   }
-
+  
+  /**
+   * <p>Returns a Solver that works to solve the puzzle specified by the file named in the 
+   * {@code args}.</p>
+   * <p>If {@code args} is empty, the program {@link System#exit(int) exits}.</p>
+   * @param args command-line arguments. The first arg is the name of the file containing the 
+   * puzzle to be solved. The second arg, if present, names the charset to be used to read the 
+   * file
+   * @return  a Solver that works to solve the puzzle specified by the file named in the 
+   * {@code args}
+   * @throws FileNotFoundException if the file named by the first arg cannot be found or read
+   */
   private static Solver solver(String[] args) throws FileNotFoundException{
-    if(args.length < 1){ //MAGIC
+    if(args.length < MIN_ARG_COUNT){
       errorExit();
     }
     File file = new File(args[SRC_FILE_ARG_INDEX]);
-    return args.length < 2 //MAGIC
+    return args.length < MIN_ARGS_FOR_CHARSET 
       ? new Solver(file)
       : new Solver(file, args[CHARSET_ARG_INDEX]);
   }
+  
+  private static final int MIN_ARG_COUNT = 1;
+  private static final int MIN_ARGS_FOR_CHARSET = 2;
   
   public static final int SRC_FILE_ARG_INDEX = 0;
   public static final int CHARSET_ARG_INDEX = 1;
