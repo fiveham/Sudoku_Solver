@@ -34,6 +34,10 @@ public class SolverApp {
   public static final int SRC_FILE_ARG_INDEX = 0;
   public static final int CHARSET_ARG_INDEX = 1;
 
+  /**
+   * <p>Prints an error message to the standard error stream, then the program 
+   * {@link System#exit(int) exits}.</p>
+   */
   private static void errorExit(){
     System.err.println("Usage: java Solver puzzle-file character-encoding");
     System.exit(0);
