@@ -2,9 +2,11 @@ package common;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -19,19 +21,20 @@ import java.util.stream.Stream;
  */
 public class Universe<E> {
 	
-	private final List<E> ie;
-	private final Map<E,Integer> ei;
+	private final List<E> indexToElement;
+	private final Map<E, Integer> elementToIndex;
 	
 	/**
 	 * <p>Constructs a Universe containing exactly the elements of {@code c}.</p>
 	 * @param c a set whose elements will become this Universe
 	 */
-	public Universe(Collection<? extends E> c){
-		this.ie = new ArrayList<E>(c);
-		this.ei = new HashMap<>();
-		for(int i=0; i<ie.size(); ++i){
-			ei.put(ie.get(i), i);
+	public Universe(Set<? extends E> c){
+		this.indexToElement = Collections.unmodifiableList(new ArrayList<>(c));
+		Map<E, Integer> elementToIndex = new HashMap<>();
+		for(int i = 0; i < indexToElement.size(); ++i){
+			elementToIndex.put(indexToElement.get(i), i);
 		}
+		this.elementToIndex = Collections.unmodifiableMap(elementToIndex);
 	}
 	
 	/**
@@ -39,11 +42,13 @@ public class Universe<E> {
 	 * @param s a stream whose contents will become this Universe
 	 */
 	public Universe(Stream<? extends E> s){
-		this.ie = s.collect(Collectors.toList());
-		this.ei = new HashMap<>();
-		for(int i=0; i<ie.size(); ++i){
-			ei.put(ie.get(i), i);
+		this.indexToElement = 
+		    Collections.unmodifiableList(new ArrayList<>(s.collect(Collectors.toSet())));
+		Map<E, Integer> elementToIndex = new HashMap<>();
+		for(int i = 0; i < indexToElement.size(); ++i){
+			elementToIndex.put(indexToElement.get(i), i);
 		}
+		this.elementToIndex = Collections.unmodifiableMap(elementToIndex);
 	}
 	
 	/**
@@ -52,7 +57,7 @@ public class Universe<E> {
 	 * @return true if {@code o} is in this Universe, false otherwise
 	 */
 	public boolean contains(Object o){
-		return ei.containsKey(o);
+		return elementToIndex.containsKey(o);
 	}
 	
 	/**
@@ -60,7 +65,7 @@ public class Universe<E> {
 	 * @return the number of elements in this Universe
 	 */
 	public int size(){
-		return ie.size();
+		return indexToElement.size();
 	}
 	
 	/**
@@ -71,21 +76,24 @@ public class Universe<E> {
 	 * size of the Universe
 	 */
 	public E get(int i){
-		return ie.get(i);
+		return indexToElement.get(i);
 	}
 	
+	/**
+   * <p>Returns the index pertaining to {@code e}, or -1 if {@code e} is not in this Universe.</p>
+   * @param e the object whose index in this universe is returned
+   * @return the index of {@code e} in this Universe or -1 if {@code e} is not in this Universe
+   */
 	public int index(E e){
-		return ei.get(e);
+	  return elementToIndex.getOrDefault(e, INDEX_IF_ABSENT);
 	}
 	
-	public BackedSet<E> set(Collection<? extends E> c){
-		return new BackedSet<E>(this,c);
-	}
+	private static final Integer INDEX_IF_ABSENT = -1;
 	
 	@Override
 	public int hashCode(){
 		if(hash==null){
-			hash = ie.hashCode();
+			hash = indexToElement.hashCode();
 		}
 		return hash;
 	}
@@ -96,7 +104,7 @@ public class Universe<E> {
 	public boolean equals(Object o){
 		if(o instanceof Universe<?>){
 			Universe<?> u = (Universe<?>) o;
-			return ie.equals(u.ie) && ei.equals(u.ei); 
+			return indexToElement.equals(u.indexToElement) && elementToIndex.equals(u.elementToIndex); 
 		}
 		return false;
 	}

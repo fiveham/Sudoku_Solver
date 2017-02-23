@@ -2,12 +2,7 @@ package common;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
-import java.util.stream.Collector.Characteristics;
 import java.util.stream.Stream;
 
 public class Sets {
@@ -19,102 +14,6 @@ public class Sets {
    * @see http://docs.oracle.com/javase/tutorial/collections/implementations/set.html
    */
 	public static final int JAVA_UTIL_HASHSET_SIZE_FACTOR = 2;
-	
-  /**
-   * <p>A Collector that collects a Stream of collections into the intersection of all the
-   * collections in the stream, so that the result is a Set containing exactly the elements held
-   * in common by all the collections in the Stream.</p> <p>This is a convenience method
-   * equivalent to
-   * {@link #massIntersectionCollector(Supplier) massIntersectionCollector(HashSet::new)}.</p>
-   * @param <T> the parameter type of the Stream to be collected, a type that extends Collection
-   * with paramter type {@code E}
-   * @param <E> the parameter type of the Collections that are the elements of the Stream to be
-   * collected
-   * @return a Collector that collects a Stream of collections into the intersection of all the
-   * collections in the stream
-   */
-	public static <T extends Collection<E>, E> Collector<T,?,Set<E>> massIntersectionCollector(){
-		return massIntersectionCollector(HashSet<E>::new);
-	}
-	
-  /**
-   * <p>A Collector that collects a Stream of collections into the intersection of all the
-   * collections in the stream, so that the result is a Set containing exactly the elements held
-   * in common by all the collections in the Stream. The type of the resulting Set is specified by
-   * {@code supplier}.</p> <p>This is a convenience method equivalent to
-   * {@link #massIntersectionCollector(Supplier) massIntersectionCollector(HashSet::new)}.</p>
-   * @param <T> the parameter type of the Stream to be collected, a type that extends Collection
-   * with paramter type {@code E}
-   * @param <E> the parameter type of the Collections that are the elements of the Stream to be
-   * collected
-   * @param <Z> the type of the Sets to be used to reduce the Stream to its collections' shared
-   * intersection and of the resulting Set ultimately produced
-   * @param supplier a source of Sets of a specific type
-   * @return a Collector that collects a Stream of collections into the intersection of all the
-   * collections in the stream
-   */
-	public static <T extends Collection<E>, E, Z extends Set<E>> Collector<T,?,Z> massIntersectionCollector(Supplier<Z> supplier){
-		return Collector.of(
-				() -> new Intersection<Z,E>(supplier), 
-				Intersection::intersect, 
-				Intersection::combineWith, 
-				Intersection::unpack, 
-				Characteristics.UNORDERED);
-	}
-	
-  /**
-   * <p>Wraps a Set of a specified type to be used in collecting a Stream of collections as the
-   * intersection of all the collections in the Stream.</p>
-   * @author fiveham
-   * @author fiveham
- *
-   * @param <X> the type of the Set to be used to collect a Stream's 
-   * @param <X> the type of the Set to be used to collect a Stream's @param <X> the type of the
-   * @param <X> the type of the Set to be used to collect a Stream's Set to be used to collect a
-   * @param <X> the type of the Set to be used to collect a Stream's Stream's collections'
-   * @param <X> the type of the Set to be used to collect a Stream's intersection and the type of
-   * @param <X> the type of the Set to be used to collect a Stream's the Set in which the ultimate
-   * @param <X> the type of the Set to be used to collect a Stream's result is reported
-   * @param <X> the type of the Set to be used to collect a Stream's @param <E> the parameter type
-   * @param <X> the type of the Set to be used to collect a Stream's of the collections that are
-   * @param <X> the type of the Set to be used to collect a Stream's elements of the Stream being
-   * @param <X> the type of the Set to be used to collect a Stream's collected
-   */
-	private static class Intersection<X extends Set<E>, E>{
-		
-        /**
-         * <p>If {@code set} is empty, either it has just been created and hasn't been used, in
-         * which case its emptiness means nothing to the mass-intersection to be collected, or it
-         * has been used at least once so that the intersection of the collections in a stream being
-         * collected is the empty set, in which case its emptiness is meaningful.</p> <p>This bit
-         * enables the meaningless and meaningful cases of {@code set} being
-         * {@link Collection#isEmpty() empty} to be differentiated easily.</p>
-         */
-		private boolean used = false;
-		private final X set;
-		
-		public Intersection(Supplier<X> supplier){
-			set = supplier.get();
-		}
-		
-		public void intersect(Collection<E> coll){
-			if(used){
-				set.retainAll(coll);
-			}else{
-				set.addAll(coll);
-				used = true;
-			}
-		}
-		
-		public Intersection<X,E> combineWith(Intersection<X,E> other){
-			intersect(other.set);
-			return this;
-		}
-		
-		public X unpack(){
-			return set;
-		}
-	}
 	
   /**
    * <p>Adds {@code c1} to {@code c2} and returns {@code c2}. This is intended to be used as a

@@ -115,9 +115,10 @@ public class Solver{
 		List<SudokuNetwork> networks;
 		if(processingResult != null 
 				&& !(networks = target.connectedComponents().stream()
-						.filter((component) -> !SudokuNetwork.isSolved(component))
-						.map((component) -> new SudokuNetwork(target.magnitude(), component))
-						.collect(Collectors.toList())).isEmpty()){
+				    .map((component) -> new SudokuNetwork(target.magnitude(), component))
+						.filter((component) -> !component.isSolved())
+						.collect(Collectors.toList()))
+				    .isEmpty()){
 			String name = Thread.currentThread().getName();
 			this.event = processingResult;
 			for(int i = 0; i < networks.size(); ++i){

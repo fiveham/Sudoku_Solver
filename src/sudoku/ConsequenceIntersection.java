@@ -59,14 +59,6 @@ public class ConsequenceIntersection{
 	  this.target = puzzle;
 	}
 	
-	public ConsequenceIntersection apply(Sudoku sudoku){
-		return new ConsequenceIntersection(sudoku);
-	}
-	
-	protected TechniqueEvent process(){
-		return implications();
-	}
-	
   /**
    * <p>Tries to find an overlap among the consequences of each of the Claims of a given Fact in
    * the puzzle hypothetically being true, starting from the smallest Facts in the puzzle and
@@ -95,7 +87,7 @@ public class ConsequenceIntersection{
 		Set<Claim> con = new Logic(f).findConsequenceIntersection();
 		return con.isEmpty() 
 				? null
-				: new SolveEventImplications(f, con).falsifyClaims();
+				: new SolveEventImplications(f, con);
 	}
 	
 	/**
@@ -143,7 +135,7 @@ public class ConsequenceIntersection{
      * @param claims the initial claims whose consequences if true are to be explored
      * @throws IllegalArgumentException if {@code claims} is empty.
      */
-		public Logic(Set<? extends Claim> claims){
+		private Logic(Set<? extends Claim> claims){
 			try{
 				this.puzzle = claims.iterator().next().getPuzzle();
 			} catch(NoSuchElementException e){
@@ -164,7 +156,7 @@ public class ConsequenceIntersection{
      * consequences of possible solution-states of the Facts of this ConseqenceIntersection's 
      * puzzle
 		 */
-		public Set<Claim> findConsequenceIntersection(){
+		private Set<Claim> findConsequenceIntersection(){
 			Set<Claim> result;
 			while((result = consequenceIntersection()).isEmpty() && isDepthAvailable()){
 				exploreDepth();
@@ -172,10 +164,28 @@ public class ConsequenceIntersection{
 			return result;
 		}
 		
-		public Set<Claim> consequenceIntersection(){
+		/**
+		 * <p>Returns a set of the Claims that are falsified by all of this Logic's WhatIfs.</p>
+		 * @return a set of the Claims that are falsified by all of this Logic's WhatIfs
+		 */
+		private Set<Claim> consequenceIntersection(){
 			return whatIfs.stream()
 					.map(WhatIf::consequences)
-					.collect(Sets.massIntersectionCollector());
+					.reduce(
+					    null, 
+					    (a, b) -> {
+					      if(a != null && b != null){
+					        Set<Claim> result = new HashSet<>(a);
+					        result.retainAll(b);
+					        return result;
+					      } else if(a == null && b == null){
+					        return new HashSet<Claim>();
+					      } else if(a != null){
+					        return new HashSet<>(a);
+					      } else{
+					        return new HashSet<>(b);
+					      }
+    					});
 		}
 		
 		/**
@@ -184,22 +194,29 @@ public class ConsequenceIntersection{
 		 * @return true if there is depth available to explore in at least one of the WhatIfs of this
      * Logic, false otherwise
 		 */
-		public boolean isDepthAvailable(){
+		private boolean isDepthAvailable(){
 			return whatIfs.stream().anyMatch(WhatIf::isDepthAvailable);
 		}
 		
-		public void exploreDepth(){
+		/**
+     * <p>For each WhatIf in this Logic, creates a set of WhatIfs that build on that WhatIf, and 
+     * replaces that WhatIf in this Logic's collection of WhatIfs with the contents of that newly 
+     * created set. If a WhatIf cannot be expanded on in that way, it simply remains in this Logic's
+     * collection.</p>
+     */
+		private void exploreDepth(){
 			populatePopularity();
 			int sizeForExploration = sizeForExploration();
 			whatIfs = whatIfs.stream()
 					.map((wi) -> wi.hasExplorableReducedFact(sizeForExploration)
 							? wi.exploreDepth() 
 							: new HashSet<>(Arrays.asList(wi))) 
-					.reduce((c1, c2) -> {
-					  c1.addAll(c2);
-					  return c1;
-					})
-					.get();
+					.reduce(
+					    new HashSet<WhatIf>(), 
+					    (c1, c2) -> {
+    					  c1.addAll(c2);
+    					  return c1;
+    					});
 		}
 		
 		/**
@@ -271,7 +288,7 @@ public class ConsequenceIntersection{
 			 * {@code c} are false, and pertains to {@code c}'s puzzle.</p>
 			 * @param c the Claim that this WhatIf initially assumes is true
 			 */
-			public WhatIf(Claim c){
+			private WhatIf(Claim c){
 				assumptions = puzzle.claimUniverse().back();
 				assumptions.add(c);
 				consequences = puzzle.claimUniverse().back(c.visible());
@@ -295,18 +312,33 @@ public class ConsequenceIntersection{
 			 * <p>Returns this WhatIf's consequences, Claims falsified by this WhatIf's assumptions.</p>
 			 * @return this WhatIf's consequences
 			 */
-			private Collection<Claim> consequences(){
+			private Set<Claim> consequences(){
 				return consequences;
 			}
 			
+			/**
+			 * <p>Returns true if there is explorable depth available from this WhatIf, false otherwise. 
+			 * Explorable depth exists if this WhatIf has access to Facts which it has reduced partially 
+			 * but not completely.</p>
+			 * @return true if there is explorable depth available from this WhatIf, false otherwise
+			 */
 			private boolean isDepthAvailable(){
-				return 0 != partiallyReducedFactsRaw().count();
+				return partiallyReducedFactsRaw().findAny().isPresent();
 			}
 			
+			/**
+       * <p>Returns true if this WhatIf has access to any reduced Facts that are not fully 
+       * reduced.</p>
+       * @param maxReducedFactSizeForExploration the maximum allowable size for a partially reduced 
+       * Fact that this WhatIf could explore
+       * @return true if this WhatIf has access to any reduced Facts that are not fully reduced, 
+       * false otherwise
+       */
 			private boolean hasExplorableReducedFact(int maxReducedFactSizeForExploration){
-				return 0 < partiallyReducedFacts()
+				return partiallyReducedFacts()
 						.filter((rf) -> rf.reducedSize() <= maxReducedFactSizeForExploration)
-						.count();
+						.findAny()
+						.isPresent();
 			}
 
       /**

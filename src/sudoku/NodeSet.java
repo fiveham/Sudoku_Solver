@@ -73,20 +73,20 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public final boolean add(T e){
-		boolean result = super.add(e);
-		if(result){
-			e.add((S)this);
+	public final boolean add(T unlinkedNode){
+		boolean change = super.add(unlinkedNode);
+		if(change){
+			unlinkedNode.add((S)this);
 		}
-		return result;
+		return change;
 	}
 	
 	/**
 	 * <p>Links this node with all the nodes in {@code otherNodes}.</p>
 	 */
 	@Override
-	public final boolean addAll(Collection<? extends T> c){
-		return c.stream()
+	public final boolean addAll(Collection<? extends T> unlinkedNodes){
+		return unlinkedNodes.stream()
 		    .map(this::add)
 		    .reduce(false, Boolean::logicalOr);
 	}
@@ -96,29 +96,12 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	 * node.</p>
 	 */
 	@Override
-	public final boolean remove(Object o){
-		return remove_internal(o);
-	}
-	
-  /**
-   * <p>Removes {@code o} and removes {@code this} from {@code o} without
-   * {@link #validateFinalState() validating the set afterwards}.</p> <p>Used internally so that
-   * bulk operations can validate the set's state only after they have completed instead of
-   * numerous times throughout the bulk operation and so that only one removal method needs to
-   * ensure mutual element-removal. If bulk operations were subject to final-state validation
-   * checks by calling remove(Object) repeatedly, then any bulk removal operation that removes all
-   * but one of the elements of this set could force a Rule to trigger a value-claim event in the
-   * middle of the operation even though such a Rule really ought to wait until the end to
-   * validate, which allows just one automatic resolution event to trigger.</p>
-   * @param o the object being removed
-   * @return true if this set has been changed by the operation, false otherwise
-   */
-	private boolean remove_internal(Object o){
-		boolean result = super.remove(o);
-		if(result){
-			((NodeSet<?,?>)o).remove(this);
+	public final boolean remove(Object linkedNode){
+		boolean change = super.remove(linkedNode);
+		if(change){
+			((NodeSet<?, ?>) linkedNode).remove(this);
 		}
-		return result;
+		return change;
 	}
 	
 	/**
@@ -129,12 +112,12 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	 * @param otherNodes nodes to be disconnected from this node
 	 */
 	@Override
-	public final boolean removeAll(Collection<?> c){
-		boolean result = false;
-		for(Object o : c){
-			result |= remove_internal(o);
+	public final boolean removeAll(Collection<?> otherNodes){
+		boolean change = false;
+		for(Object otherNode : otherNodes){
+			change |= remove(otherNode);
 		}
-		return result;
+		return change;
 	}
 	
 	/**
@@ -146,16 +129,16 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	 * are broken
 	 */
 	@Override
-	public final boolean retainAll(Collection<?> c){
-		boolean result = false;
-		Iterator<T> iter = super.iterator();
-		for(T t; iter.hasNext();){
-			if(!c.contains(t = iter.next())){
-				remove_internal(t);
-				result = true;
+	public final boolean retainAll(Collection<?> otherNodes){
+		boolean change = false;
+		Iterator<T> linkedNodes = super.iterator();
+		for(T linkedNode; linkedNodes.hasNext();){
+			if(!otherNodes.contains(linkedNode = linkedNodes.next())){
+				remove(linkedNode);
+				change = true;
 			}
 		}
-		return result;
+		return change;
 	}
 	
 	/**
@@ -163,10 +146,10 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	 */
 	@Override
 	public final void clear(){
-		Iterator<T> iter = iterator();
-		while(iter.hasNext()){
-			iter.next();
-			iter.remove();
+		Iterator<T> linkedNodes = iterator();
+		while(linkedNodes.hasNext()){
+			linkedNodes.next();
+			linkedNodes.remove();
 		}
 	}
 	

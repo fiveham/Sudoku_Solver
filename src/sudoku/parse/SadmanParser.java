@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import java.util.function.Supplier;
 import java.io.File;
 import java.io.FileNotFoundException;
 import sudoku.Puzzle;
@@ -39,13 +38,7 @@ public class SadmanParser implements Parser{
    * @throws FileNotFoundException if {@code f} could not be read
    */
 	public SadmanParser(File f, String charset) throws FileNotFoundException{
-		this(() -> {
-			try{
-				return new Scanner(f, charset);
-			} catch(FileNotFoundException e){
-				throw new IllegalArgumentException(e);
-			}
-		});
+		this(() -> new Scanner(f, charset));
 	}
 	
 	/**
@@ -55,16 +48,36 @@ public class SadmanParser implements Parser{
 	 * @throws FileNotFoundException if {@code f} could not be read
 	 */
 	public SadmanParser(File f) throws FileNotFoundException{
-		this(() -> {
-			try{
-				return new Scanner(f);
-			} catch(FileNotFoundException e){
-				throw new IllegalArgumentException(e);
-			}
-		});
+		this(() -> new Scanner(f));
 	}
 	
-	private SadmanParser(Supplier<Scanner> supplier) throws FileNotFoundException{
+	/**
+	 * <p>This is a knockoff of {@literal java.util.function.Supplier<Scanner>} that declares that it 
+	 * throws a FileNotFoundException as part of its method header. This allows the two public 
+	 * constructors to send Scanner-suppliers to the relevant constructor without needing to include 
+	 * try-catch blocks inside the lambda bodies they send.</p>
+	 * @author fiveham
+	 */
+	@FunctionalInterface
+	private interface FNFSupplier{
+	  public Scanner get() throws FileNotFoundException;
+	}
+	
+	/**
+	 * <p>Constructs a SadmanParser based on the content output by the Scanner supplied by 
+	 * {@code supplier}.</p>
+	 * <p>Scans the file until {@literal "[Puzzle]"} is found or the end-of-file is reached. 
+	 * Thereafter, the content of the puzzle is read in or a new Scanner replaces the previous one, 
+	 * respectively. In the latter case, the new Scanner reads the first lines of the file to read the 
+	 * puzzle just as a Scanner that found a {@literal "[Puzzle]"} marker would do with the lines 
+	 * after the marker. 
+	 * @param supplier supplies a Scanner for a file specified in a public constructor
+	 * @throws IllegalArgumentException if the file could not be parsed according to the Sadman format
+	 * @throws FileNotFoundException if the file backing {@code supplier} could not be read
+	 * @throws NumberFormatException if a character describing the initial value of a cell cannot be 
+	 * parsed as an int
+	 */
+	private SadmanParser(FNFSupplier supplier) throws FileNotFoundException{
 		Scanner s = supplier.get();
 		while(s.hasNext() && !INITIAL_PUZZLE_MARKER.equals(s.nextLine()));
 		
@@ -76,8 +89,8 @@ public class SadmanParser implements Parser{
 		StringBuilder initCells;
 		try{
 			initCells = new StringBuilder(s.nextLine());
-			this.mag = (int)Math.sqrt(initCells.length());
-			for(int i=1; i<mag*mag; ++i){
+			this.mag = (int) Math.sqrt(initCells.length());
+			for(int i = 1; i < mag * mag; ++i){
 				initCells.append(s.nextLine());
 			}
 		} catch(NoSuchElementException e){
@@ -85,6 +98,7 @@ public class SadmanParser implements Parser{
 		} finally{
 			s.close();
 		}
+		
 		this.values = new ArrayList<>(initCells.length());
 		for(int i=0; i<initCells.length(); ++i){
 			char c = initCells.charAt(i);

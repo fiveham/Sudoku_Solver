@@ -1,10 +1,6 @@
 package common.graph;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 /**
  * <p>A graph.</p>
@@ -26,15 +22,5 @@ public class BasicGraph<T extends Vertex<T>> extends AbstractGraph<T>{
    */
 	public BasicGraph(Collection<? extends T> coll){
 		super(coll);
-	}
-	
-  /**
-   * <p>Constructs a BasicGraph having the specified vertices and growth-event-listener
-   * sources</p>
-   * @param coll
-   * @param factories
-   */
-	public BasicGraph(Collection<? extends T> coll, List<Supplier<Consumer<Set<T>>>> factories) {
-		super(coll, factories);
 	}
 }

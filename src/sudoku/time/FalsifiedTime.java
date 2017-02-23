@@ -1,11 +1,14 @@
 package sudoku.time;
 
+import common.Sets;
 import common.time.AbstractTime;
 import common.time.Time;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
+
 import sudoku.Claim;
 
 /**
@@ -28,43 +31,19 @@ public abstract class FalsifiedTime extends AbstractTime {
    */
 	public FalsifiedTime(Time parent, Set<Claim> falsified){
 		super(parent);
-		this.falsified = new HashSet<>(falsified);
-		this.falsified.removeAll(upFalsified(this, true));
-		if(this.falsified.isEmpty()){
-			throw new NoUnaccountedClaims("No unaccounted-for Claims specified.");
+		
+		Set<Claim> f = new HashSet<>(falsified);
+		upTrail().stream()
+    		.skip(1)
+    		.filter(FalsifiedTime.class::isInstance)
+    		.map(FalsifiedTime.class::cast)
+    		.map(FalsifiedTime::falsified)
+    		.forEach(f::removeAll);
+		if(f.isEmpty()){
+		  throw new NoUnaccountedClaims("No unaccounted-for Claims specified.");
 		}
-	}
-	
-  /**
-   * <p>Returns a set of all the Claims falsified in all the FalsifiedTime nth-parents of this
-   * Time.</p>
-   * @return a set of all the Claims falsified in all the FalsifiedTime nth parents of this Time
-   */
-	private static Set<Claim> upFalsified(Time time, boolean skip){
-		return skip(time.upTrail().stream(), skip)
-				.filter(FalsifiedTime.class::isInstance)
-				.map(FalsifiedTime.class::cast)
-				.map(FalsifiedTime::falsified)
-				.map(HashSet<Claim>::new)
-				.reduce((c1, c2) -> {
-				  c1.addAll(c2);
-				  return c1;
-				})
-				.get();
-	}
-	
-  /**
-   * <p>{@link Stream#skip(long) Skips} the first element of {@code stream} if and only if
-   * {@code skip == true}.</p<
-   * @param stream a Stream whose first element may be skipped
-   * @param skip specifies whether {@code stream}'s first element will be skipped
-   * @return a Stream consisting of the remaining elements of {@code stream} after optionally 
-   * skipping the first element.
-   */
-	private static Stream<Time> skip(Stream<Time> stream, boolean skip){
-		return skip 
-		    ? stream.skip(1) 
-		    : stream;
+		this.falsified = Collections.unmodifiableSet(f);
+		this.falsified.stream().forEach(Claim::setFalse);
 	}
 	
   /**
@@ -74,28 +53,6 @@ public abstract class FalsifiedTime extends AbstractTime {
 	public Set<Claim> falsified(){
 		return falsified;
 	}
-	
-  /**
-   * <p>The first time this method is called, {@link Claim#setFalse() falsifies} the Claims
-   * specified to be {@link #falsified() falsified} by the event represented by this object.
-   * Subsequent calls do nothing.</p> <p>This method allows duplicated Claim-falsification code to
-   * be centralized and unified. Performing this falsification inside the FalsifiedTime
-   * constructor is not safe, since the members of this object's subclasses, if any, have not been
-   * assigned, meaning those classes' methods, if called upon before a call to setFalse returns,
-   * may not work as intended. By separating the mass-falsification process into a method like
-   * this, subclass instances can finish constructing before their methods may be needed.</p>
-   * <p>This method is best used at the time when this object is constructed.</p>
-   * @return this FalsifiedTime
-   */
-	public FalsifiedTime falsifyClaims(){
-		falsifyClaims.run();
-		falsifyClaims = DO_NOTHING;
-		return this;
-	}
-	
-	private static final Runnable DO_NOTHING = () -> {};
-	
-	private Runnable falsifyClaims = () -> falsified().stream().forEach(Claim::setFalse);
 	
 	@Override
 	public String toString(){
@@ -146,16 +103,22 @@ public abstract class FalsifiedTime extends AbstractTime {
 	private int deepFalse(){
 		int count = 0;
 		
-		Set<Time> layer = new HashSet<>(children());
-		while(!layer.isEmpty()){
-			Set<Time> newLayer = new HashSet<>();
-			for(Time t : layer){
-				newLayer.addAll(t.children());
-				if(t instanceof FalsifiedTime){
-					count += ((FalsifiedTime) t).falsified().size();
-				}
-			}
-			layer = newLayer;
+		Set<Time> currentLayer = children().stream()
+		    .filter(FalsifiedTime.class::isInstance)
+		    .collect(Collectors.toSet());
+		while(!currentLayer.isEmpty()){
+			count += currentLayer.stream()
+			    .filter(FalsifiedTime.class::isInstance)
+			    .map(FalsifiedTime.class::cast)
+			    .map(FalsifiedTime::falsified)
+			    .mapToInt(Set::size)
+			    .reduce(0, Integer::sum);
+			currentLayer = currentLayer.stream()
+          .map(Time::children)
+          .map(HashSet<Time>::new)
+          .reduce(
+              new HashSet<Time>(), 
+              Sets::mergeCollections);
 		}
 		
 		return count;

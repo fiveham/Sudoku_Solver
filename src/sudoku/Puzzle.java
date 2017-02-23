@@ -5,11 +5,8 @@ import common.Universe;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -112,15 +109,16 @@ public class Puzzle extends SudokuNetwork{
 		}
 	}
 	
-    /**
-     * <p>Generates the Rules for {@code p}.</p>
-     * @param p the Puzzle whose Rules are being generated
-     * @param sideLength the pre-computed side-length of {@code p}
-     * @param claims the pre-built array of Claims in {@code p}
-     * @return a list of the Rules for {@code p}
-     */
+  /**
+   * <p>Generates the Rules for {@code p}.</p>
+   * @param p a sudoku puzzle
+   * @param sideLength the side-length of {@code p}
+   * @param claims {@code p}'s SpaceMap of Claims
+   * @return a list of the Rules for {@code p}
+   */
 	private List<Rule> genRuleNodes(Puzzle p, int sideLength, SpaceMap claims){
-		List<Rule> rules = new ArrayList<>(RuleType.values().length * p.sideLength * p.sideLength * p.sideLength);
+		List<Rule> rules = new ArrayList<>(
+		    RuleType.values().length * (int) Math.pow(p.sideLength, DIMENSION_COUNT));
 		for(RuleType type : RuleType.values()){
 			for(IndexInstance dimA : type.dimA(p)){
 				for(IndexInstance dimB : type.dimB(p)){
@@ -158,20 +156,20 @@ public class Puzzle extends SudokuNetwork{
 		return dimensions;
 	}
 	
-    /**
-     * <p>Generates the {@link #indices indices} for a Puzzle with the specified
-     * {@code sideLength}.</p>
-     * @param sideLength the pre-computed side-length of {@code p}
-     * @param p the target for which the {@link #indices indices} are being generated
-     * @see #indices
-     * @return the list of {@link #indices indices} generated for {@code p}
-     */
+  /**
+   * <p>Generates the {@link #indices legal dimensional positions} for a Puzzle with the specified
+   * {@code sideLength}.</p>
+   * @param sideLength the side-length of {@code p}
+   * @param p a sudoku puzzle
+   * @see #indices
+   * @return the {@link #indices legal dimensional positions} for {@code p}
+   */
 	private static List<IndexValue> genIndices(int sideLength, Puzzle p){
 		List<IndexValue> indices = new ArrayList<>(sideLength);
-		for(int i=0; i<sideLength; ++i){
+		for(int i = 0; i < sideLength; ++i){
 			indices.add(new IndexValue(p, i));
 		}
-		return indices;
+		return Collections.unmodifiableList(indices);
 	}
 	
   /**
@@ -213,14 +211,14 @@ public class Puzzle extends SudokuNetwork{
 		return claimUniverse;
 	}
 	
-    /**
-     * <p>Returns a list (sorted) of all the {@link #IndexValue index values} that exist for this
-     * Puzzle.</p>
-     * @return a list (sorted) of all the {@link #IndexValue index values} that exist for this
-     * Puzzle.
-     */
+  /**
+   * <p>Returns a list (sorted) of all the {@link #IndexValue index values} that exist for this
+   * Puzzle.</p>
+   * @return a list (sorted) of all the {@link #IndexValue index values} that exist for this
+   * Puzzle.
+   */
 	List<IndexValue> indexValues(){
-		return new ArrayList<>(indices);
+		return indices;
 	}
 	
 	/**
@@ -260,65 +258,53 @@ public class Puzzle extends SudokuNetwork{
 		return indexFromInt(i-1);
 	}
 	
-  /**
-   * <p>Returns this Puzzle's list of the valid values for its dimensions.</p>
-   * @return this Puzzle's list of the valid values for its dimensions
+	/**
+   * <p>A convenience method that returns the outputs of {@link #decodeX(IndexInstance...) decodeX},
+   * {@link #decodeY(IndexInstance...) decodeY}, and {@link #decodeZ(IndexInstance...) decodeZ}, as 
+   * an ordered triple in the form of an array.</p>
+   * @param points dimensional indices passed on to decodeX, decodeY, and decodeZ
+   * @return an ordered triple of the outputs of decodeX, decodeY, and decodeZ given the same 
+   * parameter this method received
    */
-	List<IndexValue> getIndices(){
-		return indices;
-	}
-	
-    /**
-     * <p>A convenience method that returns the outputs of
-     * {@link #decodeX(IndexInstance...) decodeX}, {@link #decodeY(IndexInstance...) decodeY}, and
-     * {@link #decodeSymbol(IndexInstance...) decodeSymbol}, as an ordered triple in the form of an
-     * array.</p>
-     * @param dims dimension args passed on to decodeX, decodeY, and decodeSymbol.
-     * @return an ordered triple of the outputs of decodeX, decodeY, and decodeSymbol given the same
-     * args this method received
-     */
-	public IndexValue[] decodeXYZ(IndexInstance... dims){
+	public IndexValue[] decodeXYZ(IndexInstance... points){
 		return new IndexValue[]{		
-			decodeX(dims),
-			decodeY(dims),
-			decodeSymbol(dims)
+			decodeX(points),
+			decodeY(points),
+			decodeZ(points)
 		};
 	}
 	
-    /**
-     * <p>Returns the x-component of the point in space specified by {@code dims}. x-components of
-     * each element of {@code dims} are determined and summed, and
-     * {@link #indexFromInt(int) the corresponding IndexValue} is returned.</p>
-     * @param dims the x-component of the geometric point, line, or plane specified by these
-     * IndexInstances will be returned in the form of an IndexValue pertaining to this Puzzle.
-     * @return the x-component of the point in space specified by {@code dims}
-     */
-	public IndexValue decodeX(IndexInstance... dims){
+	/**
+   * <p>Returns the IndexValue for this Puzzle {@link #indexFromInt(int) corresponding} to the sum
+   * of the x-components of the specified {@code points}.</p>
+   * @param points IndexInstances from this puzzle
+   * @returns the IndexValue for this Puzzle {@link #indexFromInt(int) corresponding} to the sum
+   * of the x-components of the specified {@code points}
+   */
+	IndexValue decodeX(IndexInstance... dims){
 		return decodeDim(IndexInstance::contributionX, dims);
 	}
 	
-    /**
-     * <p>Returns the y-component of the point in space specified by {@code dims}. y-components of
-     * each element of {@code dims} are determined and summed, and
-     * {@link #indexFromInt(int) the corresponding IndexValue} is returned.</p>
-     * @param dims the y-component of the geometric point, line, or plane specified by these
-     * IndexInstances will be returned in the form of an IndexValue pertaining to this Puzzle.
-     * @return the y-component of the point in space specified by {@code dims}
-     */
-	public IndexValue decodeY(IndexInstance... dims){
+	/**
+   * <p>Returns the IndexValue for this Puzzle {@link #indexFromInt(int) corresponding} to the sum
+   * of the y-components of the specified {@code points}.</p>
+   * @param points IndexInstances from this puzzle
+   * @returns the IndexValue for this Puzzle {@link #indexFromInt(int) corresponding} to the sum
+   * of the y-components of the specified {@code points}
+   */
+	IndexValue decodeY(IndexInstance... dims){
 		return decodeDim(IndexInstance::contributionY, dims);
 	}
 	
-    /**
-     * <p>Returns the z-component of the point in space specified by {@code dims}. z-components of
-     * each element of {@code dims} are determined and summed, and
-     * {@link #indexFromInt(int) the corresponding IndexValue} is returned.</p>
-     * @param dims the z-component of the geometric point, line, or plane specified by these
-     * IndexInstances will be returned in the form of an IndexValue pertaining to this Puzzle.
-     * @return the z-component of the point in space specified by {@code dims}
-     */
-	IndexValue decodeSymbol(IndexInstance... dims){
-		return decodeDim(IndexInstance::contributionZ, dims);
+  /**
+   * <p>Returns the IndexValue for this Puzzle {@link #indexFromInt(int) corresponding} to the sum
+   * of the z-components of the specified {@code points}.</p>
+   * @param points IndexInstances from this puzzle
+   * @returns the IndexValue for this Puzzle {@link #indexFromInt(int) corresponding} to the sum
+   * of the z-components of the specified {@code points}
+   */
+	IndexValue decodeZ(IndexInstance... points){
+		return decodeDim(IndexInstance::contributionZ, points);
 	}
 	
   /**
@@ -327,21 +313,23 @@ public class Puzzle extends SudokuNetwork{
    */
 	public static final int DIMENSION_COUNT = 3;
 	
-    /**
-     * <p>Decodes the specified component of the specified dimension-values and returns the
-     * {@link #indexFromInt(int) corresponding IndexValue}. Performs the actual work for decodeX,
-     * decodeY, and decodeSymbol.</p>
-     * @param contrib a function used to specify which dimension's component will be used for the
-     * elements of {@code dims} to produce a result.
-     * @param dims dimension-values indicating a point (or other, non-point primitive geometric
-     * object) in space.
-     * @return the IndexValue {@link #indexFromInt(int) corresponding} to the combined specified
-     * dimensional contributions of the specified dimension-values.
-     */
-	private IndexValue decodeDim(Function<IndexInstance,Integer> contrib, IndexInstance[] dims){
+  /**
+   * <p>Decodes the specified dimensional component of the specified {@code dims} and returns the
+   * {@link #indexFromInt(int) corresponding IndexValue}.</p>
+   * <p>Performs the actual work for {@link #decodeX()}, {@link #decodeY}, and {@link #decodeZ}.</p>
+   * @param dimComponent a function used to specify which dimension's component (x, y, or z) will 
+   * be summed
+   * @param points dimensional indices
+   * @return the IndexValue {@link #indexFromInt(int) corresponding} to the combined specified
+   * dimensional contributions of the specified dimensional indices
+   */
+	private IndexValue decodeDim(
+	    Function<IndexInstance, Integer> dimComponent, 
+	    IndexInstance[] points){
+	  
 		int score = 0;
-		for(IndexInstance dim : dims){
-			score += contrib.apply(dim);
+		for(IndexInstance dim : points){
+			score += dimComponent.apply(dim);
 		}
 		return indexFromInt(score);
 	}
@@ -360,11 +348,11 @@ public class Puzzle extends SudokuNetwork{
 			private int useCount = 0;
 			@Override
 			public String get(){
-				if(++useCount%sideLength()==0){
-					return " "+System.lineSeparator();
-				} else{
-					return " ";
+			  StringBuilder result = new StringBuilder(" ");
+				if(++useCount % sideLength() == 0){
+					result.append(System.lineSeparator());
 				}
+				return result.toString();
 			}
 		}
 		
@@ -380,7 +368,7 @@ public class Puzzle extends SudokuNetwork{
 					return Integer.compare(snake1, snake2);
 				})
 				.forEach((cell) -> result.append(cell.isSolved() 
-						? cell.iterator().next().getSymbol() 
+						? cell.iterator().next().getZ() 
 						: BLANK_CELL)
 						.append(betweenNumbers.get()));
 		
@@ -388,35 +376,14 @@ public class Puzzle extends SudokuNetwork{
 	}
 	
   /**
-   * <p>Returns a text representation of the Puzzle where each cell is represented by a string of
-   * {@code sideLength} characters, each {@link Claim#possText() character} pertaining to a possible
-   * value of the cell.</p>
-   * @return a text representation of the Puzzle where each cell is represented by a string of
-   * {@code sideLength} characters, each {@link Claim#possText() character} pertaining to a possible
-   * value of the cell
-   */
-	public String possibilitiesToString(){
-		StringBuilder result = new StringBuilder();
-		
-		for(IndexValue y : indices){
-			for(IndexValue x : indices){
-				for(IndexValue z : indices){
-					Claim claim = claims.get(x, y, z);
-					result.append(claim.isSetFalse() ? " " : claim.getSymbol());
-				}
-				result.append("|");
-			}
-			result.append(System.lineSeparator());
-		}
-		
-		return result.toString();
-	}
-	
-	/**
-   * <p>Returns the x-coordinate of the low-X edge of the box in this puzzle with the specified 
-   * {@link DimensionType#BOX box-index}.</p>
-   * @param boxIndex the index of a box in this puzzle
-   * @return the x-coordinate of the low-Y edge of the {@code boxIndex}-th box in this puzzle
+   * <p>Returns the x-coordinate of the low-X edge of the specified box. The index of a box
+   * follows a snaking pattern from the upper left with box 0, moving rightward and increasing,
+   * then wrapping around to the next line of boxes below as needed until the lower right is
+   * reached.</p>
+   * @param boxIndex the index of the box whose lower-x-coordinate edge's x-coordinate is
+   * returned.
+   * @return the x-coordinate of the low-X edge of the box in the {@code boxIndex}-th box of a
+   * Puzzle whose {@link Sudoku#magnitude() magnitude} is {@code mag}
    */
 	private static int boxLowX(IndexValue boxIndex, int mag){
 		return mag * snakeInSquareX(boxIndex, mag);
@@ -510,19 +477,10 @@ public class Puzzle extends SudokuNetwork{
          */
 		CELL	(DimensionType.Y, 	   DimensionType.X,   DimensionType.SYMBOL,			(rt,p) -> "The value in "+rt+" "+p.getB().val.humanReadableIntValue()+","+p.getA().val.humanReadableIntValue());
 		
-		static{
-			BOX.subsumableTypes    = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ROW, COLUMN)));
-			ROW.subsumableTypes    = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(BOX)));
-			COLUMN.subsumableTypes = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(BOX)));
-			CELL.subsumableTypes   = Collections.emptySet();
-		}
-		
 		private final DimensionType dimAType;
 		private final DimensionType dimBType;
 		private final DimensionType dimCType;
 		private final BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> description;
-		
-		private Set<RuleType> subsumableTypes = null;
 		
 		private RuleType(DimensionType dimAType, DimensionType dimBType, DimensionType dimCType, 
 				BiFunction<RuleType,Pair<IndexInstance,IndexInstance>,String> description){
@@ -580,19 +538,10 @@ public class Puzzle extends SudokuNetwork{
 		public List<IndexInstance> dimInsideRule(Puzzle p){
 			return p.indexInstances(dimCType);
 		}
-		
-		public Set<DimensionType> dimsOutsideRule(Puzzle p){
-			Set<DimensionType> result = new HashSet<>(DIMENSION_COUNT - DIMENSIONS_INSIDE_RULE);
-			Collections.addAll(result, dimAType, dimBType);
-			return result;
-		}
-		
-		public boolean canClaimValue(RuleType type){
-			return subsumableTypes.contains(type);
-		}
 	}
 	
     /**
+<<<<<<< HEAD
      * <p>The number of dimensions that the Claims of a given Rule traverse.</p>
      */
 	public static final int DIMENSIONS_INSIDE_RULE = 1;
@@ -602,6 +551,14 @@ public class Puzzle extends SudokuNetwork{
    * {@link Puzzle.DimensionType dimension} (of which five are available) the wrapped IndexValue
    * pertains.</p>
    * @author fiveham
+=======
+     * <p>A wrapper for IndexValue that internally specifies to which
+     * {@link Puzzle.DimensionType dimension} (of which five are available) the wrapped IndexValue
+     * pertains.</p>
+     * @author fiveham
+     * @author fiveham
+	 *
+>>>>>>> refactor
 	 */
 	public static class IndexInstance{
 		private DimensionType type;
