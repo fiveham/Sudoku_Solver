@@ -11,9 +11,9 @@ public class SolverApp {
    * <p>The first command-line argument is the name of the file from which to read the target to 
    * be solved.</p>
    * @param args command line arguments
-   * @see #run()
    * @throws FileNotFoundException if the file specified by the first command-line argument could
    * not be found
+   * @throws InterruptedException
    */
   public static void main(String[] args) throws FileNotFoundException, InterruptedException{
     Solver s = solver(args);
