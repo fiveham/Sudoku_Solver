@@ -102,9 +102,9 @@ public class TxtParser implements Parser{
 		 */
 		TOKEN(TextFormatStyle::tokenParse);
 		
-		private final Function<Scanner,Pair<List<Integer>,Integer>> parse;
+		private final Function<Scanner, Pair<List<Integer>, Integer>> parse;
 		
-		private TextFormatStyle(Function<Scanner,Pair<List<Integer>,Integer>> parse){
+		private TextFormatStyle(Function<Scanner, Pair<List<Integer>, Integer>> parse){
 			this.parse = parse;
 		}
 		

@@ -100,11 +100,11 @@ public class SadmanParser implements Parser{
 		}
 		
 		this.values = new ArrayList<>(initCells.length());
-		for(int i=0; i<initCells.length(); ++i){
+		for(int i = 0; i < initCells.length(); ++i){
 			char c = initCells.charAt(i);
 			values.add(c == EMPTY_CELL 
 					? Puzzle.BLANK_CELL 
-					: Integer.parseInt(Character.toString(c), mag*mag+1));
+					: Integer.parseInt(Character.toString(c), mag * mag + 1));
 		}
 	}
 	

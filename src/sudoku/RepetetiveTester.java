@@ -16,8 +16,12 @@ public class RepetetiveTester {
 	public static final String EULER_DIRECTORY = "./puzzles/project_euler/";
 	
 	public static void main(String[] args) {
-		List<File> puzzles = Stream.of(new File(SADMAN_DIRECTORY).list()).map((s) -> new File(SADMAN_DIRECTORY + s)).collect(Collectors.toList());
-		Stream.of(new File(EULER_DIRECTORY).list()).map((s) -> new File(SADMAN_DIRECTORY + s)).forEach(puzzles::add);;
+		List<File> puzzles = Stream.of(new File(SADMAN_DIRECTORY).list())
+		    .map((s) -> new File(SADMAN_DIRECTORY + s))
+		    .collect(Collectors.toList());
+		Stream.of(new File(EULER_DIRECTORY).list())
+		  .map((s) -> new File(SADMAN_DIRECTORY + s))
+		  .forEach(puzzles::add);;
 		
 		for(File f : puzzles){
 			try{
@@ -26,9 +30,9 @@ public class RepetetiveTester {
 				solver.solve();
 				System.out.println(solver.getTarget().toString());
 			} catch(FileNotFoundException e){
-				System.out.println("Could not find file "+f.getName());
+				System.out.println("Could not find file " + f.getName());
 			} catch(InterruptedException e){
-				System.out.println("InterruptedException for file "+f.getName());
+				System.out.println("InterruptedException for file " + f.getName());
 			}
 		}
 	}

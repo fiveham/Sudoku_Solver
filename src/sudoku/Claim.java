@@ -7,7 +7,7 @@ import sudoku.Puzzle.IndexValue;
  * <p>This is implemented as a set of the Rules that have this Claim as an element.</p>
  * @author fiveham
  */
-public class Claim extends NodeSet<Fact,Claim>{
+public class Claim extends NodeSet<Fact, Claim>{
 	
 	private static final long serialVersionUID = -2402719833037606449L;
 	
@@ -75,12 +75,14 @@ public class Claim extends NodeSet<Fact,Claim>{
 	
 	@Override
 	public String toString(){
-		return "Claim: cell "+x.humanReadableIntValue()+","+y.humanReadableIntValue()+" is "+z.humanReadableIntValue();
+		return "Claim: cell " + x.humanReadableIntValue() 
+		    + "," + y.humanReadableIntValue() 
+		    + " is " + z.humanReadableIntValue();
 	}
 	
 	@Override
 	public boolean equals(Object o){
-		if( o instanceof Claim){
+		if(o instanceof Claim){
 			Claim c = (Claim) o;
 			return c.x == x && c.y == y && c.z == z && c.puzzle == puzzle;
 		}
@@ -96,6 +98,6 @@ public class Claim extends NodeSet<Fact,Claim>{
 		int dx = this.x.intValue() - otherClaim.x.intValue();
 		int dy = this.y.intValue() - otherClaim.y.intValue();
 		int dz = this.z.intValue() - otherClaim.z.intValue();
-		return Math.sqrt( dx*dx + dy*dy + dz*dz );
+		return Math.sqrt(dx * dx + dy * dy + dz * dz);
 	}
 }

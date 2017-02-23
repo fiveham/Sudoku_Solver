@@ -194,7 +194,9 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	
 	@Override
 	public final Collection<NodeSet<?, ?>> neighbors(){
-		return this.stream().map(NodeSet.class::cast).collect(Collectors.toList());
+		return this.stream()
+		    .map(NodeSet.class::cast)
+		    .collect(Collectors.toList());
 	}
 	
   /**
