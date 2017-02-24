@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -66,47 +65,12 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		this(source, MIN_COMBO_SIZE, source.size());
 	}
 	
-	private void test(){
-		ComboIterator ci = new ComboIterator();
-		
-		/*System.out.println("Testing firstCombo and finalCombo");
-		for(int size = 0; size <= source.size(); size++){ //note: starts at 0 and test including equality with source size
-			BigInteger first = ci.firstCombo(size);
-			BigInteger finla = ci.finalCombo(size);
-			
-			System.out.println("size "+size);
-			System.out.println("first: "+first.toString(2));
-			System.out.println("final: "+finla.toString(2));
-		}*/
-		
-		System.out.println("Testing comboAfter");
-		BigInteger bi;
-		int lo, ob;
-		
-
-		bi = BigInteger.ZERO;
-		lo = ci.lowerableOne(bi);
-		ob = ci.bitsSetToTheRight(lo, bi);
-		System.out.println(bi.toString(2));
-		System.out.println(lo + " " + ob);
-		System.out.println();
-		
-		for(int i=0; i<25; i++){
-			bi = ci.comboAfter(bi);
-			lo = ci.lowerableOne(bi);
-			ob = ci.bitsSetToTheRight(lo, bi);
-			System.out.println(bi.toString(2));
-			System.out.println(lo + " " + ob);
-			System.out.println();
-		}
-	}
-	
-    /**
-     * <p>Returns an IsoIterator wrapping this ComboGen's normal iterator, allowing elements from
-     * the underlying element pool to be excluded from combos produced by subsequent calls to
-     * {@code next()}.</p>
-     * @return an IsoIterator wrapping this ComboGen's normal iterator
-     */
+  /**
+   * <p>Returns an IsoIterator wrapping this ComboGen's normal iterator, allowing elements from
+   * the underlying element pool to be excluded from combos produced by subsequent calls to
+   * {@code next()}.</p>
+   * @return an IsoIterator wrapping this ComboGen's normal iterator
+   */
 	@Override
 	public IsoIterator<T> iterator(){
 		return new IsoIterator<>(new ComboIterator());
@@ -170,13 +134,13 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			}
 		}
 		
-        /**
-         * <p>Returns a BigInteger {@link #genComboList(BigInteger) pointing} to the first
-         * {@code size} elements from {@code list}.</p>
-         * @param size the size of the combo whose backing bitstring is returned
-         * @return a BigInteger {@link #genComboList(BigInteger) pointing} to the first {@code size}
-         * elements from {@code list}
-         */
+    /**
+     * <p>Returns a BigInteger {@link #genComboList(BigInteger) pointing} to the first
+     * {@code size} elements from {@code list}.</p>
+     * @param size the size of the combo whose backing bitstring is returned
+     * @return a BigInteger {@link #genComboList(BigInteger) pointing} to the first {@code size}
+     * elements from {@code list}
+     */
 		private BigInteger finalCombo(int size){
 			return leastCombo(size);
 		}
@@ -309,18 +273,5 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			}
 			return result;
 		}
-	}
-	
-    /**
-     * <p>For testing</p>
-     * @param args
-     */
-	public static void main(String[] args){
-		Integer[] array = new Integer[20];
-		Arrays.fill(array, 5);
-		List<Integer> src = Arrays.asList(array);
-		
-		ComboGen<Integer> cg = new ComboGen<>(src);
-		cg.test();
 	}
 }
