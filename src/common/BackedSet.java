@@ -69,7 +69,6 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 	
 	@Override
 	public Iterator<E> iterator() {
-		
 		class BSIterator implements Iterator<E>{
 			
 			BigInteger comparisonMask;
