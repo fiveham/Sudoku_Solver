@@ -21,24 +21,24 @@ import java.util.Collection;
  */
 public class ComboGen<T> implements Iterable<List<T>>{
 	
-    /**
-     * <p>The minimum possible size ({@value}) of a combination.</p>
-     */
+  /**
+   * <p>The minimum possible size ({@value}) of a combination.</p>
+   */
 	public static final int MIN_COMBO_SIZE = 0;
 	
-    /**
-     * <p>The internal list from which elements are chosen for the combinations this class
-     * produces.</p>
-     */
+  /**
+   * <p>The internal list from which elements are chosen for the combinations this class
+   * produces.</p>
+   */
 	private final List<T> source;
 	private final int minSize;
 	private final int maxSize;
 	
-    /**
-     * <p>Constructs a ComboGen that produces combinations of elements from {@code source} that have
-     * a size at least {@value #MIN_COMBO_SIZE} and at most {@code source.size()}.</p>
-     * @param source a collection of elements combinations of which are produced by this ComboGen
-     */
+  /**
+   * <p>Constructs a ComboGen that produces combinations of elements from {@code source} that have
+   * a size at least {@value #MIN_COMBO_SIZE} and at most {@code source.size()}.</p>
+   * @param source a collection of elements combinations of which are produced by this ComboGen
+   */
 	public ComboGen(Collection<? extends T> source, int minSize, int maxSize){
 		this.source = new ArrayList<>(source);
 		
@@ -76,11 +76,11 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		return new IsoIterator<>(new ComboIterator());
 	}
 	
-    /**
-     * <p>A combination-navigating iterator for this ComboGen's underlying collection.</p>
-     * <p>Produces collections of varying sizes from this ComboGen's underlying collection, starting
-     * from a size of minMag and increasing to maxMag.</p>
-     */
+  /**
+   * <p>A combination-navigating iterator for this ComboGen's underlying collection.</p>
+   * <p>Produces collections of varying sizes from this ComboGen's underlying collection, starting
+   * from a size of minMag and increasing to maxMag.</p>
+   */
 	private class ComboIterator implements Iterator<List<T>>{
 		
 		private int size;
@@ -108,14 +108,13 @@ public class ComboGen<T> implements Iterable<List<T>>{
 				throw new NoSuchElementException();
 			}
 			List<T> result = genComboList(combo);
-
 			updatePosition();
 			return result;
 		}
 		
 		private List<T> genComboList(BigInteger combo){
 			List<T> result = new ArrayList<>(size);
-			for(int i=0; i<source.size(); ++i){
+			for(int i = 0; i < source.size(); ++i){
 				if(combo.testBit(i)){
 					result.add(source.get(i));
 				}
@@ -159,35 +158,35 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			return result;
 		}
 		
-		private final Map<Integer,BigInteger> leastComboCache = new HashMap<>();
+		private final Map<Integer, BigInteger> leastComboCache = new HashMap<>();
 		
-        /**
-         * <p>Returns a BigInteger {@link #genComboList(BigInteger) pointing} to the last
-         * {@code size} elements from {@code list}.</p>
-         * @param size the size of the combo whose backing bitstring is returned
-         * @return a BigInteger {@link #genComboList(BigInteger) pointing} to the last {@code size}
-         * elements from {@code list}
-         */
+    /**
+     * <p>Returns a BigInteger {@link #genComboList(BigInteger) pointing} to the last
+     * {@code size} elements from {@code list}.</p>
+     * @param size the size of the combo whose backing bitstring is returned
+     * @return a BigInteger {@link #genComboList(BigInteger) pointing} to the last {@code size}
+     * elements from {@code list}
+     */
 		private BigInteger firstCombo(int size){
 			return greatestCombo(size);
 		}
 		
-        /**
-         * </p>Returns a BigInteger having the greatest numerical value of any BigInteger
-         * {@link #genComboList(BigInteger) pointing} to a combination of the current size. The
-         * value returned is equal to {@code (2^(size+1) - 1) * 2^(source.size() - size)}, which
-         * equals {@code 2^(source.size()+1) - 2^(source.size() - size)}.</p>
-         * @param size the number of set bits in the BigIteger returned
-         * @return a BigInteger having the greatest numerical value of any BigInteger
-         * {@link #genComboList(BigInteger) pointing} to a combination of the current size
-         */
+    /**
+     * </p>Returns a BigInteger having the greatest numerical value of any BigInteger
+     * {@link #genComboList(BigInteger) pointing} to a combination of the current size. The
+     * value returned is equal to {@code (2^(size+1) - 1) * 2^(source.size() - size)}, which
+     * equals {@code 2^(source.size()+1) - 2^(source.size() - size)}.</p>
+     * @param size the number of set bits in the BigIteger returned
+     * @return a BigInteger having the greatest numerical value of any BigInteger
+     * {@link #genComboList(BigInteger) pointing} to a combination of the current size
+     */
 		private BigInteger greatestCombo(int size){
 			if(greatestComboCache.containsKey(size)){
 				return greatestComboCache.get(size);
 			}
 			
 			BigInteger result = BigInteger.ZERO;
-			for(int i=source.size()-size; i < source.size(); ++i){
+			for(int i=source.size() - size; i < source.size(); ++i){
 				result = result.setBit(i);
 			}
 			
@@ -195,7 +194,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			return result;
 		}
 		
-		private final Map<Integer,BigInteger> greatestComboCache = new HashMap<>();
+		private final Map<Integer, BigInteger> greatestComboCache = new HashMap<>();
 		
 		/** 
      * <p>This implementation, which pulls ones down to lower indices, is tied to the fact that the 
