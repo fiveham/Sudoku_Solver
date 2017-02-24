@@ -449,7 +449,10 @@ public class ConsequenceIntersection{
 			 * specified {@code test} involving copies of the containing ConsequenceIntersection's 
 			 * puzzle's Facts from which this WhatIf's assumptions and consequences were removed
 			 */
-			private <T> Stream<T> filteredReducedFacts(BiPredicate<Fact,BackedSet<Claim>> test, BiFunction<Fact,BackedSet<Claim>,T> bifu){
+			private <T> Stream<T> filteredReducedFacts(
+			    BiPredicate<Fact, BackedSet<Claim>> test, 
+			    BiFunction<Fact, BackedSet<Claim>, T> bifu){
+			  
 				return target.factStream()
 						.map((f) -> {
 							BackedSet<Claim> bs = new BackedSet<>(puzzle.claimUniverse(), f);
