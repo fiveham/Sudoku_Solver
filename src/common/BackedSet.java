@@ -283,6 +283,14 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 		return result;
 	}
 	
+	/**
+	 * <p>Returns true if {@code a} and {@code b} are disjoint, false otherwise.</p>
+	 * <p>This method uses bitwise integer operations if {@code a} and {@code b} have the same 
+	 * Universe.</p>
+	 * @param a a BackedSet
+	 * @param b a BackedSet
+	 * @return true if {@code a} and {@code b} are disjoint, false otherwise
+	 */
 	public static boolean disjoint(BackedSet<?> a, BackedSet<?> b){
 		return a.universe.equals(b.universe)
 			? a.mask.xor(b.mask).equals(BigInteger.ZERO)
