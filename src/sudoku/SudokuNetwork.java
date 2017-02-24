@@ -83,7 +83,7 @@ public class SudokuNetwork extends BasicGraph<NodeSet<?, ?>> implements Sudoku{
 	    }
 	  }
 	  
-	  Map<CellPosition, Fact> cells = factStream()
+	  Map<CellPosition, Fact> cells = nodeStream()
         .filter(Rule.class::isInstance)
         .map(Rule.class::cast)
         .filter(Puzzle.RuleType.CELL::isTypeOf)
