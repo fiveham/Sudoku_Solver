@@ -152,7 +152,8 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 			mask = mask.setBit(index);
 			return old != mask.testBit(index);
 		} else{
-			throw new OutOfUniverseException("Cannot add the object because it is not in this set's universe.");
+			throw new OutOfUniverseException(
+			    "Cannot add the object because it is not in this set's universe.");
 		}
 	}
 	
