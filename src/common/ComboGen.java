@@ -197,20 +197,18 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		
 		private final Map<Integer,BigInteger> greatestComboCache = new HashMap<>();
 		
-		/* 
-         * This implementation, pulling 1s down to lower indices, is 
-         * This implementation, pulling 1s down to lower indices, is This implementation, pulling 1s
-         * This implementation, pulling 1s down to lower indices, is down to lower indices, is tied
-         * This implementation, pulling 1s down to lower indices, is to the fact that the first
-         * This implementation, pulling 1s down to lower indices, is combo is the greatest value and
-         * This implementation, pulling 1s down to lower indices, is the final combo is the least
-         * This implementation, pulling 1s down to lower indices, is value. If that relationship
-         * This implementation, pulling 1s down to lower indices, is between combo precedence and
-         * This implementation, pulling 1s down to lower indices, is the numerical size of the combo
-         * This implementation, pulling 1s down to lower indices, is ever changes, this method needs
-         * This implementation, pulling 1s down to lower indices, is to be adapted to the new
-         * This implementation, pulling 1s down to lower indices, is relationship.
-         */
+		/** 
+     * <p>This implementation, which pulls ones down to lower indices, is tied to the fact that the 
+     * first combo is the greatest value and the final combo is the least value. If that 
+     * relationship between combo precedence and the numerical size of the combo ever changes, this 
+     * method needs to be adapted to the new relationship.</p>
+     * <p>The combo after a given combo is determined by moving the lowest-indexed movable set bit 
+     * to an index lower by 1. A set bit is movable if the bit at index 1 lower than the movable bit
+     * is 0.</p>
+     * @param combo a BigInteger whose bits encode a combination of the elements pertaining to this 
+     * ComboGen
+     * @return a BigInteger encoding the combination after {@code combo}
+     */
 		private BigInteger comboAfter(BigInteger combo){
 			int swapIndex = lowerableOne(combo);
 			int onesBelow = bitsSetToTheRight(swapIndex, combo);
