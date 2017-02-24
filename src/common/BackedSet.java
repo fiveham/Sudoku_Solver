@@ -157,7 +157,7 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 	}
 	
 	/**
-	 * <p>Indicates that an object is not in this set's Universe and cannot be added.</p>
+	 * <p>Indicates that an object is not in a given BackedSet's Universe.</p>
 	 * @author fiveham
 	 */
 	public static class OutOfUniverseException extends RuntimeException{
