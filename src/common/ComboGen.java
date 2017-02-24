@@ -219,15 +219,14 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			result = result.setBit(swapIndex);
 			swapIndex--;
 			
-			//move all the 1s from the right of the swapped 0 to a position 
-			//immediately to the right of the swapped 0's initial position
+			//move all the 1s from the right of the swapped 0 to a position immediately to the right of 
+			//the swapped 0's initial position
 			for(int onesSet = 0; onesSet < onesBelow; ++onesSet){
 				result = result.setBit(swapIndex);
 				swapIndex--;
 			}
 			
-			//fill the space between the rightmost moved 1 and the ones' 
-			//place of the BigInteger with 0s
+			//fill the space between the rightmost moved 1 and the ones' place of the BigInteger with 0s
 			while(swapIndex >= 0){
 				result = result.clearBit(swapIndex);
 				swapIndex--;
@@ -236,35 +235,35 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			return result;
 		}
 		
-        /**
-         * <p>Returns the lowest index in {@code combo} of a {@link BigInteger#testBit(int) 1} such
-         * that the bit at the next lower index is 0. If no such bit exists in {@code combo}, then
-         * {@code source.size()} is returned.</p>
-         * @param combo the combo whose lowest-index 1 with a 0 immediately below it (in terms of
-         * index) is returned
-         * @return the lowest index in {@code combo} of a {@link BigInteger#testBit(int) 1} such
-         * that the bit at the next lower index is 0, or {@code source.size()} if no such bit exists
-         * in {@code combo}
-         */
+    /**
+     * <p>Returns the lowest index in {@code combo} of a {@link BigInteger#testBit(int) 1} such
+     * that the bit at the next lower index is 0. If no such bit exists in {@code combo}, then
+     * {@code source.size()} is returned.</p>
+     * @param combo the combo whose lowest-index 1 with a 0 immediately below it (in terms of
+     * index) is returned
+     * @return the lowest index in {@code combo} of a {@link BigInteger#testBit(int) 1} such
+     * that the bit at the next lower index is 0, or {@code source.size()} if no such bit exists
+     * in {@code combo}
+     */
 		private int lowerableOne(BigInteger combo){
-			int i=0;
-			for(;i<source.size()-1; ++i){
-				if(!combo.testBit(i) && combo.testBit(i+1)){
+			int i = 0;
+			for(; i < source.size() - 1; ++i){
+				if(!combo.testBit(i) && combo.testBit(i + 1)){
 					break;
 				}
 			}
-			return i+1;
+			return i + 1;
 		}
 		
-        /**
-         * <p>Returns the number of 1s in {@code combo} at indices less than {@code swapIndex}.</p>
-         * @param swapIndex the index in {@code combo} below which 1s are counted
-         * @param combo the BigInteger from which 1s are counted
-         * @return the number of 1s in {@code combo} at indices less than
-         */
+    /**
+     * <p>Returns the number of 1s in {@code combo} at indices less than {@code swapIndex}.</p>
+     * @param swapIndex the index in {@code combo} below which 1s are counted
+     * @param combo the BigInteger from which 1s are counted
+     * @return the number of 1s in {@code combo} at indices less than
+     */
 		private int bitsSetToTheRight(int swapIndex, BigInteger combo){
 			int result = 0;
-			for(int i=swapIndex-1; i>=0; --i){
+			for(int i=swapIndex - 1; i >= 0; --i){
 				if(combo.testBit(i)){
 					++result;
 				}
