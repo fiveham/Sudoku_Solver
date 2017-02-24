@@ -44,9 +44,9 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		this.source = new ArrayList<>(source);
 		
 		if(minSize < 0){
-			throw new IllegalArgumentException("minSize "+minSize + " < 0");
+			throw new IllegalArgumentException("minSize " + minSize + " < 0");
 		} else if(maxSize < 0){
-			throw new IllegalArgumentException("maxSize "+maxSize + " < 0");
+			throw new IllegalArgumentException("maxSize " + maxSize + " < 0");
 		}
 		
 		this.minSize = minSize < MIN_COMBO_SIZE 
