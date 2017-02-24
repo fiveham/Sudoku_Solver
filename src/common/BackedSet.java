@@ -64,7 +64,7 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 	@SuppressWarnings("unchecked")
 	@Override
 	public boolean contains(Object o) {
-		return universe.contains(o) && mask.testBit(universe.index((E)o));
+		return universe.contains(o) && mask.testBit(universe.index((E) o));
 	}
 	
 	@Override
@@ -174,7 +174,7 @@ public class BackedSet<E> implements Set<E>, Cloneable{
 	public boolean remove(Object o) {
 		if(universe.contains(o)){
 			@SuppressWarnings("unchecked")
-			int index = universe.index((E)o);
+			int index = universe.index((E) o);
 			boolean old = mask.testBit(index);
 			mask = mask.clearBit(index);
 			return old != mask.testBit(index);
