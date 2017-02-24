@@ -92,7 +92,7 @@ public class Universe<E> {
 	
 	@Override
 	public int hashCode(){
-		if(hash==null){
+		if(hash == null){
 			hash = indexToElement.hashCode();
 		}
 		return hash;
