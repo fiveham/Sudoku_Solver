@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 
 /**
  * <p>A TestIterator meant for exploring a space of combinations. As such, removing elements from
@@ -30,10 +29,6 @@ public class IsoIterator<T> extends TestIterator<List<T>> {
 	public IsoIterator(Iterator<List<T>> wrappedIterator) {
 		super(wrappedIterator);
 		this.exclude = new HashSet<>();
-		addTest(genExcludeTest(exclude));
-	}
-	
-	public static <T> Predicate<List<T>> genExcludeTest(Set<T> exclude){
-		return (list) -> Collections.disjoint(list, exclude);
+		addTest((list) -> Collections.disjoint(list, this.exclude));
 	}
 }
