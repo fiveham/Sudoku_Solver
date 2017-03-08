@@ -72,8 +72,8 @@ public class ComboGen<T> implements Iterable<List<T>>{
    * @return an IsoIterator wrapping this ComboGen's normal iterator
    */
 	@Override
-	public IsoIterator<T> iterator(){
-		return new IsoIterator<>(new ComboIterator());
+	public Iterator<List<T>> iterator(){
+		return new TestIterator<>(new ComboIterator());
 	}
 	
   /**
