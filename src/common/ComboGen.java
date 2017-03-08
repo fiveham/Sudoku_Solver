@@ -10,13 +10,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * <p>Generates combinations of the elements in a given combination supplied to the constructor.</p>
+ * <p>Generates combinations of the elements in a given collection supplied to the constructor.</p>
  * @author fiveham
- * @author fiveham
- *
- * @param <T> the type of the elements in the combinations that this 
- * @param <T> the type of the elements in the combinations that this @param <T> the type of the
- * @param <T> the type of the elements in the combinations that this elements in the combinations
  * @param <T> the type of the elements in the combinations that this that this class produces
  */
 public class ComboGen<T> implements Iterable<List<T>>{
