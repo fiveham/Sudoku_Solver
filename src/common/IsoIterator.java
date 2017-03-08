@@ -36,16 +36,4 @@ public class IsoIterator<T> extends TestIterator<List<T>> {
 	public static <T> Predicate<List<T>> genExcludeTest(Set<T> exclude){
 		return (list) -> Collections.disjoint(list, exclude);
 	}
-	
-    /**
-     * <p>Prevents {@code item} from appearing in any combinations produced by subsequent calls to
-     * next().</p>
-     * @param item an element of the backing collection from which elements are drawn to construct
-     * combinations
-     * @return true if the population of excluded items was changed by this method call, false
-     * otherwise
-     */
-	public boolean exclude(T item){
-		return exclude.add(item);
-	}
 }
