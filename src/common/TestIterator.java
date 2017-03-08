@@ -1,8 +1,6 @@
 package common;
 
-import java.util.Arrays;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -21,35 +19,6 @@ public class TestIterator<T> implements Iterator<T>{
 	protected final List<Predicate<? super T>> tests;
 	protected final Iterator<T> wrappedIterator;
 	protected T last;
-	
-    /**
-     * <p>Constructs a TestIterator backed internally by the specified Iterator and having the
-     * specified {@code tests}.</p>
-     * @param wrappedIterator the Iterator that internally produces the contingent results for this
-     * TestIterator which are only released if they pass all the {@code test}
-     * @param tests the tests that a result produced by {@code wrappedIterator} must pass in order
-     * to be produced as a valid result by this TestIterator
-     */
-	@SafeVarargs
-	public TestIterator(Iterator<T> wrappedIterator, Predicate<? super T>... tests){
-		this.wrappedIterator = wrappedIterator;
-		this.tests = Arrays.asList(tests);
-		setLast();
-	}
-	
-    /**
-     * <p>Constructs a TestIterator backed internally by the specified Iterator and having the
-     * specified {@code tests}.</p>
-     * @param wrappedIterator the Iterator that internally produces the contingent results for this
-     * TestIterator which are only released if they pass all the {@code test}
-     * @param tests the tests that a result produced by {@code wrappedIterator} must pass in order
-     * to be produced as a valid result by this TestIterator
-     */
-	public TestIterator(Iterator<T> wrappedIterator, Collection<? extends Predicate<? super T>> tests){
-		this.wrappedIterator = wrappedIterator;
-		this.tests = new ArrayList<>(tests);
-		setLast();
-	}
 	
     /**
      * <p>Constructs a TestIterator backed internally by the specified Iterator and having no
