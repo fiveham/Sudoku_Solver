@@ -1,6 +1,5 @@
 package common;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -22,36 +21,7 @@ import java.util.function.Predicate;
 public class IsoIterator<T> extends TestIterator<List<T>> {
 	
 	protected final Set<T> exclude;
-	
-    /**
-     * <p>Constructs an IsoIterator wrapping the specified Iterator and having the specified
-     * {@code tests}.</p>
-     * @param wrappedIterator the Iterator that supplies this IsoIterator with elements to test and
-     * contingently reduce
-     * @param tests tests that results from {@code wrappedIterator} must pass in order to be
-     * returned by next() in this class
-     */
-	@SafeVarargs
-	public IsoIterator(Iterator<List<T>> wrappedIterator, Predicate<? super List<? extends T>>... tests) {
-		super(wrappedIterator, tests);
-		this.exclude = new HashSet<>();
-		addTest(genExcludeTest(exclude));
-	}
-	
-    /**
-     * <p>Constructs an IsoIterator wrapping the specified Iterator and having the specified
-     * {@code tests}.</p>
-     * @param wrappedIterator the Iterator that supplies this IsoIterator with elements to test and
-     * contingently reduce
-     * @param tests tests that results from {@code wrappedIterator} must pass in order to be
-     * returned by next() in this class
-     */
-	public IsoIterator(Iterator<List<T>> wrappedIterator, Collection<? extends Predicate<? super List<? extends T>>> tests) {
-		super(wrappedIterator, tests);
-		this.exclude = new HashSet<>();
-		addTest(genExcludeTest(exclude));
-	}
-	
+  
     /**
      * <p>Constructs an IsoIterator wrapping the specified Iterator and having no tests.</p>
      * @param wrappedIterator the Iterator that supplies this IsoIterator with elements to test and
