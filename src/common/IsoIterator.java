@@ -1,10 +1,7 @@
 package common;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 /**
  * <p>A TestIterator meant for exploring a space of combinations. As such, removing elements from
@@ -19,8 +16,6 @@ import java.util.Set;
  */
 public class IsoIterator<T> extends TestIterator<List<T>> {
 	
-	protected final Set<T> exclude;
-  
     /**
      * <p>Constructs an IsoIterator wrapping the specified Iterator and having no tests.</p>
      * @param wrappedIterator the Iterator that supplies this IsoIterator with elements to test and
@@ -28,7 +23,5 @@ public class IsoIterator<T> extends TestIterator<List<T>> {
      */
 	public IsoIterator(Iterator<List<T>> wrappedIterator) {
 		super(wrappedIterator);
-		this.exclude = new HashSet<>();
-		addTest((list) -> Collections.disjoint(list, this.exclude));
 	}
 }
