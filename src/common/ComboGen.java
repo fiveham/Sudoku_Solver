@@ -77,13 +77,13 @@ public class ComboGen<T> implements Iterable<List<T>>{
    */
 	private class ComboIterator implements Iterator<List<T>>{
 		
-		private int size;
+		private int currentSize;
 		private BigInteger combo;
 		
 		private ComboIterator(){
-			this.size = minSize;
+			this.currentSize = minSize;
 			if(sizeInRange()){
-				this.combo = firstCombo(size);
+				this.combo = firstCombo(currentSize);
 			}
 		}
 		
@@ -93,7 +93,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		}
 		
 		private boolean sizeInRange(){
-			return minSize <= size && size <= maxSize;
+			return minSize <= currentSize && currentSize <= maxSize;
 		}
 		
 		@Override
@@ -107,7 +107,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		}
 		
 		private List<T> genComboList(BigInteger combo){
-			List<T> result = new ArrayList<>(size);
+			List<T> result = new ArrayList<>(currentSize);
 			for(int i = 0; i < source.size(); ++i){
 				if(combo.testBit(i)){
 					result.add(source.get(i));
@@ -117,10 +117,10 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		}
 		
 		private void updatePosition(){
-			if(finalCombo(size).equals(combo)){ //maximum lateral position at this height
-				size++; //move to next height
-				if(size <= maxSize){ //this height is legal
-					combo = firstCombo(size);
+			if(finalCombo(currentSize).equals(combo)){ //maximum lateral position at this height
+				currentSize++; //move to next height
+				if(currentSize <= maxSize){ //this height is legal
+					combo = firstCombo(currentSize);
 				}
 			} else{ //nonmaximum lateral position. proceed to next lateral position
 				combo = comboAfter(combo);
