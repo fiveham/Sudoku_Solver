@@ -65,15 +65,9 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		this(source, MIN_COMBO_SIZE, source.size());
 	}
 	
-  /**
-   * <p>Returns an IsoIterator wrapping this ComboGen's normal iterator, allowing elements from
-   * the underlying element pool to be excluded from combos produced by subsequent calls to
-   * {@code next()}.</p>
-   * @return an IsoIterator wrapping this ComboGen's normal iterator
-   */
 	@Override
 	public Iterator<List<T>> iterator(){
-		return new TestIterator<>(new ComboIterator());
+		return new ComboIterator();
 	}
 	
   /**
