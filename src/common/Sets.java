@@ -43,7 +43,7 @@ public class Sets {
 		
 		collections.forEach(
 		    (collection) -> collection.forEach(
-		        (t) -> result.put(t, result.getOrDefault(t, 0))));
+		        (t) -> result.put(t, result.getOrDefault(t, 0) + 1)));
 		
 		return result;
 	}
