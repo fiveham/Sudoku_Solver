@@ -240,7 +240,7 @@ public class ConsequenceIntersection{
 							.collect(Collectors.toList())));
 		}
 		
-		private Map<Fact,Integer> popularity;
+		private Map<Fact, Integer> popularity;
 		
 		/**
 		 * <p>Returns a comparator that compares ReducedFacts by the popularity of their Facts in this 
