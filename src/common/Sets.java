@@ -35,8 +35,8 @@ public class Sets {
    * present.</p>
    * @param <T> the type of the elements being counted
    * @param collections a stream of collections whose elements are counted
-   * @return a Map from each element present in the collections in {@code collections} to the
-   * number of times each such element occurs among those collections
+   * @return a Map from each element present in the collections in {@code collections} to the number
+   * of times each such element occurs among those collections
    */
 	public static <T> Map<T, Integer> countingUnion(Stream<? extends Collection<T>> collections){
 		Map<T, Integer> result = new HashMap<>();
