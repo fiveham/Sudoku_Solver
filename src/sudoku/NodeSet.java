@@ -227,18 +227,19 @@ public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>>
 	 * <p>Returns this NodeSet's hashcode, which is a constant value that does not change with changes 
 	 * in the content of the set.</p>
 	 * 
-	 * <p>Because a NodeSet contains (references to) its neighbors as elements, a NodeSet's elements all
-   * contain (references to) that NodeSet itself. Nodeset extends HashSet; so, the implementation of 
-   * hashCode available to NodeSet without overriding the method returns the sum of the hashcodes of 
-   * the elements of the set, but since a NodeSet just refers to other NodeSets, no concrete values 
-   * can ever be extracted to begin summing; rather, a call for one NodeSet's hashcode will result in 
-   * a loop of calls to {@code hashCode()} on one NodeSet after another, ending in stack overflow.</p>
+	 * <p>Because a NodeSet contains (references to) its neighbors as elements, a NodeSet's elements 
+	 * all contain (references to) that NodeSet itself. Nodeset extends HashSet; so, the 
+	 * implementation of hashCode available to NodeSet without overriding the method returns the sum 
+	 * of the hashcodes of the elements of the set, but since a NodeSet only contains other NodeSets, 
+	 * no concrete values can ever be extracted to begin summing; rather, a call for one NodeSet's 
+	 * hashcode would result in repeated calls to AbstractSet's implementation of hashCode, ending in 
+	 * stack overflow.</p>
    * 
    * <p>A NodeSet is used as an element of other NodeSets; so, a NodeSet's hashcode needs to remain 
    * consistent and be independent of the NodeSet's content. Otherwise the process of mutual 
-   * dissociation when an edge is removed won't work. If NodeSet did not override {@code hashCode()} 
-   * and used HashSet's implementation, then the process of removing an edge between {@code A} and 
-   * {@code B} by calling {@code A.remove(B)} would go as follows:
+   * dissociation when an edge is removed won't work correctly. If NodeSet did not override 
+   * {@code hashCode()} and used AbstractSet's implementation, then the process of removing an edge 
+   * between {@code A} and {@code B} by calling {@code A.remove(B)} would go as follows:
    * <ol>
    * <li>B's hashcode is determined</li>
    * <li>B's entry in A is found and removed</li>
