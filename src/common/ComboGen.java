@@ -131,13 +131,13 @@ public class ComboGen<T> implements Iterable<List<T>>{
       public BigInteger apply(int in){
         if(!Objects.equals(input, in)){
           input = in;
-          output = computeLeastCombo(in);
+          output = leastCombo(in);
         }
         return output;
       }
     };
     
-    private BigInteger computeLeastCombo(int size){
+    private BigInteger leastCombo(int size){
       BigInteger result = BigInteger.ZERO;
       for(int i = 0; i < size; ++i){
         result = result.setBit(i);
