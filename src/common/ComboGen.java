@@ -120,14 +120,10 @@ public class ComboGen<T> implements Iterable<List<T>>{
      * elements from {@code list}
      */
 		private BigInteger finalCombo(int size){
-			return leastCombo(size);
-		}
-		
-		private BigInteger leastCombo(int size){
-		  return leastComboCache.apply(size);
+			return finalComboCache.apply(size);
 		}
 
-    private final IntFunction<BigInteger> leastComboCache = new IntFunction<BigInteger>(){
+    private final IntFunction<BigInteger> finalComboCache = new IntFunction<BigInteger>(){
       Integer input = null;
       BigInteger output = null;
       
