@@ -38,18 +38,18 @@ public class Sets {
    * @return a Map from each element present in the collections in {@code collections} to the
    * number of times each such element occurs among the collections in {@code collections}.
    */
-	public static <T> Map<T,Integer> countingUnion(Collection<? extends Collection<T>> collections){
+	public static <T> Map<T, Integer> countingUnion(Collection<? extends Collection<T>> collections){
 		return countingUnion(collections.stream());
 	}
 	
-	public static <T> Map<T,Integer> countingUnion(Stream<? extends Collection<T>> collections){
-		Map<T,Integer> result = new HashMap<>();
+	public static <T> Map<T, Integer> countingUnion(Stream<? extends Collection<T>> collections){
+		Map<T, Integer> result = new HashMap<>();
 		
 		collections.forEach((collection) -> {
 			for(T t : collection){
 				result.put(t, result.containsKey(t) 
 						? 1 + result.get(t) 
-						: 1 );
+						: 1);
 			}
 		});
 		
