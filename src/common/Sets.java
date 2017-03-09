@@ -42,7 +42,8 @@ public class Sets {
 		Map<T, Integer> result = new HashMap<>();
 		
 		collections.forEach(
-		    (collection) -> collection.forEach((t) -> result.put(t, result.getOrDefault(t, 0))));
+		    (collection) -> collection.forEach(
+		        (t) -> result.put(t, result.getOrDefault(t, 0))));
 		
 		return result;
 	}
