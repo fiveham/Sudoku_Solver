@@ -239,7 +239,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
      */
 		private int bitsSetToTheRight(int swapIndex, BigInteger combo){
 			int result = 0;
-			for(int i=swapIndex - 1; i >= 0; --i){
+			for(int i = swapIndex - 1; i >= 0; --i){
 				if(combo.testBit(i)){
 					++result;
 				}
