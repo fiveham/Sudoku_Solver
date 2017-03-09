@@ -46,16 +46,6 @@ public class ToolSet<T> extends HashSet<T> {
 	}
 	
     /**
-     * <p>Constructs a ToolSet with the specified initial capacity and the specified load
-     * factor.</p>
-     * @param initialCapacity the initial capacity of this ToolSet
-     * @param loadFactor the load factor for this ToolSet
-     */
-	public ToolSet(int initialCapacity, float loadFactor) {
-		super(initialCapacity, loadFactor);
-	}
-	
-    /**
      * <p>Returns true if this set intersects the {@code otherSet}, false otherwise.</p>
      * @param otherSet another set
      * @return true if this set intersects the {@code otherSet}, false otherwise
