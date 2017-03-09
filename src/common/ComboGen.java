@@ -48,14 +48,6 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		this.maxSize = maxSize;
 	}
 	
-	public ComboGen(Collection<? extends T> source, int minSize){
-		this(source, minSize, source.size());
-	}
-	
-	public ComboGen(Collection<? extends T> source){
-		this(source, MIN_COMBO_SIZE, source.size());
-	}
-	
 	@Override
 	public Iterator<List<T>> iterator(){
 		return new ComboIterator();
