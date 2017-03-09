@@ -48,7 +48,7 @@ public class Sets {
 		collections.forEach((collection) -> {
 			for(T t : collection){
 				result.put(t, result.containsKey(t) 
-						? 1+result.get(t) 
+						? 1 + result.get(t) 
 						: 1 );
 			}
 		});
