@@ -1,7 +1,6 @@
 package sudoku;
 
 import common.Sets;
-import common.ToolSet;
 import common.graph.Vertex;
 import java.util.Collection;
 import java.util.HashSet;
@@ -26,7 +25,7 @@ import java.util.stream.Collectors;
  * @param <S> The type of this set
  */
 public abstract class NodeSet<T extends NodeSet<S, T>, S extends NodeSet<T, S>> 
-    extends ToolSet<T> 
+    extends HashSet<T> 
     implements Vertex<NodeSet<?, ?>>{
 	
 	private static final long serialVersionUID = 6938429068342291749L;
