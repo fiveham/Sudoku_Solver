@@ -18,30 +18,27 @@ import java.util.stream.Collectors;
  */
 public class ToolSet<T> extends HashSet<T> {
 	
-    /**
-     */
 	private static final long serialVersionUID = 7562530465837262993L;
 	
-    /**
-     * <p>Constructs an empty ToolSet.</p>
-     */
-	public ToolSet() {
+  /**
+   * <p>Constructs an empty ToolSet.</p>
+   */
+	protected ToolSet() {
 	}
 	
-    /**
-     * <p>Constructs a ToolSet containing all the elements of {@code c}.</p>
-     * @param c the collection whose elements will be contained by this ToolSet
-     */
-	public ToolSet(Collection<? extends T> c) {
+  /**
+   * <p>Constructs a ToolSet containing all the elements of {@code c}.</p>
+   * @param c the collection whose elements will be contained by this ToolSet
+   */
+	private ToolSet(Collection<? extends T> c) {
 		super(c);
 	}
 	
-    /**
-     * <p>Constructs an empty ToolSet whose capacity is initially set to
-     * {@code initialCapacity}.</p>
-     * @param initialCapacity the initial capacity of this ToolSet
-     */
-	public ToolSet(int initialCapacity) {
+  /**
+   * <p>Constructs an empty ToolSet whose capacity is initially set to {@code initialCapacity}.</p>
+   * @param initialCapacity the initial capacity of this ToolSet
+   */
+	protected ToolSet(int initialCapacity) {
 		super(initialCapacity);
 	}
 	
