@@ -1,7 +1,6 @@
 package common;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -40,15 +39,6 @@ public class ToolSet<T> extends HashSet<T> {
    */
 	protected ToolSet(int initialCapacity) {
 		super(initialCapacity);
-	}
-	
-    /**
-     * <p>Returns true if this set intersects the {@code otherSet}, false otherwise.</p>
-     * @param otherSet another set
-     * @return true if this set intersects the {@code otherSet}, false otherwise
-     */
-	public boolean intersects(Collection<? extends T> otherSet){
-		return !Collections.disjoint(this, otherSet);
 	}
 	
 	public ToolSet<T> intersection(Collection<? extends T> otherSet){
