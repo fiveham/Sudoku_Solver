@@ -35,21 +35,17 @@ public class ComboGen<T> implements Iterable<List<T>>{
    * @param source a collection of elements combinations of which are produced by this ComboGen
    */
 	public ComboGen(Collection<? extends T> source, int minSize, int maxSize){
-		this.source = new ArrayList<>(source);
-		
-		if(minSize < 0){
+		if(minSize < MIN_COMBO_SIZE){
 			throw new IllegalArgumentException("minSize " + minSize + " < 0");
-		} else if(maxSize < 0){
+		} else if(maxSize < MIN_COMBO_SIZE){
 			throw new IllegalArgumentException("maxSize " + maxSize + " < 0");
+		} else if(maxSize < minSize){
+		  throw new IllegalArgumentException("maxSize " + maxSize + " < minSize " + minSize);
 		}
-		
-		this.minSize = minSize < MIN_COMBO_SIZE 
-				? MIN_COMBO_SIZE 
-				: minSize;
-		
-		this.maxSize = maxSize > this.source.size() 
-				? this.source.size() 
-				: maxSize;
+
+    this.source = new ArrayList<>(source);
+		this.minSize = minSize;
+		this.maxSize = maxSize;
 	}
 	
 	public ComboGen(Collection<? extends T> source, int minSize){
