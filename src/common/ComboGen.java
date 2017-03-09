@@ -127,7 +127,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			}
 			
 			BigInteger result = BigInteger.ZERO;
-			for(int i=0; i < size; ++i){
+			for(int i = 0; i < size; ++i){
 				result = result.setBit(i);
 			}
 			
@@ -163,7 +163,7 @@ public class ComboGen<T> implements Iterable<List<T>>{
 			}
 			
 			BigInteger result = BigInteger.ZERO;
-			for(int i=source.size() - size; i < source.size(); ++i){
+			for(int i = source.size() - size; i < source.size(); ++i){
 				result = result.setBit(i);
 			}
 			
