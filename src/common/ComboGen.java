@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
+import java.util.function.IntFunction;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -122,21 +124,31 @@ public class ComboGen<T> implements Iterable<List<T>>{
 		}
 		
 		private BigInteger leastCombo(int size){
-			if(leastComboCache.containsKey(size)){
-				return leastComboCache.get(size);
-			}
-			
-			BigInteger result = BigInteger.ZERO;
-			for(int i = 0; i < size; ++i){
-				result = result.setBit(i);
-			}
-			
-			leastComboCache.put(size, result);
-			return result;
+		  return leastComboCache.apply(size);
 		}
-		
-		private final Map<Integer, BigInteger> leastComboCache = new HashMap<>();
-		
+
+    private final IntFunction<BigInteger> leastComboCache = new IntFunction<BigInteger>(){
+      Integer input = null;
+      BigInteger output = null;
+      
+      @Override
+      public BigInteger apply(int in){
+        if(!Objects.equals(input, in)){
+          input = in;
+          output = computeLeastCombo(in);
+        }
+        return output;
+      }
+    };
+    
+    private BigInteger computeLeastCombo(int size){
+      BigInteger result = BigInteger.ZERO;
+      for(int i = 0; i < size; ++i){
+        result = result.setBit(i);
+      }
+      return result;
+    }
+    
     /**
      * <p>Returns a BigInteger {@link #genComboList(BigInteger) pointing} to the last
      * {@code size} elements from {@code list}.</p>
