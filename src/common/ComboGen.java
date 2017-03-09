@@ -22,10 +22,10 @@ public class ComboGen<T> implements Iterable<List<T>>{
 	public static final int MIN_COMBO_SIZE = 0;
 	
   /**
-   * <p>The internal list from which elements are chosen for the combinations this class
-   * produces.</p>
+   * <p>The internal list from which elements are chosen for the combinations that are produced.</p>
    */
 	private final List<T> source;
+	
 	private final int minSize;
 	private final int maxSize;
 	
