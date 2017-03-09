@@ -34,14 +34,10 @@ public class Sets {
    * <p>Unions the collections in {@code collections} and counts how many times each element is
    * present.</p>
    * @param <T> the type of the elements being counted
-   * @param collections
+   * @param collections a stream of collections whose elements are counted
    * @return a Map from each element present in the collections in {@code collections} to the
-   * number of times each such element occurs among the collections in {@code collections}.
+   * number of times each such element occurs among those collections
    */
-	public static <T> Map<T, Integer> countingUnion(Collection<? extends Collection<T>> collections){
-		return countingUnion(collections.stream());
-	}
-	
 	public static <T> Map<T, Integer> countingUnion(Stream<? extends Collection<T>> collections){
 		Map<T, Integer> result = new HashMap<>();
 		
