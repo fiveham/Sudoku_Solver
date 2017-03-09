@@ -41,11 +41,8 @@ public class Sets {
 	public static <T> Map<T, Integer> countingUnion(Stream<? extends Collection<T>> collections){
 		Map<T, Integer> result = new HashMap<>();
 		
-		collections.forEach((collection) -> {
-			for(T t : collection){
-				result.put(t, result.getOrDefault(t, 0) + 1);
-			}
-		});
+		collections.forEach(
+		    (collection) -> collection.forEach((t) -> result.put(t, result.getOrDefault(t, 0))));
 		
 		return result;
 	}
