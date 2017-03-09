@@ -545,7 +545,7 @@ public class ConsequenceIntersection{
        * Claims assumed true
        */
 			private boolean assumeTrue(Claim c){
-				boolean result = assumptions.add(c) | consequences.addAll(c.visible());
+				boolean result = assumptions.add(c) | consequences.addAll(c.visible()); //single-bar or
 				if(!BackedSet.disjoint(assumptions, consequences)){
 					throw new IllegalStateException(
 					    "Overlap between Claims assumed true and Claims concluded false");
